@@ -1,0 +1,13 @@
+Code "Allow Attacking from Stomp Bounce" in "Gameplay" by "Hyper" 
+//
+    #lib "Sonic"
+//
+{
+    if (Sonic.State.GetCurrentStateID() == Sonic.StateID.StateBounceJump)
+    {
+        if (Sonic.Input.IsPressed(Sonic.PlayerActionType.PlayerAttack))
+            Sonic.State.SetState(Sonic.StateID.StateFall);
+    }
+}
+
+

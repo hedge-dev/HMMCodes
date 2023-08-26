@@ -1,0 +1,47 @@
+Code "Disable Lava Instant Death" in "Gameplay" by "Hyper" does "Disables Sonic instantly drowning in lava and makes him jump up from the heat until running out of rings." 
+//
+    #lib "BlackboardItem"
+    #lib "Memory"
+
+    static bool IsInitialised = false;
+
+    static int RingCount = 0;
+//
+{
+    if (!IsInitialised)
+    {
+        fixed (int* pRingCount = &RingCount)
+        {
+            /* 0x1408D78F7 */
+            long sig = ScanSignature
+            (
+                "\xF6\x43\x54\x40\x0F\x84\xD0\x00\x00\x00",
+                "xxxxxxxxxx"
+            );
+
+            WriteAsmHook
+            (
+                $@"
+                    mov rcx, {(long)pRingCount}
+                    cmp dword ptr [rcx], 0
+                    jnz exit
+                    mov rdx, {Memory.ReadJump(sig + 0x04)}
+                    jmp rdx
+                exit:
+                    lea edx, dword ptr [rax - 0x03]
+                    mov r8d, 0x800000
+                ",
+
+                sig,
+
+                HookBehavior.Replace
+            );
+        }
+
+        IsInitialised = true;
+    }
+
+    RingCount = BlackboardItem.GetRingCount();
+}
+
+

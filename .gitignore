@@ -1,0 +1,4 @@
+# Ignore dot folders
+.*/
+[Bb]uild/*
+__pycache__/

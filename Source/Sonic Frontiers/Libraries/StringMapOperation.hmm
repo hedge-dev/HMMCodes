@@ -1,0 +1,14 @@
+Library "StringMapOperation" by "ĐeäTh" 
+{
+    public uint ComputeHash(string key)
+    {
+        uint hash = key[0];
+
+        for (int i = 1; i < key.Length; i++)
+            hash = key[i] + 31 * hash;
+
+        return hash & 0x7FFFFFFF;
+    }
+}
+
+

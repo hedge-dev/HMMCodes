@@ -1,0 +1,90 @@
+Library "GameService" by "Hyper & Sajid" 
+{
+    #include "Helpers" noemit
+
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Runtime.InteropServices;
+
+    private static bool _isInitialised = false;
+
+    private static List<long> _userServiceClassPtrs = new();
+
+    UNMANAGED_FUNCTION(long, CreateServices, long ppClasses)
+    {
+        var classes = new List<long>();
+
+        // Copy array contents to our list.
+        while (Read<long>(ppClasses) != 0)
+        {
+            classes.Add(Read<long>(ppClasses));
+            ppClasses += 8;
+        }
+
+        // Add user service class pointers.
+        foreach (long ptr in _userServiceClassPtrs)
+            classes.Add(ptr);
+        
+        classes.Add(0);
+
+        var classesArr = classes.ToArray();
+
+        fixed (long* pClasses = classesArr)
+            return (long)pClasses;
+    }
+
+    private void Init()
+    {
+        if (_isInitialised)
+            return;
+        
+        WriteAsmHook
+        (
+            $@"
+                push r14
+                sub  rsp, 0x20
+                mov  rax, qword ptr [rdx]
+                mov  r14, rdx
+                mov  rbx, rcx
+                mov  rcx, r14
+                mov  rdx, {GET_UNMANAGED_FUNCTION_PTR(CreateServices)}
+                call rdx
+                mov  r14, rax
+                mov  rax, qword ptr [rax]
+            ",
+
+            /* 0x147140C75 */
+            ScanSignature
+            (
+                "\x41\x56\x48\x83\xEC\x20\x48\x8B\x02\x49\x89\xD6",
+                "xxxxxxxxxxxx"
+            ),
+
+            HookBehavior.Replace
+        );
+
+        _isInitialised = true;
+    }
+
+    public void AddUserService(long ptr)
+    {
+        Init();
+
+        if (_userServiceClassPtrs.Contains(ptr))
+            return;
+
+        _userServiceClassPtrs.Add(ptr);
+    }
+
+    public void RemoveUserService(long ptr)
+    {
+        Init();
+        
+        if (!_userServiceClassPtrs.Contains(ptr))
+            return;
+
+        _userServiceClassPtrs.Remove(ptr);
+    }
+}
+
+

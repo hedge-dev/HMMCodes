@@ -1,0 +1,135 @@
+Code "Somersault Landing at High Velocity" in "Animation" by "Hyper" does 
+/*
+Enters Sonic into a somersault state when landing from a moderate height at a high velocity whilst retaining your momentum.
+
+This state lasts a fraction of a second, but keep in mind that within that time, you will be unable to perform certain actions until the animation is complete.
+*/
+//
+    #lib "Bitwise"
+    #lib "BlackboardStatus"
+    #lib "Sonic"
+
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+    using System.Collections.Generic;
+
+    static Vector3 LastGroundedPosition;
+
+    static List<Sonic.StateID> ExitStates = new()
+    {
+        Sonic.StateID.StateJump,
+        Sonic.StateID.StateRecoveryJump,
+        Sonic.StateID.StateFall,
+        Sonic.StateID.StateBumpJump,
+        Sonic.StateID.StateRecovery
+    };
+
+    static float HeightFallen = 0.0f;
+    
+    static bool IsInitialised = false;
+    static bool IsRecoveryJumpCharging = false;
+//
+{
+    if (!IsInitialised)
+    {
+        fixed (bool* pIsRecoveryJumpCharging = &IsRecoveryJumpCharging)
+        {
+            WriteAsmHook
+            (
+                $@"
+                    movaps xmmword ptr [rsp + 0x38 + 0xFFFFFFFFFFFFFFE8], xmm6
+                    mov    rsi, rcx
+                    mov    rcx, {(long)pIsRecoveryJumpCharging}
+                    mov    dl, byte ptr [rsi + 0xC4]
+                    mov    byte ptr [rcx], dl
+                    mov    edx, 0x18
+                    mov    rcx, rdi
+                ",
+
+                /* 0x1408A0A1D */
+                ScanSignature
+                (
+                    "\x0F\x29\x74\x24\x20\x48\x8B\xF1\xBA\x18\x00\x00\x00",
+                    "xxxxxxxxxxxxx"
+                ),
+
+                HookBehavior.Replace
+            );
+        }
+
+        void NotifyStateSpringJumpHeadLandDamageCollision(Sonic.StateID stateId, Sonic.StateID[] stateStackTrace)
+        {
+            bool isStateSpringJumpHeadLand = stateId == Sonic.StateID.StateSpringJumpHeadLand;
+            
+            if (isStateSpringJumpHeadLand)
+            {
+                Sonic.Collision.ToggleEntityCollision(false);
+            }
+            else if (Sonic.State.GetPreviousStateID() == Sonic.StateID.StateSpringJumpHeadLand)
+            {
+                Sonic.Collision.ToggleEntityCollision(true);
+            }
+        }
+
+        Sonic.State.AddStateNotifyAction(NotifyStateSpringJumpHeadLandDamageCollision);
+
+        IsInitialised = true;
+    }
+
+    var kinematics = Sonic.Kinematics.Get();
+
+    if (kinematics == null)
+        return;
+
+    if (Sonic.State.GetCurrentStateID() == Sonic.StateID.StateSpringJumpHeadLand)
+    {
+        if (Sonic.Input.IsPressed(Sonic.PlayerActionType.PlayerJump) ||
+            Sonic.Input.IsPressed(Sonic.PlayerActionType.PlayerAttack))
+        {
+            // Exit into StateRun.
+            Sonic.State.SetState(Sonic.StateID.StateRun);
+        }
+    }
+
+    if (Sonic.IsGrounded())
+    {
+        LastGroundedPosition = *kinematics.Position;
+
+        if (!ExitStates.Contains(Sonic.State.GetPreviousStateID()))
+            goto Reset;
+
+        if (Sonic.Kinematics.GetHorizontalMagnitude() > 15.0f && HeightFallen >= 5.0f)
+        {
+            if (BlackboardStatus.Get() != null && Bitwise.Test(*BlackboardStatus.GetStateFlags(), (uint)BlackboardStatus.StateFlags.IsBoost))
+            {
+                // Allow StateJump to continue running if we're boosting.
+                if (Sonic.State.GetPreviousStateID() == Sonic.StateID.StateJump)
+                    goto Reset;
+            }
+
+            // Allow StateRecoveryJump to enter StateDropDash.
+            if (Sonic.State.GetPreviousStateID() == Sonic.StateID.StateRecoveryJump && IsRecoveryJumpCharging)
+                goto Reset;
+
+            // Exit into StateSpringJumpHeadLand.
+            Sonic.State.SetState(Sonic.StateID.StateSpringJumpHeadLand);
+        }
+        
+    Reset:
+        HeightFallen = 0.0f;
+    }
+    else
+    {
+        /* Reset position if the player has reached
+           apex height and has begun falling again. */
+        if ((LastGroundedPosition.Y - kinematics.Position->Y) < HeightFallen)
+        {
+            LastGroundedPosition = *kinematics.Position;
+        }
+
+        HeightFallen = LastGroundedPosition.Y - kinematics.Position->Y;
+    }
+}
+
+

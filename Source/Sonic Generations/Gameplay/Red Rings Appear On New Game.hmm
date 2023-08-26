@@ -1,0 +1,4 @@
+Patch "Red Rings Appear On New Game" in "Gameplay" by "brianuuu" 
+WriteNop(0x11A9ECB, 2);
+
+

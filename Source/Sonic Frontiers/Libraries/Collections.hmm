@@ -1,0 +1,73 @@
+Library "Collections" by "Sajid & Hyper" 
+{
+    using System.Collections.Generic;
+
+    public unsafe struct MoveArray<T> where T : unmanaged
+    {
+        public T* Items;
+        public int Length;
+        public int Capacity;
+        public void* Allocator;
+        
+        public int Count => Length;    
+
+        public ref T this[int index]
+        {
+            get => ref Items[index];
+        }
+    }
+
+    public class StackList<T> : List<T>
+    {
+        private int _maxCapacity;
+
+        public StackList(int maxCapacity)
+        {
+            _maxCapacity = maxCapacity;
+        }
+
+        public new void Add(T item)
+        {
+            if (Count >= _maxCapacity)
+            {
+                RemoveAt(Count - 1);
+            }
+
+            Insert(0, item);
+        }
+
+        public T GetItemAt(int index)
+        {
+            if (Count == 0)
+                return default;
+
+            if (index >= Count)
+            {
+                return this[Count - 1];
+            }
+
+            return this[index];
+        }
+
+        public void Push(T item)
+        {
+            Add(item);
+        }
+
+        public T Pop()
+        {
+            T item = GetItemAt(0);
+
+            RemoveAt(0);
+
+            return item;
+        }
+
+        public T Peek()
+        {
+            return GetItemAt(0);
+        }
+    }
+}
+
+

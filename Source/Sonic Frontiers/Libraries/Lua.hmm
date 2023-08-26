@@ -1,0 +1,338 @@
+Library "Lua" by "Hyper & ĐeäTh" 
+{
+    #include "Helpers" noemit
+
+    #lib "GameDocument"
+    #lib "GameMode"
+    #lib "GameService"
+    #lib "Memory"
+
+    using System.Collections.Generic;
+    using System.IO;
+
+    private static bool _isInitialised = false;
+    private static bool _isScriptSequenceInactive = true;
+
+    private static string _lastGameModeName = "GameModeUnknown";
+
+    private static long _pLuaState = 0;
+    private static long _sigScriptSequenceManagerStaticClassCtor = 0;
+
+    #define LUA_TNONE          (-1)
+    #define LUA_TNIL           0
+    #define LUA_TBOOLEAN       1
+    #define LUA_TLIGHTUSERDATA 2
+    #define LUA_TNUMBER	       3
+    #define LUA_TSTRING	       4
+    #define LUA_TTABLE         5
+    #define LUA_TFUNCTION      6
+    #define LUA_TUSERDATA      7
+    #define LUA_TTHREAD        8
+    #define LUA_NUMTYPES       9
+
+    /* 0x153A6D900 */
+    private static long _sig_luaL_loadbufferx = ScanSignature("\x48\x83\xEC\x48\x48\x8B\x44\x24\x70\x48", "xxxxxxxxxx");
+    CREATE_FUNCTION_PTR(long, luaL_loadbufferx, _sig_luaL_loadbufferx, long L, long buff, long size, long name, long mode)
+
+    /* 0x140E6DB50 */
+    private static long _sig_lua_getglobal = Memory.ReadCall(ScanSignature("\xE8\xCC\xCC\xCC\xCC\x48\x8B\x0F\x48\x8B\xD3\xE8", "x????xxxxxxx"));
+    CREATE_FUNCTION_PTR(long, lua_getglobal, _sig_lua_getglobal, long L, long name)
+
+    /* 0x153959B30 */
+    private static long _sig_lua_pcallk = ScanSignature("\x48\x89\x74\x24\x18\x57\x48\x83\xEC\x40\x31\xF6", "xxxxxxxxxxxx");
+    CREATE_FUNCTION_PTR(long, lua_pcallk, _sig_lua_pcallk, long L, int nargs, int nresults, int errfunc, long ctx, long k)
+
+    /* 0x140E6D890 */
+    private static long _sig_lua_pushlstring = ScanSignature("\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x8B\xD9\x4D", "xxxxxxxxxxxxxx");
+    CREATE_FUNCTION_PTR(long, lua_pushlstring, _sig_lua_pushlstring, long L, long s, long len)
+
+    /* 0x140E6D870 */
+    private static long _sig_lua_pushinteger = ScanSignature("\x48\x8B\x41\x10\x48\x89\x10\xC6\x40\x08\x03", "xxxxxxxxxxx");
+    CREATE_FUNCTION_PTR(long, lua_pushinteger, _sig_lua_pushinteger, long L, int n)
+
+    /* 0x153927520 */
+    private static long _sig_lua_pushnumber = ScanSignature("\x48\x8B\x41\x10\xC5\xFA", "xxxxxx");
+    CREATE_FUNCTION_PTR(long, lua_pushnumber, _sig_lua_pushnumber, long L, float n)
+
+    /* 0x140E6DAD0 */
+    private static long _sig_lua_pushboolean = ScanSignature("\x48\x8B\x41\x10\x85", "xxxxx");
+    CREATE_FUNCTION_PTR(long, lua_pushboolean, _sig_lua_pushboolean, long L, int b)
+
+    /* 0x153912110 */
+    private static long _sig_lua_type = ScanSignature("\x48\x83\xEC\x28\xE8\xCC\xCC\xCC\xCC\x0F\xB6\x50\x08\xF6", "xxxxx????xxxxx");
+    CREATE_FUNCTION_PTR(long, lua_type, _sig_lua_type, long L, int idx)
+
+    /* 0x15391B810 */
+    private static long _sig_lua_tolstring = ScanSignature("\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x4C\x89\xC3\x89", "xxxxxxxxxxxxxxxxxxx");
+    CREATE_FUNCTION_PTR(long, lua_tolstring, _sig_lua_tolstring, long L, int idx, long len)
+
+    /* 0x140E6D3D0 */
+    private static long _sig_lua_tointegerx = ScanSignature("\x40\x53\x48\x83\xEC\x20\x49\x8B\xD8\x48\xC7", "xxxxxxxxxxx");
+    CREATE_FUNCTION_PTR(long, lua_tointegerx, _sig_lua_tointegerx, long L, int idx, long pisnum)
+
+    /* 0x140E6D230 */
+    private static long _sig_lua_tonumberx = ScanSignature("\x48\x83\xEC\x28\xE8\xCC\xCC\xCC\xCC\x80\x78\x08\x13", "xxxxx????xxxx");
+    CREATE_FUNCTION_PTR(long, lua_tonumberx, _sig_lua_tonumberx, long L, int idx, long pisnum)
+
+    /* 0x153916890 */
+    private static long _sig_lua_toboolean = ScanSignature("\x48\x83\xEC\x28\xE8\xCC\xCC\xCC\xCC\x0F\xB6\x48\x08\x80\xF9\x01", "xxxxx????xxxxxxx");
+    CREATE_FUNCTION_PTR(bool, lua_toboolean, _sig_lua_toboolean, long L, int idx)
+
+    /* 0x14BDE5E20 */
+    private static long _sigInitScriptSequenceManager = ScanSignature("\x48\x89\x5C\x24\x10\x48\x89\x6C\x24\x18\x56\x57\x41\x54\x41\x56\x41\x57\x48\x81\xEC\x30\x01\x00\x00\x48\x89", "xxxxxxxxxxxxxxxxxxxxxxxxxxx");
+    CREATE_FUNCTION_PTR(int*, InitScriptSequenceManager, _sigInitScriptSequenceManager, long pScriptSequenceManager, uint* pStringHash, char a3)
+    
+    /* 0x14BDD7B60 */
+    private static long _sigRegisterScriptSequenceManager = ScanSignature("\x40\x56\x48\x81\xEC\xC0\x00\x00\x00\x48\x89\xCE\x45", "xxxxxxxxxxxxx");
+    CREATE_FUNCTION_PTR(long, RegisterScriptSequenceManager, _sigRegisterScriptSequenceManager, long pScriptSequenceManager)
+
+    public void Init()
+    {
+        if (_lastGameModeName != GameMode.GetName())
+        {
+            InitScriptSequence();
+
+            _lastGameModeName = GameMode.GetName();
+        }
+
+        if (_isInitialised)
+            return;
+
+        GameMode.Init();
+
+        fixed (bool* p_isScriptSequenceInactive = &_isScriptSequenceInactive)
+        fixed (long* p_pLuaState = &_pLuaState)
+        {
+            WriteAsmHook
+            (
+                $@"
+                    push rbp
+                    sub  rsp, 0x50
+                    mov  r9b, byte ptr [r8 + 0x20]
+                    mov  rbp, {(long)p_isScriptSequenceInactive}
+                    mov  byte ptr [rbp], r9b
+                    cmp  r9b, 0
+                    jz   getLuaState
+                    mov  rbp, {(long)p_pLuaState}
+                    mov  qword ptr [rbp], 0
+                    jmp  exit
+                getLuaState:
+                    mov  r9, qword ptr [rcx + 0x10]
+                    cmp  r9, 0
+                    jz   exit
+                    mov  r9, qword ptr [r9]
+                    cmp  r9, 0
+                    jz   exit
+                    mov  r9, qword ptr [r9 + 0x48]
+                    cmp  r9, 0
+                    jz   exit
+                    mov  r9, qword ptr [r9 + 0x18]
+                    cmp  r9, 0
+                    jz   exit
+                    mov  rbp, {(long)p_pLuaState}
+                    mov  qword ptr [rbp], r9
+                exit:
+                    cmp  byte ptr [r8 + 0x20], 0
+                    mov  r9, r8
+                    mov  rbp, rcx
+                ",
+
+                /* 0x1409172E7 */
+                ScanSignature
+                (
+                    "\x55\x48\x83\xEC\x50\x41\x80\x78\x20\x00",
+                    "xxxxxxxxxx"
+                ),
+
+                HookBehavior.Replace
+            );
+        }
+
+        _isInitialised = true;
+    }
+
+    public void InitScriptSequence()
+    {
+        if (GameMode.GetName() == "GameModeStage" ||
+            GameMode.GetTutorialDestination() == GameMode.DestinationMode.GameModeStage)
+        {
+            return;
+        }
+
+        if (_sigScriptSequenceManagerStaticClassCtor == 0)
+        {
+            /* 0x140053480 */
+            _sigScriptSequenceManagerStaticClassCtor = ScanSignature
+            (
+                "\x45\x33\xC9\x4C\x8D\x05\xCC\xCC\xCC\xCC\x48\x8D\x15\xCC\xCC\xCC\xCC\x48\x8D\x0D\xCC\xCC\xCC\xCC\xE9\x73\x3F",
+                "xxxxxx????xxx????xxx????xxx"
+            );
+
+            if (_sigScriptSequenceManagerStaticClassCtor == 0)
+            {
+                Console.WriteLine("[Lua] Failed to initialise script sequence!");
+                return;
+            }
+
+            /* 0x143C53810 */
+            GameService.AddUserService(Memory.ReadEffectiveAddress(_sigScriptSequenceManagerStaticClassCtor + 0x11));
+        }
+
+        long pGameDocument = GameDocument.Get();
+
+        if (pGameDocument == 0)
+            return;
+
+        long pScriptSequenceManager = GameDocument.GetService(pGameDocument, "ScriptSequenceManager");
+
+        if (pScriptSequenceManager == 0)
+            return;
+
+        // BuildLevel
+        uint hash = 0x59B595D6;
+
+        GET_FUNCTION_PTR(InitScriptSequenceManager).Invoke(pScriptSequenceManager, &hash, (char)0);
+        GET_FUNCTION_PTR(RegisterScriptSequenceManager).Invoke(pScriptSequenceManager);
+    }
+
+    public long GetState()
+    {
+        Init();
+
+        /*
+            This stupid null check validates the Lua state
+            by checking if lua_State.next is null. This won't
+            always mean the state is valid, of course, as any
+            bit of memory could have a null QWORD, but it works.
+
+            PUC-Rio should really add a signature to the lua_State
+            struct for external validation, because checking the
+            result of luaL_newstate is just not good enough.
+        */
+        if (_pLuaState != 0 && *(long*)_pLuaState != 0)
+            return 0;
+
+        if (_isScriptSequenceInactive)
+            return 0;
+
+        return _pLuaState;
+    }
+
+    public void Script(string code)
+    {
+        Init();
+
+        if (GetState() == 0)
+            return;
+            
+        long str = TO_STRING_PTR(code);
+        
+        GET_FUNCTION_PTR(luaL_loadbufferx).Invoke(GetState(), str, code.Length, str, 0);
+        GET_FUNCTION_PTR(lua_pcallk).Invoke(GetState(), 0, -1, 0, 0, 0);
+    }
+
+    public void LoadScript(string path)
+    {
+        if (!File.Exists(path))
+            return;
+
+        string code = string.Empty;
+
+        try
+        {
+            code = File.ReadAllText(path);
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine($"[Lua] Error: \"{path}\" is being used by another process.");
+        }
+
+        if (string.IsNullOrEmpty(code))
+            return;
+
+        Script(code);
+    }
+
+    private void Call(string funcName, int resultCount, params object[] args)
+    {
+        Init();
+
+        if (GetState() == 0)
+            return;
+
+        GET_FUNCTION_PTR(lua_getglobal).Invoke(GetState(), TO_STRING_PTR(funcName));
+
+        foreach (var arg in args)
+        {
+            var type = arg.GetType();
+
+            if (type == typeof(string))
+            {
+                string str = (string)arg;
+                GET_FUNCTION_PTR(lua_pushlstring).Invoke(GetState(), TO_STRING_PTR(str), str.Length);
+            }
+            else if (type == typeof(int))
+            {
+                GET_FUNCTION_PTR(lua_pushinteger).Invoke(GetState(), (int)arg);
+            }
+            else if (type == typeof(float) || type == typeof(double))
+            {
+                GET_FUNCTION_PTR(lua_pushnumber).Invoke(GetState(), (float)arg);
+            }
+            else if (type == typeof(bool))
+            {
+                GET_FUNCTION_PTR(lua_pushboolean).Invoke(GetState(), (bool)arg ? 1 : 0);
+            }
+            else
+            {
+                Console.WriteLine($"[Lua] Type {type} is not supported...");
+            }
+        }
+
+        GET_FUNCTION_PTR(lua_pcallk).Invoke(GetState(), args.Length, resultCount, 0, 0, 0);
+    }
+
+    public void Call(string funcName, params object[] args)
+    {
+        Call(funcName, 0, args);
+    }
+
+    public T Call<T>(string funcName, params object[] args)
+    {
+        Init();
+
+        if (GetState() == 0)
+            return default;
+
+        Call(funcName, 1, args);
+
+        var type = typeof(T);
+        var luaType = GET_FUNCTION_PTR(lua_type).Invoke(GetState(), -1);
+
+        if (type == typeof(string) && luaType == LUA_TSTRING)
+        {
+            long ptr = (long)GET_FUNCTION_PTR(lua_tolstring).Invoke(GetState(), -1, 0);
+            return (T)(object)FROM_STRING_PTR(ptr);
+        }
+        else if (type == typeof(int) && luaType == LUA_TNUMBER)
+        {
+            return (T)(object)(int)GET_FUNCTION_PTR(lua_tointegerx).Invoke(GetState(), -1, 0);
+        }
+        else if ((type == typeof(float) || type == typeof(double)) && luaType == LUA_TNUMBER)
+        {
+            return (T)(object)(float)GET_FUNCTION_PTR(lua_tonumberx).Invoke(GetState(), -1, 0);
+        }
+        else if (type == typeof(bool) && luaType == LUA_TBOOLEAN)
+        {
+            return (T)(object)(bool)GET_FUNCTION_PTR(lua_toboolean).Invoke(GetState(), -1);
+        }
+        else
+        {
+            Console.WriteLine($"[Lua] Type {type} is not supported...");
+        }
+
+        return default;
+    }
+}
+
+

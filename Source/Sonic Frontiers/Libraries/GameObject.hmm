@@ -1,0 +1,61 @@
+Library "GameObject" by "Hyper, ĐeäTh & Sajid" 
+{
+    #lib "Collections"
+
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+    using System.Runtime.InteropServices;
+
+    public long GetGOC(long gameObject, string name)
+    {
+        if (gameObject == 0)
+            return 0;
+
+        // csl::ut::MoveArray<hh::game::GOComponent*> m_Components = 0x58
+        var components = Read<Collections.MoveArray<IntPtr>>(gameObject + 0x58);
+
+        for (int i = 0; i < components.Length; i++)
+        {
+            IntPtr component = components[i];
+            
+            // hh::game::GOComponent->pStaticClass = 0x48
+            // hh::game::ComponentClass->pName     = 0x00
+            if (Marshal.PtrToStringAnsi(Read<IntPtr>(Read<IntPtr>(component + 0x48))) == name)
+            {
+                return (long)component;
+            }
+        }
+
+        return 0;
+    }
+
+    public class Transform
+    {
+        public Vector3* Position;
+        public Quaternion* Rotation;
+        public Vector3* Scale;
+
+        public Transform(long gocTransform)
+        {
+            Position = (Vector3*)(gocTransform + 0xC0);
+            Rotation = (Quaternion*)(gocTransform + 0xD0);
+            Scale    = (Vector3*)(gocTransform + 0xE0);
+        }
+
+        public static Transform Get(long gameObject)
+        {
+            if (gameObject == 0)
+                return null;
+
+            long gocTransform = GameObject.GetGOC(gameObject, "GOCTransform");
+
+            if (gocTransform == 0)
+                return null;
+
+            return new Transform(gocTransform);
+        }
+    }
+}
+
+

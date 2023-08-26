@@ -1,0 +1,30 @@
+Patch "Disable Forced Weather for Bosses" in "Weather" by "Hyper" does "Disables the weather being forced to Sunny for Giganto and Supreme." 
+{
+    // Giganto
+    WriteProtected<byte>
+    (
+        /* 0x14024E456 */
+        ScanSignature
+        (
+            "\x74\x0A\x33\xD2\x48\x8B\xC8\xE8\xCC\xCC\xCC\xCC\x48\x8B\x46\x18\x48\x8B\x48\x28\x48\x8B\x59\x48\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD0\x48\x8B\xCB\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD8",
+            "xxxxxxxx????xxxxxxxxxxxxx????xxxxxxx????xxx"
+        ),
+
+        0xEB
+    );
+
+    // Supreme
+    WriteProtected<byte>
+    (
+        /* 0x1402AFE04 */
+        ScanSignature
+        (
+            "\x74\x0A\x33\xD2\x48\x8B\xC8\xE8\xCC\xCC\xCC\xCC\x48\x8B\x46\x18\x48\x8B\x48\x28\x48\x8B\x59\x48\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD0\x48\x8B\xCB\xE8\xCC\xCC\xCC\xCC\x45\x33\xFF",
+            "xxxxxxxx????xxxxxxxxxxxxx????xxxxxxx????xxx"
+        ),
+
+        0xEB
+    );
+}
+
+

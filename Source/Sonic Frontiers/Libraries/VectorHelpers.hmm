@@ -1,0 +1,23 @@
+Library "VectorHelpers" by "Hyper" 
+{
+    public static Quaternion LookRotation(Vector3 forward, Vector3 upwards)
+    {
+        forward = Vector3.Normalize(forward);
+        upwards = Vector3.Normalize(upwards);
+
+        Vector3 right = Vector3.Cross(upwards, forward);
+        upwards = Vector3.Cross(forward, right);
+
+        Matrix4x4 rotationMatrix = new Matrix4x4
+        (
+            right.X, right.Y, right.Z, 0.0f,
+            upwards.X, upwards.Y, upwards.Z, 0.0f,
+            forward.X, forward.Y, forward.Z, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
+        );
+
+        return Quaternion.CreateFromRotationMatrix(rotationMatrix);
+    }
+}
+
+

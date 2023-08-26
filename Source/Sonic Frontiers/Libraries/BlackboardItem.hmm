@@ -1,0 +1,42 @@
+Library "BlackboardItem" by "Hyper" 
+{
+    #lib "Blackboard"
+    #lib "GameDocument"
+    #lib "GameObject"
+
+    public long Get(long blackboard = 0)
+    {
+        if (blackboard == 0)
+        {
+            long sonic = GameDocument.GetGameObject("Sonic");
+            
+            if (sonic == 0)
+                return 0;
+
+            blackboard = Blackboard.GetBlackboardFromPlayer(sonic);
+
+            if (blackboard == 0)
+                return 0;
+        }
+
+        return Blackboard.GetBlackboardContent(blackboard, "BlackboardItem");
+    }
+
+    public int GetRingCount(long blackboardItem = 0)
+    {
+        if (blackboardItem == 0 && (blackboardItem = Get()) == 0)
+            return 0;
+
+        return Read<int>(blackboardItem + 0x28);
+    }
+
+    public void SetRingCount(int count)
+    {
+        if (Get() == 0)
+            return;
+
+        WriteProtected<int>(Get() + 0x28, count);
+    }
+}
+
+

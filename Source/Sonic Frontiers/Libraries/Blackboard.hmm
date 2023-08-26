@@ -1,0 +1,52 @@
+Library "Blackboard" by "Hyper, ĐeäTh & Sajid" 
+{
+    #lib "Collections"
+    #lib "StringMapOperation"
+
+    using System.Runtime.InteropServices;
+
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+    private delegate uint _tGetNameHash();
+
+    public long GetBlackboardFromPlayer(long player)
+    {
+        if (player == 0)
+            return 0;
+
+        long gocPlayerBlackboard = GameObject.GetGOC(player, "GOCPlayerBlackboard");
+
+        if (gocPlayerBlackboard == 0)
+            return 0;
+
+        // app::player::GOCPlayerBlackboard->pBlackboard = 0x80
+        return Read<long>(gocPlayerBlackboard + 0x80);
+    }
+
+    public long GetBlackboardContent(long blackboard, string name)
+    {
+        if (blackboard == 0)
+            return 0;
+
+        // csl::ut::MoveArray<BlackboardContent*> m_Blackboards = 0x18
+        var blackboards = Read<Collections.MoveArray<IntPtr>>(blackboard + 0x18);
+
+        for (int i = 0; i < blackboards.Length; i++)
+        {
+            IntPtr blackboardContent = blackboards[i];
+
+            if (blackboardContent == IntPtr.Zero)
+                continue;
+
+            var fpGetNameHash = Marshal.GetDelegateForFunctionPointer<_tGetNameHash>(Read<IntPtr>(Read<IntPtr>(blackboardContent) + 1 * IntPtr.Size));
+            
+            if (fpGetNameHash.Invoke() == StringMapOperation.ComputeHash(name))
+            {
+                return (long)blackboardContent;
+            }
+        }
+
+        return 0;
+    }
+}
+
+

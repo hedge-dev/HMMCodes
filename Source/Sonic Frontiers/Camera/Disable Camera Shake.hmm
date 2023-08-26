@@ -1,0 +1,16 @@
+Patch "Disable Camera Shake" in "Camera" by "Hyper" does "Disables camera shake during combat." 
+{
+    WriteProtected<byte>
+    (
+        /* 0x1400B51E2 */
+        ScanSignature
+        (
+            "\x0F\x85\x08\x03\x00\x00\x48\x8B\x41\x28",
+            "xxxxxxxxxx"
+        ),
+
+        0xE9, 0x09, 0x03, 0x00, 0x00
+    );
+}
+
+
