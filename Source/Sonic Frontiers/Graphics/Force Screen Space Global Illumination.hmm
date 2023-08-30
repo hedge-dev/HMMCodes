@@ -1,0 +1,41 @@
+Patch "Force Screen Space Global Illumination" in "Graphics" by "WasifBoomz" does
+/*
+Forces Screen Space Global Illumination, giving the world more atmosphere and better lighting.
+
+Notes;
+- This effect may result in artifacts.
+*/
+{
+    //FxSSGIParameter
+    WriteAsmHook
+    (
+        $@"
+            ;Enable SSGI
+            mov byte ptr [r8], 1
+            
+            ;Set Intensity to 6
+            mov dword ptr [r8+4], 0x41800000
+            
+            ;Enable Albedo
+            mov byte ptr [r8+8], 1
+            
+            ;Enable Parameter
+            mov byte ptr [r8+9], 1
+            
+            ;Enable Denoiser
+            mov byte ptr [r8+12], 1
+            
+            ;Set Ray Length to 6
+            mov dword ptr [r8+16], 0x40C00000
+        ",
+            
+        /* 0x1401EE3FD */
+        ScanSignature
+        (
+            "\x49\x3B\xC2\x0F\x85\x76\x02\x00\x00",
+            "xxxxxxxxx"
+        ),
+            
+        HookBehavior.After
+    );
+}
