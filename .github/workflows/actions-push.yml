@@ -35,7 +35,7 @@ jobs:
         git config --global user.name "hh::dev"
         git checkout -b build
         git rm -r .
-        cp -r build .
+        cp -r build/* .
         git add "*.hmm"
         git commit -m "Update build"
         git push origin build --force
