@@ -33,7 +33,7 @@ jobs:
       run: |
         git config --global user.email "hedge-dev@github.com"
         git config --global user.name "hh::dev"
-        git checkout build
+        git branch build
         git rm -r .
         git add build
         git commit -m "Update build"
