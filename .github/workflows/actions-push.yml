@@ -35,6 +35,6 @@ jobs:
         git config --global user.name "hh::dev"
         git checkout -b build
         git rm -r .
-        git add -A
+        git add build
         git commit -m "Update build"
         git push origin build --force
