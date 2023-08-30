@@ -96,7 +96,7 @@ Library "Converse" by "Hyper & M&M"
         string notifyResult = redirectResult;
         {
             foreach (var action in _converseNotifyActions)
-                notifyResult = action.Invoke(cnvrsKey, notifyResult);
+                notifyResult = action(cnvrsKey, notifyResult);
 
             if (notifyResult != cnvrsText)
                 MarshalString(notifyResult);

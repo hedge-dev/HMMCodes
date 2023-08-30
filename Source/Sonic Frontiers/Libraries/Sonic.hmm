@@ -123,7 +123,7 @@ Library "Sonic" by "Hyper, NM & Ahremic"
             if (gocPlayerVisual == 0)
                 return;
 
-            fpSetAnimation.Invoke(gocPlayerVisual, (long)Marshal.StringToHGlobalAnsi(destination), 0xFE);
+            fpSetAnimation(gocPlayerVisual, (long)Marshal.StringToHGlobalAnsi(destination), 0xFE);
         }
 
         public static void SetAnimationParameter(string paramName, float value)
@@ -156,7 +156,7 @@ Library "Sonic" by "Hyper, NM & Ahremic"
             if (gocPlayerVisual == 0)
                 return;
 
-            fpSetAnimationParameter.Invoke(gocPlayerVisual, (long)Marshal.StringToHGlobalAnsi(paramName), value);
+            fpSetAnimationParameter(gocPlayerVisual, (long)Marshal.StringToHGlobalAnsi(paramName), value);
         }
     }
 
@@ -206,7 +206,7 @@ Library "Sonic" by "Hyper, NM & Ahremic"
             if (sonicContext == 0)
                 return 0;
 
-            return fpGetStatePluginCollision.Invoke(sonicContext);
+            return fpGetStatePluginCollision(sonicContext);
         }
 
         public static long SetCollisionSphere(CollisionType type, float radius)
@@ -234,7 +234,7 @@ Library "Sonic" by "Hyper, NM & Ahremic"
             if (statePluginCollision == 0)
                 return 0;
 
-            return fpSetCollisionSphere.Invoke(statePluginCollision, type, radius);
+            return fpSetCollisionSphere(statePluginCollision, type, radius);
         }
 
         public static void ToggleEntityCollision(bool enabled)
@@ -262,7 +262,7 @@ Library "Sonic" by "Hyper, NM & Ahremic"
             if (sonicContext == 0)
                 return;
             
-            fpToggleEntityCollision.Invoke(sonicContext, enabled);
+            fpToggleEntityCollision(sonicContext, enabled);
         }
     }
 
@@ -309,7 +309,7 @@ Library "Sonic" by "Hyper, NM & Ahremic"
             if (pStatePluginEffect == 0)
                 return;
 
-            fpPlayEffect.Invoke(pStatePluginEffect, StringMapOperation.ComputeHash(handleName), (long)Marshal.StringToHGlobalAnsi(effectName));
+            fpPlayEffect(pStatePluginEffect, StringMapOperation.ComputeHash(handleName), (long)Marshal.StringToHGlobalAnsi(effectName));
         }
 
         public static void StopEffect(string handleName)
@@ -337,7 +337,7 @@ Library "Sonic" by "Hyper, NM & Ahremic"
             if (pStatePluginEffect == 0)
                 return;
 
-            fpPlayEffect.Invoke(pStatePluginEffect, StringMapOperation.ComputeHash(handleName));
+            fpPlayEffect(pStatePluginEffect, StringMapOperation.ComputeHash(handleName));
         }
 
         public static void PlayAnimationEffect(string name)
@@ -365,7 +365,7 @@ Library "Sonic" by "Hyper, NM & Ahremic"
             if (sonicContext == 0)
                 return;
 
-            fpPlayAnimationEffect.Invoke(sonicContext, (long)Marshal.StringToHGlobalAnsi(name));
+            fpPlayAnimationEffect(sonicContext, (long)Marshal.StringToHGlobalAnsi(name));
         }
 
         public static void StopAnimationEffects()
@@ -393,7 +393,7 @@ Library "Sonic" by "Hyper, NM & Ahremic"
             if (sonicContext == 0)
                 return;
 
-            fpStopAnimationEffect.Invoke(sonicContext);
+            fpStopAnimationEffect(sonicContext);
         }
     }
 
@@ -473,7 +473,7 @@ Library "Sonic" by "Hyper, NM & Ahremic"
                     break;
             }
 
-            return Marshal.GetDelegateForFunctionPointer<_tCommonInputDel>(functionPtr).Invoke(sonicContext, actionType);
+            return Marshal.GetDelegateForFunctionPointer<_tCommonInputDel>(functionPtr)(sonicContext, actionType);
         }
 
         public static bool IsPressed(PlayerActionType actionType)
@@ -632,7 +632,7 @@ Library "Sonic" by "Hyper, NM & Ahremic"
 
             int zero = 0;
             
-            return *fpPlaySound.Invoke(pGOCSound, &zero, (long)Marshal.StringToHGlobalAnsi(soundName), 0.0f);
+            return *fpPlaySound(pGOCSound, &zero, (long)Marshal.StringToHGlobalAnsi(soundName), 0.0f);
         }
 
         public static void StopSound(int* pSoundHandle)
@@ -657,7 +657,7 @@ Library "Sonic" by "Hyper, NM & Ahremic"
             if (fpStopSound == null)
                 return;
 
-            fpStopSound.Invoke(pSoundHandle);
+            fpStopSound(pSoundHandle);
         }
     }
 
@@ -909,7 +909,7 @@ Library "Sonic" by "Hyper, NM & Ahremic"
             }
 
             foreach (TStateNotifyAction action in _stateNotifyActions)
-                action.Invoke(_currentStateID, _stateStackTrace.ToArray());
+                action(_currentStateID, _stateStackTrace.ToArray());
 
             if (_discardedStates.Contains((StateID)stateId))
                 return -2;
@@ -996,7 +996,7 @@ Library "Sonic" by "Hyper, NM & Ahremic"
             if (pSonicContext == 0)
                 return 0;
 
-            return fpGetStatePlugin.Invoke(*(long*)(*(long*)(pSonicContext + 0x38) + 0x108), StringMapOperation.ComputeHash(pluginName));
+            return fpGetStatePlugin(*(long*)(*(long*)(pSonicContext + 0x38) + 0x108), StringMapOperation.ComputeHash(pluginName));
         }
 
         public static void AddStateNotifyAction(TStateNotifyAction action)
@@ -1078,7 +1078,7 @@ Library "Sonic" by "Hyper, NM & Ahremic"
             if (sonicContext == 0)
                 return;
 
-            fpSetState.Invoke(Read<long>(sonicContext + 0x38), (int)destination, 0);
+            fpSetState(Read<long>(sonicContext + 0x38), (int)destination, 0);
         }
     }
 }

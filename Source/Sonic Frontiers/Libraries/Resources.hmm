@@ -24,7 +24,7 @@ Library "Resources" by "Hyper"
         _currentResourceType = Marshal.PtrToStringAnsi((IntPtr)pResourceTypeName);
     
     	foreach (TResourceNotifyAction action in _resourceNotifyActions)
-    		pResourceName = (long)Marshal.StringToHGlobalAnsi(action.Invoke(_currentResourceName, _currentResourceType));
+    		pResourceName = (long)Marshal.StringToHGlobalAnsi(action(_currentResourceName, _currentResourceType));
     	
         return pResourceName;
     }
@@ -32,7 +32,7 @@ Library "Resources" by "Hyper"
     UNMANAGED_FUNCTION(long, GetResourceData, long pResourceData)
     {
     	foreach (TResourceDataAction action in _resourceDataActions)
-    		pResourceData = action.Invoke(_currentResourceName, _currentResourceType, pResourceData);
+    		pResourceData = action(_currentResourceName, _currentResourceType, pResourceData);
     
         return pResourceData;
     }

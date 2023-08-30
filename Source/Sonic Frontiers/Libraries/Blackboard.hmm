@@ -39,7 +39,7 @@ Library "Blackboard" by "Hyper, ĐeäTh & Sajid"
 
             var fpGetNameHash = Marshal.GetDelegateForFunctionPointer<_tGetNameHash>(Read<IntPtr>(Read<IntPtr>(blackboardContent) + 1 * IntPtr.Size));
             
-            if (fpGetNameHash.Invoke() == StringMapOperation.ComputeHash(name))
+            if (fpGetNameHash() == StringMapOperation.ComputeHash(name))
             {
                 return (long)blackboardContent;
             }
