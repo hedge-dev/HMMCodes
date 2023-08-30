@@ -8,11 +8,11 @@ on:
     branches: [ "main" ]
 
 permissions:
-  contents: read
+  contents: write
+  
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -28,3 +28,11 @@ jobs:
     - name: Run build
       run: |
         python build.py
+
+    - name: Push to build branch
+      run: |
+        git config --global user.email "hedge-dev@github.com"
+        git config --global user.name "hh::dev"
+        git add build
+        git commit -m "Update build"
+        git push origin build --force
