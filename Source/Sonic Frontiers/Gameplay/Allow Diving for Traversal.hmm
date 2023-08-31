@@ -23,7 +23,20 @@ Code "Allow Diving for Traversal" in "Gameplay" by "WasifBoomz" does "Allows Son
         Sonic.StateID.StateGrindJump,
         Sonic.StateID.StateGrindDoubleJump,
         Sonic.StateID.StateRecoveryJump,
-        Sonic.StateID.StateSpringJumpHeadLand
+        Sonic.StateID.StateSpringJumpHeadLand,
+        Sonic.StateID.StateAvoid,
+        Sonic.StateID.StateAvoidLocal, 
+        Sonic.StateID.StateAvoidToTarget,
+        Sonic.StateID.StateAvoidUpper,
+        Sonic.StateID.StateFan,
+        Sonic.StateID.StateSpinSlash,
+        Sonic.StateID.StateChargeAttack,
+        Sonic.StateID.StateSlingshot,
+        Sonic.StateID.StateSmash,
+        Sonic.StateID.StateHomingAttack,
+        Sonic.StateID.StateHomingFinished,
+        Sonic.StateID.StateHomingRepelled,
+        Sonic.StateID.StateCrossSlash
     };
 
     static Dictionary<Sonic.PlayerActionType, Sonic.StateID> divingStateExits = new Dictionary<Sonic.PlayerActionType, Sonic.StateID>()
