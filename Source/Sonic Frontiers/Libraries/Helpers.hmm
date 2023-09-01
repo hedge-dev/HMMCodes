@@ -1,5 +1,9 @@
-Library "Helpers" by "Hyper" 
+Library "Helpers" by "Hyper"
 {
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
     #define UNMANAGED_FUNCTION(returnType, functionName, ...) \
         [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
         private delegate returnType T##functionName(__VA_ARGS__); \
@@ -17,8 +21,103 @@ Library "Helpers" by "Hyper"
     #define GET_FUNCTION_PTR(functionName) System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<T##functionName>((IntPtr)_addr##functionName)
 
     #define TO_STRING_PTR(str) (long)System.Runtime.InteropServices.Marshal.StringToHGlobalAnsi(str)
+    #define TO_WSTRING_PTR(str) (long)System.Runtime.InteropServices.Marshal.StringToHGlobalUni(str)
+    #define TO_U8STRING_PTR(str) (long)Helpers.StringToCoTaskMemUTF8(str)
 
     #define FROM_STRING_PTR(ptr) System.Runtime.InteropServices.Marshal.PtrToStringAnsi((IntPtr)ptr)
+    #define FROM_WSTRING_PTR(ptr) System.Runtime.InteropServices.Marshal.PtrToStringUni((IntPtr)ptr)
+    #define FROM_U8STRING_PTR(ptr) Helpers.PtrToStringUTF8((IntPtr)ptr)
+
+    // https://github.com/scripthookvdotnet/scripthookvdotnet/blob/main/source/core/StringMarshal.cs
+    /*
+        Copyright (C) 2015 crosire, kagikn
+
+        This software is  provided 'as-is', without any express  or implied  warranty. In no event will the
+        authors be held liable for any damages arising from the use of this software.
+        Permission  is granted  to anyone  to use  this software  for  any  purpose,  including  commercial
+        applications, and to alter it and redistribute it freely, subject to the following restrictions:
+
+        1. The origin of this software must not be misrepresented; you must not claim that you  wrote the
+            original  software. If you use this  software  in a product, an  acknowledgment in the product
+            documentation would be appreciated but is not required.
+        2. Altered source versions must  be plainly  marked as such, and  must not be  misrepresented  as
+            being the original software.
+        3. This notice may not be removed or altered from any source distribution.
+
+        Changes (29/08/2023);
+            - [Hyper] renamed buffer
+            - [Hyper] renamed functions to use uppercase "UTF8"
+            - [Hyper] removed braces to compact code
+            - [Hyper] removed unsafe clauses (HMM always uses unsafe code)
+            - [Hyper] removed static modifiers
+    */
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private static byte[] _bufferStringToCoTaskMemUTF8 = new byte[100];
+
+    public string PtrToStringUTF8(IntPtr ptr)
+    {
+        if (ptr == IntPtr.Zero)
+            return string.Empty;
+
+        byte* data = (byte*)ptr.ToPointer();
+
+        int len = 0;
+        while (data[len] != 0)
+            ++len;
+
+        return PtrToStringUTF8(ptr, len);
+    }
+
+    public string PtrToStringUTF8(IntPtr ptr, int len)
+    {
+        if (len < 0)
+            throw new ArgumentException(null, nameof(len));
+
+        if (ptr == IntPtr.Zero)
+            return null;
+
+        if (len == 0)
+            return string.Empty;
+
+        return Encoding.UTF8.GetString((byte*)ptr.ToPointer(), len);
+    }
+
+    public IntPtr StringToCoTaskMemUTF8(string s)
+    {
+        if (s == null)
+            return IntPtr.Zero;
+
+        int byteCountUtf8 = Encoding.UTF8.GetByteCount(s);
+        if (byteCountUtf8 > _bufferStringToCoTaskMemUTF8.Length)
+            _bufferStringToCoTaskMemUTF8 = new byte[byteCountUtf8 * 2];
+
+        Encoding.UTF8.GetBytes(s, 0, s.Length, _bufferStringToCoTaskMemUTF8, 0);
+
+        IntPtr dest = Marshal.AllocCoTaskMem(byteCountUtf8 + 1);
+        if (dest == IntPtr.Zero)
+            throw new OutOfMemoryException();
+
+        Marshal.Copy(_bufferStringToCoTaskMemUTF8, 0, dest, byteCountUtf8);
+        
+        ((byte*)dest.ToPointer())[byteCountUtf8] = 0;
+
+        return dest;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public List<int> GetSubstringIndices(string str, string substr)
+    {
+        var indices = new List<int>();
+
+        int i = 0;
+        while ((i = str.IndexOf(substr, i)) != -1)
+        {
+            indices.Add(i);
+            i += substr.Length;
+        }
+
+        return indices;
+    }
 }
-
-
