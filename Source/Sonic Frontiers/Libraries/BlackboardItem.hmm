@@ -1,4 +1,4 @@
-Library "BlackboardItem" by "Hyper" 
+Library "BlackboardItem" by "Hyper"
 {
     #lib "Blackboard"
     #lib "GameDocument"
@@ -22,6 +22,14 @@ Library "BlackboardItem" by "Hyper"
         return Blackboard.GetBlackboardContent(blackboard, "BlackboardItem");
     }
 
+    public int GetMaxRingCount(long blackboardItem = 0)
+    {
+        if (blackboardItem == 0 && (blackboardItem = Get()) == 0)
+            return 0;
+
+        return Read<int>(blackboardItem + 0x24);
+    }
+
     public int GetRingCount(long blackboardItem = 0)
     {
         if (blackboardItem == 0 && (blackboardItem = Get()) == 0)
@@ -38,5 +46,3 @@ Library "BlackboardItem" by "Hyper"
         WriteProtected<int>(Get() + 0x28, count);
     }
 }
-
-
