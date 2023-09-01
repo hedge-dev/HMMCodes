@@ -37,7 +37,8 @@ Library "BlackboardStatus" by "Hyper"
         IsAutoRun = 0x0A,
         IsCyberSpace = 0x1D,
         IsPowerBoost = 0x26,
-        IsHeightMapCollision = 0x31
+        IsHeightMapCollision = 0x31,
+        IsBattle = 0x3A
     }
 
     public long Get(long blackboard = 0)
