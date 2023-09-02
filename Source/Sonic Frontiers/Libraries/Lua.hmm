@@ -8,6 +8,7 @@ Library "Lua" by "Hyper & ĐeäTh"
     #lib "Helpers"
     #lib "Logger"
     #lib "Memory"
+    #lib "Resources"
     #lib "StringMapOperation"
 
     // Basic types
