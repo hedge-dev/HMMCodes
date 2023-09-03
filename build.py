@@ -70,5 +70,24 @@ def BuildAll(dir) -> None:
         if os.path.isdir(file):
             BuildFolder(file)
 
+    globalCodeFile = "!Global.hmm"
+
+    if not os.path.isfile("build/" + globalCodeFile):
+        return
+    
+    globalData = ""
+    for file in glob.glob("build/*.hmm"):
+        if os.path.basename(file) == globalCodeFile:
+            with open(file, "r", encoding='utf8') as f:
+                globalData += f.read()
+                globalData += "\n"
+            pass
+        else:
+            with open(file, "a", encoding='utf8') as f:
+                f.write(globalData)
+            pass
+            
+
+
 mkdir("build")
 BuildAll("Source")
