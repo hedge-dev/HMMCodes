@@ -1,9 +1,12 @@
-Library "BlackboardStatus" by "Hyper" 
+Library "BlackboardStatus" by "Hyper"
 {
     #lib "Bitwise"
     #lib "Blackboard"
     #lib "GameDocument"
     #lib "GameObject"
+
+    #define IS_STATE_FLAG(name) (BlackboardStatus.Get() != 0 && (*BlackboardStatus.GetStateFlags() & (1L << (int)BlackboardStatus.StateFlags.name)) != 0)
+    #define IS_WORLD_FLAG(name) (BlackboardStatus.Get() != 0 && (*BlackboardStatus.GetWorldFlags() & (1L << (int)BlackboardStatus.WorldFlags.name)) != 0)
 
     public enum StateFlags
     {
@@ -37,7 +40,8 @@ Library "BlackboardStatus" by "Hyper"
         IsAutoRun = 0x0A,
         IsCyberSpace = 0x1D,
         IsPowerBoost = 0x26,
-        IsHeightMapCollision = 0x31
+        IsHeightMapCollision = 0x31,
+        IsBattle = 0x3A
     }
 
     public long Get(long blackboard = 0)
@@ -92,5 +96,3 @@ Library "BlackboardStatus" by "Hyper"
         return GetFieldPointer(blackboardStatus, 0x38);
     }
 }
-
-
