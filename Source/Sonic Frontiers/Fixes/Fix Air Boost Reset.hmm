@@ -4,7 +4,9 @@ Code "Fix Air Boost Reset" in "Fixes" by "Hyper" does "Allows Sonic to perform a
     #lib "BlackboardStatus"
     #lib "Sonic"
 
-    static Sonic.StateID[] AirBoostStates =
+    using System.Collections.Generic;
+
+    static List<Sonic.StateID> AllowedStates = new()
     {
         Sonic.StateID.StateStompingFlip,
         Sonic.StateID.StateStompingBounce,
@@ -18,15 +20,15 @@ Code "Fix Air Boost Reset" in "Fixes" by "Hyper" does "Allows Sonic to perform a
     void NotifyAirBoostReset(Sonic.StateID stateId, Sonic.StateID[] stateStackTrace)
     {
         // Reset flag for StateAirBoost or StateSpinBoost.
-        if (stateId == Sonic.StateID.StateAirBoost || stateId == Sonic.StateID.StateSpinBoost)
+        if (stateId is Sonic.StateID.StateAirBoost or Sonic.StateID.StateSpinBoost || AllowedStates.Contains(stateStackTrace[0]))
         {
             IsRestoredAirBoost = false;
             return;
         }
 
-        foreach (var restoreState in AirBoostStates)
+        foreach (var state in AllowedStates)
         {
-            if (restoreState == stateId)
+            if (state == stateId)
                 IsRestoredAirBoost = true;
         }
     }
@@ -50,5 +52,3 @@ Code "Fix Air Boost Reset" in "Fixes" by "Hyper" does "Allows Sonic to perform a
         Sonic.State.SetState(Sonic.StateID.StateAirBoost);
     }
 }
-
-
