@@ -1,42 +1,16 @@
-Code "Allow Cyclone Kick for Traversal" in "Gameplay" by "WasifBoomz" does "Allows Sonic to use the Cyclone Kick for traversal by pressing the attack button while holding the jump button." 
+Code "Allow Cyclone Kick for Traversal" in "Gameplay" by "WasifBoomz" does "Allows Sonic to use the Cyclone Kick for traversal by pressing the attack button while holding the jump button."
 //
     #lib "Sonic"
-    #lib "Bitwise"
-    #lib "BlackboardStatus"
-
-    static Sonic.StateID[] enableStates =
-    {
-        Sonic.StateID.StateJump,
-        Sonic.StateID.StateBounceJump,
-        Sonic.StateID.StateGrind,
-        Sonic.StateID.StateSpringJump
-    };
 
     static bool allowChargeAttack = false;
 //
 {
-    if (BlackboardStatus.Get() == 0)
-        return;
-
-    var state = Sonic.State.GetCurrentStateID();
-
-    if (Sonic.IsGrounded())
+    if (Sonic.IsGroundedSpecial())
         allowChargeAttack = true;
 
-    if (Bitwise.Test(*BlackboardStatus.GetStateFlags(), (uint)BlackboardStatus.StateFlags.IsWallClimb))
-        allowChargeAttack = true;
-
-    for (int i = 0; i < enableStates.Length; i++)
-    {
-        if (state == enableStates[i])
-            allowChargeAttack = true;
-    }
-
-    if (allowChargeAttack && Sonic.Input.IsDown(Sonic.PlayerActionType.PlayerJump) && Sonic.Input.IsPressed(Sonic.PlayerActionType.PlayerAttack))
+    if (Sonic.State.GetCurrentStateID() == Sonic.StateID.StateAcceleCombo1 && Sonic.Input.IsDown(Sonic.PlayerActionType.PlayerJump) && !Sonic.IsGroundedSpecial() && allowChargeAttack)
     {
         Sonic.State.SetState(Sonic.StateID.StateChargeAttack);
         allowChargeAttack = false;
     }
 }
-
-
