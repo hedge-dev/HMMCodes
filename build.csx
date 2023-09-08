@@ -26,6 +26,8 @@ if (Failures.Count != 0)
     {
         Console.WriteLine($"- {fail}");
     }
+
+    Environment.Exit(1);
 }
 
 async Task BuildAllFolders(string root)
