@@ -1,4 +1,5 @@
 # Ignore dot folders
 .*/
 [Bb]uild/*
-__pycache__/
+
+!.github/

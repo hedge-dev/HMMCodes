@@ -10,7 +10,7 @@ Library "Reflection" by "Hyper"
     private static Dictionary<string, object> _rflBackups = new();
     private static Dictionary<string, long> _rflPointers = new();
 
-    public class ReflectionInfo<T>
+    public class ReflectionInfo<T> where T : unmanaged
     {
         public string Name;
         public Type Type;
@@ -61,7 +61,7 @@ Library "Reflection" by "Hyper"
     	_isInitialised = true;
     }
 
-    public T* GetDataPtr<T>(string rflName)
+    public T* GetDataPtr<T>(string rflName) where T : unmanaged
     {
     	Init();
 
@@ -88,7 +88,7 @@ Library "Reflection" by "Hyper"
     	return result;
     }
 
-    public ReflectionInfo<T> GetDataInfo<T>(string rflName)
+    public ReflectionInfo<T> GetDataInfo<T>(string rflName) where T : unmanaged
     {
         return new ReflectionInfo<T>(rflName, GetDataPtr<T>(rflName));
     }
