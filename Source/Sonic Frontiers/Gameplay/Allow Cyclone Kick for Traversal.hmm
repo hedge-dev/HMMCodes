@@ -5,12 +5,10 @@ Code "Allow Cyclone Kick for Traversal" in "Gameplay" by "WasifBoomz" does "Allo
     static bool allowChargeAttack = false;
 //
 {
-    Sonic.StateID state = Sonic.State.GetCurrentStateID();
-
     if (Sonic.IsGroundedSpecial())
         allowChargeAttack = true;
 
-    if (state == Sonic.StateID.StateAcceleCombo1 && Sonic.Input.IsDown(Sonic.PlayerActionType.PlayerJump) && !Sonic.IsGroundedSpecial() && allowChargeAttack)
+    if (Sonic.State.GetCurrentStateID() == Sonic.StateID.StateAcceleCombo1 && Sonic.Input.IsDown(Sonic.PlayerActionType.PlayerJump) && !Sonic.IsGroundedSpecial() && allowChargeAttack)
     {
         Sonic.State.SetState(Sonic.StateID.StateChargeAttack);
         allowChargeAttack = false;
