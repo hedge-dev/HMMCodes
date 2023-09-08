@@ -1,6 +1,9 @@
 Library "VectorHelpers" by "Hyper" 
 {
-    public static Quaternion LookRotation(Vector3 forward, Vector3 upwards)
+    #load "System.Numerics.Vectors.dll"
+    using System.Numerics;
+
+    public Quaternion LookRotation(Vector3 forward, Vector3 upwards)
     {
         forward = Vector3.Normalize(forward);
         upwards = Vector3.Normalize(upwards);
