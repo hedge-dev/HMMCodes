@@ -1,0 +1,19 @@
+Code "Keep Speed from Enemy Bounce" in "Physics" by "Weezley"
+//
+    #include "ReflectionHelpers" noemit
+
+    #lib "SonicParameters"
+//
+{
+    var SonicParametersInfo = Reflection.GetDataInfo<SonicParameters.Root>("player_common");
+
+    if (SonicParametersInfo.pData == null)
+        return;
+
+    RFL_SET_CONTEXTUAL_PLAYER_PARAM(SonicParametersInfo, modePackage.spinAttack.jumpForce, 12.0f);
+    RFL_SET_CONTEXTUAL_PLAYER_PARAM(SonicParametersInfo, modePackage.spinAttack.jumpAddForce, 22.0f);
+    RFL_SET_CONTEXTUAL_PLAYER_PARAM(SonicParametersInfo, modePackage.spinAttack.deceleForce, 2.5f);
+    RFL_SET_CONTEXTUAL_PLAYER_PARAM(SonicParametersInfo, modePackage.spinAttack.acceleForce, 2.5f);
+    RFL_SET_CONTEXTUAL_PLAYER_PARAM(SonicParametersInfo, modePackage.spinAttack.brakeForce, 0.5f);
+    RFL_SET_CONTEXTUAL_PLAYER_PARAM(SonicParametersInfo, modePackage.spinAttack.limitSpeedMax, 70.0f);
+}
