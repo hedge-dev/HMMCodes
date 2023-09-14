@@ -1,4 +1,4 @@
-Code "Keep Speed from Enemy Bounce" in "Physics" by "Weezley"
+Code "Retain Velocity from Enemy Bounce" in "Physics" by "Weezley" does "Retains the current velocity when bouncing off of enemies."
 //
     #include "ReflectionHelpers" noemit
 
