@@ -69,17 +69,27 @@ Library "Memory" by "Hyper"
         return addr + Read<int>(addr + 0x03) + 0x07;
     }
 
-    public long ReadJump(long addr)
+    public enum JumpType : sbyte
     {
-        if (addr == 0)
-            return 0;
+        Unknown = -1,
+        ShortCond,
+        NearJmp,
+        NearCond,
+        LongJmp
+    }
 
-        sbyte jmpType = -1;
+    public JumpType ReadJumpOpcode(long addr)
+    {
+        JumpType result = JumpType.Unknown;
+
+        if (addr == 0)
+            return result;
+
         byte opcode = Read<byte>(addr);
 
         if ((opcode & 0xF0) == 0x70)
         {
-            jmpType = 0;
+            result = JumpType.ShortCond;
         }
         else
         {
@@ -87,39 +97,65 @@ Library "Memory" by "Hyper"
             {
                 case 0xE3:
                 case 0xEB:
-                    jmpType = 0;
+                    result = JumpType.ShortCond;
                     break;
 
                 case 0xE9:
-                    jmpType = 1;
+                    result = JumpType.NearJmp;
                     break;
 
                 case 0x0F:
-                    jmpType = 2;
+                    result = JumpType.NearCond;
                     break;
 
                 case 0xFF:
-                    jmpType = 3;
+                    result = JumpType.LongJmp;
                     break;
             }
         }
 
-        switch (jmpType)
+        return result;
+    }
+
+    public long ReadJump(long addr)
+    {
+        if (addr == 0)
+            return 0;
+
+        switch (ReadJumpOpcode(addr))
         {
-            case 0:
+            case JumpType.ShortCond:
                 return addr + Read<byte>(addr + 0x01) + 0x02;
 
-            case 1:
+            case JumpType.NearJmp:
                 return addr + Read<int>(addr + 0x01) + 0x05;
 
-            case 2:
+            case JumpType.NearCond:
                 return addr + Read<int>(addr + 0x02) + 0x06;
 
-            case 3:
+            case JumpType.LongJmp:
                 return Read<long>(addr + 0x06);
         }
 
         return 0;
+    }
+
+    public void WriteForceJump(long addr)
+    {
+        if (addr == 0)
+            return;
+        
+        switch (ReadJumpOpcode(addr))
+        {
+            case JumpType.ShortCond:
+                WriteProtected<byte>(addr, 0xEB);
+                break;
+
+            case JumpType.NearCond:
+                WriteProtected<byte>(addr, 0xE9);
+                WriteProtected<int>(addr + 0x01, Read<int>(addr + 0x02) + 0x01);
+                break;
+        }
     }
 
     public long ReadThunk(long addr, long offset = 0)
@@ -127,5 +163,3 @@ Library "Memory" by "Hyper"
         return ReadJump(ReadCall(addr) + offset);
     }
 }
-
-
