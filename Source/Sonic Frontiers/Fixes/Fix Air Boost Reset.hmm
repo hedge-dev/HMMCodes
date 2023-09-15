@@ -14,13 +14,22 @@ Code "Fix Air Boost Reset" in "Fixes" by "Hyper" does "Allows Sonic to perform a
         Sonic.StateID.StateSpringJump
     }
 
+    static List<Sonic.StateID> DisallowedStates = new()
+    {
+        Sonic.StateID.StateAirBoost,
+        Sonic.StateID.StateCaught,
+        Sonic.StateID.StateSpinBoost
+    }
+
     static bool IsRestoredAirBoost = false;
 //
 {
+    Console.WriteLine(Sonic.State.GetCurrentStateID());
+
     void NotifyAirBoostReset(Sonic.StateID stateId, Sonic.StateID[] stateStackTrace)
     {
         // Reset flag for StateAirBoost or StateSpinBoost.
-        if (stateId is Sonic.StateID.StateAirBoost or Sonic.StateID.StateSpinBoost || AllowedStates.Contains(stateStackTrace[0]))
+        if (DisallowedStates.Contains(stateId) || (AllowedStates.Contains(stateStackTrace[0]) && stateStackTrace[0] != Sonic.StateID.StateSpringJump))
         {
             IsRestoredAirBoost = false;
             return;
