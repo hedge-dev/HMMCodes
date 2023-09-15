@@ -1,0 +1,27 @@
+Patch "Always Unlocked New Game+" in "Cheats" by "Hyper"
+//
+    #lib "Memory"
+//
+{
+    // Always display menu item.
+    Memory.WriteForceJump
+    (
+        /* 0x1409E9BC5 */
+        ScanSignature
+        (
+            "\x0F\x85\x89\x00\x00\x00\x49\x8B\xCF",
+            "xxxxxxxxx"
+        )
+    );
+
+    // Allow any save slot.
+    Memory.WriteForceJump
+    (
+        /* 0x140A050D2 */
+        ScanSignature
+        (
+            "\x0F\x85\x85\x00\x00\x00\xE8",
+            "xxxxxxx"
+        )
+    );
+}
