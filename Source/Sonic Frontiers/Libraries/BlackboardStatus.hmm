@@ -37,6 +37,8 @@ Library "BlackboardStatus" by "Hyper"
 
     public enum WorldFlags
     {
+        IsDead = 0x01,
+        IsDamagedOrRepelled = 0x02,
         IsAutoRun = 0x0A,
         IsCyberSpace = 0x1D,
         IsPowerBoost = 0x26,
