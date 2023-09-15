@@ -1,0 +1,33 @@
+Library "BlackboardBattle" by "Hyper & ĐeäTh"
+{
+    #lib "Blackboard"
+    #lib "GameDocument"
+    #lib "GameObject"
+
+    using System.Runtime.InteropServices;
+    
+    [StructLayout(LayoutKind.Explicit, Size = 0x100, Pack = 0x10)]
+    public struct Data
+    {
+        [FieldOffset(0xAC)] public float PhantomRushCapacity;
+        [FieldOffset(0xB8)] public float QuickCyloopCapacity;
+    }
+
+    public static Data* Get(long blackboard = 0)
+    {
+        if (blackboard == 0)
+        {
+            long sonic = GameDocument.GetGameObject("Sonic");
+            
+            if (sonic == 0)
+                return null;
+
+            blackboard = Blackboard.GetBlackboardFromPlayer(sonic);
+
+            if (blackboard == 0)
+                return null;
+        }
+
+        return (Data*)Blackboard.GetBlackboardContent(blackboard, "BlackboardBattle");
+    }
+}
