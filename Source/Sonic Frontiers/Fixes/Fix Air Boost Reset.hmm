@@ -24,8 +24,6 @@ Code "Fix Air Boost Reset" in "Fixes" by "Hyper" does "Allows Sonic to perform a
     static bool IsRestoredAirBoost = false;
 //
 {
-    Console.WriteLine(Sonic.State.GetCurrentStateID());
-
     void NotifyAirBoostReset(Sonic.StateID stateId, Sonic.StateID[] stateStackTrace)
     {
         // Reset flag for StateAirBoost or StateSpinBoost.
