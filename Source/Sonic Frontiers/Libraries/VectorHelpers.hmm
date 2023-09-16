@@ -1,9 +1,10 @@
 Library "VectorHelpers" by "Hyper" 
 {
-    #load "System.Numerics.Vectors.dll"
+    #load "System.Numerics.dll"
+
     using System.Numerics;
 
-    public Quaternion LookRotation(Vector3 forward, Vector3 upwards)
+    public static Quaternion LookRotation(Vector3 forward, Vector3 upwards)
     {
         forward = Vector3.Normalize(forward);
         upwards = Vector3.Normalize(upwards);
@@ -21,6 +22,9 @@ Library "VectorHelpers" by "Hyper"
 
         return Quaternion.CreateFromRotationMatrix(rotationMatrix);
     }
+
+    public static Quaternion LookRotation(Vector3 forward)
+    {
+        return LookRotation(forward, Vector3.UnitY);
+    }
 }
-
-

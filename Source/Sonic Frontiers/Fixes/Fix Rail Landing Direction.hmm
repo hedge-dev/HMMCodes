@@ -1,0 +1,33 @@
+Code "Fix Rail Landing Direction" in "Fixes" by "Hyper" does "Fixes the player landing in the opposite direction that was being faced prior to landing on a rail."
+//
+    #include "BlackboardStatus" noemit
+
+    #lib "BlackboardStatus"
+    #lib "Sonic"
+    #lib "VectorHelpers"
+
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+
+    static bool _isGrindLand = false;
+
+    static Vector3 _preGrindForward = Vector3.Zero;
+//
+{
+    var kinematics = Sonic.Kinematics.Get();
+
+    if (kinematics == null)
+        return;
+    
+    if (IS_STATE_FLAG(IsGrind) && !_isGrindLand)
+    {
+        *kinematics.Rotation = VectorHelpers.LookRotation(_preGrindForward);
+        _isGrindLand = true;
+    }
+    else
+    {
+        _preGrindForward = Sonic.Kinematics.GetForward();
+        _isGrindLand = false;
+    }
+}
