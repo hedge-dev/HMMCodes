@@ -13,7 +13,7 @@ Library "BlackboardBattle" by "Hyper & ĐeäTh"
         [FieldOffset(0xB8)] public float QuickCyloopCapacity;
     }
 
-    public static Data* Get(long blackboard = 0)
+    public Data* Get(long blackboard = 0)
     {
         if (blackboard == 0)
         {
