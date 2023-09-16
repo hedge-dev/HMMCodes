@@ -4,11 +4,18 @@ Library "Converse" by "Hyper & M&M"
 
     #lib "Memory"
 
+    #load "System.Xml.dll"
+    #load "System.Xml.Linq.dll"
+
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
+    using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
     using System.Text;
     using System.Text.RegularExpressions;
+    using System.Xml;
+    using System.Xml.Linq;
 
     private static bool _isInitialised = false;
 
@@ -31,6 +38,22 @@ Library "Converse" by "Hyper & M&M"
 
     private static sbyte _language = -1;
 
+    public class RedirectedString
+    {
+        public string Key { get; set; }
+
+        public string Value { get; set; }
+
+        public bool IsRawAttributes { get; set; }
+
+        public RedirectedString(string in_key, string in_value, bool in_isRawAttributes = false)
+        {
+            Key = in_key;
+            Value = in_value;
+            IsRawAttributes = in_isRawAttributes;
+        }
+    }
+
     public class ReplacementString
     {
         public string Pattern { get; set; }
@@ -39,19 +62,22 @@ Library "Converse" by "Hyper & M&M"
 
         public bool IsRegex { get; set; }
 
-        public ReplacementString(string in_pattern, string in_replacement, bool in_isRegex)
+        public bool IsRawAttributes { get; set; }
+
+        public ReplacementString(string in_pattern, string in_replacement, bool in_isRegex = false, bool in_isRawAttributes = false)
         {
             Pattern = in_pattern;
             Replacement = in_replacement;
             IsRegex = in_isRegex;
+            IsRawAttributes = in_isRawAttributes;
         }
     }
 
-    private static Dictionary<string, string> _redirectedStrings = new();
+    private static List<RedirectedString> _redirectedStrings = new();
     private static List<ReplacementString> _replacementStrings = new();
 
-    public delegate string TConverseNotifyAction(string key, string text);
-    private static List<TConverseNotifyAction> _converseNotifyActions = new();
+    public delegate string TConverseNotifyAction(string key, string textRaw, string textXml);
+    private static Dictionary<TConverseNotifyAction, bool> _converseNotifyActions = new();
 
     UNMANAGED_FUNCTION(long, RedirectString, long pCnvrsKey, long pCnvrsText, int cnvrsTextLength)
     {
@@ -59,7 +85,7 @@ Library "Converse" by "Hyper & M&M"
             return pCnvrsText;
 
         string cnvrsKey = Marshal.PtrToStringAnsi((IntPtr)pCnvrsKey);
-        string cnvrsText = pCnvrsText == 0 ? string.Empty : Marshal.PtrToStringUni((IntPtr)pCnvrsText);
+        string cnvrsText = pCnvrsText == 0 ? string.Empty : Marshal.PtrToStringUni((IntPtr)pCnvrsText, cnvrsTextLength);
         IntPtr pData = IntPtr.Zero;
 
         void MarshalString(string str)
@@ -86,7 +112,11 @@ Library "Converse" by "Hyper & M&M"
             foreach (var entry in _redirectedStrings)
             {
                 if (entry.Key == cnvrsKey)
-                    redirectResult = entry.Value;
+                {
+                    redirectResult = entry.IsRawAttributes
+                        ? entry.Value
+                        : WriteAttributes(entry.Value);
+                }
             }
 
             if (redirectResult != cnvrsText)
@@ -95,8 +125,13 @@ Library "Converse" by "Hyper & M&M"
 
         string notifyResult = redirectResult;
         {
-            foreach (var action in _converseNotifyActions)
-                notifyResult = action(cnvrsKey, notifyResult);
+            foreach (var entry in _converseNotifyActions)
+            {
+                notifyResult = entry.Key(cnvrsKey, notifyResult, ReadAttributes(notifyResult));
+
+                if (!entry.Value)
+                    notifyResult = WriteAttributes(notifyResult);
+            }
 
             if (notifyResult != cnvrsText)
                 MarshalString(notifyResult);
@@ -104,16 +139,22 @@ Library "Converse" by "Hyper & M&M"
 
         foreach (var entry in _replacementStrings)
         {
-            string replacementResult = notifyResult;
+            string replacementResult = entry.IsRawAttributes
+                ? notifyResult
+                : ReadAttributes(notifyResult);
 
             if (entry.IsRegex)
             {
-                replacementResult = new Regex(entry.Pattern).Replace(notifyResult, entry.Replacement);
+                replacementResult = new Regex(entry.Pattern).Replace(replacementResult, entry.Replacement);
             }
             else
             {
-                replacementResult = notifyResult.Replace(entry.Pattern, entry.Replacement);
+                replacementResult = replacementResult.Replace(entry.Pattern, entry.Replacement);
             }
+
+            replacementResult = entry.IsRawAttributes
+                ? replacementResult
+                : WriteAttributes(replacementResult);
 
             if (replacementResult != cnvrsText)
                 MarshalString(replacementResult);
@@ -250,6 +291,217 @@ Library "Converse" by "Hyper & M&M"
 
         _isInitialised = true;
     }
+    
+    // Puyo Text Editor XML interoperability.
+    /*
+        References;
+            - https://github.com/nickworonekin/puyo-text-editor/blob/main/src/PuyoTextEditor/Text/CnvrsTextEncoding.cs#L27
+            - https://github.com/nickworonekin/puyo-text-editor/blob/main/src/PuyoTextEditor/Text/CnvrsTextEncoding.cs#L105
+    */
+    /*
+        MIT License
+
+        Copyright (c) 2021 Nick Woronekin
+
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+    */
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    public enum AttributeType
+    {
+        Colour = 0xE000,
+        Variable = 0xE001,
+        Image = 0xE005,
+        ColourEnd = 0xE010
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private ushort GetNameLength(ushort value) => (ushort)((((value & 0x0FF0) >> 4) / 2) - 1);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private ushort SetNameLength(int value) => (ushort)((((value + 1) * 2) << 4) & 0x0FF0);
+
+    public string ReadAttributes(string text)
+    {
+        var result = new StringBuilder();
+        var chars = Encoding.Unicode.GetChars(Encoding.Unicode.GetBytes(text));
+
+        for (int i = 0; i < chars.Length; i++)
+        {
+            var c = chars[i];
+
+            switch ((AttributeType)(c & 0xF00F))
+            {
+                case AttributeType.Colour:
+                {
+                    // End
+                    if ((AttributeType)c == AttributeType.ColourEnd)
+                    {
+                        result.Append("</color>");
+                        break;
+                    }
+                    
+                    i++;
+
+                    var nameLength = GetNameLength(c) - 2;
+                    var argb = (uint)(chars[i] << 16 | (chars[i + 1]));
+
+                    i += 2;
+
+                    var name = new string(chars, i, nameLength);
+
+                    result.Append($"<color name=\"{name}\" value=\"{argb.ToString("X8")}\">");
+
+                    i += nameLength;
+
+                    break;
+                }
+                
+                case AttributeType.Variable:
+                {
+                    i++;
+
+                    var nameLength = GetNameLength(c);
+                    var name = new string(chars, i, nameLength);
+
+                    result.Append($"<var name=\"{name}\" />");
+
+                    i += nameLength;
+
+                    break;
+                }
+                
+                case AttributeType.Image:
+                {
+                    i++;
+
+                    var nameLength = GetNameLength(c);
+                    var name = new string(chars, i, nameLength);
+
+                    result.Append($"<image name=\"{name}\" />");
+
+                    i += nameLength;
+
+                    break;
+                }
+
+                default:
+                    result.Append(c);
+                    break;
+            }
+        }
+
+        return result.ToString();
+    }
+
+    public string WriteAttributes(string text, XElement element = null)
+    {
+        var result = new StringBuilder();
+        var root = element ?? XElement.Parse($"<text>{text}</text>");
+
+        foreach (var node in root.Nodes())
+        {
+            if (node is XElement eNode)
+            {
+                switch (eNode.Name.LocalName)
+                {
+                    case "color":
+                    case "colour":
+                    {
+                        var name = eNode.Attribute("name").Value;
+                        var argb = uint.Parse(eNode.Attribute("value").Value, NumberStyles.HexNumber);
+
+                        result.Append((char)(ushort)(0xE000 | SetNameLength(name.Length + 2)));
+                        result.Append((char)(ushort)(argb >> 16));
+                        result.Append((char)(ushort)(argb & 0xFFFF));
+                        result.Append(name.ToCharArray());
+                        result.Append('\0');
+                        result.Append(WriteAttributes(text, eNode));
+                        result.Append((char)(ushort)0xE010);
+
+                        break;
+                    }
+
+                    case "var":
+                    {
+                        var name = eNode.Attribute("name").Value;
+
+                        result.Append((char)(ushort)(0xE001 | SetNameLength(name.Length)));
+                        result.Append(name.ToCharArray());
+                        result.Append('\0');
+
+                        break;
+                    }
+
+                    case "image":
+                    {
+                        var name = eNode.Attribute("name").Value;
+
+                        result.Append((char)(ushort)(0xE005 | SetNameLength(name.Length)));
+                        result.Append(name.ToCharArray());
+                        result.Append('\0');
+
+                        break;
+                    }
+                }
+            }
+            else if (node is XText tNode)
+            {
+                result.Append(tNode.Value.ToCharArray());
+            }
+        }
+
+        return result.ToString();
+    }
+
+    public bool IsAttribute(char c)
+    {
+        var attributes = ((AttributeType[])Enum.GetValues(typeof(AttributeType))).ToList();
+
+        foreach (var attribute in attributes)
+        {
+            if (c == (char)attribute)
+                return true;
+        }
+
+        return false;
+    }
+
+    public string OmitAttributes(string text)
+    {
+        var result = new StringBuilder();
+        var chars = Encoding.Unicode.GetChars(Encoding.Unicode.GetBytes(text));
+
+        for (int i = 0; i < chars.Length; i++)
+        {
+            var c = chars[i];
+
+            if (IsAttribute(c))
+                continue;
+            
+            result.Append(c);
+        }
+
+        return result.ToString();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////
 
     public Language GetCurrentLanguage()
     {
@@ -258,40 +510,48 @@ Library "Converse" by "Hyper & M&M"
         return (Language)_language;
     }
 
-    public void AddConverseNotifyAction(TConverseNotifyAction action)
+    public void AddConverseNotifyAction(TConverseNotifyAction action, bool isRawAttributes = false)
     {
         Init();
 
-        if (_converseNotifyActions.Contains(action))
+        if (_converseNotifyActions.ContainsKey(action))
+        {
+            _converseNotifyActions[action] = isRawAttributes;
             return;
+        }
 
-        _converseNotifyActions.Add(action);
+        _converseNotifyActions.Add(action, isRawAttributes);
     }
 
     public void RemoveConverseNotifyAction(TConverseNotifyAction action)
     {
         Init();
 
-        if (!_converseNotifyActions.Contains(action))
+        if (!_converseNotifyActions.ContainsKey(action))
             return;
 
         _converseNotifyActions.Remove(action);
     }
 
-    public void Redirect(string key, string text)
+    public void Redirect(string key, string text, bool isRawAttributes = false)
     {
         Init();
 
-        if (_redirectedStrings.ContainsKey(key))
+        if (string.IsNullOrEmpty(key))
+            return;
+
+        var first = _redirectedStrings.FirstOrDefault(x => x.Key == key);
+        
+        if (first != null)
         {
-            _redirectedStrings[key] = text;
+            first.Value = text;
             return;
         }
 
-        _redirectedStrings.Add(key, text);
+        _redirectedStrings.Add(new RedirectedString(key, text, isRawAttributes));
     }
 
-    public void Replace(string pattern, string replacement, bool isRegex = false)
+    public void Replace(string pattern, string replacement, bool isRegex = false, bool isRawAttributes = false)
     {
         Init();
 
@@ -316,11 +576,7 @@ Library "Converse" by "Hyper & M&M"
         if (string.IsNullOrEmpty(key))
             return;
         
-        if (_redirectedStrings.ContainsKey(key))
-            _redirectedStrings.Remove(key);
-        
+        _redirectedStrings.RemoveAll(x => x.Key == key);
         _replacementStrings.RemoveAll(x => x.Pattern == key);
     }
 }
-
-
