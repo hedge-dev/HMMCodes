@@ -1,4 +1,7 @@
-Code "59.94 FPS Cap" in "Graphics" by "PTKickass" 
-Write<float>(0x19FD2C, 59.94f)
+Patch "59.94 FPS Cap" in "Graphics" by "PTKickass" 
+static float FPS = 59.94f; 
+
+fixed (float* pFPS = &FPS)
+    WriteProtected<uint>(0xE7B460, (uint)pFPS);
 
 
