@@ -1,0 +1,4 @@
+Code "Unleashed Boost Blur" by "MSCLeap75"
+Write<float>(0x01A43210, (float)1.00857) 
+Write<float>(0x01A431F4, (float)1.00857) 
+Write<float>(0x01A4321C, (float)2.0) 
