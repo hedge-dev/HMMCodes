@@ -1,4 +1,4 @@
-Patch "Disable Traversal Objects in Chests" in "Gameplay" by "Hyper" does 
+Patch "Disable Traversal Objects in Chests" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does 
 /*
 Disables the hidden traversal objects in chests that require cyloop to reveal, making them always accessible.
 

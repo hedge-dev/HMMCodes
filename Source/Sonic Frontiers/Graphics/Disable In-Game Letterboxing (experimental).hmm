@@ -1,4 +1,4 @@
-Patch "Disable In-Game Letterboxing (experimental)" in "Graphics" by "Hyper" does 
+Patch "Disable In-Game Letterboxing (experimental)" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does 
 /*
 Disables letterboxing for in-game cutscenes and Training Simulator.
 

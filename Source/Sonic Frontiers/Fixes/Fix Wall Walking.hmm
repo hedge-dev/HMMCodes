@@ -1,23 +1,22 @@
 Code "Fix Wall Walking" in "Fixes" by "Hyper & Ahremic" does "Prevents the player from being able to walk vertically up walls at low speeds."
 //
-    #lib "Sonic"
+    #lib "Player"
 
     #load "System.Numerics.dll"
 
     using System.Numerics;
 //
 {
-    if (Sonic.State.GetCurrentStateID() != Sonic.StateID.StateRun)
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() != Sonic.StateID.StateRun)
         return;
     
-    var kinematics = Sonic.Kinematics.Get();
+    var kinematics = Player.Kinematics.Get();
     
     if (kinematics == null)
         return;
     
-    if (Vector3.Transform(Vector3.UnitY, *kinematics.Rotation).Y < 0.05f &&
-        kinematics.Velocity->Length() < 14.0f)
+    if (Vector3.Transform(Vector3.UnitY, kinematics->Rotation).Y < 0.05f && Player.Kinematics.GetMagnitude() < 14.0f)
     {
-        Sonic.State.SetState(Sonic.StateID.StateFall);
+        Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateFall);
     }
 }

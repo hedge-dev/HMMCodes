@@ -1,4 +1,4 @@
-Code "Enable Air Tricks in Cyber Space" in "Gameplay" by "WasifBoomz" does 
+Code "Enable Air Tricks in Cyber Space" in "! Incompatible - awaiting fixes for v1.40" by "WasifBoomz" does 
 /*
 Allows Sonic to use the Air Trick skill in Cyber Space.
 
@@ -6,8 +6,9 @@ Notes;
 - This will only work for traversal objects, use the 'Enable Flinging from Terrain in Cyber Space' code to allow Sonic to fling off of terrain.
 */
 //
+    #include "BlackboardStatus" noemit
+
     #lib "Bitwise"
-    #lib "BlackboardStatus"
     #lib "Memory"
 
     static bool isCyber = false;
@@ -117,10 +118,7 @@ Notes;
         isInitialised = true;
     }
 
-    if (BlackboardStatus.Get() == 0)
-        return;
-
-    isCyber = Bitwise.Test(*BlackboardStatus.GetWorldFlags(), (uint)BlackboardStatus.WorldFlags.IsCyberSpace);
+    isCyber = IS_WORLD_FLAG(IsCyberSpace);
 }
 
 

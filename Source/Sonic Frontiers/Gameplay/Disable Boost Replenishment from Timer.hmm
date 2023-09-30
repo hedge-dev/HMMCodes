@@ -1,4 +1,4 @@
-Patch "Disable Boost Replenishment from Timer" in "Gameplay" by "Hyper" does "Prevents the boost gauge from refilling over time." 
+Patch "Disable Boost Replenishment from Timer" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Prevents the boost gauge from refilling over time." 
 {
     WriteNop
     (

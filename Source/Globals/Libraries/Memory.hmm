@@ -1,72 +1,84 @@
-Library "Memory" by "Hyper" 
+Library "Memory" by "Hyper & Sajid" 
 {
     using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Text;
 
-    private static Dictionary<IntPtr, List<byte>> _preservedMemory = new();
+    private static Dictionary<nint, List<byte>> _preservedMemory = new();
 
-    public void Preserve(IntPtr location, long length, bool preserveOnce = true)
+    public void Preserve(nint in_location, nint in_length, bool in_isPreservedOnce = true)
     {
-        if (location == IntPtr.Zero)
+        if (in_location == 0)
             return;
 
-        if (preserveOnce)
+        if (in_isPreservedOnce)
         {
-            if (_preservedMemory.ContainsKey(location))
+            if (_preservedMemory.ContainsKey(in_location))
                 return;
         }
         else
         {
-            if (_preservedMemory.ContainsKey(location))
-                _preservedMemory.Remove(location);
+            if (_preservedMemory.ContainsKey(in_location))
+                _preservedMemory.Remove(in_location);
         }
         
         List<byte> buffer = new();
-        for (long i = 0; i < length; i++)
-            buffer.Add(Read<byte>(location.ToInt64() + i));
+        for (nint i = 0; i < in_length; i++)
+            buffer.Add(Read<byte>(in_location + i));
 
-        _preservedMemory.Add(location, buffer);
+        _preservedMemory.Add(in_location, buffer);
     }
 
-    public void Preserve(long location, long length, bool preserveOnce = true)
+    public void Preserve(long in_location, long in_length, bool in_isPreservedOnce = true)
     {
-        Preserve(new IntPtr(location), length, preserveOnce);
+        Preserve((nint)in_location, (nint)in_length, in_isPreservedOnce);
     }
 
-    public void Restore(IntPtr location)
+    public void Restore(nint in_location)
     {
-        if (location == IntPtr.Zero)
+        if (in_location == 0)
             return;
 
-        if (!_preservedMemory.ContainsKey(location))
+        if (!_preservedMemory.ContainsKey(in_location))
             return;
 
-        long i = 0;
-        foreach (byte b in _preservedMemory[location])
+        nint i = 0;
+        foreach (byte b in _preservedMemory[in_location])
         {
-            WriteProtected<byte>(location.ToInt64() + i, b);
+            WriteProtected<byte>(in_location + i, b);
             i++;
         }
     }
 
-    public void Restore(long location)
+    public void Restore(long in_location)
     {
-        Restore(new IntPtr(location));
+        Restore((nint)in_location);
     }
 
-    public long ReadCall(long addr)
+    public nint ReadCall(nint in_location)
     {
-        if (addr == 0)
+        if (in_location == 0)
             return 0;
 
-        return addr + Read<int>(addr + 0x01) + 0x05;
+        return in_location + Read<int>(in_location + 0x01) + 0x05;
     }
 
-    public long ReadEffectiveAddress(long addr)
+    public long ReadCall(long in_location)
     {
-        if (addr == 0)
+        return (long)ReadCall((nint)in_location);
+    }
+
+    public nint ReadEffectiveAddress(nint in_location)
+    {
+        if (in_location == 0)
             return 0;
 
-        return addr + Read<int>(addr + 0x03) + 0x07;
+        return in_location + Read<int>(in_location + 0x03) + 0x07;
+    }
+
+    public long ReadEffectiveAddress(long in_location)
+    {
+        return (long)ReadEffectiveAddress((nint)in_location);
     }
 
     public enum JumpType : sbyte
@@ -78,14 +90,14 @@ Library "Memory" by "Hyper"
         LongJmp
     }
 
-    public JumpType ReadJumpOpcode(long addr)
+    public JumpType ReadJumpOpcode(nint in_location)
     {
         JumpType result = JumpType.Unknown;
 
-        if (addr == 0)
+        if (in_location == 0)
             return result;
 
-        byte opcode = Read<byte>(addr);
+        byte opcode = Read<byte>(in_location);
 
         if ((opcode & 0xF0) == 0x70)
         {
@@ -117,49 +129,91 @@ Library "Memory" by "Hyper"
         return result;
     }
 
-    public long ReadJump(long addr)
+    public JumpType ReadJumpOpcode(long in_location)
     {
-        if (addr == 0)
+        return ReadJumpOpcode((nint)in_location);
+    }
+
+    public nint ReadJump(nint in_location)
+    {
+        if (in_location == 0)
             return 0;
 
-        switch (ReadJumpOpcode(addr))
+        switch (ReadJumpOpcode(in_location))
         {
             case JumpType.ShortCond:
-                return addr + Read<byte>(addr + 0x01) + 0x02;
+                return in_location + Read<byte>(in_location + 0x01) + 0x02;
 
             case JumpType.NearJmp:
-                return addr + Read<int>(addr + 0x01) + 0x05;
+                return in_location + Read<int>(in_location + 0x01) + 0x05;
 
             case JumpType.NearCond:
-                return addr + Read<int>(addr + 0x02) + 0x06;
+                return in_location + Read<int>(in_location + 0x02) + 0x06;
 
             case JumpType.LongJmp:
-                return Read<long>(addr + 0x06);
+                return (nint)Read<long>(in_location + 0x06);
         }
 
         return 0;
     }
 
-    public void WriteForceJump(long addr)
+    public long ReadJump(long in_location)
     {
-        if (addr == 0)
+        return (long)ReadJump((nint)in_location);
+    }
+
+    public void WriteForceJump(nint in_location)
+    {
+        if (in_location == 0)
             return;
         
-        switch (ReadJumpOpcode(addr))
+        switch (ReadJumpOpcode(in_location))
         {
             case JumpType.ShortCond:
-                WriteProtected<byte>(addr, 0xEB);
+                WriteProtected<byte>(in_location, 0xEB);
                 break;
 
             case JumpType.NearCond:
-                WriteProtected<byte>(addr, 0xE9);
-                WriteProtected<int>(addr + 0x01, Read<int>(addr + 0x02) + 0x01);
+                WriteProtected<byte>(in_location, 0xE9);
+                WriteProtected<int>(in_location + 0x01, Read<int>(in_location + 0x02) + 0x01);
                 break;
         }
     }
 
-    public long ReadThunk(long addr, long offset = 0)
+    public void WriteForceJump(long in_location)
     {
-        return ReadJump(ReadCall(addr) + offset);
+        WriteForceJump((nint)in_location);
+    }
+
+    public nint ReadThunk(nint in_location, nint in_offset = 0)
+    {
+        return ReadJump(ReadCall(in_location) + in_offset);
+    }
+
+    public long ReadThunk(long in_location, long in_offset = 0)
+    {
+        return (long)ReadThunk((nint)in_location, (nint)in_offset);
+    }
+
+    public void WriteString(long in_location, string in_str, Encoding in_encoding)
+    {
+        WriteProtected<byte>(in_location, in_encoding.GetBytes(in_str));
+    }
+
+    public void WriteString(long in_location, string in_str)
+    {
+        WriteString(in_location, in_str, Encoding.ASCII);
+    }
+    
+    public struct Pointer<T> where T : unmanaged
+    {
+        public T* pData;
+
+        public Pointer(T* in_pData)
+        {
+            pData = in_pData;
+        }
+
+        public override string ToString() => $"0x{((long)pData):X}";
     }
 }

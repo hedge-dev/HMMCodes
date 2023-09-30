@@ -1,4 +1,4 @@
-Patch "Disable Photo Mode Camera Collision" in "Camera" by "Hyper" 
+Patch "Disable Photo Mode Camera Collision" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" 
 {
     // Camera position
     WriteProtected<byte>

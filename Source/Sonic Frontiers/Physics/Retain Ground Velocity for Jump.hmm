@@ -8,7 +8,7 @@ Notes;
 */
 //
     #lib "Memory"
-    #lib "Sonic"
+    #lib "Player"
 
     static bool IsInitialised = false;
     static bool IsStateJump = false;
@@ -69,12 +69,14 @@ Notes;
         IsInitialised = true;
     }
 
-    void NotifyStateJump(Sonic.StateID stateId, Sonic.StateID[] stateStackTrace)
+    Sonic.StateID NotifyStateJump(Sonic.StateID in_stateId, Sonic.StateID[] in_stateStackTrace)
     {
-        IsStateJump = stateId == Sonic.StateID.StateJump;
+        IsStateJump = in_stateId == Sonic.StateID.StateJump;
+
+        return in_stateId;
     }
 
-    Sonic.State.AddStateNotifyAction(NotifyStateJump);
+    Player.State.AddStateNotifyAction<Sonic.StateID>(NotifyStateJump);
 }
 
 

@@ -1,4 +1,4 @@
-Patch "Hide Skill Piece Transition" in "UI" by "Hyper" does "Removes the transition when picking up skill pieces to put them into the skill points display." 
+Patch "Hide Skill Piece Transition" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Removes the transition when picking up skill pieces to put them into the skill points display." 
 {
     WriteNop
     (

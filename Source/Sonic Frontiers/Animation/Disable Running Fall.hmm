@@ -1,4 +1,4 @@
-Patch "Disable Running Fall" in "Animation" by "Hyper" does "Disables the animation where Sonic continues running when falling off a platform, forcing him into the proper falling animation." 
+Patch "Disable Running Fall" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Disables the animation where Sonic continues running when falling off a platform, forcing him into the proper falling animation." 
 {
     WriteNop
     (

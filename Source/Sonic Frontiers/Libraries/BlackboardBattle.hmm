@@ -1,33 +1,48 @@
-Library "BlackboardBattle" by "Hyper & ĐeäTh"
+Library "BlackboardBattle" by "Hyper & ĐeäTh" does "Provides access to `app::player::BlackboardBattle` from Sonic Frontiers."
 {
-    #lib "Blackboard"
-    #lib "GameDocument"
-    #lib "GameObject"
+    #import "Blackboard"
 
     using System.Runtime.InteropServices;
     
+    /// <summary>
+    /// A struct representation of `app::player::BlackboardBattle`.
+    /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0x100, Pack = 0x10)]
     public struct Data
     {
-        [FieldOffset(0xAC)] public float PhantomRushCapacity;
-        [FieldOffset(0xB8)] public float QuickCyloopCapacity;
+        /// <summary>
+        /// An instance of `app::player::BlackboardContent`, the base class for `app::player::BlackboardBattle`.
+        /// </summary>
+        [FieldOffset(0)]    public BlackboardContent BlackboardContent;
+
+        /// <summary>
+        /// The value of the Phantom Rush gauge.
+        /// </summary>
+        [FieldOffset(0xAC)] public float PhantomRushAmount;
+
+        /// <summary>
+        /// The value of the Quick Cyloop gauge.
+        /// </summary>
+        [FieldOffset(0xB8)] public float QuickCyloopAmount;
     }
 
-    public Data* Get(long blackboard = 0)
+    /// <summary>
+    /// Gets an instance of `app::player::BlackboardBattle`.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "BlackboardBattle"
+    /// //
+    /// {
+    ///     var pBlackboardBattle = BlackboardBattle.Get();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <returns>A pointer to an instance of `app::player::BlackboardBattle`.</returns>
+    public Data* Get()
     {
-        if (blackboard == 0)
-        {
-            long sonic = GameDocument.GetGameObject("Sonic");
-            
-            if (sonic == 0)
-                return null;
-
-            blackboard = Blackboard.GetBlackboardFromPlayer(sonic);
-
-            if (blackboard == 0)
-                return null;
-        }
-
-        return (Data*)Blackboard.GetBlackboardContent(blackboard, "BlackboardBattle");
+        return (Data*)Blackboard.GetPlayerBlackboardContent("BlackboardBattle");
     }
 }

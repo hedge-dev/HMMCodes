@@ -1,4 +1,4 @@
-Patch "Rebind Quick Restart to Back" in "Gameplay" by "Hyper" does "Rebinds the quick restart command from LT + RT + Back to just pressing the Back button." 
+Patch "Rebind Quick Restart to Back" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Rebinds the quick restart command from LT + RT + Back to just pressing the Back button." 
 {
     // GameModeBattleRush
     WriteProtected<byte>

@@ -8,7 +8,7 @@ Notes;
 - Flinging off of a grind rail will automatically begin tricking.
 */
 //
-    #lib "Sonic"
+    #lib "Player"
 
     static bool BeginFrameCount = false;
 
@@ -21,17 +21,15 @@ Notes;
     }
 //
 {
-    // Current: StateFall, Previous: StateGrind
-    if (Sonic.State.GetCurrentStateID() == Sonic.StateID.StateFall && Sonic.State.GetPreviousStateID() == Sonic.StateID.StateGrind)
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateFall && Player.State.GetPreviousStateID<Sonic.StateID>() == Sonic.StateID.StateGrind)
     {
         // Enter into StateBumpJump when flinging off of grind rails.
-        Sonic.State.SetState(Sonic.StateID.StateBumpJump);
+        Player.State.SetState(Sonic.StateID.StateBumpJump);
     }
 
-    // StateGrindJump
-    if (Sonic.State.GetCurrentStateID() == Sonic.StateID.StateGrindJump)
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateGrindJump)
     {
-        if (Sonic.Input.IsReleased(Sonic.PlayerActionType.PlayerJump))
+        if (Player.Input.IsReleased(Player.InputActionType.PlayerJump))
             BeginFrameCount = true;
 
         if (BeginFrameCount)
@@ -40,7 +38,7 @@ Notes;
         // Provide small frame window to allow for StateGrindDoubleJump.
         if (GrindJumpReleaseFrameCount > 12)
         {
-            Sonic.State.SetState(Sonic.StateID.StateBumpJump);
+            Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateBumpJump);
 
             ResetMembers();
         }

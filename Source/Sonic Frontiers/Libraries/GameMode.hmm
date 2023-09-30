@@ -1,20 +1,16 @@
 Library "GameMode" by "Hyper" 
 {
+    #include "Helpers" noemit
+    
     using System.Runtime.InteropServices;
 
     private static bool _isInitialised = false;
-
-    public enum DestinationMode : sbyte
-    {
-        Unknown = -1,
-        GameModeStage,
-        GameModeCyberStage
-    }
 
     private static sbyte _destinationMode = -1;
     
     private static long _pGameModeName = 0;
 
+    [LibraryInitializer]
     public void Init()
     {
         if (_isInitialised)
@@ -44,7 +40,7 @@ Library "GameMode" by "Hyper"
                     movaps xmmword ptr [rsp + 0x38 + 0xFFFFFFFFFFFFFFE8], xmm6
                 ",
 
-                /* 0x146BEA180 */
+                /* 0x147085410 */
                 ScanSignature
                 (
                     "\x40\x53\x48\x83\xEC\x30\x48\x89\xCB\x0F\x29\x74\x24\x20\x48\x83\xE9\x80\x0F\x28\xF1\xE8\xCC\xCC\xCC\xCC\x48\x85\xC0\x74\x12",
@@ -66,7 +62,7 @@ Library "GameMode" by "Hyper"
                     movsd xmm0, qword ptr [rbx]
                 ",
 
-                /* 0x1401D8EA4 */
+                /* 0x1401FCA94 */
                 ScanSignature
                 (
                     "\xBA\x38\x00\x00\x00\x48\x89\x07",
@@ -88,10 +84,10 @@ Library "GameMode" by "Hyper"
                     lea rcx, qword ptr [rsi + 0x100]
                 ",
 
-                /* 0x147334264 */
+                /* 0x1476CA834 */
                 ScanSignature
                 (
-                    "\x41\xB8\x10\x00\x00\x00\x48\x89\x06\x48\x8D\x8E\x00\x01\x00\x00\x0F\x10\x03\x0F\x11\x86\xE0\x00\x00\x00\x0F\x10\x4B\x10\x0F\x11\x8E\xF0\x00\x00\x00\x48\x8B\x13\xE8\xCC\xCC\xCC\xCC\x4C\x31\x05",
+                    "\x41\xB8\x10\x00\x00\x00\x48\x89\x06\x48\x8D\x8E\x00\x01\x00\x00\x0F\x10\x03\x0F\x11\x86\xE0\x00\x00\x00\x0F\x10\x4B\x10\x0F\x11\x8E\xF0\x00\x00\x00\x48\x8B\x13\xE8\xCC\xCC\xCC\xCC\x44\x89\x05",
                     "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx????xxx"
                 ),
 
@@ -110,10 +106,10 @@ Library "GameMode" by "Hyper"
                     mov qword ptr [rsi + 0x190], rbp
                 ",
 
-                /* 0x147967172 */
+                /* 0x147CB8905 */
                 ScanSignature
                 (
-                    "\x48\x89\x9E\xA8\x01\x00\x00\x31\xED",
+                    "\x48\x89\x9F\xA8\x01\x00\x00\x31\xED",
                     "xxxxxxxxx"
                 ),
 
@@ -136,7 +132,7 @@ Library "GameMode" by "Hyper"
                         mov    rdx, [rax + 0x70]
                     ",
                     
-                    /* 0x14015AAA9 */
+                    /* 0x140170517 */
                     ScanSignature
                     (
                         "\x48\x8B\x47\x10\x0F\x29\x87\x10\x01\x00\x00",
@@ -161,7 +157,7 @@ Library "GameMode" by "Hyper"
                         mov    byte ptr [rax], 0
                     ",
                     
-                    /* 0x140158D07 */
+                    /* 0x14016E547 */
                     ScanSignature
                     (
                         "\x0F\x10\x44\x24\x20\x48\x89\x85\xB0\x00\x00\x00\x66\xC7\x87\x20\x01\x00\x00\x01\x01",
@@ -186,7 +182,7 @@ Library "GameMode" by "Hyper"
                         mov edx, ebx
                     ",
                     
-                    /* 0x140158AD0 */
+                    /* 0x14016E310 */
                     ScanSignature
                     (
                         "\x33\xDB\x48\x8D\x0D\xCC\xCC\xCC\xCC\x8B\xD3",
@@ -201,19 +197,46 @@ Library "GameMode" by "Hyper"
         _isInitialised = true;
     }
 
+    /// <summary>
+    /// Gets the name of the current instance of `app::game::GameMode`.
+    /// </summary>
+    /// <returns>The name of the current instance of `app::game::GameMode`.</returns>
     public string GetName()
     {
-        Init();
-
         if (_pGameModeName == 0)
             return "GameModeUnknown";
 
-        return Marshal.PtrToStringAnsi((IntPtr)_pGameModeName);
+        return FROM_STRING_PTR(_pGameModeName);
     }
 
+    /// <summary>
+    /// Gets the destination game mode when transitioning out of `GameModeTutorial` (Training Simulator).
+    /// </summary>
+    /// <returns>The destination game mode represented by the `DestinationMode` enum.</returns>
     public DestinationMode GetTutorialDestination()
     {
         return (DestinationMode)_destinationMode;
+    }
+
+    /// <summary>
+    /// An enum containing known destination game modes from `GameModeTutorial` (Training Simulator).
+    /// </summary>
+    public enum DestinationMode : sbyte
+    {
+        /// <summary>
+        /// The destination game mode has not been set.
+        /// </summary>
+        Unknown = -1,
+        
+        /// <summary>
+        /// The destination game mode is `GameModeStage` (Island).
+        /// </summary>
+        GameModeStage,
+
+        /// <summary>
+        /// The destination game mode is `GameModeCyberStage` (Cyber Space).
+        /// </summary>
+        GameModeCyberStage
     }
 }
 

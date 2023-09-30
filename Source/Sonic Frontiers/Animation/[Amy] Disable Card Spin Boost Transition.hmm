@@ -1,0 +1,8 @@
+Patch "[Amy] Disable Card Spin Boost Transition" in "Animation" by "Hyper"
+//
+    #lib "Player"
+//
+{
+    Player.State.Redirect<Amy.StateID>(Amy.StateID.AmyStateTarotBuild, Amy.StateID.AmyStateTarotBoost);
+    Player.State.Redirect<Amy.StateID>(Amy.StateID.AmyStateTarotBuildAir, Amy.StateID.AmyStateTarotBoost);
+}

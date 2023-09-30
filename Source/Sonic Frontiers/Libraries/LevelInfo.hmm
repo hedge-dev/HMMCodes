@@ -1,23 +1,52 @@
 Library "LevelInfo" by "Hyper, ĐeäTh & Sajid" 
 {
-    #lib "Collections"
+    #include "Helpers" noemit
+
     #lib "GameDocument"
 
-    public long GetLevelInfo(long gameDocument = 0)
-    {
-        if (gameDocument == 0 && (gameDocument = GameDocument.Get()) == 0)
-            return 0;
+    using System.Runtime.InteropServices;
 
-        return GameDocument.GetService(gameDocument, "LevelInfo");
+    /// <summary>
+    /// A struct representation of `app::level::LevelInfo`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x100)]
+    public struct Data
+    {
+        /// <summary>
+        /// An array of pointers to `app::level::PlayerInformation` instances.
+        /// </summary>
+        [FieldOffset(0xC8)] UNMANAGED_FIXED_ARRAY(PlayerInformation*, PlayerInfo, 1)
     }
-    
-    public long GetPlayerInformation(long levelInfo = 0, int playerIndex = 0)
-    {
-        if (levelInfo == 0 && (levelInfo = GetLevelInfo()) == 0)
-            return 0;
 
-        return Read<long>((levelInfo + 0xC8) + (playerIndex * IntPtr.Size));
+    /// <summary>
+    /// A struct representation of `app::level::PlayerInformation`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x2F0)]
+    public struct PlayerInformation
+    {
+        /// <summary>
+        /// Determines if the current player is grounded.
+        /// </summary>
+        [FieldOffset(0x2EE)] public bool IsGrounded;
+    }
+
+    /// <summary>
+    /// Gets an instance of `app::level::LevelInfo`.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "LevelInfo"
+    /// //
+    /// {
+    ///     var pLevelInfo = LevelInfo.Get();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <returns>A pointer to an instance of `app::level::LevelInfo`.</returns>
+    public Data* Get()
+    {
+        return (Data*)GameDocument.GetService("LevelInfo");
     }
 }
-
-

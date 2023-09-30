@@ -5,9 +5,9 @@ Enters Sonic into a somersault state when landing from a moderate height at a hi
 This state lasts a fraction of a second, but keep in mind that within that time, you will be unable to perform certain actions until the animation is complete.
 */
 //
-    #lib "Bitwise"
-    #lib "BlackboardStatus"
-    #lib "Sonic"
+    #include "BlackboardStatus" noemit
+    
+    #lib "Player"
 
     #load "System.Numerics.dll"
 
@@ -58,62 +58,62 @@ This state lasts a fraction of a second, but keep in mind that within that time,
             );
         }
 
-        void NotifyStateSpringJumpHeadLandDamageCollision(Sonic.StateID stateId, Sonic.StateID[] stateStackTrace)
+        Sonic.StateID NotifyStateSpringJumpHeadLandDamageCollision(Sonic.StateID in_stateId, Sonic.StateID[] in_stateStackTrace)
         {
-            bool isStateSpringJumpHeadLand = stateId == Sonic.StateID.StateSpringJumpHeadLand;
+            bool isStateSpringJumpHeadLand = in_stateId == Sonic.StateID.StateSpringJumpHeadLand;
             
             if (isStateSpringJumpHeadLand)
             {
-                Sonic.Collision.ToggleEntityCollision(false);
+                Player.Collision.SetEntityCollision(false);
             }
-            else if (Sonic.State.GetPreviousStateID() == Sonic.StateID.StateSpringJumpHeadLand)
+            else if (Player.State.GetPreviousStateID<Sonic.StateID>() == Sonic.StateID.StateSpringJumpHeadLand)
             {
-                Sonic.Collision.ToggleEntityCollision(true);
+                Player.Collision.SetEntityCollision(true);
             }
+
+            return in_stateId;
         }
 
-        Sonic.State.AddStateNotifyAction(NotifyStateSpringJumpHeadLandDamageCollision);
+        Player.State.AddStateNotifyAction<Sonic.StateID>(NotifyStateSpringJumpHeadLandDamageCollision);
 
         IsInitialised = true;
     }
 
-    var kinematics = Sonic.Kinematics.Get();
+    var kinematics = Player.Kinematics.Get();
 
     if (kinematics == null)
         return;
 
-    if (Sonic.State.GetCurrentStateID() == Sonic.StateID.StateSpringJumpHeadLand)
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateSpringJumpHeadLand)
     {
-        if (Sonic.Input.IsPressed(Sonic.PlayerActionType.PlayerJump) ||
-            Sonic.Input.IsPressed(Sonic.PlayerActionType.PlayerAttack))
+        if (Player.Input.IsPressed(Player.InputActionType.PlayerJump) ||
+            Player.Input.IsPressed(Player.InputActionType.PlayerAttack))
         {
-            // Exit into StateRun.
-            Sonic.State.SetState(Sonic.StateID.StateRun);
+            Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateRun);
         }
     }
 
-    if (Sonic.IsGrounded())
+    if (Player.Status.IsGrounded())
     {
-        LastGroundedPosition = *kinematics.Position;
+        LastGroundedPosition = kinematics->Position;
 
-        if (!ExitStates.Contains(Sonic.State.GetPreviousStateID()))
+        if (!ExitStates.Contains(Player.State.GetPreviousStateID<Sonic.StateID>()))
             goto Reset;
 
-        if (Sonic.Kinematics.GetHorizontalMagnitude() > 15.0f && HeightFallen >= 5.0f)
+        if (Player.Kinematics.GetHorizontalMagnitude() > 15.0f && HeightFallen >= 5.0f)
         {
-            if (BlackboardStatus.Get() != null && Bitwise.Test(*BlackboardStatus.GetStateFlags(), (uint)BlackboardStatus.StateFlags.IsBoost))
+            if (IS_STATE_FLAG(IsBoost))
             {
                 // Allow StateJump to continue running if we're boosting.
-                if (Sonic.State.GetPreviousStateID() == Sonic.StateID.StateJump)
+                if (Player.State.GetPreviousStateID<Sonic.StateID>() == Sonic.StateID.StateJump)
                     goto Reset;
             }
 
             // Allow StateRecoveryJump to enter StateDropDash.
-            if (Sonic.State.GetPreviousStateID() == Sonic.StateID.StateRecoveryJump && IsRecoveryJumpCharging)
+            if (Player.State.GetPreviousStateID<Sonic.StateID>() == Sonic.StateID.StateRecoveryJump && IsRecoveryJumpCharging)
                 goto Reset;
-
-            // Exit into StateSpringJumpHeadLand.
-            Sonic.State.SetState(Sonic.StateID.StateSpringJumpHeadLand);
+            
+            Player.State.SetState(Sonic.StateID.StateSpringJumpHeadLand);
         }
         
     Reset:
@@ -123,12 +123,12 @@ This state lasts a fraction of a second, but keep in mind that within that time,
     {
         /* Reset position if the player has reached
            apex height and has begun falling again. */
-        if ((LastGroundedPosition.Y - kinematics.Position->Y) < HeightFallen)
+        if ((LastGroundedPosition.Y - kinematics->Position.Y) < HeightFallen)
         {
-            LastGroundedPosition = *kinematics.Position;
+            LastGroundedPosition = kinematics->Position;
         }
 
-        HeightFallen = LastGroundedPosition.Y - kinematics.Position->Y;
+        HeightFallen = LastGroundedPosition.Y - kinematics->Position.Y;
     }
 }
 

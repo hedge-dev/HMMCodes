@@ -1,4 +1,4 @@
-Patch "Disable Photo Mode Orbit Camera (experimental)" in "Camera" by "Hyper" does 
+Patch "Disable Photo Mode Orbit Camera (experimental)" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does 
 /*
 Makes the camera in Photo Mode control more like a first-person camera, rather than orbiting a specific point.
 

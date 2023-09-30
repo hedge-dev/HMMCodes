@@ -8,5 +8,5 @@ Code "Infinite Quick Cyloop Gauge" in "Cheats" by "Hyper"
     if (pBlackboardBattle == null)
         return;
 
-    pBlackboardBattle->QuickCyloopCapacity = 120.0f;
+    pBlackboardBattle->QuickCyloopAmount = 120.0f;
 }

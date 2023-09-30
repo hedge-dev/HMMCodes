@@ -1,4 +1,4 @@
-Patch "Disable Jump Board Paths on Islands" in "Gameplay" by "Hyper" does "Stops Sonic locking to a path when hitting jump boards, allowing him to fling off them like ramps." 
+Patch "Disable Jump Board Paths on Islands" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Stops Sonic locking to a path when hitting jump boards, allowing him to fling off them like ramps." 
 //
     #lib "Memory"
 

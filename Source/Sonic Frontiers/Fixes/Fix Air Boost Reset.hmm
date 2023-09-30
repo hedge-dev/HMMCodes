@@ -1,8 +1,10 @@
-Code "Fix Air Boost Reset" in "Fixes" by "Hyper" does "Allows Sonic to perform another Air Boost after previously using it before performing a homing attack, stomp, or using a spring." 
+Code "Fix Air Boost Reset" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Allows Sonic to perform another Air Boost after previously using it before performing a homing attack, stomp, or using a spring." 
 //
+    #include "BlackboardStatus" noemit
+
     #lib "Bitwise"
     #lib "BlackboardStatus"
-    #lib "Sonic"
+    #lib "Player"
 
     using System.Collections.Generic;
 
@@ -21,41 +23,50 @@ Code "Fix Air Boost Reset" in "Fixes" by "Hyper" does "Allows Sonic to perform a
         Sonic.StateID.StateSpinBoost
     }
 
+    static bool IsInitialised = false;
     static bool IsRestoredAirBoost = false;
 //
 {
-    void NotifyAirBoostReset(Sonic.StateID stateId, Sonic.StateID[] stateStackTrace)
+    if (IsInitialised)
     {
-        // Reset flag for StateAirBoost or StateSpinBoost.
-        if (DisallowedStates.Contains(stateId) || (AllowedStates.Contains(stateStackTrace[0]) && stateStackTrace[0] != Sonic.StateID.StateSpringJump))
+        Sonic.StateID NotifyAirBoostReset(Sonic.StateID in_stateId, Sonic.StateID[] in_stateStackTrace)
         {
-            IsRestoredAirBoost = false;
-            return;
+            // Reset flag for StateAirBoost or StateSpinBoost.
+            if (DisallowedStates.Contains(in_stateId) || (AllowedStates.Contains(in_stateStackTrace[0]) && in_stateStackTrace[0] != Sonic.StateID.StateSpringJump))
+            {
+                IsRestoredAirBoost = false;
+                return in_stateId;
+            }
+
+            foreach (var state in AllowedStates)
+            {
+                if (state == in_stateId)
+                    IsRestoredAirBoost = true;
+            }
+
+            return in_stateId;
         }
 
-        foreach (var state in AllowedStates)
-        {
-            if (state == stateId)
-                IsRestoredAirBoost = true;
-        }
+        Player.State.AddStateNotifyAction<Sonic.StateID>(NotifyAirBoostReset);
+
+        IsInitialised = true;
     }
 
-    Sonic.State.AddStateNotifyAction(NotifyAirBoostReset);
+    var pBlackboardStatus = BlackboardStatus.Get();
 
-    if (BlackboardStatus.Get() != 0)
+    if (pBlackboardStatus != null)
     {
         // Disable restored air boost for Super Sonic.
-        if (BlackboardStatus.IsSuper())
+        if (pBlackboardStatus->IsSuper)
             IsRestoredAirBoost = false;
 
         // Disable restored air boost for diving.
-        if (Bitwise.Test(*BlackboardStatus.GetStateFlags(), (uint)BlackboardStatus.StateFlags.IsDiving))
+        if (IS_STATE_FLAG(IsDiving))
             IsRestoredAirBoost = false;
     }
 
-    if (Sonic.Input.IsPressed(Sonic.PlayerActionType.PlayerBoost) && !Sonic.IsGroundedSpecial() && IsRestoredAirBoost)
+    if (Player.Input.IsPressed(Player.InputActionType.PlayerBoost) && !Player.Status.IsGroundedSpecial() && IsRestoredAirBoost)
     {
-        // Exit into StateAirBoost.
-        Sonic.State.SetState(Sonic.StateID.StateAirBoost);
+        Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateAirBoost);
     }
 }

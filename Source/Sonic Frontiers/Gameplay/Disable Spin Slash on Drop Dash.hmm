@@ -1,4 +1,4 @@
-Patch "Disable Spin Slash on Drop Dash" in "Gameplay" by "Hyper" 
+Patch "Disable Spin Slash on Drop Dash" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" 
 {
     WriteProtected<byte>
     (

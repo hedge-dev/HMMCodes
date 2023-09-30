@@ -1,0 +1,21 @@
+Library "Plugins" by "Hyper"
+{
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `app::player::StatePluginBoost`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit)]
+    public struct StatePluginBoost
+    {
+        /// <summary>
+        /// The maximum amount of boost the player can hold.
+        /// </summary>
+        [FieldOffset(0x38)] public float Capacity;
+
+        /// <summary>
+        /// The current amount of boost for the player.
+        /// </summary>
+        [FieldOffset(0x3C)] public float Amount;
+    }
+}

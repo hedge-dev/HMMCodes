@@ -1,4 +1,4 @@
-Patch "Keep Red Rings on Death" in "Cheats" by "WasifBoomz" does "Prevents you from losing Red Rings after dying in Cyber Space." 
+Patch "Keep Red Rings on Death" in "! Incompatible - awaiting fixes for v1.40" by "WasifBoomz" does "Prevents you from losing Red Rings after dying in Cyber Space." 
 {
     WriteNop
     (

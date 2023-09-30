@@ -1,4 +1,4 @@
-Patch "Infinite Training Simulator Timer" in "Cheats" by "Hyper" does "Allows the timer in Training Simulator to drop below zero and continue uninterrupted." 
+Patch "Infinite Training Simulator Timer" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Allows the timer in Training Simulator to drop below zero and continue uninterrupted." 
 {
     WriteProtected<byte>
     (

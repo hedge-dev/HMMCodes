@@ -1,0 +1,83 @@
+Code "Character Swapper (experimental)" in "Gameplay" by "Hyper, Skyth & Gordon Ramsay" does
+/*
+Allows switching between Sonic, Amy, Knuckles and Tails using hotkeys.
+
+Controller Layout;
+- RS + D-Pad Up - switch to Sonic
+- RS + D-Pad Right - switch to Amy
+- RS + D-Pad Down - switch to Knuckles
+- RS + D-Pad Left - switch to Tails
+
+Keyboard Layout;
+- 1 - switch to Sonic
+- 2 - switch to Amy
+- 3 - switch to Knuckles
+- 4 - switch to Tails
+
+Known issues;
+- Characters other than Sonic will have the lowest stats and an incomplete skill tree.
+*/
+//
+    #lib "Lua"
+    #lib "Player"
+    #lib "XInput"
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    public static extern short GetAsyncKeyState(HMMCodes.Keys vKey);
+
+    static bool _isUpdateCharacter = false;
+
+    static Player.PlayerType _currentCharacter = Player.PlayerType.Unknown;
+    
+    static bool IsButtonDownSpecial(XInput.Buttons buttons)
+    {
+        if (!XInput.IsButtonDown(XInput.Buttons.RIGHT_THUMB))
+            return false;
+
+        return XInput.IsButtonDown(buttons);
+    }
+//
+{
+    Lua.CreateLineHook
+    (
+        @"""sonic"", ""tails"", ""knuckles"", ""amy"", ",
+
+        "script/resident/stagedata.lua",
+
+        @"attrs\s*=\s*\{",
+
+        HookBehavior.After,
+
+        true
+    );
+
+    if ((GetAsyncKeyState(HMMCodes.Keys.D1) & 0x8000) != 0 || IsButtonDownSpecial(XInput.Buttons.DPAD_UP))
+    {
+        _currentCharacter = Player.PlayerType.Sonic;
+        _isUpdateCharacter = true;
+    }
+
+    if ((GetAsyncKeyState(HMMCodes.Keys.D2) & 0x8000) != 0 || IsButtonDownSpecial(XInput.Buttons.DPAD_RIGHT))
+    {
+        _currentCharacter = Player.PlayerType.Amy;
+        _isUpdateCharacter = true;
+    }
+
+    if ((GetAsyncKeyState(HMMCodes.Keys.D3) & 0x8000) != 0 || IsButtonDownSpecial(XInput.Buttons.DPAD_DOWN))
+    {
+        _currentCharacter = Player.PlayerType.Knuckles;
+        _isUpdateCharacter = true;
+    }
+
+    if ((GetAsyncKeyState(HMMCodes.Keys.D4) & 0x8000) != 0 || IsButtonDownSpecial(XInput.Buttons.DPAD_LEFT))
+    {
+        _currentCharacter = Player.PlayerType.Tails;
+        _isUpdateCharacter = true;
+    }
+
+    if (_isUpdateCharacter)
+    {
+        Player.SetPlayerType(_currentCharacter);
+        _isUpdateCharacter = false;
+    }
+}

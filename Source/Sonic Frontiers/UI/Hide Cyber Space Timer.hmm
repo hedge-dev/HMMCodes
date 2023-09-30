@@ -1,4 +1,4 @@
-Patch "Hide Cyber Space Timer" in "UI" by "Hyper" 
+Patch "Hide Cyber Space Timer" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" 
 {
     WriteProtected<byte>
     (

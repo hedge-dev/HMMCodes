@@ -1,0 +1,37 @@
+Library "States" by "Hyper"
+{
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `app::player::StateDoubleJump`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0xC8)]
+    public struct StateDoubleJump
+    {
+        /// <summary>
+        /// The amount of time the Drop Dash has been charged for.
+        /// </summary>
+        [FieldOffset(0xB4)] public float DropDashChargeTimer;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::StateRecoveryJump`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0xC8)]
+    public struct StateRecoveryJump
+    {
+        /// <summary>
+        /// Determines whether the player is charging a Drop Dash.
+        /// </summary>
+        [FieldOffset(0xC4)] public bool IsDropDashCharge;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::StateTailsFly`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0xB8)]
+    public struct StateTailsFly
+    {
+        [FieldOffset(0xA4)] public float FlightDuration;
+    }
+}

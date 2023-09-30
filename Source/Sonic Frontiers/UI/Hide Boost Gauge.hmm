@@ -1,4 +1,4 @@
-Patch "Hide Boost Gauge" in "UI" by "Hyper" 
+Patch "Hide Boost Gauge" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" 
 {
     WriteProtected<byte>
     (

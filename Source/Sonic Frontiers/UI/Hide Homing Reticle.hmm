@@ -1,4 +1,4 @@
-Patch "Hide Homing Reticle" in "UI" by "Hyper" 
+Patch "Hide Homing Reticle" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" 
 {
     // Disable sound and main reticle.
     WriteProtected<byte>

@@ -1,4 +1,4 @@
-Patch "Always Have Power Boost on Islands" in "Cheats" by "SuperSonic16" 
+Patch "Always Have Power Boost on Islands" in "! Incompatible - awaiting fixes for v1.40" by "SuperSonic16" 
 {
     WriteProtected<byte>
     (

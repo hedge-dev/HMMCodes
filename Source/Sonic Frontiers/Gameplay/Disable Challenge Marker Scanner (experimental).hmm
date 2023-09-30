@@ -1,4 +1,4 @@
-Patch "Disable Challenge Marker Scanner (experimental)" in "Gameplay" by "Hyper" does 
+Patch "Disable Challenge Marker Scanner (experimental)" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does 
 /*
 Disables the scanning event and map transition after completing challenges.
 

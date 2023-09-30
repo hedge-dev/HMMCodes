@@ -1,16 +1,19 @@
 Code "Allow Cyclone Kick for Traversal" in "Gameplay" by "WasifBoomz" does "Allows Sonic to use the Cyclone Kick for traversal by pressing the attack button while holding the jump button."
 //
-    #lib "Sonic"
+    #lib "Player"
 
     static bool allowChargeAttack = false;
 //
 {
-    if (Sonic.IsGroundedSpecial())
+    if (Player.GetPlayerType() != Player.PlayerType.Sonic)
+        return;
+
+    if (Player.Status.IsGroundedSpecial())
         allowChargeAttack = true;
 
-    if (Sonic.State.GetCurrentStateID() == Sonic.StateID.StateAcceleCombo1 && Sonic.Input.IsDown(Sonic.PlayerActionType.PlayerJump) && !Sonic.IsGroundedSpecial() && allowChargeAttack)
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateAcceleCombo1 && Player.Input.IsDown(Player.InputActionType.PlayerJump) && !Player.Status.IsGroundedSpecial() && allowChargeAttack)
     {
-        Sonic.State.SetState(Sonic.StateID.StateChargeAttack);
+        Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateChargeAttack);
         allowChargeAttack = false;
     }
 }

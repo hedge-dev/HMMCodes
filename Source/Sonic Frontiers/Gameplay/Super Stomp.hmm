@@ -7,7 +7,7 @@ Idea by Yosho.
 //
     #lib "MathHelpers"
     #lib "Memory"
-    #lib "Sonic"
+    #lib "Player"
 
     #load "System.Numerics.dll"
 
@@ -92,21 +92,21 @@ Idea by Yosho.
         IsInitialised = true;
     }
 
-    var kinematics = Sonic.Kinematics.Get();
+    var kinematics = Player.Kinematics.Get();
 
     if (kinematics == null)
         return;
 
-    if (Sonic.State.GetCurrentStateID() == Sonic.StateID.StateStompingDown)
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateStompingDown)
     {
         if (!IsStompBeginPositionPreserved)
         {
-            StompBeginPosition = *kinematics.Position;
+            StompBeginPosition = kinematics->Position;
 
             IsStompBeginPositionPreserved = true;
         }
         
-        HeightFallen = StompBeginPosition.Y - kinematics.Position->Y;
+        HeightFallen = StompBeginPosition.Y - kinematics->Position.Y;
 
         // 11.0f is the default value for boundStompingCollisionScale.
         Radius = MathHelpers.Clamp(HeightFallen - HeightThreshold, 11.0f, 33.0f);

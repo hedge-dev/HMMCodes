@@ -1,4 +1,4 @@
-Patch "Disable Guardian Music (experimental) (v1.20)" in "! Incompatible - awaiting fixes for v1.30" by "Hyper" does 
+Patch "Disable Guardian Music (experimental)" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does 
 /*
 Disables the music specific to each guardian on the islands.
 

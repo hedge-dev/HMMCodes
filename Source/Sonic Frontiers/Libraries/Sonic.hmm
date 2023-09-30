@@ -1,1086 +1,282 @@
 Library "Sonic" by "Hyper, NM & Ahremic" 
 {
-    #lib "Bitwise"
-    #lib "BlackboardStatus"
-    #lib "Collections"
-    #lib "GameDocument"
-    #lib "GameObject"
-    #lib "LevelInfo"
-    #lib "Memory"
-    #lib "StringMapOperation"
+    #include "Helpers" noemit
 
-    #load "System.Numerics.dll"
+    #import "Collections"
 
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Numerics;
+    #lib "PlayerEffect"
+
     using System.Runtime.InteropServices;
 
-    public long GetSonic()
-    {
-        return GameDocument.GetGameObject("Sonic");
-    }
-
-    public long GetSonicContext(long sonic = 0)
-    {
-        if (sonic == 0 && (sonic = GetSonic()) == 0)
-            return 0;
-
-        return Read<long>(sonic + 0x2E0);
-    }
-
-    public bool IsGrounded()
-    {
-        long playerInfo = LevelInfo.GetPlayerInformation();
-
-        if (playerInfo == 0)
-            return false;
-
-        return Read<bool>(playerInfo + 0x2EE);
-    }
-
-    public bool IsGroundedSpecial()
-    {
-        if (BlackboardStatus.Get() == 0)
-            return true;
-
-        return IsGrounded() ||
-            Bitwise.Test(*BlackboardStatus.GetStateFlags(), (uint)BlackboardStatus.StateFlags.IsGrind) ||
-            Bitwise.Test(*BlackboardStatus.GetStateFlags(), (uint)BlackboardStatus.StateFlags.IsSpringJump) ||
-            Bitwise.Test(*BlackboardStatus.GetStateFlags(), (uint)BlackboardStatus.StateFlags.IsWallClimb);
-    }
-
-    public enum ModePackageType
-    {
-        ForwardView,
-        Water,
-        CyberSpace,
-        SideView
-    }
-
-    public ModePackageType GetModePackageType()
-    {
-		var pSonic = GetSonic();
-
-		if (pSonic == 0)
-			return 0;
-
-		var pPlayerParameter = GameObject.GetGOC(pSonic, "GOCPlayerParameter");
-
-		if (pPlayerParameter == 0)
-			return 0;
-
-		return (ModePackageType)(*(int*)(((long)pPlayerParameter) + 0xB8));
-    }
-
-    public bool IsSideView()
-    {
-		return GetModePackageType() == ModePackageType.SideView;
-    }
-
-    public bool IsUnderwater()
-    {
-		return GetModePackageType() == ModePackageType.Water;
-    }
-
-    public static class Animation
-    {
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate void _tSetAnimation(long gocPlayerVisual, long animationNamePtr, byte a3);
-        private static long _sigSetAnimation = 0;
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate void _tSetAnimationParameter(long gocPlayerVisual, long paramNamePtr, float value);
-        private static long _sigSetAnimationParameter = 0;
-
-        public static void SetAnimation(string destination)
-        {
-            if (_sigSetAnimation == 0)
-            {
-                /* 0x1408122E0 */
-                _sigSetAnimation = ScanSignature
-                (
-                    "\x40\x53\x48\x83\xEC\x20\xF6\x81\x78\x01\x00\x00\x10\x48\x8B\xDA",
-                    "xxxxxxxxxxxxxxxx"
-                );
-
-                if (_sigSetAnimation == 0)
-                    return;
-            }
-
-            var fpSetAnimation = Marshal.GetDelegateForFunctionPointer<_tSetAnimation>((IntPtr)_sigSetAnimation);
-
-            if (fpSetAnimation == null)
-                return;
-
-            long sonic = GetSonic();
-
-            if (sonic == 0)
-                return;
-
-            long gocPlayerVisual = GameObject.GetGOC(sonic, "GOCPlayerVisual");
-
-            if (gocPlayerVisual == 0)
-                return;
-
-            fpSetAnimation(gocPlayerVisual, (long)Marshal.StringToHGlobalAnsi(destination), 0xFE);
-        }
-
-        public static void SetAnimationParameter(string paramName, float value)
-        {
-            if (_sigSetAnimationParameter == 0)
-            {
-                /* 0x140813140 */
-                _sigSetAnimationParameter = ScanSignature
-                (
-                    "\x40\x53\x48\x83\xEC\x30\x48\x8B\x81\x10\x01\x00\x00\x48\x8B\xDA",
-                    "xxxxxxxxxxxxxxxx"
-                );
-
-                if (_sigSetAnimationParameter == 0)
-                    return;
-            }
-
-            var fpSetAnimationParameter = Marshal.GetDelegateForFunctionPointer<_tSetAnimationParameter>((IntPtr)_sigSetAnimationParameter);
-
-            if (fpSetAnimationParameter == null)
-                return;
-
-            long sonic = GetSonic();
-
-            if (sonic == 0)
-                return;
-
-            long gocPlayerVisual = GameObject.GetGOC(sonic, "GOCPlayerVisual");
-
-            if (gocPlayerVisual == 0)
-                return;
-
-            fpSetAnimationParameter(gocPlayerVisual, (long)Marshal.StringToHGlobalAnsi(paramName), value);
-        }
-    }
-
-    public enum CollisionType : byte
-    {
-        Default,
-        Damage = 2,
-        DamageHoming = 3
-    }
-
-    public static class Collision
-    {
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate long _tGetStatePluginCollision(long sonicContext);
-        private static long _sigGetStatePluginCollision = 0;
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate long _tSetCollisionSphere(long statePluginCollision, CollisionType type, float radius);
-        private static long _sigSetCollisionSphere = 0;
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate void _tToggleEntityCollision(long sonicContext, bool enabled);
-        private static long _sigToggleEntityCollision = 0;
-
-        public static long GetPlugin()
-        {
-            if (_sigGetStatePluginCollision == 0)
-            {
-                /* 0x14086A0B0 */
-                _sigGetStatePluginCollision = ScanSignature
-                (
-                    "\x40\x56\x48\x83\xEC\x20\x48\x8B\x41\x38\x48\x8B\xB0\x08\x01\x00\x00\x48\x85\xF6\x74\x65\x48\x8B\x46\x20\x48\x89\x5C\x24\x30\x48\x8B\x5E\x18\x48\x89\x7C\x24\x38\x48\x8D\x3C\xC3\x48\x3B\xDF\x74\x19\x48\x8B\x0B\x48\x8B\x01\xFF\x50\xCC\x3D\x8E\xB4\x47\x3B",
-                    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx?xxxxx"
-                );
-
-                if (_sigGetStatePluginCollision == 0)
-                    return 0;
-            }
-
-            var fpGetStatePluginCollision = Marshal.GetDelegateForFunctionPointer<_tGetStatePluginCollision>((IntPtr)_sigGetStatePluginCollision);
-
-            if (fpGetStatePluginCollision == null)
-                return 0;
-
-            long sonicContext = GetSonicContext();
-
-            if (sonicContext == 0)
-                return 0;
-
-            return fpGetStatePluginCollision(sonicContext);
-        }
-
-        public static long SetCollisionSphere(CollisionType type, float radius)
-        {
-            if (_sigSetCollisionSphere == 0)
-            {
-                /* 0x1408ED200 */
-                _sigSetCollisionSphere = ScanSignature
-                (
-                    "\x40\x53\x48\x83\xEC\x50\x0F\x28\x05\xCC\xCC\xCC\xCC\x48\x8B\xD9\x88\x54\x24\x20",
-                    "xxxxxxxxx????xxxxxxx"
-                );
-
-                if (_sigSetCollisionSphere == 0)
-                    return 0;
-            }
-
-            var fpSetCollisionSphere = Marshal.GetDelegateForFunctionPointer<_tSetCollisionSphere>((IntPtr)_sigSetCollisionSphere);
-
-            if (fpSetCollisionSphere == null)
-                return 0;
-
-            long statePluginCollision = GetPlugin();
-
-            if (statePluginCollision == 0)
-                return 0;
-
-            return fpSetCollisionSphere(statePluginCollision, type, radius);
-        }
-
-        public static void ToggleEntityCollision(bool enabled)
-        {
-            if (_sigToggleEntityCollision == 0)
-            {
-                /* 0x14BB87C00 */
-                _sigToggleEntityCollision = ScanSignature
-                (
-                    "\x40\x53\x48\x83\xEC\x20\x48\x8B\x41\x50\x0F\xB6\xDA",
-                    "xxxxxxxxxxxxx"
-                );
-
-                if (_sigToggleEntityCollision == 0)
-                    return;
-            }
-
-            var fpToggleEntityCollision = Marshal.GetDelegateForFunctionPointer<_tToggleEntityCollision>((IntPtr)_sigToggleEntityCollision);
-
-            if (fpToggleEntityCollision == null)
-                return;
-
-            long sonicContext = GetSonicContext();
-
-            if (sonicContext == 0)
-                return;
-            
-            fpToggleEntityCollision(sonicContext, enabled);
-        }
-    }
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static class Effect
     {
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate bool _tPlayAnimationEffect(long pSonicContext, long effectName);
-        private static long _sigPlayAnimationEffect = 0;
+        /* 0x1407ED9FC */
+        private static long _sigGetSonicEffectCyloopVisualModel = ScanSignature("\xE8\xCC\xCC\xCC\xCC\x48\x85\xC0\x74\x12\x41\x0F\x2F\xF0", "x????xxxxxxxxx");
+        FUNCTION_PTR(long, fpGetSonicEffectCyloopVisualModel, Memory.ReadCall(_sigGetSonicEffectCyloopVisualModel), ref SonicEffectCyloop in_pSonicEffectCyloop, int in_index)
 
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate long _tStopAnimationEffects(long sonicContext);
-        private static long _sigStopAnimationEffects = 0;
+        /* 0x1407EDA13 */
+        private static long _sigSetVisualModelVisibility = ScanSignature("\xE8\xCC\xCC\xCC\xCC\x0F\x28\x74\x24\x60\x44\x0F\x28\x44\x24\x40\x48\x83\x7D\x50\x00", "x????xxxxxxxxxxxxxxxx");
+        FUNCTION_PTR(bool, fpSetVisualModelVisibility, Memory.ReadCall(_sigSetVisualModelVisibility), long in_pVisualModel, bool in_isVisible, byte in_unk1)
 
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate long _tPlayEffect(long pStatePluginEffect, uint handleNameHash, long pEffectName);
-        private static long _sigPlayEffect = 0;
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate long _tStopEffect(long pStatePluginEffect, uint handleNameHash);
-        private static long _sigStopEffect = 0;
-
-        public static void PlayEffect(string handleName, string effectName)
+        /// <summary>
+        /// A struct representation of `app::player::SonicEffectCyloop`.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit, Size = 0xC8)]
+        public struct SonicEffectCyloop
         {
-            if (_sigPlayEffect == 0)
-            {
-                /* 0x1408DF420 */
-                _sigPlayEffect = ScanSignature
-                (
-                    "\x48\x8B\xC4\x48\x89\x58\x08\x48\x89\x68\x18\x48\x89\x70\x20\x57\x48\x81\xEC\xA0\x00\x00\x00\xF3",
-                    "xxxxxxxxxxxxxxxxxxxxxxxx"
-                );
-
-                if (_sigPlayEffect == 0)
-                    return;
-            }
-
-            var fpPlayEffect = Marshal.GetDelegateForFunctionPointer<_tPlayEffect>((IntPtr)_sigPlayEffect);
-
-            if (fpPlayEffect == null)
-                return;
-
-            long pStatePluginEffect = State.GetStatePlugin("StatePluginEffect");
-
-            if (pStatePluginEffect == 0)
-                return;
-
-            fpPlayEffect(pStatePluginEffect, StringMapOperation.ComputeHash(handleName), (long)Marshal.StringToHGlobalAnsi(effectName));
-        }
-
-        public static void StopEffect(string handleName)
-        {
-            if (_sigStopEffect == 0)
-            {
-                /* 0x14B912E80 */
-                _sigStopEffect = ScanSignature
-                (
-                    "\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x8B\x41\x30\x48\x8D",
-                    "xxxxxxxxxxxxxxxx"
-                );
-
-                if (_sigStopEffect == 0)
-                    return;
-            }
-
-            var fpPlayEffect = Marshal.GetDelegateForFunctionPointer<_tStopEffect>((IntPtr)_sigStopEffect);
-
-            if (fpPlayEffect == null)
-                return;
-
-            long pStatePluginEffect = State.GetStatePlugin("StatePluginEffect");
-
-            if (pStatePluginEffect == 0)
-                return;
-
-            fpPlayEffect(pStatePluginEffect, StringMapOperation.ComputeHash(handleName));
-        }
-
-        public static void PlayAnimationEffect(string name)
-        {
-            if (_sigPlayAnimationEffect == 0)
-            {
-                /* 0x140901E20 */
-                _sigPlayAnimationEffect = ScanSignature
-                (
-                    "\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x48\x8B\xF2\x48\x8B\xF9\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD8",
-                    "xxxxxxxxxxxxxxxxxxxxxx????xxx"
-                );
-
-                if (_sigPlayAnimationEffect == 0)
-                    return;
-            }
-
-            var fpPlayAnimationEffect = Marshal.GetDelegateForFunctionPointer<_tPlayAnimationEffect>((IntPtr)_sigPlayAnimationEffect);
-
-            if (fpPlayAnimationEffect == null)
-                return;
-
-            long sonicContext = GetSonicContext();
-
-            if (sonicContext == 0)
-                return;
-
-            fpPlayAnimationEffect(sonicContext, (long)Marshal.StringToHGlobalAnsi(name));
-        }
-
-        public static void StopAnimationEffects()
-        {
-            if (_sigStopAnimationEffects == 0)
-            {
-                /* 0x14BC65500 */
-                _sigStopAnimationEffects = ScanSignature
-                (
-                    "\x40\x53\x48\x83\xEC\x20\x48\x89\xCB\xE8\xCC\xCC\xCC\xCC\x48\x85\xC0",
-                    "xxxxxxxxxx????xxx"
-                );
-
-                if (_sigStopAnimationEffects == 0)
-                    return;
-            }
-
-            var fpStopAnimationEffect = Marshal.GetDelegateForFunctionPointer<_tStopAnimationEffects>((IntPtr)_sigStopAnimationEffects);
-
-            if (fpStopAnimationEffect == null)
-                return;
-
-            long sonicContext = GetSonicContext();
-
-            if (sonicContext == 0)
-                return;
-
-            fpStopAnimationEffect(sonicContext);
-        }
-    }
-
-    public enum PlayerActionType
-    {
-        PlayerJump = 0,             // A
-        PlayerCyloop = 1,           // Y
-        PlayerAttack = 2,           // X
-        PlayerLightDash = 3,        // LS
-        PlayerBoost = 4,            // RT
-        PlayerDrift = 5,            // Unknown
-        PlayerChangeSuperSonic = 6, // Unknown
-        PlayerLeftStep = 7,         // LB
-        PlayerRightStep = 8,        // RB
-        PlayerStomping = 9,         // B
-        PlayerAction = 10,          // Unknown
-        PlayerActionAlways = 11,    // Unknown
-        PlayerSmash = 12,           // Unknown
-        CameraGaze = 13,            // RS
-        PlayerSonicboom = 14        // LT
-    }
-
-    public static class Input
-    {
-        private enum ButtonState
-        {
-            Pressed,
-            Down,
-            Released
-        }
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate bool _tCommonInputDel(long sonicContext, PlayerActionType actionType);
-
-        /* 0x1408F6400 */
-        private static long _sigIsPressed = ScanSignature
-        (
-            "\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x63\xFA\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD8\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD0\x48\x8B\xCB\xE8\xCC\xCC\xCC\xCC\x48\x8B\x5C\x24\x30\x48\x8B\x80\x90\x00\x00\x00\x48\x8B\x48\x78\x0F\xB6\x44\xF9\x07\xD0",
-            "xxxxxxxxxxxxxx????xxxx????xxxxxxx????xxxxxxxxxxxxxxxxxxxxxx"
-        );
-        
-        /* 0x1408F65D0 */
-        private static long _sigIsDown = ScanSignature
-        (
-            "\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x63\xFA\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD8\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD0\x48\x8B\xCB\xE8\xCC\xCC\xCC\xCC\x48\x8B\x5C\x24\x30\x48\x8B\x80\x90\x00\x00\x00\x48\x8B\x48\x78\x0F\xB6\x44\xF9\x07\xF6",
-            "xxxxxxxxxxxxxx????xxxx????xxxxxxx????xxxxxxxxxxxxxxxxxxxxxx"
-        );
-
-        /* 0x1408F6580 */
-        private static long _sigIsReleased = ScanSignature
-        (
-            "\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x63\xFA\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD8\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD0\x48\x8B\xCB\xE8\xCC\xCC\xCC\xCC\x48\x8B\x5C\x24\x30\x48\x8B\x80\x90\x00\x00\x00\x48\x8B\x48\x78\x0F\xB6\x44\xF9\x07\xC0",
-            "xxxxxxxxxxxxxx????xxxx????xxxxxxx????xxxxxxxxxxxxxxxxxxxxxx"
-        );
-
-        private static bool CheckButtonState(ButtonState buttonState, PlayerActionType actionType)
-        {
-            long sonicContext = GetSonicContext();
-
-            if (sonicContext == 0)
-                return false;
-
-            IntPtr functionPtr = IntPtr.Zero;
-
-            switch (buttonState)
-            {
-                case ButtonState.Pressed:
-                    functionPtr = (IntPtr)_sigIsPressed;
-                    break;
-
-                case ButtonState.Down:
-                    functionPtr = (IntPtr)_sigIsDown;
-                    break;
-
-                case ButtonState.Released:
-                    functionPtr = (IntPtr)_sigIsReleased;
-                    break;
-            }
-
-            return Marshal.GetDelegateForFunctionPointer<_tCommonInputDel>(functionPtr)(sonicContext, actionType);
-        }
-
-        public static bool IsPressed(PlayerActionType actionType)
-        {
-            return CheckButtonState(ButtonState.Pressed, actionType);
-        }
-
-        public static bool IsDown(PlayerActionType actionType)
-        {
-            return !CheckButtonState(ButtonState.Down, actionType);
-        }
-
-        public static bool IsReleased(PlayerActionType actionType)
-        {
-            return CheckButtonState(ButtonState.Released, actionType);
-        }
-    }
-
-    public class Kinematics
-    {
-        public Vector3* Position;
-        public Quaternion* Rotation;
-        public Vector3* Velocity;
-
-        public Kinematics(long gocPlayerKinematicParams)
-        {
-            Position = (Vector3*)(gocPlayerKinematicParams + 0x80);
-            Rotation = (Quaternion*)(gocPlayerKinematicParams + 0x90);
-            Velocity = (Vector3*)(gocPlayerKinematicParams + 0xD0);
-        }
-
-        public static Kinematics Get()
-        {
-            long sonic = GetSonic();
-
-            if (sonic == 0)
-                return null;
-
-            long gocPlayerKinematicParams = GameObject.GetGOC(sonic, "GOCPlayerKinematicParams");
-
-            if (gocPlayerKinematicParams == 0)
-                return null;
-
-            return new Kinematics(gocPlayerKinematicParams);
-        }
-
-        public static Vector3 GetForward()
-        {
-            Kinematics k = Get();
-
-            if (k == null)
-                return Vector3.Zero;
-
-            return Vector3.Transform(new Vector3(0.0f, 0.0f, 1.0f), Quaternion.Normalize(*k.Rotation));
-        }
-
-        public static float GetHorizontalMagnitude()
-        {
-            Kinematics k = Get();
-
-            if (k == null)
-                return 0.0f;
-
-            Vector3* velocity = k.Velocity;
-
-            if (velocity == null)
-                return 0.0f;
-
-            return (float)Math.Sqrt(velocity->X * velocity->X + velocity->Z * velocity->Z);
-        }
-    }
-
-    public static class Message
-    {
-        private static bool _initialised = false;
-        private static int _currentMessageID = -1;
-
-        private static void Init()
-        {
-            if (_initialised)
-                return;
-
-            fixed (int* p_currentMessageID = &_currentMessageID)
-            {
-                WriteAsmHook
-                (
-                    $@"
-                        mov    eax, [rdx + 8]
-                        mov    r14, {(long)p_currentMessageID}
-                        mov    dword ptr [r14], eax
-                        mov    r14, rdx
-                        movaps xmmword ptr [rsp + 0x260 + 0xFFFFFFFFFFFFFFD0], xmm6
-                    ",
-
-                    /* 0x140864C1B */
-                    ScanSignature
-                    (
-                        "\x8B\x42\x08\x4C\x8B\xF2\x0F\x29\xB4\x24\x30\x02\x00\x00",
-                        "xxxxxxxxxxxxxx"
-                    ),
-
-                    HookBehavior.Replace
-                );
-            }
-
-            _initialised = true;
-        }
-
-        public static int GetMessageID()
-        {
-            Init();
-
-            return _currentMessageID;
-        }
-    }
-
-    public static class Sound
-    {
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate int* _tPlaySound(long pGOCSound, int* a2, long pSoundName, float a4);
-        private static long _sigPlaySound = 0;
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate int* _tStopSound(int* pSoundHandle);
-        private static long _sigStopSound = 0;
-
-        public static int PlaySound(string soundName)
-        {
-            if (_sigPlaySound == 0)
-            {
-                /* 0x140AE69F0 */
-                _sigPlaySound = ScanSignature
-                (
-                    "\x4C\x8B\xDC\x49\x89\x5B\x08\x57\x48\x81\xEC\x80\x00\x00\x00",
-                    "xxxxxxxxxxxxxxx"
-                );
-
-                if (_sigPlaySound == 0)
-                    return 0;
-            }
-
-            var fpPlaySound = Marshal.GetDelegateForFunctionPointer<_tPlaySound>((IntPtr)_sigPlaySound);
-
-            if (fpPlaySound == null)
-                return 0;
-
-            long pSonic = GetSonic();
-
-            if (pSonic == 0)
-                return 0;
-
-            long pGOCSound = GameObject.GetGOC(pSonic, "GOCSound");
-
-            if (pGOCSound == 0)
-                return 0;
-
-            int zero = 0;
+            /// <summary>
+            /// An instance of `app::player::PlayerEffect`, the base class for `app::player::SonicEffectCyloop`.
+            /// </summary>
+            [FieldOffset(0)]    public PlayerEffect.Data PlayerEffect;
             
-            return *fpPlaySound(pGOCSound, &zero, (long)Marshal.StringToHGlobalAnsi(soundName), 0.0f);
+            /// <summary>
+            /// Determines if the visual model should update locally within `app::player::SonicEffectCyloop` or externally.
+            /// </summary>
+            [FieldOffset(0xC0)] public bool IsLocalVisualModelUpdate;
         }
 
-        public static void StopSound(int* pSoundHandle)
+        /// <summary>
+        /// Sets whether the Cyloop aura should be rendered.
+        /// </summary>
+        /// <param name="in_isEnabled">Determines whether the aura should render - setting this to false uses default behaviour.</param>
+        public static void SetCyloopAuraVisibility(bool in_isEnabled)
         {
-            if (_sigStopSound == 0)
-            {
-                /* 0x1405A90FF */
-                _sigStopSound = ScanSignature
-                (
-                    "\xE8\xCC\xCC\xCC\xCC\x48\x8B\xCF\xE8\xCC\xCC\xCC\xCC\x33\xD2\x48\x8B\xCF\xF3\x0F\x10\x90\x90\x00\x00\x00",
-                    "x????xxxx????xxxxxxxxxxxxx"
-                );
-
-                if (_sigStopSound == 0)
-                    return;
-
-                _sigStopSound = Memory.ReadCall(_sigStopSound);
-            }
-
-            var fpStopSound = Marshal.GetDelegateForFunctionPointer<_tStopSound>((IntPtr)_sigStopSound);
-
-            if (fpStopSound == null)
+            var pSonicEffectCyloop = PlayerEffect.Get<SonicEffectCyloop>();
+            
+            if (pSonicEffectCyloop == null)
                 return;
 
-            fpStopSound(pSoundHandle);
+            var pVisualModel = GET_FUNCTION_PTR(fpGetSonicEffectCyloopVisualModel)(ref *pSonicEffectCyloop, 4);
+
+            if (pVisualModel == 0)
+                return;
+
+            pSonicEffectCyloop->IsLocalVisualModelUpdate = !in_isEnabled;
+
+            GET_FUNCTION_PTR(fpSetVisualModelVisibility)(pVisualModel, in_isEnabled, 0);
         }
     }
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /// <summary>
+    /// An enum containing all of Sonic's state IDs.
+    /// </summary>
     public enum StateID : int
     {
         Default = -1,
-        StateAcceleCombo1 = 146,           // StateAttackRoot
-        StateAcceleCombo2 = 147,           // StateAttackRoot
-        StateAquaBallJump = 119,
-        StateAquaBallStand = 118,
-        StateAquaBallStomping = 120,
-        StateAttackRoot = 131,
-        StateAuraTrain = 188,
-        StateAvoid = 137,
-        StateAvoidLocal = 140,
-        StateAvoidToTarget = 139,
-        StateAvoidUpper = 138,
-        StateAwakening = 26,
-        StateBallMove = 169,
-        StateBaseJump = 101,
-        StateBatterBox = 200,
-        StateBattleStart = 155,
-        StateBoarding = 180,
-        StateBossCounter = 156,
+        StateAcceleCombo1 = 149,        // StateAttackRoot
+        StateAcceleCombo2 = 150,        // StateAttackRoot
+        StateAquaBallJump = 121,
+        StateAquaBallStand = 120,
+        StateAquaBallStomping = 122,
+        StateAttackRoot = 134,
+        StateAuraTrain = 191,
+        StateAvoid = 140,
+        StateAvoidLocal = 143,
+        StateAvoidToTarget = 142,
+        StateAvoidUpper = 141,
+        StateAwakening = 27,
+        StateBallMove = 172,
+        StateBaseJump = 102,
+        StateBatterBox = 203,
+        StateBattleStart = 158,
+        StateBoarding = 183,
+        StateBossCounter = 159,
         StateBrake = 6,
         StateBrakeNeutral = 7,
-        StateBreathe = 43,
+        StateBreathe = 44,
         StateBumpJump = 16,
-        StateCaught = 164,
-        StateChargeAttack = 148,           // StateAttackRoot
-        StateClimbing = 99,                // StateWallActionRoot
-        StateClimbingEdge = 98,            // StateWallActionRoot
-        StateCloudJump = 189,
-        StateHomingFinish = 133,           // StateAttackRoot
-        StateComboMove = 128,
-        StateComboStep = 129,
-        StateComboWarp = 130,
-        StateCrasher = 150,                // StateAttackRoot
-        StateCrossSlash = 152,             // StateAttackRoot
-        StateDamage = 28,                  // StateDamageRoot
-        StateDamageBlowOff = 30,           // StateDamageRoot
-        StateDamageBlowOffHeavy = 31,      // StateDamageRoot
-        StateDamageLava = 37,
-        StateDamageQuake = 32,             // StateDamageRoot
-        StateDamageRoot = 27,
-        StateDamageRunning = 33,           // StateDamageRoot
-        StateDamageTurnBack = 29,          // StateDamageRoot
-        StateDead = 38,
-        StateDebuff = 177,
-        StateDestination = 185,
-        StateDiving = 78,                  // StateDivingRoot
-        StateDivingDamage = 80,            // StateDivingRoot
-        StateDivingFall = 79,              // StateDivingRoot
-        StateDivingRoot = 77,
-        StateDivingSpecial = 83,           // StateDivingSpecialRoot
-        StateDivingSpecialDamage = 86,     // StateDivingSpecialRoot
-        StateDivingSpecialDashRing = 84,   // StateDivingSpecialRoot
-        StateDivingSpecialFall = 85,       // StateDivingSpecialRoot
-        StateDivingSpecialPush = 87,       // StateDivingSpecialRoot
-        StateDivingSpecialRoot = 82,
-        StateDivingSpring = 81,            // StateDivingRoot
-        StateDrift = 109,
-        StateDriftDash = 110,
-        StateDriftAir = 111,
-        StateDropDash = 112,
+        StateCaught = 167,
+        StateChargeAttack = 151,        // StateAttackRoot
+        StateClimbing = 100,    // StateWallActionRoot
+        StateClimbingEdge = 99, // StateWallActionRoot
+        StateCloudJump = 192,
+        StateHomingFinish = 136,        // StateAttackRoot
+        StateComboMove = 131,
+        StateComboStep = 132,
+        StateComboWarp = 133,
+        StateCrasher = 153,     // StateAttackRoot
+        StateCrossSlash = 155,  // StateAttackRoot
+        StateDamage = 29,       // StateDamageRoot
+        StateDamageBlowOff = 31,        // StateDamageRoot
+        StateDamageBlowOffHeavy = 32,   // StateDamageRoot
+        StateDamageLava = 38,
+        StateDamageQuake = 33,  // StateDamageRoot
+        StateDamageRoot = 28,
+        StateDamageRunning = 34,        // StateDamageRoot
+        StateDamageTurnBack = 30,       // StateDamageRoot
+        StateDead = 39,
+        StateDebuff = 180,
+        StateDestination = 188,
+        StateDiving = 79,       // StateDivingRoot
+        StateDivingDamage = 81, // StateDivingRoot
+        StateDivingFall = 80,   // StateDivingRoot
+        StateDivingRoot = 78,
+        StateDivingSpecial = 84,        // StateDivingSpecialRoot
+        StateDivingSpecialDamage = 87,  // StateDivingSpecialRoot
+        StateDivingSpecialDashRing = 85,        // StateDivingSpecialRoot
+        StateDivingSpecialFall = 86,    // StateDivingSpecialRoot
+        StateDivingSpecialPush = 88,    // StateDivingSpecialRoot
+        StateDivingSpecialRoot = 83,
+        StateDivingSpring = 82, // StateDivingRoot
+        StateDrift = 111,
+        StateDriftDash = 112,
+        StateDriftAir = 113,
+        StateDropDash = 114,
         StateFall = 15,
-        StateFallWithKodama = 195,
-        StateFallWithCannonball = 198,
-        StateFallFlip = 22,
-        StateFallingDead = 39,
-        StateFallSlope = 21,
-        StateFan = 168,
-        StateFixedGoal = 126,
-        StateFloat = 107,
-        StateFly = 102,
-        StateFlyLocal = 105,
-        StateFlyLocal2D = 106,
-        StateFlyOnPath = 104,
-        StateFlyTurn = 103,
-        StateGoal = 124,
-        StateGoal2 = 125,
-        StateGrind = 46,                   // StateGrindRoot
-        StateGrindDamage = 49,             // StateGrindRoot
-        StateGrindDamageAir = 50,          // StateGrindRoot
-        StateGrindJump = 47,               // StateGrindRoot
-        StateGrindDoubleJump = 48,         // StateGrindRoot
-        StateGrindRoot = 45,
-        StateGrindStep = 51,
-        StateGuard = 145,
-        StateGuardedFlipBack = 34,         // StateDamageRoot
-        StateHangPole = 170,
-        StateHangPoleJump = 171,
-        StateHoldStand = 159,
-        StateHomingAttack = 62,            // StateAttackRoot
-        StateHomingAttackRoot = 61,        // StateAttackRoot
-        StateHomingAttackInStorm = 63,     // StateAttackRoot
-        StateHomingFinished = 64,          // StateAttackRoot
-        StateHomingRepelled = 65,
-        StateHomingShot = 153,             // StateAttackRoot
-        StateImpactGimmick = 182,
+        StateFallWithKodama = 198,
+        StateFallWithCannonball = 201,
+        StateFallFlip = 21,
+        StateFallingDead = 40,
+        StateFallSlope = 20,
+        StateFan = 171,
+        StateFixedGoal = 128,
+        StateFloat = 108,
+        StateFly = 103,
+        StateFlyLocal = 106,
+        StateFlyLocal2D = 107,
+        StateFlyOnPath = 105,
+        StateFlyTurn = 104,
+        StateGoal = 126,
+        StateGoal2 = 127,
+        StateGrind = 47,        // StateGrindRoot
+        StateGrindDamage = 50,  // StateGrindRoot
+        StateGrindDamageAir = 51,       // StateGrindRoot
+        StateGrindJump = 48,    // StateGrindRoot
+        StateGrindDoubleJump = 49,      // StateGrindRoot
+        StateGrindRoot = 46,
+        StateGrindStep = 52,
+        StateGuard = 148,
+        StateGuardedFlipBack = 35,      // StateDamageRoot
+        StateHangPole = 173,
+        StateHangPoleJump = 174,
+        StateHoldStand = 162,
+        StateHomingAttack = 63, // StateAttackRoot
+        StateHomingAttackRoot = 62,     // StateAttackRoot
+        StateHomingAttackInStorm = 64,  // StateAttackRoot
+        StateHomingFinished = 65,       // StateAttackRoot
+        StateHomingRepelled = 66,
+        StateHomingShot = 156,  // StateAttackRoot
+        StateImpactGimmick = 185,
         StateJump = 8,
-        StateJumpWithKodama = 194,
-        StateJumpBoardLaunch = 167,
+        StateJumpWithKodama = 197,
+        StateJumpBoardLaunch = 170,
         StateBounceJump = 11,
         StateRecoveryJump = 12,
-        StateSpringJump = 162,
-        StateSpringJumpHeadLand = 163,
-        StateKickBox = 173,
-        StateLavaDead = 44,
-        StateLeftStep = 71,
-        StateLeftStepRun = 73,
-        PlayerStateLevitation = 211,
-        StateLightDash = 25,
-        StateLoopKick = 149,               // StateAttackRoot
-        StateMoveInWarningArea = 186,
-        StateMoveToBatterBox = 201,
-        StateMoveToBossArea = 187,
-        StateMoveToReflexesPanel = 203,
-        StateNoisyGoal = 127,
-        StateOperateConsole = 181,
-        StateParalysis = 36,
-        StateParriedFlipBack = 35,
-        StateParry = 141,
-        StateParryStand = 142,             // StateParry
-        StatePipeMove = 165,
-        StatePipeOut = 166,
-        StatePressDead = 42,
-        StatePursuitKick = 132,            // StateAttackRoot
-        StatePushBox = 172,
-        StateQuickCyloop = 134,            // StateAttackRoot
-        StateQuickStep = 67,               // StateQuickStepRoot
-        StateQuickStepCrash = 70,          // StateQuickStepRoot
-        StateQuickStepJump = 75,
-        StateQuickStepDoubleJump = 76,
-        StateQuickStepLeft = 68,           // StateQuickStepRoot
-        StateQuickStepRight = 69,          // StateQuickStepRoot
-        StateQuickStepRoot = 66,
-        StateRecoil = 20,
-        StateRecovery = 161,
-        StateReflexesPanel = 202,
-        StateReflexesPanelLeftStep = 204,
-        StateReflexesPanelRightStep = 205,
-        StateRightStep = 72,
-        StateRightStepRun = 74,
+        StateSpringJump = 165,
+        StateSpringJumpHeadLand = 166,
+        StateKickBox = 176,
+        StateLavaDead = 45,
+        StateLeftStep = 72,
+        StateLeftStepRun = 74,
+        PlayerStateLevitation = 215,
+        StateLightDash = 26,
+        StateLoopKick = 152,    // StateAttackRoot
+        StateMoveInWarningArea = 189,
+        StateMoveToBatterBox = 204,
+        StateMoveToBossArea = 190,
+        StateMoveToReflexesPanel = 206,
+        StateNoisyGoal = 129,
+        StateOperateConsole = 184,
+        StateParalysis = 37,
+        StateParriedFlipBack = 36,
+        StateParry = 144,
+        StateParryStand = 145,  // StateParry
+        StatePipeMove = 168,
+        StatePipeOut = 169,
+        StatePressDead = 43,
+        StatePursuitKick = 135, // StateAttackRoot
+        StatePushBox = 175,
+        StateQuickCyloop = 137, // StateAttackRoot
+        StateQuickStep = 68,    // StateQuickStepRoot
+        StateQuickStepCrash = 71,       // StateQuickStepRoot
+        StateQuickStepJump = 76,
+        StateQuickStepDoubleJump = 77,
+        StateQuickStepLeft = 69,        // StateQuickStepRoot
+        StateQuickStepRight = 70,       // StateQuickStepRoot
+        StateQuickStepRoot = 67,
+        StateRecoil = 19,
+        StateRecovery = 164,
+        StateReflexesPanel = 205,
+        StateReflexesPanelLeftStep = 207,
+        StateReflexesPanelRightStep = 208,
+        StateRightStep = 73,
+        StateRightStepRun = 75,
         StateRun = 4,
-        StateRunWithKodama = 193,
-        StateRunWithCannonball = 196,
-        StateRunawayBee = 191,
-        StateRunningStart = 123,
-        StateSandSki = 174,
-        StateSandSkiBlow = 175,
-        StateSendSignal = 183,
+        StateRunWithKodama = 196,
+        StateRunWithCannonball = 199,
+        StateRunawayBee = 194,
+        StateRunningStart = 125,
+        StateSandSki = 177,
+        StateSandSkiBlow = 178,
+        StateSendSignal = 186,
         StateSleep = 0,
-        StateSliding = 59,                 // StateSquatRoot
-        StateSlidingToStand = 60,
-        StateSlingshot = 176,
-        StateSmash = 135,                  // StateAttackRoot
-        StateSmashSS = 136,                // StateAttackRoot
-        StateSonicBoomKick = 151,          // StateAttackRoot
-        StateSpin = 113,
+        StateSliding = 60,      // StateSquatRoot
+        StateSlidingToStand = 61,
+        StateSlingshot = 179,
+        StateSmash = 138,       // StateAttackRoot
+        StateSmashSS = 139,     // StateAttackRoot
+        StateSonicBoomKick = 154,       // StateAttackRoot
+        StateSpin = 115,
         StateSpinAttack = 14,
-        StateSpinBoost = 116,
-        StateSpinBoostCharge = 115,
-        StateSpinMove = 117,
-        StateSpinDash = 114,               // StateAttackRoot
-        StateSpinSlash = 154,              // StateAttackRoot
-        StateSquat = 19,                   // StateSquatRoot
-        StateSquatRoot = 18,
+        StateSpinBoost = 118,
+        StateSpinBoostCharge = 117,
+        StateSpinMove = 119,
+        StateSpinDash = 116,    // StateAttackRoot
+        StateSpinSlash = 157,   // StateAttackRoot
+        StateSquat = 18,        // StateSquatRoot
+        StateSquatRoot = 17,
         StateStandRoot = 1,
-        StateStandWithKodama = 192,
-        StateStand = 2,                    // StateStandRoot
-        StateStandWithCannonball = 197,
-        StateStolenEmerald = 179,
-        StateStorm = 178,
-        StateSuffocatingDead = 41,
-        StateTakeBehind = 143,
-        StateTakeBehindSS = 144,
-        StateTalkMode = 160,
-        StateThrowCannonball = 199,
-        StateTreadmill = 190,
-        StateTreeJump = 243,
-        StateTumble = 17,
+        StateStandWithKodama = 195,
+        StateStand = 2, // StateStandRoot
+        StateStandWithCannonball = 200,
+        StateStolenEmerald = 182,
+        StateStorm = 181,
+        StateSuffocatingDead = 42,
+        StateTakeBehind = 146,
+        StateTakeBehindSS = 147,
+        StateTalkMode = 163,
+        StateThrowCannonball = 202,
+        StateTimeUpDead = 130,
+        StateTreadmill = 193,
+        StateTreeJump = 276,
         StateTurn = 5,
-        StateUpDead = 40,
-        StateUpDownPole = 121,
-        StateUpDownPoleDamage = 122,
+        StateUpDead = 41,
+        StateUpDownPole = 123,
+        StateUpDownPoleDamage = 124,
         StateWakeUp = 3,
-        StateWarpEnd = 158,
-        StateWarpStart = 157,
-        StateWaterFall = 184,
-        StateAirBoost = 23,
-        StateWithAnimalRoot = 206,
-        StateFallWithAnimal = 210,         // StateWithAnimalRoot
-        StateJumpWithAnimal = 209,         // StateWithAnimalRoot
+        StateWarpEnd = 161,
+        StateWarpStart = 160,
+        StateWaterFall = 187,
+        StateAirBoost = 22,
+        StateWithAnimalRoot = 209,
+        StateFallWithAnimal = 213,      // StateWithAnimalRoot
+        StateJumpWithAnimal = 212,      // StateWithAnimalRoot
         StateDoubleJump = 9,
-        StateRunWithAnimal = 208,          // StateWithAnimalRoot
-        StateStandWithAnimal = 207,        // StateWithAnimalRoot
-        StateStomping = 52,                // StateAttackRoot
-        StateStompingAttack = 55,          // StateAttackRoot
-        StateStompingBounce = 58,          // StateAttackRoot
-        StateStompingDown = 54,            // StateAttackRoot
-        StateStompingFlip = 53,            // StateAttackRoot
-        StateStompingLand = 57,            // StateAttackRoot
-        StateStompingPress = 56,           // StateAttackRoot
-        StateWallHanging = 90,             // StateWallActionRoot
-        StateWallHoming = 92,
-        StateWallJump = 96,
-        StateWallJumpReady = 97,
-        StateWallLanding = 93,             // StateWallActionRoot
-        StateWallLeave = 100,
-        StateWallReset = 95,               // StateWallActionRoot
-        StateWallRest = 91,                // StateWallActionRoot
-        StateWallSlideDown = 94,           // StateWallActionRoot
-        StateWallActionRoot = 88,
-        StateWallMove = 89                 // StateWallActionRoot
-    }
-
-    public static class State
-    {
-        private static bool _initialisedStateRedirector = false;
-        private static List<StateID> _discardedStates = new();
-        private static Dictionary<StateID, StateID> _redirectedStates = new();
-        private static StateID _currentStateID = Sonic.StateID.Default;
-        private static Collections.StackList<StateID> _stateStackTrace = new(10);
-
-        public delegate void TStateNotifyAction(StateID stateId, StateID[] stateStackTrace);
-        private static List<TStateNotifyAction> _stateNotifyActions = new();
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate int _tSetStateID(int stateId);
-        private static _tSetStateID _delSetStateID = new _tSetStateID(SetStateID);
-        private static IntPtr _fpSetStateID = Marshal.GetFunctionPointerForDelegate(_delSetStateID);
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate long _tGetStatePlugin(long pStatePluginManager, uint pluginNameHash);
-        private static long _sigGetStatePlugin = 0;
-
-        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private delegate void _tSetState(long gocPlayerHsm, int stateId, int a3);
-        private static long _sigSetState = 0;
-
-        private static int SetStateID(int stateId)
-        {
-            if (stateId != -1)
-            {
-                _stateStackTrace.Push(_currentStateID);
-
-                _currentStateID = (StateID)stateId;
-            }
-
-            foreach (TStateNotifyAction action in _stateNotifyActions)
-                action(_currentStateID, _stateStackTrace.ToArray());
-
-            if (_discardedStates.Contains((StateID)stateId))
-                return -2;
-
-            if (_redirectedStates.ContainsKey((StateID)stateId))
-                return (int)_redirectedStates[(StateID)stateId];
-
-            return stateId;
-        }
-
-        private static void InitStateRedirector()
-        {
-            if (_initialisedStateRedirector)
-                return;
-
-            WriteAsmHook
-            (
-                $@"
-                    mov   edx, [rbx + 0x114]
-                    mov   ecx, edx
-                    mov   rax, {(long)_fpSetStateID}
-                    call  rax
-                    mov   edx, eax
-                    cmp   edx, -2
-                    jne   exit
-                    mov   r15, qword ptr [rsp + 0x38 + 0xFFFFFFFFFFFFFFE8]
-                    add   rsp, 0x28
-                    pop   rbp
-                    pop   rbx
-                    ret
-                exit:
-                    movzx eax, byte ptr [rbx + 0x11C]
-                ",
-
-                /* 0x140802F2D */
-                ScanSignature
-                (
-                    "\x8B\x93\x14\x01\x00\x00\x83\xFA\xFF",
-                    "xxxxxxxxx"
-                ),
-
-                HookBehavior.Replace
-            );
-
-            _initialisedStateRedirector = true;
-        }
-
-        public static StateID GetCurrentStateID()
-        {
-            InitStateRedirector();
-
-            return _currentStateID;
-        }
-
-        public static StateID GetPreviousStateID(int stackIndex = 0)
-        {
-            InitStateRedirector();
-
-            return _stateStackTrace.GetItemAt(stackIndex);
-        }
-
-        public static long GetStatePlugin(string pluginName)
-        {
-            if (_sigGetStatePlugin == 0)
-            {
-                /* 0x140124200 */
-                _sigGetStatePlugin = ScanSignature
-                (
-                    "\x48\x89\x5C\x24\x08\x48\x89\x6C\x24\x10\x48\x89\x74\x24\x18\x57\x48\x83\xEC\x20\x48\x8B\x59\x18\x8B",
-                    "xxxxxxxxxxxxxxxxxxxxxxxxx"
-                );
-
-                if (_sigGetStatePlugin == 0)
-                    return 0;
-            }
-
-            var fpGetStatePlugin = Marshal.GetDelegateForFunctionPointer<_tGetStatePlugin>((IntPtr)_sigGetStatePlugin);
-
-            if (fpGetStatePlugin == null)
-                return 0;
-
-            long pSonicContext = GetSonicContext();
-
-            if (pSonicContext == 0)
-                return 0;
-
-            return fpGetStatePlugin(*(long*)(*(long*)(pSonicContext + 0x38) + 0x108), StringMapOperation.ComputeHash(pluginName));
-        }
-
-        public static void AddStateNotifyAction(TStateNotifyAction action)
-        {
-            InitStateRedirector();
-
-            if (_stateNotifyActions.Contains(action))
-                return;
-
-            _stateNotifyActions.Add(action);
-        }
-
-        public static void RemoveStateNotifyAction(TStateNotifyAction action)
-        {
-            InitStateRedirector();
-
-            if (!_stateNotifyActions.Contains(action))
-                return;
-
-            _stateNotifyActions.Remove(action);
-        }
-
-        public static void Redirect(StateID source, StateID destination)
-        {
-            InitStateRedirector();
-
-            if (_redirectedStates.ContainsKey(source))
-            {
-                _redirectedStates[source] = destination;
-                return;
-            }
-
-            _redirectedStates.Add(source, destination);
-        }
-
-        public static void Discard(StateID source)
-        {
-            InitStateRedirector();
-
-            if (_discardedStates.Contains(source))
-                return;
-
-            _discardedStates.Add(source);
-        }
-
-        public static void Restore(StateID source)
-        {
-            InitStateRedirector();
-
-            if (_discardedStates.Contains(source))
-                _discardedStates.Remove(source);
-            
-            if (_redirectedStates.ContainsKey(source))
-                _redirectedStates.Remove(source);
-        }
-
-        public static void SetState(StateID destination)
-        {
-            if (_sigSetState == 0)
-            {
-                /* 0x140802400 */
-                _sigSetState = ScanSignature
-                (
-                    "\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x48\x8B\xD9\x41\x8B\xF8\x48\x81\xC1\x88\x00\x00\x00\x8B\xF2\xE8\xCC\xCC\xCC\xCC\x3B",
-                    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx????x"
-                );
-
-                if (_sigSetState == 0)
-                    return;
-            }
-
-            var fpSetState = Marshal.GetDelegateForFunctionPointer<_tSetState>((IntPtr)_sigSetState);
-
-            if (fpSetState == null)
-                return;
-
-            long sonicContext = GetSonicContext();
-
-            if (sonicContext == 0)
-                return;
-
-            fpSetState(Read<long>(sonicContext + 0x38), (int)destination, 0);
-        }
+        StateRunWithAnimal = 211,       // StateWithAnimalRoot
+        StateStandWithAnimal = 210,     // StateWithAnimalRoot
+        StatePutDownAnimal = 214,       // StateWithAnimalRoot
+        StateStomping = 53,     // StateAttackRoot
+        StateStompingAttack = 56,       // StateAttackRoot
+        StateStompingBounce = 59,       // StateAttackRoot
+        StateStompingDown = 55, // StateAttackRoot
+        StateStompingFlip = 54, // StateAttackRoot
+        StateStompingLand = 58, // StateAttackRoot
+        StateStompingPress = 57,        // StateAttackRoot
+        StateWallHanging = 91,  // StateWallActionRoot
+        StateWallHoming = 93,
+        StateWallJump = 97,
+        StateWallJumpReady = 98,
+        StateWallLanding = 94,  // StateWallActionRoot
+        StateWallLeave = 101,
+        StateWallReset = 96,    // StateWallActionRoot
+        StateWallRest = 92,     // StateWallActionRoot
+        StateWallSlideDown = 95,        // StateWallActionRoot
+        StateWallActionRoot = 89,
+        StateWallMove = 90,     // StateWallActionRoot
+        SuperSonicStateFingerSnap = 110,
     }
 }
-
-

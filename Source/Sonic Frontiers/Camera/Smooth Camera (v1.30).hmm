@@ -1,4 +1,4 @@
-Patch "Smooth Camera (v1.30)" in "Camera" by "Ahremic" does "Replaces linear camera interpolation with a sigmoid solution, using Ken Perlin's ''Smoother Step'' second-order hermite polynomial." 
+Patch "Smooth Camera (v1.30)" in "! Incompatible - awaiting fixes for v1.40" by "Ahremic" does "Replaces linear camera interpolation with a sigmoid solution, using Ken Perlin's ''Smoother Step'' second-order hermite polynomial." 
 //
     static float value01 = 1.0f;
     static float value03 = 3.0f;

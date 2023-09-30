@@ -1,4 +1,4 @@
-Code "Disable Lava Instant Death" in "Gameplay" by "Hyper" does "Disables Sonic instantly drowning in lava and makes him jump up from the heat until running out of rings." 
+Code "Disable Lava Instant Death" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Disables Sonic instantly drowning in lava and makes him jump up from the heat until running out of rings." 
 //
     #lib "BlackboardItem"
     #lib "Memory"
@@ -41,7 +41,7 @@ Code "Disable Lava Instant Death" in "Gameplay" by "Hyper" does "Disables Sonic 
         IsInitialised = true;
     }
 
-    RingCount = BlackboardItem.GetRingCount();
+    RingCount = BlackboardItem.Get() == null ? 0 : BlackboardItem.Get()->RingCount;
 }
 
 

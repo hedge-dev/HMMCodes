@@ -1,0 +1,63 @@
+Library "MathHelpers" by "Hyper" 
+{
+    using System.Collections.Generic;
+
+    public T Clamp<T>(T in_value, T in_minValue, T in_maxValue) where T : IComparable<T>
+    {
+        if (in_value.CompareTo(in_minValue) < 0)
+        {
+            return in_minValue;
+        }
+        else if (in_value.CompareTo(in_maxValue) > 0)
+        {
+            return in_maxValue;
+        }
+        else
+        {
+            return in_value;
+        }
+    }
+
+    public T FloatPercentToRange<T>(float in_value)
+    {
+        if (typeof(T) == typeof(sbyte))
+        {
+            return (T)(object)(byte)(in_value * (sbyte.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(byte))
+        {
+            return (T)(object)(byte)(in_value * (byte.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(short))
+        {
+            return (T)(object)(short)(in_value * (short.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(ushort))
+        {
+            return (T)(object)(ushort)(in_value * (ushort.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(int))
+        {
+            return (T)(object)(int)(in_value * (int.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(uint))
+        {
+            return (T)(object)(uint)(in_value * (uint.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(long))
+        {
+            return (T)(object)(long)(in_value * (long.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(ulong))
+        {
+            return (T)(object)(ulong)(in_value * (ulong.MaxValue * 1.0f));
+        }
+        
+        return default;
+    }
+    
+    public float Lerp(float in_start, float in_end, float in_time)
+    {
+        return in_start + (in_end - in_start) * in_time;
+    }
+}

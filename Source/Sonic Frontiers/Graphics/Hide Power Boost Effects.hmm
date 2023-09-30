@@ -1,4 +1,4 @@
-Patch "Hide Power Boost Effects" in "Graphics" by "NM & Hyper" 
+Patch "Hide Power Boost Effects" in "! Incompatible - awaiting fixes for v1.40" by "NM & Hyper" 
 {
     /* Activation FX */
     WriteNop

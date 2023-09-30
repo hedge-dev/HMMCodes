@@ -1,0 +1,19 @@
+Code "Show Another Story Stages in Arcade Mode" in "UI" by "Gordon Ramsay & Hyper"
+//
+    #lib "Lua"
+    #lib "Player"
+//
+{
+    Lua.CreateLineHook
+    (
+        string.Empty,
+
+        "script/resident/stagedata.lua",
+
+        @",\s*""extra""\s*|""\s*extra""\s*,",
+
+        HookBehavior.Replace,
+
+        true
+    );
+}

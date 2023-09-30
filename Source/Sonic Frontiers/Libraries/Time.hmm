@@ -1,11 +1,13 @@
 Library "Time" by "Hyper" 
 {
-    private static bool _initialised = false;
+    private static bool _isInitialised = false;
+
     private static float* _pFrameRate;
 
-    private void Init()
+    [LibraryInitializer]
+    public void Init()
     {
-        if (_initialised)
+        if (_isInitialised)
             return;
 
         fixed (float** p_pFrameRate = &_pFrameRate)
@@ -32,22 +34,24 @@ Library "Time" by "Hyper"
             );
         }
 
-        _initialised = true;
+        _isInitialised = true;
     }
 
+    /// <summary>
+    /// Gets the current frame rate.
+    /// </summary>
+    /// <returns>The current frame rate.</returns>
     public float GetFrameRate()
     {
-        Init();
-
         return _pFrameRate == null ? 0.0f : *_pFrameRate;
     }
 
+    /// <summary>
+    /// Gets the current frame delta.
+    /// </summary>
+    /// <returns>The current delta time.</returns>
     public float GetDeltaTime()
     {
-        Init();
-
         return 1.0f / GetFrameRate();
     }
 }
-
-

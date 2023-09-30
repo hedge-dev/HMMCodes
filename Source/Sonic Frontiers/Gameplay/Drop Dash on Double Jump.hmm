@@ -1,4 +1,4 @@
-Patch "Drop Dash on Double Jump" in "Gameplay" by "Hyper" does "Allows you to drop dash immediately after double jumping, making it require only two presses." 
+Patch "Drop Dash on Double Jump" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Allows you to drop dash immediately after double jumping, making it require only two presses." 
 {
     /* 0x14B52AB4D */
     var sig = ScanSignature

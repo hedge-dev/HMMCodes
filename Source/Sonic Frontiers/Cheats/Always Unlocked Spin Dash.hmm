@@ -1,4 +1,4 @@
-Patch "Always Unlocked Spin Dash" in "Cheats" by "Hyper" 
+Patch "Always Unlocked Spin Dash" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" 
 {
     // Unlock various components of Spin Dash.
     WriteAsmHook

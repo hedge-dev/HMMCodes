@@ -1,4 +1,4 @@
-Patch "Hide Enemy Health Gauge" in "UI" by "Hyper & Gordon Ramsay" does "Hides the health gauge for standard enemies and guardians." 
+Patch "Hide Enemy Health Gauge" in "! Incompatible - awaiting fixes for v1.40" by "Hyper & Gordon Ramsay" does "Hides the health gauge for standard enemies and guardians." 
 {
     WriteProtected<byte>
     (

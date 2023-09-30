@@ -2,6 +2,8 @@ Library "GameService" by "Hyper & Sajid"
 {
     #include "Helpers" noemit
 
+    #lib "GameDocument"
+
     using System.Collections.Generic;
     using System.Linq;
     using System.Runtime.InteropServices;
@@ -10,19 +12,50 @@ Library "GameService" by "Hyper & Sajid"
 
     private static List<long> _userServiceClassPtrs = new();
 
-    UNMANAGED_FUNCTION(long, CreateServices, long ppClasses)
+    /// <summary>
+    /// A struct representation of `hh::game::GameService`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x70)]
+    public struct Data
+    {
+        /// <summary>
+        /// A pointer to an instance of `app::GameDocument`.
+        /// </summary>
+        [FieldOffset(0x30)] public GameDocument.Data* pGameDocument;
+
+        /// <summary>
+        /// A pointer to an instance of `GameServiceStaticClass`.
+        /// </summary>
+        [FieldOffset(0x38)] public GameServiceStaticClass* pStaticClass;
+    }
+
+    /// <summary>
+    /// A struct representation of the static class for storing information about a game service.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct GameServiceStaticClass
+    {
+        /// <summary>
+        /// The name of this game service.
+        /// </summary>
+        [FieldOffset(0)] public Helpers.UnmanagedString Name;
+
+        public override string ToString() => Name.ToString();
+    }
+
+    UNMANAGED_FUNCTION(long, CreateServices, long in_ppClasses)
     {
         var classes = new List<long>();
 
         // Copy array contents to our list.
-        while (Read<long>(ppClasses) != 0)
+        while (Read<long>(in_ppClasses) != 0)
         {
-            classes.Add(Read<long>(ppClasses));
-            ppClasses += 8;
+            classes.Add(Read<long>(in_ppClasses));
+            in_ppClasses += 8;
         }
 
         // Add user service class pointers.
-        foreach (long ptr in _userServiceClassPtrs)
+        foreach (var ptr in _userServiceClassPtrs)
             classes.Add(ptr);
         
         classes.Add(0);
@@ -33,7 +66,8 @@ Library "GameService" by "Hyper & Sajid"
             return (long)pClasses;
     }
 
-    private void Init()
+    [LibraryInitializer]
+    public void Init()
     {
         if (_isInitialised)
             return;
@@ -66,24 +100,26 @@ Library "GameService" by "Hyper & Sajid"
         _isInitialised = true;
     }
 
-    public void AddUserService(long ptr)
+    /// <summary>
+    /// Adds a pointer to a `GameServiceStaticClass` struct to the user pointers list of game services to load.
+    /// </summary>
+    public void AddUserService(long in_ptr)
     {
-        Init();
-
-        if (_userServiceClassPtrs.Contains(ptr))
+        if (_userServiceClassPtrs.Contains(in_ptr))
             return;
 
-        _userServiceClassPtrs.Add(ptr);
+        _userServiceClassPtrs.Add(in_ptr);
     }
 
-    public void RemoveUserService(long ptr)
+    /// <summary>
+    /// Removes a pointer to a `GameServiceStaticClass` struct.
+    /// </summary>
+    public void RemoveUserService(long in_ptr)
     {
-        Init();
-        
-        if (!_userServiceClassPtrs.Contains(ptr))
+        if (!_userServiceClassPtrs.Contains(in_ptr))
             return;
 
-        _userServiceClassPtrs.Remove(ptr);
+        _userServiceClassPtrs.Remove(in_ptr);
     }
 }
 

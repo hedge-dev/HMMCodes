@@ -1,9 +1,10 @@
-Code "Always Dodge with Side Step" in "Gameplay" by "Hyper" does "Always makes Sonic dodge left or right instead of side stepping whilst not running." 
+Code "Always Dodge with Side Step" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Always makes Sonic dodge left or right instead of side stepping whilst not running." 
 //
+    #include "BlackboardStatus" noemit
+
     #lib "Bitwise"
-    #lib "BlackboardStatus"
     #lib "Memory"
-    #lib "Sonic"
+    #lib "Player"
 
     static bool IsInitialised = false;
     static bool IsAutoRun = false;
@@ -90,12 +91,9 @@ Code "Always Dodge with Side Step" in "Gameplay" by "Hyper" does "Always makes S
         IsInitialised = true;
     }
 
-    if (BlackboardStatus.Get() == 0)
-        return;
-
-    IsAutoRun = Bitwise.Test(*BlackboardStatus.GetWorldFlags(), (uint)BlackboardStatus.WorldFlags.IsAutoRun);
-    IsCyberSpace = Bitwise.Test(*BlackboardStatus.GetWorldFlags(), (uint)BlackboardStatus.WorldFlags.IsCyberSpace);
-    IsAboveVelocityThreshold = Sonic.Kinematics.GetHorizontalMagnitude() >= 15.0f;
+    IsAutoRun = IS_WORLD_FLAG(IsAutoRun);
+    IsCyberSpace = IS_WORLD_FLAG(IsCyberSpace);
+    IsAboveVelocityThreshold = Player.Kinematics.GetHorizontalMagnitude() >= 15.0f;
 }
 
 

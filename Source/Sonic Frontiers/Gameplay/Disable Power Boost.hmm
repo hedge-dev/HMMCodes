@@ -1,4 +1,4 @@
-Patch "Disable Power Boost" in "Gameplay" by "Hyper" 
+Patch "Disable Power Boost" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" 
 {
     WriteProtected<byte>
     (

@@ -57,7 +57,7 @@ Library "Lua" by "Hyper & ĐeäTh"
 
     private static List<uint> _userScriptHandles = new();
 
-    private static ValueTuple<string, long> _currentScript = new();
+    private static (string ScriptName, long pResourceData) _currentScript = new();
     private static Dictionary<string, string> _scriptData = new();
 
     public abstract class Hook
@@ -105,9 +105,9 @@ Library "Lua" by "Hyper & ĐeäTh"
             Hash = StringMapOperation.ComputeHash(ToString());
         }
 
-        public override string WriteHook(string code)
+        public override string WriteHook(string in_code)
         {
-            string result = code;
+            string result = in_code;
             var regexOptions = RegexOptions.Compiled | RegexOptions;
 
             bool isLineFound = IsRegex
@@ -179,7 +179,7 @@ Library "Lua" by "Hyper & ĐeäTh"
             Hash = StringMapOperation.ComputeHash(ToString());
         }
 
-        public override string WriteHook(string code)
+        public override string WriteHook(string in_code)
         {
             var result = new StringBuilder();
 
@@ -196,11 +196,10 @@ Library "Lua" by "Hyper & ĐeäTh"
             string funcPattern = $@"(^function\s+{FunctionName}\s*\(.*?\))";
 
             bool isInsideFunction = false;
-            bool isFunctionNameTokenSkipped = false;
             
             int scopeDepth = 0;
 
-            foreach (string line in code.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.None))
+            foreach (string line in in_code.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.None))
             {
                 if (line.Contains($"function {FunctionName}"))
                 {
@@ -293,79 +292,71 @@ Library "Lua" by "Hyper & ĐeäTh"
 
     private static List<Hook> _hooks = new();
 
-    /* 0x153A6D900 */
+    /* 0x153DC50F0 */
     private static long _sig_luaL_loadbufferx = ScanSignature("\x48\x83\xEC\x48\x48\x8B\x44\x24\x70\x48", "xxxxxxxxxx");
-    CREATE_FUNCTION_PTR(long, luaL_loadbufferx, _sig_luaL_loadbufferx, long L, long buff, long size, long name, long mode)
+    FUNCTION_PTR(long, luaL_loadbufferx, _sig_luaL_loadbufferx, long L, long buff, long size, long name, long mode)
 
-    /* 0x140E6DB50 */
+    /* 0x140F56850 */
     private static long _sig_lua_getglobal = Memory.ReadCall(ScanSignature("\xE8\xCC\xCC\xCC\xCC\x48\x8B\x0F\x48\x8B\xD3\xE8", "x????xxxxxxx"));
-    CREATE_FUNCTION_PTR(long, lua_getglobal, _sig_lua_getglobal, long L, long name)
+    FUNCTION_PTR(long, lua_getglobal, _sig_lua_getglobal, long L, long name)
 
-    /* 0x153959B30 */
+    /* 0x153D1EE30 */
     private static long _sig_lua_pcallk = ScanSignature("\x48\x89\x74\x24\x18\x57\x48\x83\xEC\x40\x31\xF6", "xxxxxxxxxxxx");
-    CREATE_FUNCTION_PTR(long, lua_pcallk, _sig_lua_pcallk, long L, int nargs, int nresults, int errfunc, long ctx, long k)
+    FUNCTION_PTR(long, lua_pcallk, _sig_lua_pcallk, long L, int nargs, int nresults, int errfunc, long ctx, long k)
 
-    /* 0x140E6D0C0 */
+    /* 0x140F55DC0 */
     private static long _sig_lua_pop = ScanSignature("\x40\x53\x48\x83\xEC\x20\x45\x8B\xD0", "xxxxxxxxx");
-    CREATE_FUNCTION_PTR(long, lua_pop, _sig_lua_pop, long L, int idx)
+    FUNCTION_PTR(long, lua_pop, _sig_lua_pop, long L, int idx)
 
-    /* 0x140E6D890 */
+    /* 0x140F56590 */
     private static long _sig_lua_pushlstring = ScanSignature("\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x8B\xD9\x4D", "xxxxxxxxxxxxxx");
-    CREATE_FUNCTION_PTR(long, lua_pushlstring, _sig_lua_pushlstring, long L, long s, long len)
+    FUNCTION_PTR(long, lua_pushlstring, _sig_lua_pushlstring, long L, long s, long len)
 
-    /* 0x140E6D870 */
+    /* 0x140F56570 */
     private static long _sig_lua_pushinteger = ScanSignature("\x48\x8B\x41\x10\x48\x89\x10\xC6\x40\x08\x03", "xxxxxxxxxxx");
-    CREATE_FUNCTION_PTR(long, lua_pushinteger, _sig_lua_pushinteger, long L, int n)
+    FUNCTION_PTR(long, lua_pushinteger, _sig_lua_pushinteger, long L, int n)
 
-    /* 0x153927520 */
+    /* 0x153CF8870 */
     private static long _sig_lua_pushnumber = ScanSignature("\x48\x8B\x41\x10\xC5\xFA", "xxxxxx");
-    CREATE_FUNCTION_PTR(long, lua_pushnumber, _sig_lua_pushnumber, long L, float n)
+    FUNCTION_PTR(long, lua_pushnumber, _sig_lua_pushnumber, long L, float n)
 
-    /* 0x140E6DAD0 */
+    /* 0x140F567D0 */
     private static long _sig_lua_pushboolean = ScanSignature("\x48\x8B\x41\x10\x85", "xxxxx");
-    CREATE_FUNCTION_PTR(long, lua_pushboolean, _sig_lua_pushboolean, long L, int b)
+    FUNCTION_PTR(long, lua_pushboolean, _sig_lua_pushboolean, long L, int b)
 
-    /* 0x153912110 */
+    /* 0x153CE29A0 */
     private static long _sig_lua_type = ScanSignature("\x48\x83\xEC\x28\xE8\xCC\xCC\xCC\xCC\x0F\xB6\x50\x08\xF6", "xxxxx????xxxxx");
-    CREATE_FUNCTION_PTR(long, lua_type, _sig_lua_type, long L, int idx)
+    FUNCTION_PTR(long, lua_type, _sig_lua_type, long L, int idx)
 
     /* 0x15391B810 */
     private static long _sig_lua_tolstring = ScanSignature("\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x4C\x89\xC3\x89", "xxxxxxxxxxxxxxxxxxx");
-    CREATE_FUNCTION_PTR(long, lua_tolstring, _sig_lua_tolstring, long L, int idx, long len)
+    FUNCTION_PTR(long, lua_tolstring, _sig_lua_tolstring, long L, int idx, long len)
 
-    /* 0x140E6D3D0 */
+    /* 0x153CEFC70 */
     private static long _sig_lua_tointegerx = ScanSignature("\x40\x53\x48\x83\xEC\x20\x49\x8B\xD8\x48\xC7", "xxxxxxxxxxx");
-    CREATE_FUNCTION_PTR(long, lua_tointegerx, _sig_lua_tointegerx, long L, int idx, long pisnum)
+    FUNCTION_PTR(long, lua_tointegerx, _sig_lua_tointegerx, long L, int idx, long pisnum)
 
-    /* 0x140E6D230 */
+    /* 0x140F55F30 */
     private static long _sig_lua_tonumberx = ScanSignature("\x48\x83\xEC\x28\xE8\xCC\xCC\xCC\xCC\x80\x78\x08\x13", "xxxxx????xxxx");
-    CREATE_FUNCTION_PTR(long, lua_tonumberx, _sig_lua_tonumberx, long L, int idx, long pisnum)
+    FUNCTION_PTR(long, lua_tonumberx, _sig_lua_tonumberx, long L, int idx, long pisnum)
 
-    /* 0x153916890 */
+    /* 0x153CE8FE0 */
     private static long _sig_lua_toboolean = ScanSignature("\x48\x83\xEC\x28\xE8\xCC\xCC\xCC\xCC\x0F\xB6\x48\x08\x80\xF9\x01", "xxxxx????xxxxxxx");
-    CREATE_FUNCTION_PTR(bool, lua_toboolean, _sig_lua_toboolean, long L, int idx)
+    FUNCTION_PTR(bool, lua_toboolean, _sig_lua_toboolean, long L, int idx)
 
-    /* 0x14BDE5E20 */
+    /* 0x14C25D880 */
     private static long _sigInitScriptSequenceManager = ScanSignature("\x48\x89\x5C\x24\x10\x48\x89\x6C\x24\x18\x56\x57\x41\x54\x41\x56\x41\x57\x48\x81\xEC\x30\x01\x00\x00\x48\x89", "xxxxxxxxxxxxxxxxxxxxxxxxxxx");
-    CREATE_FUNCTION_PTR(int*, InitScriptSequenceManager, _sigInitScriptSequenceManager, long pScriptSequenceManager, uint* pStringHash, char a3)
+    FUNCTION_PTR(int*, InitScriptSequenceManager, _sigInitScriptSequenceManager, GameService.Data* in_pScriptSequenceManager, uint* in_pStringHash, char a3)
     
-    /* 0x14BDD7B60 */
+    /* 0x14C245AC0 */
     private static long _sigRegisterScriptSequenceManager = ScanSignature("\x40\x56\x48\x81\xEC\xC0\x00\x00\x00\x48\x89\xCE\x45", "xxxxxxxxxxxxx");
-    CREATE_FUNCTION_PTR(long, RegisterScriptSequenceManager, _sigRegisterScriptSequenceManager, long pScriptSequenceManager)
+    FUNCTION_PTR(long, RegisterScriptSequenceManager, _sigRegisterScriptSequenceManager, GameService.Data* in_pScriptSequenceManager)
 
+    [LibraryInitializer]
     public void Init()
     {
-        if (_lastGameModeName != GameMode.GetName())
-        {
-            InitScriptSequence();
-
-            _lastGameModeName = GameMode.GetName();
-        }
-
         if (_isInitialised)
             return;
-
-        GameMode.Init();
 
         fixed (bool* p_isScriptSequenceInactive = &_isScriptSequenceInactive)
         fixed (long* p_pLuaState = &_pLuaState)
@@ -415,30 +406,30 @@ Library "Lua" by "Hyper & ĐeäTh"
             );
         }
 
-        long HookService(string resourceName, string resourceType, long pResourceData)
+        Resources.Data* HookService(string in_resourceName, string in_resourceType, Resources.Data* in_pResource)
         {
-            if (resourceType != "ResLuaData" || pResourceData == 0)
-                return pResourceData;
+            if (in_resourceType != "ResLuaData" || in_pResource == null)
+                return in_pResource;
 
-            _currentScript = (resourceName, pResourceData);
+            _currentScript = (in_resourceName, (long)in_pResource);
 
             bool isHooked = false;
 
-            string script = _scriptData.ContainsKey(resourceName)
-                ? _scriptData[resourceName]
-                : FROM_U8STRING_PTR((IntPtr)(*(long*)(pResourceData + 0x60)));
+            string script = _scriptData.ContainsKey(in_resourceName)
+                ? _scriptData[in_resourceName]
+                : Helpers.PtrToStringUTF8((nint)in_pResource->pData, (int)in_pResource->Size);
                 
             // Always allow committing backed up Lua data.
-            if (_hooks.Count == 0 && _scriptData.ContainsKey(resourceName))
+            if (_hooks.Count == 0 && _scriptData.ContainsKey(in_resourceName))
                 isHooked = true;
 
             foreach (var hook in _hooks)
             {
-                if (hook.ScriptName == resourceName || string.IsNullOrEmpty(hook.ScriptName))
+                if (hook.ScriptName == in_resourceName || string.IsNullOrEmpty(hook.ScriptName))
                 {
                     // Back up current script since the game caches our changes.
-                    if (!_scriptData.ContainsKey(resourceName))
-                        _scriptData.Add(resourceName, script);
+                    if (!_scriptData.ContainsKey(in_resourceName))
+                        _scriptData.Add(in_resourceName, script);
                 }
                 else if (!string.IsNullOrEmpty(hook.ScriptName))
                 {
@@ -457,11 +448,11 @@ Library "Lua" by "Hyper & ĐeäTh"
 
             if (isHooked)
             {
-                *(long*)(pResourceData + 0x60) = TO_U8STRING_PTR(script);
-                *(long*)(pResourceData + 0x68) = Encoding.UTF8.GetBytes(script).Length;
+                in_pResource->pData = TO_U8STRING_PTR(script);
+                in_pResource->Size = Encoding.UTF8.GetBytes(script).Length;
             }
 
-            return pResourceData;
+            return in_pResource;
         }
 
         Resources.AddResourceDataAction(HookService);
@@ -469,12 +460,15 @@ Library "Lua" by "Hyper & ĐeäTh"
         _isInitialised = true;
     }
 
-    private bool IsInitialised()
+    [LibraryUpdate]
+    public void Update()
     {
-        if (!_isInitialised)
-            Logger.Error("[Lua] Lua library is not initialised! Please call Lua.Init() at the beginning of your code.");
+        if (_lastGameModeName != GameMode.GetName())
+        {
+            InitScriptSequence();
 
-        return _isInitialised;
+            _lastGameModeName = GameMode.GetName();
+        }
     }
 
     public void InitScriptSequence()
@@ -487,31 +481,26 @@ Library "Lua" by "Hyper & ĐeäTh"
 
         if (_sigScriptSequenceManagerStaticClassCtor == 0)
         {
-            /* 0x140053480 */
+            /* 0x140178E1E */
             _sigScriptSequenceManagerStaticClassCtor = ScanSignature
             (
-                "\x45\x33\xC9\x4C\x8D\x05\xCC\xCC\xCC\xCC\x48\x8D\x15\xCC\xCC\xCC\xCC\x48\x8D\x0D\xCC\xCC\xCC\xCC\xE9\x73\x3F",
-                "xxxxxx????xxx????xxx????xxx"
+                "\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD0\x48\x8B\xCF\xE8\xCC\xCC\xCC\xCC\x0F\xB7\x97\x58\x01\x00\x00",
+                "x????xxxxxxx????xxxxxxx"
             );
 
             if (_sigScriptSequenceManagerStaticClassCtor == 0)
             {
-                Console.WriteLine("[Lua] Failed to initialise script sequence!");
+                Logger.Error("[Lua] Failed to initialise script sequence!");
                 return;
             }
 
-            /* 0x143C53810 */
-            GameService.AddUserService(Memory.ReadEffectiveAddress(_sigScriptSequenceManagerStaticClassCtor + 0x11));
+            /* 0x143DBE440 */
+            GameService.AddUserService(Memory.ReadEffectiveAddress(Memory.ReadCall(_sigScriptSequenceManagerStaticClassCtor)));
         }
 
-        long pGameDocument = GameDocument.Get();
+        var pScriptSequenceManager = GameDocument.GetService("ScriptSequenceManager");
 
-        if (pGameDocument == 0)
-            return;
-
-        long pScriptSequenceManager = GameDocument.GetService(pGameDocument, "ScriptSequenceManager");
-
-        if (pScriptSequenceManager == 0)
+        if (pScriptSequenceManager == null)
             return;
 
         // BuildLevel
@@ -523,9 +512,6 @@ Library "Lua" by "Hyper & ĐeäTh"
 
     public long GetState()
     {
-        if (!IsInitialised())
-            return 0;
-
         /*
             This stupid null check validates the Lua state
             by checking if lua_State.next is null. This won't
@@ -542,29 +528,25 @@ Library "Lua" by "Hyper & ĐeäTh"
         return _pLuaState;
     }
 
-    public (string, long) GetCurrentScriptResource()
+    public (string ScriptName, long pResourceData) GetCurrentScriptResource()
     {
-        if (!IsInitialised())
-            return (null, 0);
-
-        return (_currentScript.Item1, _currentScript.Item2);
+        return (_currentScript.ScriptName, _currentScript.pResourceData);
     }
 
-    public string Peek(bool isOutput = true)
+    public string Peek(bool in_isOutput = true)
     {
-        if (!IsInitialised())
-            return string.Empty;
-
-        long pResourceData = _currentScript.Item2;
+        long pResourceData = _currentScript.pResourceData;
 
         if (pResourceData == 0)
             return string.Empty;
 
-        string result = FROM_U8STRING_PTR((IntPtr)(*(long*)(pResourceData + 0x60)));
+        var pResource = (Resources.Data*)pResourceData;
 
-        if (isOutput)
+        string result = Helpers.PtrToStringUTF8((nint)pResource->pData, (int)pResource->Size);
+
+        if (in_isOutput)
         {
-            Logger.Utility($"[Lua] Peeking \"{_currentScript.Item1}\" at 0x{pResourceData:X}...");
+            Logger.Utility($"[Lua] Peeking \"{_currentScript.ScriptName}\" at 0x{pResourceData:X}...");
             Logger.Warning("[Lua] WARNING: console output may look mangled due to unsupported characters");
             Logger.Utility("[Lua] ///////////////////////////// PEEK START /////////////////////////////");
             Console.Write($"\n{result}\n");
@@ -574,12 +556,9 @@ Library "Lua" by "Hyper & ĐeäTh"
         return result;
     }
     
-    public LineHook CreateLineHook(string code, string scriptName, string pattern, HookBehavior behaviour, bool isRegex = false, RegexOptions regexOptions = default)
+    public LineHook CreateLineHook(string in_code, string in_scriptName, string in_pattern, HookBehavior in_behaviour, bool in_isRegex = false, RegexOptions in_regexOptions = default)
     {
-        if (!IsInitialised())
-            return null;
-
-        var hook = new LineHook(code, scriptName, pattern, behaviour, isRegex, regexOptions);
+        var hook = new LineHook(in_code, in_scriptName, in_pattern, in_behaviour, in_isRegex, in_regexOptions);
 
         if (_hooks.Contains(hook))
             return hook;
@@ -589,18 +568,15 @@ Library "Lua" by "Hyper & ĐeäTh"
         return hook;
     }
 
-    public LineHook CreateLineHook(string code, string pattern, HookBehavior behaviour, bool isRegex = false)
+    public LineHook CreateLineHook(string in_code, string in_pattern, HookBehavior in_behaviour, bool in_isRegex = false)
     {
         // Hook all Lua scripts.
-        return CreateLineHook(code, null, pattern, behaviour, isRegex);
+        return CreateLineHook(in_code, null, in_pattern, in_behaviour, in_isRegex);
     }
 
-    public FunctionHook CreateFunctionHook(string code, string scriptName, string functionName, HookBehavior behaviour)
+    public FunctionHook CreateFunctionHook(string in_code, string in_scriptName, string in_functionName, HookBehavior in_behaviour)
     {
-        if (!IsInitialised())
-            return null;
-
-        var hook = new FunctionHook(code, scriptName, functionName, behaviour);
+        var hook = new FunctionHook(in_code, in_scriptName, in_functionName, in_behaviour);
 
         if (_hooks.Contains(hook))
             return hook;
@@ -610,31 +586,31 @@ Library "Lua" by "Hyper & ĐeäTh"
         return hook;
     }
 
-    public FunctionHook CreateFunctionHook(string code, string functionName, HookBehavior behaviour)
+    public FunctionHook CreateFunctionHook(string in_code, string in_functionName, HookBehavior in_behaviour)
     {
         // Hook all Lua scripts.
-        return CreateFunctionHook(code, null, functionName, behaviour);
+        return CreateFunctionHook(in_code, null, in_functionName, in_behaviour);
     }
 
-    public void UninstallHook(Hook hook)
+    public void UninstallHook(Hook in_hook)
     {
-        if (hook == null)
+        if (in_hook == null)
             return;
         
-        if (!_hooks.Contains(hook))
+        if (!_hooks.Contains(in_hook))
             return;
 
-        _hooks.Remove(hook);
+        _hooks.Remove(in_hook);
     }
 
-    public string CreateFunctionSignature(string funcName, params object[] args)
+    public string CreateFunctionSignature(string in_functionName, params object[] in_args)
     {
         var code = new StringBuilder();
         {
-            code.Append($"{funcName}(");
+            code.Append($"{in_functionName}(");
 
             int i = 0;
-            foreach (var arg in args)
+            foreach (var arg in in_args)
             {
                 if (arg.GetType() == typeof(string))
                 {
@@ -645,7 +621,7 @@ Library "Lua" by "Hyper & ĐeäTh"
                     code.Append($"{arg}");
                 }
 
-                if (i != args.Length - 1)
+                if (i != in_args.Length - 1)
                 {
                     code.Append(", ");
                 }
@@ -659,39 +635,36 @@ Library "Lua" by "Hyper & ĐeäTh"
         return code.ToString();
     }
 
-    public string GetPreviousError(long L)
+    public string GetPreviousError(long in_pLuaState)
     {
-        var pError = (IntPtr)GET_FUNCTION_PTR(lua_tolstring)(L, -1, 0);
+        var pError = (IntPtr)GET_FUNCTION_PTR(lua_tolstring)(in_pLuaState, -1, 0);
         
-        GET_FUNCTION_PTR(lua_pop)(L, 1);
+        GET_FUNCTION_PTR(lua_pop)(in_pLuaState, 1);
 
         return FROM_STRING_PTR(pError);
     }
 
-    private void CallHandled(long L, int args, int results)
+    private void CallHandled(long in_pLuaState, int in_args, int in_results)
     {
         if (_isScriptSequenceInactive)
             return;
 
-        if (GET_FUNCTION_PTR(lua_pcallk)(L, args, results, 0, 0, 0) != LUA_OK)
+        if (GET_FUNCTION_PTR(lua_pcallk)(in_pLuaState, in_args, in_results, 0, 0, 0) != LUA_OK)
         {
-            Logger.Error($"[Lua] Error: {GetPreviousError(L)}");
+            Logger.Error($"[Lua] Error: {GetPreviousError(in_pLuaState)}");
         }
     }
 
-    public void Script(string code, bool isRunOnce = false)
+    public void Script(string in_code, bool in_isRunOnce = false)
     {
-        if (!IsInitialised())
+        long pLuaState = GetState();
+
+        if (pLuaState == 0)
             return;
 
-        long L = GetState();
-
-        if (L == 0)
-            return;
-
-        if (isRunOnce)
+        if (in_isRunOnce)
         {
-            uint codeHash = StringMapOperation.ComputeHash(code);
+            uint codeHash = StringMapOperation.ComputeHash(in_code);
 
             if (_userScriptHandles.Contains(codeHash))
             {
@@ -703,51 +676,45 @@ Library "Lua" by "Hyper & ĐeäTh"
             }
         }
             
-        long str = TO_STRING_PTR(code);
+        long str = TO_STRING_PTR(in_code);
         
-        GET_FUNCTION_PTR(luaL_loadbufferx)(L, str, code.Length, str, 0);
+        GET_FUNCTION_PTR(luaL_loadbufferx)(pLuaState, str, in_code.Length, str, 0);
 
-        CallHandled(L, 0, -1);
+        CallHandled(pLuaState, 0, -1);
     }
 
-    public void LoadScript(string path, bool isRunOnce = false)
+    public void LoadScript(string in_path, bool in_isRunOnce = false)
     {
-        if (!IsInitialised())
-            return;
-
-        if (!File.Exists(path))
+        if (!File.Exists(in_path))
             return;
 
         string code = string.Empty;
 
         try
         {
-            code = File.ReadAllText(path);
+            code = File.ReadAllText(in_path);
         }
-        catch (IOException ex)
+        catch (IOException)
         {
-            Logger.Error($"[Lua] Error: \"{path}\" is being used by another process.");
+            Logger.Error($"[Lua] Error: \"{in_path}\" is being used by another process.");
         }
 
         if (string.IsNullOrEmpty(code))
             return;
 
-        Script(code, isRunOnce);
+        Script(code, in_isRunOnce);
     }
 
-    private void Call(string funcName, int resultCount, params object[] args)
+    private void Call(string in_functionName, int in_resultCount, params object[] in_args)
     {
-        if (!IsInitialised())
-            return;
-
         long L = GetState();
 
         if (L == 0)
             return;
 
-        GET_FUNCTION_PTR(lua_getglobal)(L, TO_STRING_PTR(funcName));
+        GET_FUNCTION_PTR(lua_getglobal)(L, TO_STRING_PTR(in_functionName));
 
-        foreach (var arg in args)
+        foreach (var arg in in_args)
         {
             var type = arg.GetType();
 
@@ -775,25 +742,22 @@ Library "Lua" by "Hyper & ĐeäTh"
             }
         }
 
-        CallHandled(L, args.Length, resultCount);
+        CallHandled(L, in_args.Length, in_resultCount);
     }
 
-    public void Call(string funcName, params object[] args)
+    public void Call(string in_functionName, params object[] in_args)
     {
-        Call(funcName, 0, args);
+        Call(in_functionName, 0, in_args);
     }
 
-    public T Call<T>(string funcName, params object[] args)
+    public T Call<T>(string in_functionName, params object[] in_args)
     {
-        if (!IsInitialised())
-            return default;
-
         long L = GetState();
 
         if (L == 0)
             return default;
 
-        Call(funcName, 1, args);
+        Call(in_functionName, 1, in_args);
 
         var type = typeof(T);
         var luaType = GET_FUNCTION_PTR(lua_type)(L, -1);

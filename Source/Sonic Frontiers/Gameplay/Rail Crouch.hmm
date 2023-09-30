@@ -1,4 +1,4 @@
-Code "Rail Crouch" in "Gameplay" by "WasifBoomz" does 
+Code "Rail Crouch" in "! Incompatible - awaiting fixes for v1.40" by "WasifBoomz" does 
 /*
 Allows Sonic to crouch on grind rails to gain or lose speed based on the angle of the rail.
 
@@ -7,13 +7,14 @@ Notes;
 - The boost has been modified to become an accelerator while grinding.
 */
 //
-    #lib "Sonic"
+    #include "BlackboardStatus" noemit
+
     #lib "BlackboardStatus"
     #lib "Bitwise"
+    #lib "Player"
 
     #load "System.Numerics.dll"
 	
-    using System;
     using System.Numerics;
 
     const float grindCrouchSpeed = 40.0f;
@@ -103,7 +104,7 @@ Notes;
         isInitialised = true;
     }
 
-    Sonic.Kinematics kinematics = Sonic.Kinematics.Get();
+    var kinematics = Player.Kinematics.Get();
 
     if (BlackboardStatus.Get() == null)
         return;
@@ -119,24 +120,22 @@ Notes;
     isRailCrouching = false;
 
     // Run this code when crouching on rails
-    if (Sonic.Input.IsDown(Sonic.PlayerActionType.PlayerStomping))
+    if (Player.Input.IsDown(Player.InputActionType.PlayerStomping))
     {
-        if (Sonic.State.GetCurrentStateID() == Sonic.StateID.StateGrind)
+        if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateGrind)
         {
             isRailCrouching = true;
-            Sonic.Animation.SetAnimation("GRIND_LAND");
+            Player.Animation.SetAnimation("GRIND_LAND");
         }
 
 	    // Increase speed based on gravity
-        *grindAcceleration -= (Vector3.Normalize(*kinematics.Velocity).Y) * grindCrouchSpeed;
+        *grindAcceleration -= (Vector3.Normalize(kinematics->Velocity).Y) * grindCrouchSpeed;
     }
     
     // Increase acceleration when boosting on Grind Rails
-    if (Bitwise.Test(*BlackboardStatus.GetStateFlags(), (uint)BlackboardStatus.StateFlags.IsBoost))
+    if (IS_STATE_FLAG(IsBoost))
     {
-        *grindAcceleration += (Vector3.Normalize(*kinematics.Velocity).Y) * boostGrindSpeed;
+        *grindAcceleration += (Vector3.Normalize(kinematics->Velocity).Y) * boostGrindSpeed;
         *grindAcceleration = Math.Max(*grindAcceleration, boostGrindSpeedMin);
     }
 }
-
-

@@ -1,31 +1,33 @@
 Patch "Fix Damage from Jumping into Enemies" in "Fixes" by "Hyper" does "Fixes Sonic taking damage when jumping into enemies within a small frame window." 
 //
-    #lib "Sonic"
+    #lib "Player"
 
     static bool IsJumpPrevious = false;
 //
 {
-    void NotifyJumpDamageCollision(Sonic.StateID stateId, Sonic.StateID[] stateStackTrace)
+    Sonic.StateID NotifyJumpDamageCollision(Sonic.StateID in_stateId, Sonic.StateID[] in_stateStackTrace)
     {
-        bool isJump = stateId == Sonic.StateID.StateJump ||
-            stateId == Sonic.StateID.StateDoubleJump ||
-            stateId == Sonic.StateID.StateGrindDoubleJump;
+        bool isJump = in_stateId == Sonic.StateID.StateJump ||
+            in_stateId == Sonic.StateID.StateDoubleJump ||
+            in_stateId == Sonic.StateID.StateGrindDoubleJump;
 
         if (isJump)
         {
-            Sonic.Collision.SetCollisionSphere(Sonic.CollisionType.Damage, 1.0f);
-            Sonic.Collision.ToggleEntityCollision(false);
+            Player.Collision.SetCollisionSphere(Player.CollisionType.Damage, 1.0f);
+            Player.Collision.SetEntityCollision(false);
             IsJumpPrevious = true;
         }
         else if (IsJumpPrevious)
         {
-            Sonic.Collision.SetCollisionSphere(Sonic.CollisionType.Default, 1.0f);
-            Sonic.Collision.ToggleEntityCollision(true);
+            Player.Collision.SetCollisionSphere(Player.CollisionType.Default, 1.0f);
+            Player.Collision.SetEntityCollision(true);
             IsJumpPrevious = false;
         }
+
+        return in_stateId;
     }
 
-    Sonic.State.AddStateNotifyAction(NotifyJumpDamageCollision);
+    Player.State.AddStateNotifyAction<Sonic.StateID>(NotifyJumpDamageCollision);
 }
 
 

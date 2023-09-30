@@ -4,8 +4,6 @@ Code "Tutorial Skip" in "Gameplay" by "Gordon Ramsay & Hyper" does "Displays a p
     #lib "Lua"
 //
 {
-    Lua.Init();
-
     Converse.Redirect("skip_tutorial_caption", "Skip the tutorial?");
     Converse.Redirect("skip_tutorial_body", "Would you like to skip the tutorial? This will place you by\nthe 1-2 Portal with some rings and experience points.\nAll major tutorial flags will be marked as complete.");
 
