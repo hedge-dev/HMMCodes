@@ -1,4 +1,4 @@
-Patch "Retain Ground Velocity for Jump" in "Physics" by "Hyper" does 
+Patch "Retain Ground Velocity for Jump" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does 
 /*
 Retains Sonic's ground velocity when jumping.
 
