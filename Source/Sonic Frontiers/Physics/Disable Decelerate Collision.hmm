@@ -1,4 +1,4 @@
-Patch "Disable Decelerate Collision" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does 
+Patch "Disable Decelerate Collision" in "Physics" by "Hyper" does 
 /*
 Disables the collision flag that kills all horizontal velocity when jumping.
 
