@@ -15,7 +15,7 @@ Library "Resources" by "Hyper"
     public delegate string TResourceNotifyAction(string in_resourceName, string in_resourceType);
     private static List<TResourceNotifyAction> _resourceNotifyActions = new();
     
-    public delegate Resources.Data* TResourceDataAction(string in_resourceName, string in_resourceType, Data* in_pResource);
+    public delegate long TResourceDataAction(string in_resourceName, string in_resourceType, long in_pResource);
     private static List<TResourceDataAction> _resourceDataActions = new();
     
     UNMANAGED_FUNCTION(long, GetResourceInfo, long in_pResourceName, long in_pResourceType)
@@ -29,12 +29,12 @@ Library "Resources" by "Hyper"
         return in_pResourceName;
     }
     
-    UNMANAGED_FUNCTION(long, GetResourceData, Data* in_pResource)
+    UNMANAGED_FUNCTION(long, GetResourceData, long in_pResource)
     {
     	foreach (TResourceDataAction action in _resourceDataActions)
     		in_pResource = action(_currentResourceName, _currentResourceType, in_pResource);
     
-        return (long)in_pResource;
+        return in_pResource;
     }
 
     /// <summary>

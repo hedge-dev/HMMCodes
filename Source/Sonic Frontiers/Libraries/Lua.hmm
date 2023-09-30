@@ -406,10 +406,12 @@ Library "Lua" by "Hyper & ĐeäTh"
             );
         }
 
-        Resources.Data* HookService(string in_resourceName, string in_resourceType, Resources.Data* in_pResource)
+        long HookService(string in_resourceName, string in_resourceType, long in_pResource)
         {
-            if (in_resourceType != "ResLuaData" || in_pResource == null)
+            if (in_resourceType != "ResLuaData" || in_pResource == 0)
                 return in_pResource;
+
+            var pResource = (Resources.Data*)in_pResource;
 
             _currentScript = (in_resourceName, (long)in_pResource);
 
@@ -417,7 +419,7 @@ Library "Lua" by "Hyper & ĐeäTh"
 
             string script = _scriptData.ContainsKey(in_resourceName)
                 ? _scriptData[in_resourceName]
-                : Helpers.PtrToStringUTF8((nint)in_pResource->pData, (int)in_pResource->Size);
+                : Helpers.PtrToStringUTF8((nint)pResource->pData, (int)pResource->Size);
                 
             // Always allow committing backed up Lua data.
             if (_hooks.Count == 0 && _scriptData.ContainsKey(in_resourceName))
@@ -448,11 +450,11 @@ Library "Lua" by "Hyper & ĐeäTh"
 
             if (isHooked)
             {
-                in_pResource->pData = TO_U8STRING_PTR(script);
-                in_pResource->Size = Encoding.UTF8.GetBytes(script).Length;
+                pResource->pData = TO_U8STRING_PTR(script);
+                pResource->Size = Encoding.UTF8.GetBytes(script).Length;
             }
 
-            return in_pResource;
+            return (long)pResource;
         }
 
         Resources.AddResourceDataAction(HookService);
