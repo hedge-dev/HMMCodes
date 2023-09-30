@@ -1,6 +1,6 @@
-Code "Retain Velocity When Jumping Up Slopes" in "Physics" by "Weezley" does "Retains the current ground velocity when jumping from a steep slope."
+Code "Retain Velocity When Jumping Up Slopes" in "! Incompatible - awaiting fixes for v1.40" by "Weezley" does "Retains the current ground velocity when jumping from a steep slope."
 //
-    #include "ReflectionHelpers" noemit
+    #include "Reflection" noemit
 
     #lib "SonicParameters"
 //
