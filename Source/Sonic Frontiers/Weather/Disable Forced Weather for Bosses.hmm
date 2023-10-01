@@ -1,4 +1,4 @@
-Patch "Disable Forced Weather for Bosses" in "Weather" by "Hyper" does "Disables the weather being forced to Sunny for Giganto and Supreme." 
+Patch "Disable Forced Weather for Bosses" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Disables the weather being forced to Sunny for Giganto and Supreme." 
 {
     // Giganto
     WriteProtected<byte>
