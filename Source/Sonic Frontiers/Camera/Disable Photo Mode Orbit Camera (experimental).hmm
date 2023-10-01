@@ -1,4 +1,4 @@
-Patch "Disable Photo Mode Orbit Camera (experimental)" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does 
+Patch "Disable Photo Mode Orbit Camera (experimental)" in "Camera" by "Hyper" does 
 /*
 Makes the camera in Photo Mode control more like a first-person camera, rather than orbiting a specific point.
 
@@ -14,24 +14,20 @@ Known issues;
         WriteAsmHook
         (
             $@"
-                push  rax
+                mov   rcx, {(long)pDistance}
+                movss xmm8, dword ptr [rcx]
                 mov   rcx, rsi
                 lea   rcx, [rsi + 0x50]
-                mov   rax, {(long)pDistance}
-                movss xmm7, dword ptr [rax]
-                pop   rax
             ",
 
-            /* 0x1400A55CB */
+            /* 0x1400B1E26 */
             ScanSignature
             (
-                "\x48\x8B\xCE\xE8\xCC\xCC\xCC\xCC\x48\x8D\x4E\x50\xF3\x0F\x10\x78\x2C",
-                "xxxx????xxxxxxxxx"
+                "\x48\x8B\xCE\xE8\xCC\xCC\xCC\xCC\x48\x8D\x4E\x50\xF3\x44\x0F\x10\x40\x2C",
+                "xxxx????xxxxxxxxxx"
             ),
 
             HookBehavior.Replace
         );
     }
 }
-
-
