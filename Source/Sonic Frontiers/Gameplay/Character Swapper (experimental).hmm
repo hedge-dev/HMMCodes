@@ -20,6 +20,12 @@ Known issues;
 //
     #lib "Player"
     #lib "XInput"
+
+    using System.Diagnostics;
+    using System.Runtime.InteropServices;
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
     
     static bool IsButtonDownSpecial(XInput.Buttons buttons)
     {
@@ -30,6 +36,9 @@ Known issues;
     }
 //
 {
+    if (GetForegroundWindow() != Process.GetCurrentProcess().MainWindowHandle)
+        return;
+    
     if ((GetAsyncKeyState(HMMCodes.Keys.D1) & 0x8000) != 0 || IsButtonDownSpecial(XInput.Buttons.DPAD_UP))
     {
         Player.SetPlayerType(Player.PlayerType.Sonic);
