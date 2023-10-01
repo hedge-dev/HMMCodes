@@ -62,7 +62,7 @@ Library "Reflection" by "Hyper"
     /// <param name="in_info">An instance of `ReflectionInfo<T>`.</param>
     /// <param name="in_type">The reflection struct type.</param>
     /// <param name="in_hierarchy">The hierarchy to get the reflection data from.</param>
-    #define RFL_RESET_PARAM(in_info, in_type, in_hierarchy) in_info.pData->in_hierarchy = Reflection.GetOriginalData<in_type>(in_info.Name).in_hierarchy
+    #define RFL_RESET_PARAM(in_info, in_type, in_hierarchy) in_info.pData->in_hierarchy = ((in_type)Reflection.GetOriginalData(in_info.Name)).in_hierarchy
 
     /// <summary>
     /// Gets a parameter from the specified hierarchy in the current contextual mode package.
@@ -132,11 +132,11 @@ Library "Reflection" by "Hyper"
     /// <param name="in_hierarchy">The hierarchy to get the reflection data from.</param>
     #define RFL_RESET_CONTEXTUAL_PLAYER_PARAM(in_info, in_type, in_hierarchy) \
         if (Player.Status.IsSideView()) \
-            in_info.pData->cyberspaceSV.in_hierarchy = Reflection.GetOriginalData<in_type>(in_info.Name).cyberspaceSV.in_hierarchy; \
+            in_info.pData->cyberspaceSV.in_hierarchy = ((in_type)Reflection.GetOriginalData(in_info.Name)).cyberspaceSV.in_hierarchy; \
         else if ((BlackboardStatus.Get() != null && (BlackboardStatus.Get()->WorldFlags & (1L << (int)BlackboardStatus.WorldFlags.IsCyberSpace)) != 0)) \
-            in_info.pData->cyberspace.in_hierarchy = Reflection.GetOriginalData<in_type>(in_info.Name).cyberspace.in_hierarchy; \
+            in_info.pData->cyberspace.in_hierarchy = ((in_type)Reflection.GetOriginalData(in_info.Name)).cyberspace.in_hierarchy; \
         else \
-            in_info.pData->forwardView.in_hierarchy = Reflection.GetOriginalData<in_type>(in_info.Name).forwardView.in_hierarchy;
+            in_info.pData->forwardView.in_hierarchy = ((in_type)Reflection.GetOriginalData(in_info.Name)).forwardView.in_hierarchy;
 
     using System.Collections.Generic;
 
@@ -253,16 +253,4 @@ Library "Reflection" by "Hyper"
 
         return _rflBackups[in_rflName];
     }
-
-    /// <summary>
-    /// Gets the original struct by name for given reflection data (if it was backed up by `GetDataPtr<T>()`).
-    /// </summary>
-    /// <param name="in_rflName">The name of the reflection data to get.</param>
-    /// <returns>A struct pertaining to the original reflection data.</returns>
-    public T GetOriginalData<T>(string in_rflName)
-    {
-        return (T)GetOriginalData(in_rflName);
-    }
 }
-
-
