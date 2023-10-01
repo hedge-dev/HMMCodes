@@ -15,19 +15,11 @@ Keyboard Layout;
 - 4 - switch to Tails
 
 Known issues;
-- Characters other than Sonic will have the lowest stats and an incomplete skill tree.
+- Characters other than Sonic will have the lowest stats and an incomplete skill tree outside of Another Story.
 */
 //
-    #lib "Lua"
     #lib "Player"
     #lib "XInput"
-
-    [System.Runtime.InteropServices.DllImport("user32.dll")]
-    public static extern short GetAsyncKeyState(HMMCodes.Keys vKey);
-
-    static bool _isUpdateCharacter = false;
-
-    static Player.PlayerType _currentCharacter = Player.PlayerType.Unknown;
     
     static bool IsButtonDownSpecial(XInput.Buttons buttons)
     {
@@ -38,46 +30,23 @@ Known issues;
     }
 //
 {
-    Lua.CreateLineHook
-    (
-        @"""sonic"", ""tails"", ""knuckles"", ""amy"", ",
-
-        "script/resident/stagedata.lua",
-
-        @"attrs\s*=\s*\{",
-
-        HookBehavior.After,
-
-        true
-    );
-
     if ((GetAsyncKeyState(HMMCodes.Keys.D1) & 0x8000) != 0 || IsButtonDownSpecial(XInput.Buttons.DPAD_UP))
     {
-        _currentCharacter = Player.PlayerType.Sonic;
-        _isUpdateCharacter = true;
+        Player.SetPlayerType(Player.PlayerType.Sonic);
     }
 
     if ((GetAsyncKeyState(HMMCodes.Keys.D2) & 0x8000) != 0 || IsButtonDownSpecial(XInput.Buttons.DPAD_RIGHT))
     {
-        _currentCharacter = Player.PlayerType.Amy;
-        _isUpdateCharacter = true;
+        Player.SetPlayerType(Player.PlayerType.Amy);
     }
 
     if ((GetAsyncKeyState(HMMCodes.Keys.D3) & 0x8000) != 0 || IsButtonDownSpecial(XInput.Buttons.DPAD_DOWN))
     {
-        _currentCharacter = Player.PlayerType.Knuckles;
-        _isUpdateCharacter = true;
+        Player.SetPlayerType(Player.PlayerType.Knuckles);
     }
 
     if ((GetAsyncKeyState(HMMCodes.Keys.D4) & 0x8000) != 0 || IsButtonDownSpecial(XInput.Buttons.DPAD_LEFT))
     {
-        _currentCharacter = Player.PlayerType.Tails;
-        _isUpdateCharacter = true;
-    }
-
-    if (_isUpdateCharacter)
-    {
-        Player.SetPlayerType(_currentCharacter);
-        _isUpdateCharacter = false;
+        Player.SetPlayerType(Player.PlayerType.Tails);
     }
 }

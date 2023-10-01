@@ -73,14 +73,28 @@ Library "Player" by "Hyper, NM, Ahremic & Skyth"
     {
         if (_isInitialised)
             return;
+        
+        // Allow character switching outside of Another Story.
+        Lua.CreateLineHook
+        (
+            @"""sonic"", ""tails"", ""knuckles"", ""amy"", ",
+
+            "script/resident/stagedata.lua",
+
+            @"attrs\s*=\s*\{",
+
+            HookBehavior.After,
+
+            true
+        );
 
         // Always construct app::player::AmyInfo.
         WriteNop
         (
-            /* 0x14085DC2B */
+            /* 0x14091181B */
             ScanSignature
             (
-                "\x74\x3E\x48\x8B\x07\xBA\xD0\x00\x00\x00",
+                "\x74\x3E\x48\x8B\x07\xBA\xD8\x00\x00\x00",
                 "xxxxxxxxxx"
             ),
             
@@ -90,7 +104,7 @@ Library "Player" by "Hyper, NM, Ahremic & Skyth"
         // Always construct app::player::KnucklesInfo.
         WriteNop
         (
-            /* 0x14085DBE0 */
+            /* 0x1409117D0 */
             ScanSignature
             (
                 "\x74\x47\x48\x8B\x07\xBA\xC0\x00\x00\x00",
@@ -103,10 +117,10 @@ Library "Player" by "Hyper, NM, Ahremic & Skyth"
         // Always construct app::player::TailsInfo.
         WriteNop
         (
-            /* 0x14085DB95 */
+            /* 0x140911785 */
             ScanSignature
             (
-                "\x74\x47\x48\x8B\x07\xBA\xB8\x00\x00\x00",
+                "\x74\x47\x48\x8B\x07\xBA\x20\x01\x00\x00",
                 "xxxxxxxxxx"
             ),
             
