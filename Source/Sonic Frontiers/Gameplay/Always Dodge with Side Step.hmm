@@ -1,22 +1,21 @@
-Code "Always Dodge with Side Step" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Always makes Sonic dodge left or right instead of side stepping whilst not running." 
+Code "Always Dodge with Side Step" in "Gameplay" by "Hyper" does "Always makes Sonic dodge left or right instead of side stepping whilst not running." 
 //
     #include "BlackboardStatus" noemit
 
-    #lib "Bitwise"
     #lib "Memory"
     #lib "Player"
 
-    static bool IsInitialised = false;
-    static bool IsAutoRun = false;
-    static bool IsCyberSpace = false;
-    static bool IsAboveVelocityThreshold = false;
+    static bool _isInitialised = false;
+    static bool _isAutoRun = false;
+    static bool _isCyberSpace = false;
+    static bool _isAboveVelocityThreshold = false;
 //
 {
-    if (!IsInitialised)
+    if (!_isInitialised)
     {
-        fixed (bool* pIsCyberSpace = &IsCyberSpace)
+        fixed (bool* p_isCyberSpace = &_isCyberSpace)
         {
-            /* 0x14BB219E0 */
+            /* 0x14BF59240 */
             long sig = ScanSignature
             (
                 "\x0F\x29\x7C\x24\x70\x48\x8B\x49\x28",
@@ -33,10 +32,10 @@ Code "Always Dodge with Side Step" in "! Incompatible - awaiting fixes for v1.40
                     movaps xmmword ptr [rsp + 0x88 + 0xFFFFFFFFFFFFFFE8], xmm7
                     mov    rcx, qword ptr [rcx + 0x28]
                     mov    edx, 5
-                    mov    rax, {(long)pIsCyberSpace}
+                    mov    rax, {(long)p_isCyberSpace}
                     cmp    byte ptr [rax], 0
                     jnz    exit
-                    mov    rax, {Memory.ReadJump(sig + 0x15)}
+                    mov    rax, {Memory.ReadJump(sig + 0x1C)}
                     jmp    rax
                 exit:
                 ",
@@ -46,18 +45,18 @@ Code "Always Dodge with Side Step" in "! Incompatible - awaiting fixes for v1.40
                 HookBehavior.Replace
             );
             
-            /* 0x1408FE17A */
+            /* 0x1409D07B6 */
             sig = ScanSignature
             (
-                "\x0F\x29\x70\xE8\x48\x8B\x49\x28\xBA\x05\x00\x00\x00\x0F\x29\x78\xD8\xE8\xCC\xCC\xCC\xCC\x84\xC0\x0F\x84\xBD\x02\x00\x00",
+                "\x0F\x29\x70\xE8\x48\x8B\x49\x28\xBA\x05\x00\x00\x00\x0F\x29\x78\xD8\xE8\xCC\xCC\xCC\xCC\x84\xC0\x0F\x84\xBE\x02\x00\x00",
                 "xxxxxxxxxxxxxxxxxx????xxxxxxxx"
             );
 
             if (sig == 0)
                 return;
 
-            fixed (bool* pIsAutoRun = &IsAutoRun)
-            fixed (bool* pIsAboveVelocityThreshold = &IsAboveVelocityThreshold)
+            fixed (bool* p_isAutoRun = &_isAutoRun)
+            fixed (bool* p_isAboveVelocityThreshold = &_isAboveVelocityThreshold)
             {
                 // StateRun
                 WriteAsmHook
@@ -67,13 +66,13 @@ Code "Always Dodge with Side Step" in "! Incompatible - awaiting fixes for v1.40
                         mov    rcx, qword ptr [rcx + 0x28]
                         mov    edx, 5
                         movaps xmmword ptr [rax - 0x28], xmm7
-                        mov    rax, {(long)pIsCyberSpace}
+                        mov    rax, {(long)p_isCyberSpace}
                         cmp    byte ptr [rax], 0
                         jnz    exit
-                        mov    rax, {(long)pIsAutoRun}
+                        mov    rax, {(long)p_isAutoRun}
                         cmp    byte ptr [rax], 0
                         jnz    exit
-                        mov    rax, {(long)pIsAboveVelocityThreshold}
+                        mov    rax, {(long)p_isAboveVelocityThreshold}
                         cmp    byte ptr [rax], 0
                         jnz    exit
                         mov    rax, {Memory.ReadJump(sig + 0x18)}
@@ -88,12 +87,10 @@ Code "Always Dodge with Side Step" in "! Incompatible - awaiting fixes for v1.40
             }
         }
 
-        IsInitialised = true;
+        _isInitialised = true;
     }
 
-    IsAutoRun = IS_WORLD_FLAG(IsAutoRun);
-    IsCyberSpace = IS_WORLD_FLAG(IsCyberSpace);
-    IsAboveVelocityThreshold = Player.Kinematics.GetHorizontalMagnitude() >= 15.0f;
+    _isAutoRun = IS_WORLD_FLAG(IsAutoRun);
+    _isCyberSpace = IS_WORLD_FLAG(IsCyberSpace);
+    _isAboveVelocityThreshold = Player.Kinematics.GetHorizontalMagnitude() >= 15.0f;
 }
-
-
