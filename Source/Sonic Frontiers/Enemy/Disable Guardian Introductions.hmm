@@ -1,4 +1,4 @@
-Patch "Disable Guardian Introductions" in "Enemy" by "Hyper" does "Disables the sequence that zooms the camera into guardians and displays their name." 
+Patch "Disable Guardian Introductions" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Disables the sequence that zooms the camera into guardians and displays their name." 
 {
     // Asura
     WriteProtected<byte>
