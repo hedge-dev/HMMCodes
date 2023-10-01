@@ -59,12 +59,17 @@ Library "BlackboardStatus" by "Hyper" does "Provides access to `app::player::Bla
         /// <summary>
         /// Bit flags representing state statuses.
         /// </summary>
-        [FieldOffset(0x30)] public long StateFlags;
+        [FieldOffset(0x38)] public long StateFlags;
 
         /// <summary>
         /// Bit flags representing world statuses.
         /// </summary>
-        [FieldOffset(0x38)] public long WorldFlags;
+        [FieldOffset(0x40)] public long WorldFlags;
+
+        /// <summary>
+        /// Determines if the current player is in an event.
+        /// </summary>
+        [FieldOffset(0x44)] public bool IsEvent;
     }
 
     /// <summary>
@@ -110,11 +115,6 @@ Library "BlackboardStatus" by "Hyper" does "Provides access to `app::player::Bla
         /// The player is boosting.
         /// </summary>
         IsBoost = 0x00,
-
-        /// <summary>
-        /// The player is performing a recovery jump.
-        /// </summary>
-        IsRecoveryJump = 0x02,
 
         /// <summary>
         /// The player is air boosting.
@@ -182,11 +182,6 @@ Library "BlackboardStatus" by "Hyper" does "Provides access to `app::player::Bla
         IsDrift = 0x13,
 
         /// <summary>
-        /// The player is boosting whilst drifting.
-        /// </summary>
-        IsDriftDash = 0x14,
-
-        /// <summary>
         /// The player is performing a homing attack.
         /// </summary>
         IsHoming = 0x17,
@@ -205,6 +200,11 @@ Library "BlackboardStatus" by "Hyper" does "Provides access to `app::player::Bla
         /// The player is idle.
         /// </summary>
         IsIdle = 0x1A,
+
+        /// <summary>
+        /// The player is idle on a climbable wall.
+        /// </summary>
+        IsWallClimbIdle = 0x1C,
 
         /// <summary>
         /// The player is using the skateboard.
@@ -245,17 +245,17 @@ Library "BlackboardStatus" by "Hyper" does "Provides access to `app::player::Bla
         /// <summary>
         /// The player is in Cyber Space.
         /// </summary>
-        IsCyberSpace = 0x1D,
+        IsCyberSpace = 0x1E,
 
         /// <summary>
         /// The player has Power Boost.
         /// </summary>
-        IsPowerBoost = 0x26,
+        IsPowerBoost = 0x28,
 
         /// <summary>
         /// The player is standing on collision pertaining to the height map.
         /// </summary>
-        IsHeightMapCollision = 0x31,
+        IsHeightMapCollision = 0x37,
 
         /// <summary>
         /// The player is in battle.
