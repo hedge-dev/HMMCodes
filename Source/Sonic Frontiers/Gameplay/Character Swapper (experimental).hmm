@@ -16,6 +16,7 @@ Keyboard Layout;
 
 Known issues;
 - Characters other than Sonic will have the lowest stats and an incomplete skill tree outside of Another Story.
+- The hotkeys to switch characters using the D-Pad currently only works with Xbox controllers.
 */
 //
     #lib "Player"
