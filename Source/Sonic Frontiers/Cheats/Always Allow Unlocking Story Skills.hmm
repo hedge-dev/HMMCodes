@@ -1,4 +1,4 @@
-Patch "Always Allow Unlocking Story Skills" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does 
+Patch "Always Allow Unlocking Story Skills" in "Cheats" by "Hyper" does 
 /*
 Allows the skills typically obtained through story progression to be unlocked as regular skills for free.
 
@@ -35,22 +35,20 @@ Affected skills;
                 mov   dword ptr [rax], 0    ; reset incrementation, this code runs every time the skill tree opens, so we'll be back
                 pop   rbx
                 pop   rax
-                movzx edi, byte ptr [r14 + rax * 8 + 0x30]
+                movzx edi, byte ptr [rsi + rax * 8 + 0x30]
                 movzx ecx, byte ptr [rdx + 1]
                 imul  edi, ecx
                 add   dil, [rdx]
             ",
 
-            /* 0x1409507C0 */
+            /* 0x140AA5F50 */
             ScanSignature
             (
-                "\x41\x0F\xB6\x7C\xC6\x30",
-                "xxxxxx"
+                "\x0F\xB6\x7C\xC6\x30",
+                "xxxxx"
             ),
 
             HookBehavior.Replace
         );
     }
 }
-
-
