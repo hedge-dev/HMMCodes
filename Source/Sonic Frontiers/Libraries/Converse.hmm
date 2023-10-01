@@ -215,10 +215,10 @@ Library "Converse" by "Hyper & M&M"
 
         WriteNop
         (
-            /* 0x14DA9000D */
+            /* 0x14DC8588D */
             ScanSignature
             (
-                "\x0F\x84\xE8\x00\x00\x00\x48\x8D\x8F\xC8\x00\x00\x00",
+                "\x0F\x84\xFA\x00\x00\x00\x48\x8D\x8F\xC8\x00\x00\x00",
                 "xxxxxxxxxxxxx"
             ),
             
@@ -227,7 +227,7 @@ Library "Converse" by "Hyper & M&M"
 
         ConverseHook
         (
-            /* 0x14DA90041 */
+            /* 0x14DC858D3 */
             ScanSignature
             (
                 "\x44\x8B\x44\x24\x28\x48\x8B\x4F\x08\xE8\xCC\xCC\xCC\xCC\x48\x89\xC2\x48\x8B\x8F\xF0\x00\x00\x00",
@@ -237,7 +237,7 @@ Library "Converse" by "Hyper & M&M"
 
         WriteNop
         (
-            /* 0x14DA900A6 */
+            /* 0x14DC85938 */
             ScanSignature
             (
                 "\x74\x53\x44\x8B\x44\x24\x28",
@@ -249,7 +249,7 @@ Library "Converse" by "Hyper & M&M"
 
         ConverseHook
         (
-            /* 0x14DA900A8 */
+            /* 0x14DC8593A */
             ScanSignature
             (
                 "\x44\x8B\x44\x24\x28\x48\x8B\x4F\x08\xE8\xCC\xCC\xCC\xCC\x48\x89\xC2\x48\x89\xF9",
@@ -259,7 +259,7 @@ Library "Converse" by "Hyper & M&M"
 
         fixed (sbyte* p_language = &_language)
         {
-            /* 0x140A14050 */
+            /* 0x140AFA200 */
             var sig = Memory.ReadCall
             (
                 ScanSignature
