@@ -1,4 +1,4 @@
-Library "SonicParameters"
+Library "KnucklesParameters"
 {
     #load "System.Numerics.dll"
 
@@ -327,345 +327,6 @@ Library "SonicParameters"
         [FieldOffset(0x49FC)] public PlayerParamAcceleMode acceleMode;
     }
 
-    public enum Condition : sbyte
-    {
-        Time = 0,
-        Animation = 1
-    }
-
-    public enum Shape : sbyte
-    {
-        Sphere = 0,
-        Cylinder = 1,
-        Box = 2
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x30)]
-    public struct PlayerParamAttackCollider
-    {
-        [FieldOffset(0x00)] public Condition condition;
-        [FieldOffset(0x01)] public sbyte count;
-        [FieldOffset(0x04)] public float spanTime;
-        [FieldOffset(0x08)] public Shape shape;
-        [FieldOffset(0x10)] public Vector3 shapeSize;
-        [FieldOffset(0x20)] public Vector3 shapeOffset;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x40)]
-    public struct PlayerParamAcceleCombo
-    {
-        [FieldOffset(0x00)] public PlayerParamAttackCollider hit;
-        [FieldOffset(0x30)] public float motionSpeedRatio;
-        [FieldOffset(0x34)] public float motionSpeedRatioAccele;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0xC0)]
-    public struct PlayerParamAcceleComboSet
-    {
-        [FieldOffset(0x00)] public PlayerParamAcceleCombo sonic;
-        [FieldOffset(0x40)] public PlayerParamAcceleCombo superSonic1;
-        [FieldOffset(0x80)] public PlayerParamAcceleCombo superSonic2;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x40)]
-    public struct PlayerParamLoopKick
-    {
-        [FieldOffset(0x00)] public float loopRadius;
-        [FieldOffset(0x04)] public float loopTime;
-        [FieldOffset(0x08)] public float loopSpeedCurveRatio;
-        [FieldOffset(0x0C)] public float loopEndStopTime;
-        [FieldOffset(0x10)] public float loopEndSpeed;
-        [FieldOffset(0x14)] public float kickSpeed;
-        [FieldOffset(0x18)] public float failSafeTime;
-        [FieldOffset(0x20)] public Vector3 offset;
-        [FieldOffset(0x30)] public UnmanagedString cameraName;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0xC0)]
-    public struct PlayerParamLoopKickSet
-    {
-        [FieldOffset(0x00)] public PlayerParamLoopKick sonic;
-        [FieldOffset(0x40)] public PlayerParamLoopKick superSonic1;
-        [FieldOffset(0x80)] public PlayerParamLoopKick superSonic2;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x90)]
-    public struct PlayerParamCrasher
-    {
-        [FieldOffset(0x00)] public float startWait;
-        [FieldOffset(0x04)] public unsafe fixed float distanceRatios[5];
-        [FieldOffset(0x18)] public unsafe fixed float angles[5];
-        [FieldOffset(0x2C)] public unsafe fixed float radii[5];
-        [FieldOffset(0x40)] public float distanceMax;
-        [FieldOffset(0x44)] public float zigzagBeginOneStepTime;
-        [FieldOffset(0x48)] public float zigzagEndOneStepTime;
-        [FieldOffset(0x4C)] public float crasherSpeed;
-        [FieldOffset(0x50)] public float failSafeTime;
-        [FieldOffset(0x54)] public float cameraDistance;
-        [FieldOffset(0x58)] public float cameraOffsetElevation;
-        [FieldOffset(0x5C)] public float cameraOffsetAzimuth;
-        [FieldOffset(0x60)] public float cameraRoll;
-        [FieldOffset(0x70)] public Vector3 offset;
-        [FieldOffset(0x80)] public UnmanagedString cameraName;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x1B0)]
-    public struct PlayerParamCrasherSet
-    {
-        [FieldOffset(0x00)] public PlayerParamCrasher sonic;
-        [FieldOffset(0x90)] public PlayerParamCrasher superSonic1;
-        [FieldOffset(0x120)] public PlayerParamCrasher superSonic2;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0xD0)]
-    public struct PlayerParamSpinSlash
-    {
-        [FieldOffset(0x00)] public PlayerParamAttackCollider hit;
-        [FieldOffset(0x30)] public PlayerParamAttackCollider hitLast;
-        [FieldOffset(0x60)] public float chargeTime;
-        [FieldOffset(0x64)] public float homingSpeed;
-        [FieldOffset(0x68)] public float bounceTime;
-        [FieldOffset(0x6C)] public float radius;
-        [FieldOffset(0x70)] public float slashTime;
-        [FieldOffset(0x74)] public sbyte numSlashs;
-        [FieldOffset(0x78)] public float angle;
-        [FieldOffset(0x7C)] public float lastHitTime;
-        [FieldOffset(0x80)] public float slowRatio0;
-        [FieldOffset(0x84)] public float slowRatio1;
-        [FieldOffset(0x90)] public Vector3 offset;
-        [FieldOffset(0xA0)] public UnmanagedString cameraName;
-        [FieldOffset(0xB0)] public UnmanagedString cameraNamePost;
-        [FieldOffset(0xC0)] public UnmanagedString cameraShakeName;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x270)]
-    public struct PlayerParamSpinSlashSet
-    {
-        [FieldOffset(0x00)] public PlayerParamSpinSlash sonic;
-        [FieldOffset(0xD0)] public PlayerParamSpinSlash superSonic1;
-        [FieldOffset(0x1A0)] public PlayerParamSpinSlash superSonic2;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0xA0)]
-    public struct PlayerParamChargeAttack
-    {
-        [FieldOffset(0x00)] public PlayerParamAttackCollider hit;
-        [FieldOffset(0x30)] public PlayerParamAttackCollider hitLast;
-        [FieldOffset(0x60)] public float ignoreSwingingTime;
-        [FieldOffset(0x64)] public float riseSlowRatio;
-        [FieldOffset(0x68)] public float riseTime;
-        [FieldOffset(0x6C)] public float riseDistance;
-        [FieldOffset(0x70)] public float preRiseDistance;
-        [FieldOffset(0x74)] public float postRiseDistance;
-        [FieldOffset(0x78)] public float lastVelocity;
-        [FieldOffset(0x7C)] public float spiralRadius;
-        [FieldOffset(0x80)] public float spiralRadiusEaseInTime;
-        [FieldOffset(0x84)] public float spiralRadiusEaseOutTime;
-        [FieldOffset(0x88)] public float spiralAngularSpeed;
-        [FieldOffset(0x8C)] public float lastHitTime;
-        [FieldOffset(0x90)] public UnmanagedString cameraName;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x1E0)]
-    public struct PlayerParamChargeAttackSet
-    {
-        [FieldOffset(0x00)] public PlayerParamChargeAttack sonic;
-        [FieldOffset(0xA0)] public PlayerParamChargeAttack superSonic1;
-        [FieldOffset(0x140)] public PlayerParamChargeAttack superSonic2;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0xD0)]
-    public struct PlayerParamStompingAttack
-    {
-        [FieldOffset(0x00)] public PlayerParamAttackCollider hit;
-        [FieldOffset(0x30)] public PlayerParamAttackCollider hitLast;
-        [FieldOffset(0x60)] public float riseTime;
-        [FieldOffset(0x64)] public float flipSpeed;
-        [FieldOffset(0x68)] public float motionTime;
-        [FieldOffset(0x6C)] public float lastHitTime;
-        [FieldOffset(0x70)] public float slowRatio;
-        [FieldOffset(0x74)] public float minPressTime;
-        [FieldOffset(0x78)] public float minPressTimeHeight;
-        [FieldOffset(0x7C)] public float maxPressTime;
-        [FieldOffset(0x80)] public float maxPressTimeHeight;
-        [FieldOffset(0x90)] public Vector3 offset;
-        [FieldOffset(0xA0)] public Vector3 offsetAsura;
-        [FieldOffset(0xB0)] public UnmanagedString cameraName;
-        [FieldOffset(0xC0)] public UnmanagedString cameraNameBarrage;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x270)]
-    public struct PlayerParamStompingAttackSet
-    {
-        [FieldOffset(0x00)] public PlayerParamStompingAttack sonic;
-        [FieldOffset(0xD0)] public PlayerParamStompingAttack superSonic1;
-        [FieldOffset(0x1A0)] public PlayerParamStompingAttack superSonic2;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x40)]
-    public struct PlayerParamComboFinish
-    {
-        [FieldOffset(0x00)] public PlayerParamAttackCollider hit;
-        [FieldOffset(0x30)] public float ignoreSwingingTime;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0xC0)]
-    public struct PlayerParamComboFinishSet
-    {
-        [FieldOffset(0x00)] public PlayerParamComboFinish sonic;
-        [FieldOffset(0x40)] public PlayerParamComboFinish superSonic1;
-        [FieldOffset(0x80)] public PlayerParamComboFinish superSonic2;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x40)]
-    public struct PlayerParamSonicBoom
-    {
-        [FieldOffset(0x00)] public float waitTime;
-        [FieldOffset(0x04)] public float spanTime;
-        [FieldOffset(0x08)] public float fallSpeed;
-        [FieldOffset(0x0C)] public float autoContinueTime;
-        [FieldOffset(0x10)] public float speed;
-        [FieldOffset(0x14)] public float maxSpeed;
-        [FieldOffset(0x18)] public float accele;
-        [FieldOffset(0x1C)] public float slowRatio;
-        [FieldOffset(0x20)] public Vector3 offset;
-        [FieldOffset(0x30)] public UnmanagedString cameraName;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0xC0)]
-    public struct PlayerParamSonicBoomSet
-    {
-        [FieldOffset(0x00)] public PlayerParamSonicBoom sonic;
-        [FieldOffset(0x40)] public PlayerParamSonicBoom superSonic1;
-        [FieldOffset(0x80)] public PlayerParamSonicBoom superSonic2;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0xB0)]
-    public struct PlayerParamCrossSlash
-    {
-        [FieldOffset(0x00)] public float spanTime;
-        [FieldOffset(0x04)] public float attackTime;
-        [FieldOffset(0x08)] public float moveAngle;
-        [FieldOffset(0x0C)] public float stopTime;
-        [FieldOffset(0x10)] public float slowRatio;
-        [FieldOffset(0x14)] public float spinPhase;
-        [FieldOffset(0x18)] public float spinRadius;
-        [FieldOffset(0x1C)] public float spinSpeed;
-        [FieldOffset(0x20)] public unsafe fixed float spawnDelayTime[2];
-        [FieldOffset(0x30)] public unsafe fixed byte /* Vector3[2] */ _spawnLocalTranslation[32];
-
-        public unsafe Vector3* spawnLocalTranslation
-        {
-            get
-            {
-                fixed (byte* p_spawnLocalTranslation = _spawnLocalTranslation)
-                    return (Vector3*)p_spawnLocalTranslation;
-            }
-        }
-
-        [FieldOffset(0x50)] public unsafe fixed byte /* Vector3[2] */ _spawnLocalAngle[32];
-
-        public unsafe Vector3* spawnLocalAngle
-        {
-            get
-            {
-                fixed (byte* p_spawnLocalAngle = _spawnLocalAngle)
-                    return (Vector3*)p_spawnLocalAngle;
-            }
-        }
-
-        [FieldOffset(0x70)] public float speed;
-        [FieldOffset(0x74)] public float maxSpeed;
-        [FieldOffset(0x78)] public float accele;
-        [FieldOffset(0x80)] public Vector3 offset;
-        [FieldOffset(0x90)] public UnmanagedString cameraName;
-        [FieldOffset(0xA0)] public UnmanagedString launchCameraShakeName;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x210)]
-    public struct PlayerParamCrossSlashSet
-    {
-        [FieldOffset(0x00)] public PlayerParamCrossSlash sonic;
-        [FieldOffset(0xB0)] public PlayerParamCrossSlash superSonic1;
-        [FieldOffset(0x160)] public PlayerParamCrossSlash superSonic2;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x90)]
-    public struct PlayerParamHomingShot
-    {
-        [FieldOffset(0x00)] public float appearTime;
-        [FieldOffset(0x04)] public float appearPhaseTime;
-        [FieldOffset(0x08)] public float spinRadius;
-        [FieldOffset(0x0C)] public float spinSpeed;
-        [FieldOffset(0x10)] public float spinSpeedPostLaunch;
-        [FieldOffset(0x14)] public float chargeTime;
-        [FieldOffset(0x18)] public float spawnTime;
-        [FieldOffset(0x1C)] public float launchPreWaitTime;
-        [FieldOffset(0x20)] public float spanTime;
-        [FieldOffset(0x24)] public bool launchRandomize;
-        [FieldOffset(0x28)] public float launchWaitTime;
-        [FieldOffset(0x2C)] public float beginAngleX;
-        [FieldOffset(0x30)] public float tangent0;
-        [FieldOffset(0x34)] public float tangent1;
-        [FieldOffset(0x38)] public float spiralWaitTime;
-        [FieldOffset(0x3C)] public float spiralAngularSpeed;
-        [FieldOffset(0x40)] public float spiralAngularSpeedMax;
-        [FieldOffset(0x44)] public float spiralAngularSpeedAccele;
-        [FieldOffset(0x48)] public byte numShots;
-        [FieldOffset(0x4C)] public float speed;
-        [FieldOffset(0x50)] public float maxSpeed;
-        [FieldOffset(0x54)] public float accele;
-        [FieldOffset(0x58)] public float whiteoutBeginTime;
-        [FieldOffset(0x5C)] public float whiteoutFadeOutTime;
-        [FieldOffset(0x60)] public float whiteoutFadingTime;
-        [FieldOffset(0x64)] public float whiteoutFadeInTime;
-        [FieldOffset(0x70)] public Vector3 offset;
-        [FieldOffset(0x80)] public UnmanagedString cameraName;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x1B0)]
-    public struct PlayerParamHomingShotSet
-    {
-        [FieldOffset(0x00)] public PlayerParamHomingShot sonic;
-        [FieldOffset(0x90)] public PlayerParamHomingShot superSonic1;
-        [FieldOffset(0x120)] public PlayerParamHomingShot superSonic2;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x160)]
-    public struct PlayerParamSmash
-    {
-        [FieldOffset(0x00)] public PlayerParamAttackCollider hit1;
-        [FieldOffset(0x30)] public PlayerParamAttackCollider hit2;
-        [FieldOffset(0x60)] public unsafe fixed byte /* Vector3[16] */ _offsets[256];
-
-        public unsafe Vector3* offsets
-        {
-            get
-            {
-                fixed (byte* p_offsets = _offsets)
-                    return (Vector3*)p_offsets;
-            }
-        }
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x420)]
-    public struct PlayerParamSmashSet
-    {
-        [FieldOffset(0x00)] public PlayerParamSmash sonic;
-        [FieldOffset(0x160)] public PlayerParamSmash superSonic1;
-        [FieldOffset(0x2C0)] public PlayerParamSmash superSonic2;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x14)]
-    public struct PlayerParamBehind
-    {
-        [FieldOffset(0x00)] public float moveTime;
-        [FieldOffset(0x04)] public float moveTimeSS;
-        [FieldOffset(0x08)] public float tangentScale;
-        [FieldOffset(0x0C)] public float waitTime;
-        [FieldOffset(0x10)] public float cameraTurnRatio;
-    }
-
     [StructLayout(LayoutKind.Explicit, Size = 0x04)]
     public struct PlayerParamComboCommon
     {
@@ -830,6 +491,61 @@ Library "SonicParameters"
         [FieldOffset(0x18)] public PlayerParamComboMove comboMoveSupersonic;
         [FieldOffset(0x2C)] public PlayerParamComboMoveCorrection comboMoveCorrection;
         [FieldOffset(0x34)] public PlayerParamComboTransitTable comboTable;
+    }
+
+    public enum Condition : sbyte
+    {
+        Time = 0,
+        Animation = 1
+    }
+
+    public enum Shape : sbyte
+    {
+        Sphere = 0,
+        Cylinder = 1,
+        Box = 2
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x30)]
+    public struct PlayerParamAttackCollider
+    {
+        [FieldOffset(0x00)] public Condition condition;
+        [FieldOffset(0x01)] public sbyte count;
+        [FieldOffset(0x04)] public float spanTime;
+        [FieldOffset(0x08)] public Shape shape;
+        [FieldOffset(0x10)] public Vector3 shapeSize;
+        [FieldOffset(0x20)] public Vector3 shapeOffset;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x40)]
+    public struct KnucklesParamComboPunch1
+    {
+        [FieldOffset(0x00)] public PlayerParamAttackCollider hit;
+        [FieldOffset(0x30)] public float motionScale;
+        [FieldOffset(0x34)] public float motionSpeedRate;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x40)]
+    public struct KnucklesParamComboPunch2
+    {
+        [FieldOffset(0x00)] public PlayerParamAttackCollider hit;
+        [FieldOffset(0x30)] public float motionScale;
+        [FieldOffset(0x34)] public float motionSpeedRate;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x40)]
+    public struct KnucklesParamComboUppercut
+    {
+        [FieldOffset(0x00)] public PlayerParamAttackCollider hit;
+        [FieldOffset(0x30)] public float motionScale;
+        [FieldOffset(0x34)] public float motionSpeedRate;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x08)]
+    public struct KnucklesParamParryDebuff
+    {
+        [FieldOffset(0x00)] public float damageRate;
+        [FieldOffset(0x04)] public float effectTime;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x58)]
@@ -1057,154 +773,16 @@ Library "SonicParameters"
         [FieldOffset(0x1458)] public float recoveryFriendsQuickCyloopEnergyByRing;
     }
 
-    public enum Part : sbyte
-    {
-        PunchR = 0,
-        PunchL = 1,
-        KickR = 2,
-        KickL = 3
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x50)]
-    public struct PlayerParamSuperSonicShapeAttackData
-    {
-        [FieldOffset(0x00)] public UnmanagedString name;
-        [FieldOffset(0x10)] public Part part;
-        [FieldOffset(0x20)] public Vector3 begin;
-        [FieldOffset(0x30)] public Vector3 end;
-        [FieldOffset(0x40)] public float scale;
-        [FieldOffset(0x44)] public float roll;
-        [FieldOffset(0x48)] public float moveTime;
-        [FieldOffset(0x4C)] public float fadeoutTime;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0xA20)]
-    public struct PlayerParamSuperSonic
-    {
-        [FieldOffset(0x00)] public int numRings;
-        [FieldOffset(0x04)] public float decreaseSec;
-        [FieldOffset(0x08)] public float inletRadius;
-        [FieldOffset(0x0C)] public float moveSoundSpeed;
-        [FieldOffset(0x10)] public ColorF auraColor2;
-        [FieldOffset(0x20)] public unsafe fixed byte /* PlayerParamSuperSonicShapeAttackData[32] */ _shapeEffects[2560];
-
-        public unsafe PlayerParamSuperSonicShapeAttackData* shapeEffects
-        {
-            get
-            {
-                fixed (byte* p_shapeEffects = _shapeEffects)
-                    return (PlayerParamSuperSonicShapeAttackData*)p_shapeEffects;
-            }
-        }
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x30)]
-    public struct PlayerParamSandSki
-    {
-        [FieldOffset(0x00)] public float blowDeceleForce;
-        [FieldOffset(0x04)] public float blowDeceleForceOnGround;
-        [FieldOffset(0x08)] public float blowGravityScale;
-        [FieldOffset(0x0C)] public float blowTransitTime;
-        [FieldOffset(0x10)] public float blowDownTime;
-        [FieldOffset(0x14)] public float pylonBlowUpSize;
-        [FieldOffset(0x18)] public float pylonBlowSpeed;
-        [FieldOffset(0x20)] public UnmanagedString pylonHitStop;
-    }
-
-    public enum CameraShakeTiming : sbyte
-    {
-        StartCameraInterpolation = 0,
-        EndCameraInterpolation = 1
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x60)]
-    public struct PlayerParamSlingshot
-    {
-        [FieldOffset(0x00)] public float timeScaleInMove;
-        [FieldOffset(0x04)] public float hitStartRestTime;
-        [FieldOffset(0x10)] public Vector3 hitCameraOffset;
-        [FieldOffset(0x20)] public float hitCameraTimeEaseIn;
-        [FieldOffset(0x24)] public float hitCameraFovyAngle;
-        [FieldOffset(0x28)] public float hitTimeScaleValue;
-        [FieldOffset(0x2C)] public float hitTimeScaleTimeEaseIn;
-        [FieldOffset(0x30)] public float resetCameraEaseOutTime;
-        [FieldOffset(0x34)] public float resetTimeScaleEaseOutTime;
-        [FieldOffset(0x38)] public float timeScaleKeepTime;
-        [FieldOffset(0x3C)] public float shotEffOffset;
-        [FieldOffset(0x40)] public float hitEffOffset;
-        [FieldOffset(0x44)] public CameraShakeTiming cameraShakeTiming;
-        [FieldOffset(0x48)] public UnmanagedString cameraShakeName;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x14)]
-    public struct PlayerParamRunawayBee
-    {
-        [FieldOffset(0x00)] public float meanderCycle;
-        [FieldOffset(0x04)] public float meanderAngle;
-        [FieldOffset(0x08)] public float minSpeed;
-        [FieldOffset(0x0C)] public float maxSpeed;
-        [FieldOffset(0x10)] public float time;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x14)]
-    public struct PlayerParamRunWithKodamaParam
-    {
-        [FieldOffset(0x00)] public int numKodamas;
-        [FieldOffset(0x04)] public float initialSpeed;
-        [FieldOffset(0x08)] public float minSpeed;
-        [FieldOffset(0x0C)] public float maxSpeed;
-        [FieldOffset(0x10)] public float jumpForce;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0xA8)]
-    public struct PlayerParamRunWithKodama
-    {
-        [FieldOffset(0x00)] public int maxKodamas;
-        [FieldOffset(0x04)] public float gravitySize;
-        [FieldOffset(0x08)] public unsafe fixed byte /* PlayerParamRunWithKodamaParam[8] */ __params[160];
-
-        public unsafe PlayerParamRunWithKodamaParam* _params
-        {
-            get
-            {
-                fixed (byte* p__params = __params)
-                    return (PlayerParamRunWithKodamaParam*)p__params;
-            }
-        }
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x0C)]
-    public struct PlayerParamMine
-    {
-        [FieldOffset(0x00)] public float radiusLow;
-        [FieldOffset(0x04)] public float radiusMedium;
-        [FieldOffset(0x08)] public float radiusHigh;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x8040)]
-    public struct CommonPackageSonic
+    [StructLayout(LayoutKind.Explicit, Size = 0x6220)]
+    public struct CommonPackageKnuckles
     {
         [FieldOffset(0)]     public CommonPackage commonPackage;
-        [FieldOffset(0x4A10)] public PlayerParamAcceleComboSet acceleComboSet;
-        [FieldOffset(0x4AD0)] public PlayerParamLoopKickSet loopKickSet;
-        [FieldOffset(0x4B90)] public PlayerParamCrasherSet crasherSet;
-        [FieldOffset(0x4D40)] public PlayerParamSpinSlashSet spinSlashSet;
-        [FieldOffset(0x4FB0)] public PlayerParamChargeAttackSet chargeAtackSet;
-        [FieldOffset(0x5190)] public PlayerParamStompingAttackSet stompingAttackSet;
-        [FieldOffset(0x5400)] public PlayerParamComboFinishSet comboFinishSet;
-        [FieldOffset(0x54C0)] public PlayerParamSonicBoomSet sonicboomSet;
-        [FieldOffset(0x5580)] public PlayerParamCrossSlashSet crossSlashSet;
-        [FieldOffset(0x5790)] public PlayerParamHomingShotSet homingShotSet;
-        [FieldOffset(0x5940)] public PlayerParamSmashSet smashSet;
-        [FieldOffset(0x5D60)] public PlayerParamBehind behind;
-        [FieldOffset(0x5D74)] public PlayerParamCombo combo;
-        [FieldOffset(0x6058)] public PlayerParamCyloop cyloop;
-        [FieldOffset(0x74C0)] public PlayerParamSuperSonic supersonic;
-        [FieldOffset(0x7EE0)] public PlayerParamSandSki sandski;
-        [FieldOffset(0x7F10)] public PlayerParamSlingshot slingshot;
-        [FieldOffset(0x7F70)] public PlayerParamRunawayBee runawayBee;
-        [FieldOffset(0x7F84)] public PlayerParamRunWithKodama runWithKodama;
-        [FieldOffset(0x802C)] public PlayerParamMine mine;
+        [FieldOffset(0x4A10)] public PlayerParamCombo combo;
+        [FieldOffset(0x4CF0)] public KnucklesParamComboPunch1 comboPunch1;
+        [FieldOffset(0x4D30)] public KnucklesParamComboPunch2 comboPunch2;
+        [FieldOffset(0x4D70)] public KnucklesParamComboUppercut comboUppercut;
+        [FieldOffset(0x4DB0)] public KnucklesParamParryDebuff parryDebuff;
+        [FieldOffset(0x4DB8)] public PlayerParamCyloop cyloop;
     }
 
     public enum SupportedPlane : sbyte
@@ -2027,212 +1605,104 @@ Library "SonicParameters"
         [FieldOffset(0x858)] public PlayerParamAvoid avoid;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x44)]
-    public struct PlayerParamStorm
+    [StructLayout(LayoutKind.Explicit, Size = 0x08)]
+    public struct KnucklesParamGlidingCamera
     {
-        [FieldOffset(0x00)] public float damperV;
-        [FieldOffset(0x04)] public float damperH;
-        [FieldOffset(0x08)] public float brake;
-        [FieldOffset(0x0C)] public float accelRate;
-        [FieldOffset(0x10)] public float moveForce;
-        [FieldOffset(0x14)] public float maxSpeedH;
-        [FieldOffset(0x18)] public float maxSpeedV;
-        [FieldOffset(0x1C)] public float rotateSpeed;
-        [FieldOffset(0x20)] public float rotateAngularSpeed;
-        [FieldOffset(0x24)] public float minDrawSpeed;
-        [FieldOffset(0x28)] public float maxDrawSpeed;
-        [FieldOffset(0x2C)] public float minDrawSpeedDistance;
-        [FieldOffset(0x30)] public float maxDrawSpeedDistance;
-        [FieldOffset(0x34)] public float damageTime;
-        [FieldOffset(0x38)] public float damageNoBrakeTime;
-        [FieldOffset(0x3C)] public float forceHomingReaction;
-        [FieldOffset(0x40)] public float forceHomingReaction2;
+        [FieldOffset(0x00)] public float azimuthSensitivity;
+        [FieldOffset(0x04)] public float elevationOffset;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x1C)]
-    public struct PlayerParamCloudJump
+    [StructLayout(LayoutKind.Explicit, Size = 0x40)]
+    public struct KnucklesParamGliding
     {
-        [FieldOffset(0x00)] public float acceleForce;
-        [FieldOffset(0x04)] public float deceleForce;
-        [FieldOffset(0x08)] public float overSpeedDeceleForce;
-        [FieldOffset(0x0C)] public float rotationForce;
-        [FieldOffset(0x10)] public float rotationForceDecaySpeed;
-        [FieldOffset(0x14)] public float rotationForceDecayRate;
-        [FieldOffset(0x18)] public float rotationForceDecayMax;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x14)]
-    public struct PlayerParamAquaBall
-    {
-        [FieldOffset(0x00)] public float fallAccel;
-        [FieldOffset(0x04)] public float damper;
-        [FieldOffset(0x08)] public float jumpSpeed;
-        [FieldOffset(0x0C)] public float stompingSpeed;
-        [FieldOffset(0x10)] public float boundSpeed;
+        [FieldOffset(0x00)] public float minSpeed;
+        [FieldOffset(0x04)] public float minSpeedRingMax;
+        [FieldOffset(0x08)] public float moveWaitTime;
+        [FieldOffset(0x0C)] public float minActionTime;
+        [FieldOffset(0x10)] public float fallSpeed;
+        [FieldOffset(0x14)] public float fallAccel;
+        [FieldOffset(0x18)] public float maxSteerSpeed;
+        [FieldOffset(0x1C)] public float rollSpeed;
+        [FieldOffset(0x20)] public float neutralRollSpeed;
+        [FieldOffset(0x24)] public float yawSpeed;
+        [FieldOffset(0x28)] public float maxRollAngle;
+        [FieldOffset(0x2C)] public float height;
+        [FieldOffset(0x30)] public float startHeight;
+        [FieldOffset(0x34)] public KnucklesParamGlidingCamera camera;
+        [FieldOffset(0x3C)] public float practiceTime;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x20)]
-    public struct PlayerParamSlider
+    public struct KnucklesParamCyKnuckle
     {
-        [FieldOffset(0x00)] public float frontAccel;
-        [FieldOffset(0x04)] public float frontBrake;
-        [FieldOffset(0x08)] public float sideBrake;
-        [FieldOffset(0x0C)] public float damageBrake;
-        [FieldOffset(0x10)] public float defaultRotateSpeed;
-        [FieldOffset(0x14)] public float rotateSpeed;
-        [FieldOffset(0x18)] public float rotateSpeedAir;
-        [FieldOffset(0x1C)] public float gravity;
+        [FieldOffset(0x00)] public float findRadius;
+        [FieldOffset(0x04)] public uint numNotifies;
+        [FieldOffset(0x08)] public float effectTime;
+        [FieldOffset(0x0C)] public float effectTimeWall;
+        [FieldOffset(0x10)] public float rotateCycleTime;
+        [FieldOffset(0x14)] public float activeRadius;
+        [FieldOffset(0x18)] public float findDistanceStomp;
+        [FieldOffset(0x1C)] public float findRadiusStomp;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x10)]
+    public struct KnucklesParamCyKnuckleDig
+    {
+        [FieldOffset(0x00)] public float diveScale;
+        [FieldOffset(0x04)] public float speed;
+        [FieldOffset(0x08)] public float stompingAttackScale;
+        [FieldOffset(0x0C)] public bool alsoStomping;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x04)]
-    public struct PlayerParamAirTrick
+    public struct KnucklesParamCyKnuckleWarp
     {
-        [FieldOffset(0x00)] public uint amount;
+        [FieldOffset(0x00)] public float appearWaitTime;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x68)]
-    public struct PlayerParamDrift
+    [StructLayout(LayoutKind.Explicit, Size = 0x04)]
+    public struct KnucklesParamCyKnucklePopupItem
     {
-        [FieldOffset(0x00)] public float startAngle;
-        [FieldOffset(0x04)] public float endSpeed;
-        [FieldOffset(0x08)] public float minSpeed;
-        [FieldOffset(0x0C)] public float minSpeedMax;
-        [FieldOffset(0x10)] public float maxSpeed;
-        [FieldOffset(0x14)] public float maxSpeedMax;
-        [FieldOffset(0x18)] public float minBoostSpeed;
-        [FieldOffset(0x1C)] public float minBoostSpeedMax;
-        [FieldOffset(0x20)] public float maxBoostSpeed;
-        [FieldOffset(0x24)] public float maxBoostSpeedMax;
-        [FieldOffset(0x28)] public float accel;
-        [FieldOffset(0x2C)] public float brake;
-        [FieldOffset(0x30)] public float maxSteerAngle;
-        [FieldOffset(0x34)] public float steerAccel;
-        [FieldOffset(0x38)] public float maxSteerSpeed;
-        [FieldOffset(0x3C)] public float neutralSteerAccel;
-        [FieldOffset(0x40)] public float maxNeutralSteerSpeed;
-        [FieldOffset(0x44)] public float maxRotateSpeed;
-        [FieldOffset(0x48)] public float recoverTime;
-        [FieldOffset(0x4C)] public float maxChargeTime;
-        [FieldOffset(0x50)] public float minDashSpeed;
-        [FieldOffset(0x54)] public float maxDashSpeed;
-        [FieldOffset(0x58)] public float minDashJumpSpeed;
-        [FieldOffset(0x5C)] public float maxDashJumpSpeed;
-        [FieldOffset(0x60)] public float jumpSpeed;
-        [FieldOffset(0x64)] public float checkFallTime;
+        [FieldOffset(0x00)] public float appearWaitTime;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x34)]
-    public struct PlayerParamDriftAir
+    [StructLayout(LayoutKind.Explicit, Size = 0x6C)]
+    public struct KnucklesParamCyKnuckleAppearGimmick
     {
-        [FieldOffset(0x00)] public float startAngle;
-        [FieldOffset(0x04)] public float endSpeed;
-        [FieldOffset(0x08)] public float minSpeed;
-        [FieldOffset(0x0C)] public float maxSpeed;
-        [FieldOffset(0x10)] public float accel;
-        [FieldOffset(0x14)] public float brake;
-        [FieldOffset(0x18)] public float maxSteerAngle;
-        [FieldOffset(0x1C)] public float steerAccel;
-        [FieldOffset(0x20)] public float maxSteerSpeed;
-        [FieldOffset(0x24)] public float neutralSteerAccel;
-        [FieldOffset(0x28)] public float maxNeutralSteerSpeed;
-        [FieldOffset(0x2C)] public float maxRotateSpeed;
-        [FieldOffset(0x30)] public float recoverTime;
+        [FieldOffset(0x00)] public float appearWaitTime;
+        [FieldOffset(0x04)] public CyloopDropItemParameter dropItem;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x24)]
-    public struct PlayerParamDriftDash
+    [StructLayout(LayoutKind.Explicit, Size = 0x120)]
+    public struct KnucklesParamMaximumHeatKnuckle
     {
-        [FieldOffset(0x00)] public float maxSpeed;
-        [FieldOffset(0x04)] public float brake;
-        [FieldOffset(0x08)] public float steeringSpeed1;
-        [FieldOffset(0x0C)] public float steeringSpeed2;
-        [FieldOffset(0x10)] public float startSteeringSpeed;
-        [FieldOffset(0x14)] public float endSteeringSpeed;
-        [FieldOffset(0x18)] public float outOfControlSpeed;
-        [FieldOffset(0x1C)] public float checkDashSpeed;
-        [FieldOffset(0x20)] public float checkDashTime;
+        [FieldOffset(0x00)] public unsafe fixed float lockonLevelUpSpanTime[4];
+        [FieldOffset(0x10)] public unsafe fixed float damageTime[4];
+        [FieldOffset(0x20)] public float speed;
+        [FieldOffset(0x24)] public float chargeTime;
+        [FieldOffset(0x28)] public float chargeTime2;
+        [FieldOffset(0x2C)] public float preDamageTime;
+        [FieldOffset(0x30)] public float postDamageTime;
+        [FieldOffset(0x34)] public float slowRate;
+        [FieldOffset(0x40)] public PlayerParamAttackCollider hit;
+        [FieldOffset(0x70)] public PlayerParamAttackCollider hit2;
+        [FieldOffset(0xA0)] public Vector3 hitVisualOffset;
+        [FieldOffset(0xB0)] public Vector3 hitEffectOffset;
+        [FieldOffset(0xC0)] public float followSpeed;
+        [FieldOffset(0xC4)] public float followTime;
+        [FieldOffset(0xC8)] public UnmanagedString cameraNameMove;
+        [FieldOffset(0xD8)] public UnmanagedString cameraNameHit;
+        [FieldOffset(0xE8)] public bool startMoveCameraFromCharge;
+        [FieldOffset(0xEC)] public float enabledCameraHeight;
+        [FieldOffset(0xF0)] public UnmanagedString cameraShakeName;
+        [FieldOffset(0x100)] public UnmanagedString vibrationName;
+        [FieldOffset(0x110)] public float shakeEndTime;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x70)]
-    public struct PlayerParamBoarding
+    [StructLayout(LayoutKind.Explicit, Size = 0x04)]
+    public struct KnucklesParamDrillBoost
     {
-        [FieldOffset(0x00)] public float maxSpeed;
-        [FieldOffset(0x04)] public float minSpeed;
-        [FieldOffset(0x08)] public float damageSpeed;
-        [FieldOffset(0x0C)] public float accel;
-        [FieldOffset(0x10)] public float damageBrake;
-        [FieldOffset(0x14)] public float damageBrakeTime;
-        [FieldOffset(0x18)] public float damageMotionTime;
-        [FieldOffset(0x1C)] public float damageInvicibleTime;
-        [FieldOffset(0x20)] public float damper;
-        [FieldOffset(0x24)] public float airDamperV;
-        [FieldOffset(0x28)] public float airDamperH;
-        [FieldOffset(0x2C)] public float gravity;
-        [FieldOffset(0x30)] public float airJumpSpeed;
-        [FieldOffset(0x34)] public float groundJumpSpeed;
-        [FieldOffset(0x38)] public float airAccel;
-        [FieldOffset(0x3C)] public float maxAirAddSpeed;
-        [FieldOffset(0x40)] public float downForceRate;
-        [FieldOffset(0x44)] public float steeringSpeed1;
-        [FieldOffset(0x48)] public float steeringSpeed2;
-        [FieldOffset(0x4C)] public float steeringSpeed3;
-        [FieldOffset(0x50)] public float startSteeringSpeed;
-        [FieldOffset(0x54)] public float endSteeringSpeed;
-        [FieldOffset(0x58)] public float startSpeed;
-        [FieldOffset(0x5C)] public float startSlope;
-        [FieldOffset(0x60)] public float staticStartSlope;
-        [FieldOffset(0x64)] public float finishSlope;
-        [FieldOffset(0x68)] public float finishTime;
-        [FieldOffset(0x6C)] public float bigLandTime;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x3C)]
-    public struct PlayerParamDropDash
-    {
-        [FieldOffset(0x00)] public float maxChargeTime;
-        [FieldOffset(0x04)] public float minDashSpeed;
-        [FieldOffset(0x08)] public float minDashSpeedMax;
-        [FieldOffset(0x0C)] public float maxDashSpeed;
-        [FieldOffset(0x10)] public float maxDashSpeedMax;
-        [FieldOffset(0x14)] public float tumbleDashSpeed;
-        [FieldOffset(0x18)] public float maxSpeed;
-        [FieldOffset(0x1C)] public float brake;
-        [FieldOffset(0x20)] public float steeringSpeed1;
-        [FieldOffset(0x24)] public float steeringSpeed2;
-        [FieldOffset(0x28)] public float startSteeringSpeed;
-        [FieldOffset(0x2C)] public float endSteeringSpeed;
-        [FieldOffset(0x30)] public float outOfControlSpeed;
-        [FieldOffset(0x34)] public float checkDashSpeed;
-        [FieldOffset(0x38)] public float checkDashTime;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x14)]
-    public struct PlayerParamBounceJump
-    {
-        [FieldOffset(0x00)] public float startSpeed;
-        [FieldOffset(0x04)] public float jumpRate1;
-        [FieldOffset(0x08)] public float jumpRate2;
-        [FieldOffset(0x0C)] public float jumpRate3;
-        [FieldOffset(0x10)] public float inoperableTime;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
-    public struct PlayerParamLightDash
-    {
-        [FieldOffset(0x00)] public float dashSpeed;
-        [FieldOffset(0x04)] public float dashSpeedMax;
-        [FieldOffset(0x08)] public float speed;
-        [FieldOffset(0x0C)] public float speedMax;
-        [FieldOffset(0x10)] public float accel;
-        [FieldOffset(0x14)] public float brake;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x0C)]
-    public struct PlayerParamSpinDash
-    {
-        [FieldOffset(0x00)] public float time;
-        [FieldOffset(0x04)] public float minSpeed;
-        [FieldOffset(0x08)] public float deceleForce;
+        [FieldOffset(0x00)] public float prepareTime;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x40)]
@@ -2284,131 +1754,19 @@ Library "SonicParameters"
         [FieldOffset(0xE8)] public UnmanagedString cameraShakeName;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x40)]
-    public struct PlayerParamFly
-    {
-        [FieldOffset(0x00)] public float maxSpeed;
-        [FieldOffset(0x04)] public float maxDashSpeed;
-        [FieldOffset(0x08)] public float accel;
-        [FieldOffset(0x0C)] public float dashAccel;
-        [FieldOffset(0x10)] public float brake;
-        [FieldOffset(0x14)] public float minRotateSpeed;
-        [FieldOffset(0x18)] public float maxRotateSpeed;
-        [FieldOffset(0x1C)] public float blowOffTime;
-        [FieldOffset(0x20)] public float blowOffAngle;
-        [FieldOffset(0x24)] public float turnBrake;
-        [FieldOffset(0x28)] public float turnRotateSpeed;
-        [FieldOffset(0x2C)] public float quickTurnThresholdAngle;
-        [FieldOffset(0x30)] public float quickTurnStartSpeed;
-        [FieldOffset(0x34)] public float quickTurnBrake;
-        [FieldOffset(0x38)] public float quickTurnRotateSpeed;
-        [FieldOffset(0x3C)] public float comboTime;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x34)]
-    public struct PlayerParamLimitedFly
-    {
-        [FieldOffset(0x00)] public float maxSpeed1D;
-        [FieldOffset(0x04)] public float accel1D;
-        [FieldOffset(0x08)] public float brake1D;
-        [FieldOffset(0x0C)] public float fixAccel1D;
-        [FieldOffset(0x10)] public float fixSpeed1D;
-        [FieldOffset(0x14)] public float fixAccelQuick;
-        [FieldOffset(0x18)] public float fixSpeedQuick;
-        [FieldOffset(0x1C)] public float rotateSpeed1D;
-        [FieldOffset(0x20)] public float maxSpeed2D;
-        [FieldOffset(0x24)] public float accel2D;
-        [FieldOffset(0x28)] public float brake2D;
-        [FieldOffset(0x2C)] public float fixSpeed2D;
-        [FieldOffset(0x30)] public float rotateSpeed2D;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x10)]
-    public struct PlayerCyberModeSpeedParam
-    {
-        [FieldOffset(0x00)] public float initial;
-        [FieldOffset(0x04)] public float min;
-        [FieldOffset(0x08)] public float max;
-        [FieldOffset(0x0C)] public float minTurn;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x24)]
-    public struct PlayerMaxSpeedChallengeLevelParam
-    {
-        [FieldOffset(0x00)] public PlayerCyberModeSpeedParam speed;
-        [FieldOffset(0x10)] public PlayerCyberModeSpeedParam speedPowerBoost;
-        [FieldOffset(0x20)] public float recoveryRate;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x238)]
-    public struct PlayerParamCyberMode
-    {
-        [FieldOffset(0x00)] public float lowGravityScale;
-        [FieldOffset(0x04)] public float timeScale;
-        [FieldOffset(0x08)] public float accelForce;
-        [FieldOffset(0x0C)] public float jerk;
-        [FieldOffset(0x10)] public float minSpeedThreshold;
-        [FieldOffset(0x14)] public float maxSpeedThreshold;
-        [FieldOffset(0x18)] public float recoveryRate;
-        [FieldOffset(0x1C)] public float maxSpeed;
-        [FieldOffset(0x20)] public float maxSpeedInBoost;
-        [FieldOffset(0x24)] public uint numLevels;
-        [FieldOffset(0x28)] public unsafe fixed byte /* PlayerMaxSpeedChallengeLevelParam[8] */ _levels[288];
-
-        public unsafe PlayerMaxSpeedChallengeLevelParam* levels
-        {
-            get
-            {
-                fixed (byte* p_levels = _levels)
-                    return (PlayerMaxSpeedChallengeLevelParam*)p_levels;
-            }
-        }
-
-        [FieldOffset(0x148)] public float animalMinSpeed;
-        [FieldOffset(0x14C)] public float animalMaxSpeed;
-        [FieldOffset(0x150)] public float animalInitialSpeed;
-        [FieldOffset(0x154)] public float animalMinTurnSpeed;
-        [FieldOffset(0x158)] public float animalJumpForce;
-        [FieldOffset(0x15C)] public float animalGravitySize;
-        [FieldOffset(0x160)] public float nitroConsumptionRate;
-        [FieldOffset(0x164)] public float nitroAirDragPowerMin;
-        [FieldOffset(0x168)] public float nitroAirDragPowerMax;
-        [FieldOffset(0x170)] public UnmanagedString nitroHitStopName;
-        [FieldOffset(0x180)] public UnmanagedString nitroHitStopNameAir;
-        [FieldOffset(0x190)] public UnmanagedString nitroCameraShakeName;
-        [FieldOffset(0x1A0)] public UnmanagedString nitroCameraShakeNameAir;
-        [FieldOffset(0x1B0)] public UnmanagedString nitroVibrationName;
-        [FieldOffset(0x1C0)] public UnmanagedString nitroVibrationNameAir;
-        [FieldOffset(0x1D0)] public float nitroRunEffectDelay;
-        [FieldOffset(0x1D8)] public UnmanagedString nitroCameraShakeNameInRun;
-        [FieldOffset(0x1E8)] public UnmanagedString nitroVibrationNameInRun;
-        [FieldOffset(0x1F8)] public PlayerCyberModeSpeedParam nitroSpeed;
-        [FieldOffset(0x208)] public PlayerCyberModeSpeedParam nitroSpeedLvMax;
-        [FieldOffset(0x218)] public PlayerCyberModeSpeedParam nitroSpeedPowerBoost;
-        [FieldOffset(0x228)] public PlayerCyberModeSpeedParam nitroSpeedLvMaxPowerBoost;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0xEE0)]
-    public struct ModePackageSonic
+    [StructLayout(LayoutKind.Explicit, Size = 0xC00)]
+    public struct ModePackageKnuckles
     {
         [FieldOffset(0)]    public ModePackage modePackage;
-        [FieldOffset(0x8F0)] public PlayerParamStorm storm;
-        [FieldOffset(0x934)] public PlayerParamCloudJump cloudJump;
-        [FieldOffset(0x950)] public PlayerParamAquaBall aquaball;
-        [FieldOffset(0x964)] public PlayerParamSlider slider;
-        [FieldOffset(0x984)] public PlayerParamAirTrick airtrick;
-        [FieldOffset(0x988)] public PlayerParamDrift drift;
-        [FieldOffset(0x9F0)] public PlayerParamDriftAir driftair;
-        [FieldOffset(0xA24)] public PlayerParamDriftDash driftDash;
-        [FieldOffset(0xA48)] public PlayerParamBoarding boarding;
-        [FieldOffset(0xAB8)] public PlayerParamDropDash dropDash;
-        [FieldOffset(0xAF4)] public PlayerParamBounceJump bounceJump;
-        [FieldOffset(0xB08)] public PlayerParamLightDash lightDash;
-        [FieldOffset(0xB20)] public PlayerParamSpinDash spindash;
-        [FieldOffset(0xB30)] public PlayerParamSpinBoost spinBoost;
-        [FieldOffset(0xC28)] public PlayerParamFly fly;
-        [FieldOffset(0xC68)] public PlayerParamLimitedFly limitedfly;
-        [FieldOffset(0xCA0)] public PlayerParamCyberMode cyberMode;
+        [FieldOffset(0x8F0)] public KnucklesParamGliding gliding;
+        [FieldOffset(0x930)] public KnucklesParamCyKnuckle cyknuckle;
+        [FieldOffset(0x950)] public KnucklesParamCyKnuckleDig cyknuckleDig;
+        [FieldOffset(0x960)] public KnucklesParamCyKnuckleWarp cyknuckleWarp;
+        [FieldOffset(0x964)] public KnucklesParamCyKnucklePopupItem cyknucklePopupItem;
+        [FieldOffset(0x968)] public KnucklesParamCyKnuckleAppearGimmick cyknuckleAppearGimmick;
+        [FieldOffset(0x9E0)] public KnucklesParamMaximumHeatKnuckle maximumHeatKnuckle;
+        [FieldOffset(0xB00)] public KnucklesParamDrillBoost drillBoost;
+        [FieldOffset(0xB08)] public PlayerParamSpinBoost spinBoost;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x1A8)]
@@ -2422,14 +1780,13 @@ Library "SonicParameters"
         [FieldOffset(0x174)] public PlayerParamAirBoost airboost;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0xAE90)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x7BD0)]
     public struct Root
     {
-        [FieldOffset(0x00)] public CommonPackageSonic common;
-        [FieldOffset(0x8040)] public ModePackageSonic forwardView;
-        [FieldOffset(0x8F20)] public WaterModePackage water;
-        [FieldOffset(0x90D0)] public ModePackageSonic cyberspace;
-        [FieldOffset(0x9FB0)] public ModePackageSonic cyberspaceSV;
+        [FieldOffset(0x00)] public CommonPackageKnuckles common;
+        [FieldOffset(0x6220)] public ModePackageKnuckles forwardView;
+        [FieldOffset(0x6E20)] public WaterModePackage water;
+        [FieldOffset(0x6FD0)] public ModePackageKnuckles cyberspaceSV;
     }
 
 }
