@@ -9,7 +9,7 @@ Code "Fix Stomp Reset" in "Fixes" by "Hyper" does "Fixes the stomp attack only r
     {
         WriteNop
         (
-            /* 0x1408FF6C0 */
+            /* 0x1409D1D4B */
             ScanSignature
             (
                 "\x74\x98\x45\x33\xC0",
