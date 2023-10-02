@@ -1,16 +1,14 @@
-Patch "Allow Spin Dash on Dash Panels" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Allows Sonic to Spin Dash through dash panels without interruptions." 
+Patch "Allow Spin Dash on Dash Panels" in "Gameplay" by "Hyper" does "Allows Sonic to Spin Dash through dash panels without interruptions." 
 {
     WriteProtected<byte>
     (
-        /* 0x140862428 */
+        /* 0x140916A78 */
         ScanSignature
         (
-            "\x41\x0F\x94\xC4\xD0\xE9",
+            "\x41\x0F\x94\xC7\xD0\xE9",
             "xxxxxx"
         ),
 
-        Assemble("mov r12b, 0; nop")
+        Assemble("mov r15b, 0; nop")
     );
 }
-
-
