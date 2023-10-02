@@ -1,4 +1,10 @@
-Code "Bouncy Jump Ball" in "Animation" by "Hyper" does "Uses bouncy jump ball animations when jumping and double jumping, similar to Sonic Forces." 
+Code "Bouncy Jump Ball" in "Animation" by "Hyper" does
+/*
+Uses bouncy jump ball animations when jumping and double jumping, similar to Sonic Forces.
+
+Notes;
+- Tails uses his normal jump ball animation, as he doesn't have a bouncy alternative.
+*/
 //
     #include "Helpers" noemit
 
