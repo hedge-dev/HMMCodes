@@ -1,4 +1,4 @@
-Code "Fix Rail Landing Direction" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Fixes the player landing in the opposite direction that was being faced prior to landing on a rail."
+Code "Fix Rail Landing Direction" in "Fixes" by "Hyper" does "Fixes the player landing in the opposite direction that was being faced prior to landing on a rail."
 //
     #include "BlackboardStatus" noemit
 
