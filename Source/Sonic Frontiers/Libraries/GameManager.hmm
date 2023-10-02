@@ -114,6 +114,28 @@ Library "GameManager" by "Hyper, ĐeäTh & Sajid"
     }
 
     /// <summary>
+    /// Gets an instance of `hh::game::GameService` obtained by the current instance of `hh::game::GameManager`.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "GameManager"
+    ///     
+    ///     #import "Services"
+    /// //
+    /// {
+    ///     var pExpManager = GameManager.GetService<ExpManager>();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <returns>A pointer to an instance of `hh::game::GameService`.</returns>
+    public T* GetService<T>()
+    {
+        return (T*)GetService(typeof(T).Name);
+    }
+
+    /// <summary>
     /// Gets an instance of `hh::game::GameObject` obtained by the current instance of `hh::game::GameManager` by name.
     /// </summary>
     /// <example>
@@ -147,5 +169,27 @@ Library "GameManager" by "Hyper, ĐeäTh & Sajid"
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Gets an instance of `hh::game::GameObject` obtained by the current instance of `hh::game::GameManager`.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "GameManager"
+    ///     
+    ///     #import "Objects"
+    /// //
+    /// {
+    ///     var pSonic = GameManager.GetGameObject<Sonic>("Sonic");
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <returns>A pointer to an instance of `hh::game::GameObject`.</returns>
+    public T* GetGameObject<T>()
+    {
+        return (T*)GetGameObject(typeof(T).Name);
     }
 }

@@ -1,0 +1,35 @@
+Library "Services" by "Hyper"
+{
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `app::game::ExpManager`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0xF0)]
+    public struct ExpManager
+    {
+        [StructLayout(LayoutKind.Sequential)]
+        public struct PlayerData
+        {
+            /// <summary>
+            /// The amount of skill pieces being added to the total.
+            /// </summary>
+            public int PendingSkillPieces;
+
+            /// <summary>
+            /// The total amount of skill pieces.
+            /// </summary>
+            public int TotalSkillPieces;
+
+            /// <summary>
+            /// The total amount of skill points.
+            /// </summary>
+            public short TotalSkillPoints;
+        }
+
+        [FieldOffset(0x80)] public PlayerData Sonic;
+        [FieldOffset(0x9C)] public PlayerData Amy;
+        [FieldOffset(0xB8)] public PlayerData Knuckles;
+        [FieldOffset(0xD4)] public PlayerData Tails;
+    }
+}
