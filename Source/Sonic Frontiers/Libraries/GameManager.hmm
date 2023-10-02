@@ -130,7 +130,7 @@ Library "GameManager" by "Hyper, ĐeäTh & Sajid"
     /// ]]></code>
     /// </example>
     /// <returns>A pointer to an instance of `hh::game::GameService`.</returns>
-    public T* GetService<T>()
+    public T* GetService<T>() where T : unmanaged
     {
         return (T*)GetService(typeof(T).Name);
     }
@@ -188,7 +188,7 @@ Library "GameManager" by "Hyper, ĐeäTh & Sajid"
     /// ]]></code>
     /// </example>
     /// <returns>A pointer to an instance of `hh::game::GameObject`.</returns>
-    public T* GetGameObject<T>()
+    public T* GetGameObject<T>() where T : unmanaged
     {
         return (T*)GetGameObject(typeof(T).Name);
     }
