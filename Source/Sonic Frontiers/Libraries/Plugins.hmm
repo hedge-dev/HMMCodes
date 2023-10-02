@@ -11,11 +11,11 @@ Library "Plugins" by "Hyper"
         /// <summary>
         /// The maximum amount of boost the player can hold.
         /// </summary>
-        [FieldOffset(0x38)] public float Capacity;
+        [FieldOffset(0x3C)] public float BoostCapacity;
 
         /// <summary>
         /// The current amount of boost for the player.
         /// </summary>
-        [FieldOffset(0x3C)] public float Amount;
+        [FieldOffset(0x40)] public float BoostAmount;
     }
 }
