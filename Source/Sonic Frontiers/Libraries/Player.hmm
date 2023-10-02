@@ -8,17 +8,25 @@ Library "Player" by "Hyper, NM, Ahremic & Skyth"
 
     #lib "BlackboardStatus"
     #lib "Collections"
-    #lib "GameDocument"
+    #lib "GameManager"
     #lib "GameObject"
     #lib "LevelInfo"
     #lib "Lua"
+    #lib "Reflection"
     #lib "StringMapOperation"
     #lib "VectorHelpers"
 
     #lib "Sonic"
+    #lib "SonicParameters"
+
     #lib "Amy"
+    #lib "AmyParameters"
+
     #lib "Knuckles"
+    #lib "KnucklesParameters"
+
     #lib "Tails"
+    #lib "TailsParameters"
 
     #load "System.Numerics.dll"
 
@@ -132,22 +140,22 @@ Library "Player" by "Hyper, NM, Ahremic & Skyth"
 
     public (PlayerType Type, long pGameObject) GetPlayer()
     {
-        var pSonic = GameDocument.GetGameObject("Sonic");
+        var pSonic = GameManager.GetGameObject("Sonic");
 
         if (pSonic != null)
             return (PlayerType.Sonic, (long)pSonic);
         
-        var pPlayerAmy = GameDocument.GetGameObject("PlayerAmy");
+        var pPlayerAmy = GameManager.GetGameObject("PlayerAmy");
 
         if (pPlayerAmy != null)
             return (PlayerType.Amy, (long)pPlayerAmy);
         
-        var pPlayerKnuckles = GameDocument.GetGameObject("PlayerKnuckles");
+        var pPlayerKnuckles = GameManager.GetGameObject("PlayerKnuckles");
 
         if (pPlayerKnuckles != null)
             return (PlayerType.Knuckles, (long)pPlayerKnuckles);
         
-        var pPlayerTails = GameDocument.GetGameObject("PlayerTails");
+        var pPlayerTails = GameManager.GetGameObject("PlayerTails");
 
         if (pPlayerTails != null)
             return (PlayerType.Tails, (long)pPlayerTails);

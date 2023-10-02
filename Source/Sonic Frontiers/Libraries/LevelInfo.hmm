@@ -2,7 +2,7 @@ Library "LevelInfo" by "Hyper, ĐeäTh & Sajid"
 {
     #include "Helpers" noemit
 
-    #lib "GameDocument"
+    #lib "GameManager"
 
     using System.Runtime.InteropServices;
 
@@ -47,6 +47,6 @@ Library "LevelInfo" by "Hyper, ĐeäTh & Sajid"
     /// <returns>A pointer to an instance of `app::level::LevelInfo`.</returns>
     public Data* Get()
     {
-        return (Data*)GameDocument.GetService("LevelInfo");
+        return (Data*)GameManager.GetService("LevelInfo");
     }
 }

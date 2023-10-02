@@ -2,7 +2,7 @@ Library "GameService" by "Hyper & Sajid"
 {
     #include "Helpers" noemit
 
-    #lib "GameDocument"
+    #lib "GameManager"
 
     using System.Collections.Generic;
     using System.Linq;
@@ -19,9 +19,9 @@ Library "GameService" by "Hyper & Sajid"
     public struct Data
     {
         /// <summary>
-        /// A pointer to an instance of `app::GameDocument`.
+        /// A pointer to an instance of `app::GameManager`.
         /// </summary>
-        [FieldOffset(0x30)] public GameDocument.Data* pGameDocument;
+        [FieldOffset(0x30)] public GameManager.Data* pGameManager;
 
         /// <summary>
         /// A pointer to an instance of `GameServiceStaticClass`.

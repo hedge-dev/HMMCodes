@@ -2,7 +2,7 @@ Library "Lua" by "Hyper & ĐeäTh"
 {
     #include "Helpers" noemit
 
-    #lib "GameDocument"
+    #lib "GameManager"
     #lib "GameMode"
     #lib "GameService"
     #lib "Helpers"
@@ -82,6 +82,11 @@ Library "Lua" by "Hyper & ĐeäTh"
                 return false;
 
             return Hash == ((Hook)obj).Hash;
+        }
+
+        public override int GetHashCode()
+        {
+            return Hash.ToString("X").GetHashCode();
         }
     }
 
@@ -500,7 +505,7 @@ Library "Lua" by "Hyper & ĐeäTh"
             GameService.AddUserService(Memory.ReadEffectiveAddress(Memory.ReadCall(_sigScriptSequenceManagerStaticClassCtor)));
         }
 
-        var pScriptSequenceManager = GameDocument.GetService("ScriptSequenceManager");
+        var pScriptSequenceManager = GameManager.GetService("ScriptSequenceManager");
 
         if (pScriptSequenceManager == null)
             return;

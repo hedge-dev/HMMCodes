@@ -5,7 +5,7 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
     #import "Collections"
     #import "GOComponents"
 
-    #lib "GameDocument"
+    #lib "GameManager"
     #lib "Memory"
 
     using System.Runtime.InteropServices;
@@ -17,9 +17,9 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
     public struct Data
     {
         /// <summary>
-        /// A pointer to an instance of `app::GameDocument`.
+        /// A pointer to an instance of `app::GameManager`.
         /// </summary>
-        [FieldOffset(0x18)] public GameDocument.Data* pGameDocument;
+        [FieldOffset(0x18)] public GameManager.Data* pGameManager;
 
         /// <summary>
         /// An array of pointers to `hh::game::GOComponent` instances.
@@ -41,11 +41,11 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
     /// <code><![CDATA[
     /// Code
     /// //
-    ///     #lib "GameDocument"
+    ///     #lib "GameManager"
     ///     #lib "GameObject"
     /// //
     /// {
-    ///     var pSonic = GameDocument.GetGameObject("Sonic");
+    ///     var pSonic = GameManager.GetGameObject("Sonic");
     ///     var pGOCPlayerKinematicParams = GameObject.GetGOC(pSonic, "GOCPlayerKinematicParams");
     /// }
     /// ]]></code>
@@ -78,13 +78,13 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
     /// <code><![CDATA[
     /// Code
     /// //
-    ///     #lib "GameDocument"
+    ///     #lib "GameManager"
     ///     #lib "GameObject"
     ///     
     ///     #import "GOComponents"
     /// //
     /// {
-    ///     var pSonic = GameDocument.GetGameObject("Sonic");
+    ///     var pSonic = GameManager.GetGameObject("Sonic");
     ///     var pGOCPlayerKinematicParams = GameObject.GetGOC<GOCPlayerKinematicParams>(pSonic);
     /// }
     /// ]]></code>

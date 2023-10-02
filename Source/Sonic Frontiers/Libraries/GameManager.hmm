@@ -1,4 +1,4 @@
-Library "GameDocument" by "Hyper, ĐeäTh & Sajid" 
+Library "GameManager" by "Hyper, ĐeäTh & Sajid" 
 {
     #include "Helpers" noemit
 
@@ -11,7 +11,7 @@ Library "GameDocument" by "Hyper, ĐeäTh & Sajid"
     using System.Runtime.InteropServices;
 
     /// <summary>
-    /// A struct representation of `app::GameDocument`.
+    /// A struct representation of `hh::game::GameManager`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0x358)]
     public struct Data
@@ -48,46 +48,46 @@ Library "GameDocument" by "Hyper, ĐeäTh & Sajid"
     }
 
     /* 0x140C478D8 */
-    private static long _sigGameDocumentSingleton = (long)ScanSignature
+    private static long _sigGameManagerSingleton = (long)ScanSignature
     (
         "\x48\x89\x2D\xCC\xCC\xCC\xCC\x8D\x75\x20",
         "xxx????xxx"
     );
 
     /// <summary>
-    /// Gets an instance of `app::GameDocument`.
+    /// Gets an instance of `hh::game::GameManager`.
     /// </summary>
     /// <example>
     /// <code><![CDATA[
     /// Code
     /// //
-    ///     #lib "GameDocument"
+    ///     #lib "GameManager"
     /// //
     /// {
-    ///     var pGameDocument = GameDocument.Get();
+    ///     var pGameManager = GameManager.Get();
     /// }
     /// ]]></code>
     /// </example>
-    /// <returns>A pointer to an instance of `app::GameDocument`.</returns>
+    /// <returns>A pointer to an instance of `hh::game::GameManager`.</returns>
     public Data* Get()
     {
-        if (_sigGameDocumentSingleton == 0)
+        if (_sigGameManagerSingleton == 0)
             return null;
         
-        return *(Data**)Memory.ReadEffectiveAddress(_sigGameDocumentSingleton);
+        return *(Data**)Memory.ReadEffectiveAddress(_sigGameManagerSingleton);
     }
 
     /// <summary>
-    /// Gets an instance of `hh::game::GameService` obtained by the current instance of `app::GameDocument` by name.
+    /// Gets an instance of `hh::game::GameService` obtained by the current instance of `hh::game::GameManager` by name.
     /// </summary>
     /// <example>
     /// <code><![CDATA[
     /// Code
     /// //
-    ///     #lib "GameDocument"
+    ///     #lib "GameManager"
     /// //
     /// {
-    ///     var pPhotoModeService = GameDocument.GetService("PhotoModeService");
+    ///     var pPhotoModeService = GameManager.GetService("PhotoModeService");
     /// }
     /// ]]></code>
     /// </example>
@@ -95,12 +95,12 @@ Library "GameDocument" by "Hyper, ĐeäTh & Sajid"
     /// <returns>A pointer to an instance of `hh::game::GameService`.</returns>
     public GameService.Data* GetService(string in_name)
     {
-        var pGameDocument = Get();
+        var pGameManager = Get();
 
-        if (pGameDocument == null)
+        if (pGameManager == null)
             return null;
         
-        var gameServices = pGameDocument->GameServices;
+        var gameServices = pGameManager->GameServices;
 
         for (int i = 0; i < gameServices.Length; i++)
         {
@@ -114,16 +114,16 @@ Library "GameDocument" by "Hyper, ĐeäTh & Sajid"
     }
 
     /// <summary>
-    /// Gets an instance of `hh::game::GameObject` obtained by the current instance of `app::GameDocument` by name.
+    /// Gets an instance of `hh::game::GameObject` obtained by the current instance of `hh::game::GameManager` by name.
     /// </summary>
     /// <example>
     /// <code><![CDATA[
     /// Code
     /// //
-    ///     #lib "GameDocument"
+    ///     #lib "GameManager"
     /// //
     /// {
-    ///     var pSonic = GameDocument.GetGameObject("Sonic");
+    ///     var pSonic = GameManager.GetGameObject("Sonic");
     /// }
     /// ]]></code>
     /// </example>
@@ -131,12 +131,12 @@ Library "GameDocument" by "Hyper, ĐeäTh & Sajid"
     /// <returns>A pointer to an instance of `hh::game::GameObject`.</returns>
     public GameObject.Data* GetGameObject(string in_name)
     {
-        var pGameDocument = Get();
+        var pGameManager = Get();
 
-        if (pGameDocument == null)
+        if (pGameManager == null)
             return null;
         
-        var gameObjects = pGameDocument->GameObjects;
+        var gameObjects = pGameManager->GameObjects;
 
         for (int i = 0; i < gameObjects.Length; i++)
         {
