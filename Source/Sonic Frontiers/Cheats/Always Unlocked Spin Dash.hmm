@@ -1,4 +1,4 @@
-Patch "Always Unlocked Spin Dash" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" 
+Patch "Always Unlocked Spin Dash" in "Cheats" by "Hyper" 
 {
     // Unlock various components of Spin Dash.
     WriteAsmHook
@@ -8,11 +8,11 @@ Patch "Always Unlocked Spin Dash" in "! Incompatible - awaiting fixes for v1.40"
             ret
         ",
 
-        /* 0x140A15CD0 */
+        /* 0x140AFC580 */
         ScanSignature
         (
-            "\x48\x8B\x41\x08\x8B\x40\x4C",
-            "xxxxxxx"
+            "\x48\x8B\x41\x08\xF6\x40\x4C\x06",
+            "xxxxxxxx"
         ),
 
         HookBehavior.Replace
@@ -22,7 +22,7 @@ Patch "Always Unlocked Spin Dash" in "! Incompatible - awaiting fixes for v1.40"
     WriteAsmHook
     (
         $@"
-            cmp   edx, 0x3B
+            cmp   edx, 0x3E
             jne   exit
             mov   al, 1
             ret
@@ -34,7 +34,7 @@ Patch "Always Unlocked Spin Dash" in "! Incompatible - awaiting fixes for v1.40"
             shr   rax, 6
         ",
 
-        /* 0x1407DE270 */
+        /* 0x140884C10 */
         ScanSignature
         (
             "\x8B\xC2\x83\xE0\x3F\x44\x0F\xB6\xC0\x8B\xC2\x48\xC1\xE8\x06\x48\x8B\x44\xC1\x28",
@@ -44,5 +44,3 @@ Patch "Always Unlocked Spin Dash" in "! Incompatible - awaiting fixes for v1.40"
         HookBehavior.Replace
     );
 }
-
-
