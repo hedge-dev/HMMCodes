@@ -79,6 +79,4 @@ Notes;
         _checkpointPosition = kinematics->Position;
         _inputTimer = 0.0f;
     }
-
-    Console.WriteLine(_checkpointPosition);
 }
