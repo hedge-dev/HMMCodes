@@ -5,6 +5,7 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
     #import "Collections"
     #import "GOComponents"
 
+    #lib "Helpers"
     #lib "GameManager"
     #lib "Memory"
 

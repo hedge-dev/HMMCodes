@@ -50,7 +50,9 @@ Library "Lua" by "Hyper & ĐeäTh"
         "GameModeBattleRush",
         "GameModeFishing",
         "GameModeHacking",
-        "GameModeStage"
+        "GameModeStage",
+        "GameModeTitle",
+        "GameModeUnknown"
     };
 
     private static string _lastGameModeName = "GameModeUnknown";
@@ -653,6 +655,9 @@ Library "Lua" by "Hyper & ĐeäTh"
 
     private void CallHandled(long in_pLuaState, int in_args, int in_results)
     {
+        if (in_pLuaState == 0)
+            return;
+
         if (_isScriptSequenceInactive)
             return;
 
@@ -714,12 +719,12 @@ Library "Lua" by "Hyper & ĐeäTh"
 
     private void Call(string in_functionName, int in_resultCount, params object[] in_args)
     {
-        long L = GetState();
+        long pLuaState = GetState();
 
-        if (L == 0)
+        if (pLuaState == 0)
             return;
 
-        GET_FUNCTION_PTR(lua_getglobal)(L, TO_STRING_PTR(in_functionName));
+        GET_FUNCTION_PTR(lua_getglobal)(pLuaState, TO_STRING_PTR(in_functionName));
 
         foreach (var arg in in_args)
         {
@@ -728,19 +733,19 @@ Library "Lua" by "Hyper & ĐeäTh"
             if (type == typeof(string))
             {
                 string str = (string)arg;
-                GET_FUNCTION_PTR(lua_pushlstring)(L, TO_STRING_PTR(str), str.Length);
+                GET_FUNCTION_PTR(lua_pushlstring)(pLuaState, TO_STRING_PTR(str), str.Length);
             }
             else if (type == typeof(int))
             {
-                GET_FUNCTION_PTR(lua_pushinteger)(L, (int)arg);
+                GET_FUNCTION_PTR(lua_pushinteger)(pLuaState, (int)arg);
             }
             else if (type == typeof(float) || type == typeof(double))
             {
-                GET_FUNCTION_PTR(lua_pushnumber)(L, (float)arg);
+                GET_FUNCTION_PTR(lua_pushnumber)(pLuaState, (float)arg);
             }
             else if (type == typeof(bool))
             {
-                GET_FUNCTION_PTR(lua_pushboolean)(L, (bool)arg ? 1 : 0);
+                GET_FUNCTION_PTR(lua_pushboolean)(pLuaState, (bool)arg ? 1 : 0);
             }
             else
             {
@@ -749,7 +754,7 @@ Library "Lua" by "Hyper & ĐeäTh"
             }
         }
 
-        CallHandled(L, in_args.Length, in_resultCount);
+        CallHandled(pLuaState, in_args.Length, in_resultCount);
     }
 
     public void Call(string in_functionName, params object[] in_args)
@@ -759,32 +764,32 @@ Library "Lua" by "Hyper & ĐeäTh"
 
     public T Call<T>(string in_functionName, params object[] in_args)
     {
-        long L = GetState();
+        long pLuaState = GetState();
 
-        if (L == 0)
+        if (pLuaState == 0)
             return default;
 
         Call(in_functionName, 1, in_args);
 
         var type = typeof(T);
-        var luaType = GET_FUNCTION_PTR(lua_type)(L, -1);
+        var luaType = GET_FUNCTION_PTR(lua_type)(pLuaState, -1);
 
         if (type == typeof(string) && luaType == LUA_TSTRING)
         {
-            long ptr = (long)GET_FUNCTION_PTR(lua_tolstring)(L, -1, 0);
+            long ptr = (long)GET_FUNCTION_PTR(lua_tolstring)(pLuaState, -1, 0);
             return (T)(object)FROM_STRING_PTR(ptr);
         }
         else if (type == typeof(int) && luaType == LUA_TNUMBER)
         {
-            return (T)(object)(int)GET_FUNCTION_PTR(lua_tointegerx)(L, -1, 0);
+            return (T)(object)(int)GET_FUNCTION_PTR(lua_tointegerx)(pLuaState, -1, 0);
         }
         else if ((type == typeof(float) || type == typeof(double)) && luaType == LUA_TNUMBER)
         {
-            return (T)(object)(float)GET_FUNCTION_PTR(lua_tonumberx)(L, -1, 0);
+            return (T)(object)(float)GET_FUNCTION_PTR(lua_tonumberx)(pLuaState, -1, 0);
         }
         else if (type == typeof(bool) && luaType == LUA_TBOOLEAN)
         {
-            return (T)(object)(bool)GET_FUNCTION_PTR(lua_toboolean)(L, -1);
+            return (T)(object)(bool)GET_FUNCTION_PTR(lua_toboolean)(pLuaState, -1);
         }
         else
         {

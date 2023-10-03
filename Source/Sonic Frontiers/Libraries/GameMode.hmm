@@ -33,7 +33,7 @@ Library "GameMode" by "Hyper"
                     mov    qword ptr [rax], r8
                     jmp    exit
                 unknown:
-                    mov    rbx, {(long)Marshal.StringToHGlobalAnsi("GameModeUnknown")}
+                    mov    rbx, {TO_STRING_PTR("GameModeUnknown")}
                     mov    qword ptr [rax], rbx
                 exit:
                     mov    rbx, rcx
@@ -53,7 +53,7 @@ Library "GameMode" by "Hyper"
             WriteAsmHook
             (
                 $@"
-                    mov   rcx, {(long)Marshal.StringToHGlobalAnsi("GameModeTitle")}
+                    mov   rcx, {TO_STRING_PTR("GameModeTitle")}
                     mov   rdx, {(long)p_pGameModeName}
                     mov   qword ptr [rdx], rcx
                     mov   edx, 0x38
@@ -76,7 +76,7 @@ Library "GameMode" by "Hyper"
             WriteAsmHook
             (
                 $@"
-                    mov r8, {(long)Marshal.StringToHGlobalAnsi("GameModeCyberStage")}
+                    mov r8, {TO_STRING_PTR("GameModeCyberStage")}
                     mov rcx, {(long)p_pGameModeName}
                     mov qword ptr [rcx], r8
                     mov r8d, 0x10
@@ -98,12 +98,12 @@ Library "GameMode" by "Hyper"
             WriteAsmHook
             (
                 $@"
-                    mov qword ptr [rsi + 0x1A8], rbx
-                    mov rbp, {(long)Marshal.StringToHGlobalAnsi("GameModeStage")}
+                    mov qword ptr [rdi + 0x1A8], rbx
+                    mov rbp, {TO_STRING_PTR("GameModeStage")}
                     mov rax, {(long)p_pGameModeName}
                     mov qword ptr [rax], rbp
                     xor ebp, ebp
-                    mov qword ptr [rsi + 0x190], rbp
+                    mov qword ptr [rdi + 0x190], rbp
                 ",
 
                 /* 0x147CB8905 */
@@ -122,7 +122,7 @@ Library "GameMode" by "Hyper"
                 WriteAsmHook
                 (
                     $@"
-                        mov    rdx, {(long)Marshal.StringToHGlobalAnsi("GameModeTutorial")}
+                        mov    rdx, {TO_STRING_PTR("GameModeTutorial")}
                         mov    rax, {(long)p_pGameModeName}
                         mov    qword ptr [rax], rdx
                         mov    rax, {(long)p_destinationMode}
@@ -150,7 +150,7 @@ Library "GameMode" by "Hyper"
                         movups xmm0, xmmword ptr [rsp + 0x210 + 0xFFFFFFFFFFFFFE10]
                         mov    qword ptr [rbp + 0x110 + 0xFFFFFFFFFFFFFFA0], rax
                         mov    word ptr [rdi + 0x120], 0x101
-                        mov    rcx, {(long)Marshal.StringToHGlobalAnsi("GameModeTutorial")}
+                        mov    rcx, {TO_STRING_PTR("GameModeTutorial")}
                         mov    rax, {(long)p_pGameModeName}
                         mov    qword ptr [rax], rcx
                         mov    rax, {(long)p_destinationMode}
@@ -171,9 +171,9 @@ Library "GameMode" by "Hyper"
                 WriteAsmHook
                 (
                     $@"
-                        mov rbx, {(long)Marshal.StringToHGlobalAnsi("w6d01")}
+                        mov rbx, {TO_STRING_PTR("w6d01")}
                         lea rcx, qword ptr [rbx]
-                        mov rbx, {(long)Marshal.StringToHGlobalAnsi("GameModeTutorial")}
+                        mov rbx, {TO_STRING_PTR("GameModeTutorial")}
                         mov rdx, {(long)p_pGameModeName}
                         mov qword ptr [rdx], rbx
                         mov rax, {(long)p_destinationMode}

@@ -2,6 +2,7 @@ Library "GOComponents" by "Hyper"
 {
     #include "Helpers" noemit
 
+    #lib "Helpers"
     #lib "Memory"
     #lib "Player"
     #lib "PlayerEffect"

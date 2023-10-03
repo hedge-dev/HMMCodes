@@ -19,7 +19,7 @@ Library "Time" by "Hyper"
                     lea    rdi, qword ptr [rcx + 0x14]
                     movaps xmmword ptr [rsp + 0x58 + 0xFFFFFFFFFFFFFFE8], xmm6
                     mov    r9, {(long)p_pFrameRate}
-                    mov    [r9], rcx
+                    mov    qword ptr [r9], rcx
                     add    qword ptr [r9], 0x14
                 ",
 
