@@ -1,16 +1,16 @@
-Code "Disable Lava Instant Death" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Disables Sonic instantly drowning in lava and makes him jump up from the heat until running out of rings." 
+Code "Disable Lava Instant Death" in "Gameplay" by "Hyper" does "Disables Sonic instantly drowning in lava and makes him jump up from the heat until running out of rings." 
 //
     #lib "BlackboardItem"
     #lib "Memory"
 
-    static bool IsInitialised = false;
+    static bool _isInitialised = false;
 
-    static int RingCount = 0;
+    static int _ringCount = 0;
 //
 {
-    if (!IsInitialised)
+    if (!_isInitialised)
     {
-        fixed (int* pRingCount = &RingCount)
+        fixed (int* p_ringCount = &_ringCount)
         {
             /* 0x1408D78F7 */
             long sig = ScanSignature
@@ -22,14 +22,14 @@ Code "Disable Lava Instant Death" in "! Incompatible - awaiting fixes for v1.40"
             WriteAsmHook
             (
                 $@"
-                    mov rcx, {(long)pRingCount}
+                    mov rcx, {(long)p_ringCount}
                     cmp dword ptr [rcx], 0
                     jnz exit
                     mov rdx, {Memory.ReadJump(sig + 0x04)}
                     jmp rdx
                 exit:
                     lea edx, dword ptr [rax - 0x03]
-                    mov r8d, 0x800000
+                    mov r8d, 0x400000
                 ",
 
                 sig,
@@ -38,10 +38,8 @@ Code "Disable Lava Instant Death" in "! Incompatible - awaiting fixes for v1.40"
             );
         }
 
-        IsInitialised = true;
+        _isInitialised = true;
     }
 
-    RingCount = BlackboardItem.Get() == null ? 0 : BlackboardItem.Get()->RingCount;
+    _ringCount = BlackboardItem.Get() == null ? 0 : BlackboardItem.Get()->RingCount;
 }
-
-
