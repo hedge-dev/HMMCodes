@@ -1,16 +1,15 @@
-Patch "Always Respawn Enemies" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Always respawns enemies and guardians when loading back into islands." 
+Patch "Always Respawn Enemies" in "Enemy" by "Hyper" does "Always respawns enemies and guardians when loading back into islands."
+//
+    #lib "Memory"
+//
 {
-    WriteProtected<byte>
+    Memory.WriteForceJump
     (
         /* 0x14922FB24 */
         ScanSignature
         (
-            "\x0F\x88\x6D\x01\x00\x00\xE8",
-            "xxxxxxx"
-        ),
-
-        0xE9, 0x6E, 0x01, 0x00, 0x00
+            "\x0F\x88\x76\x01\x00\x00",
+            "xxxxxx"
+        )
     );
 }
-
-
