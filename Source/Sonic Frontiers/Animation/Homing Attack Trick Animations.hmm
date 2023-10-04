@@ -1,25 +1,30 @@
 Code "Homing Attack Trick Animations" in "Animation" by "Hyper & Ahremic" does "Replaces the homing attack finish animation with randomised trick animations." 
 //
+    #include "Helpers" noemit
+    
     #lib "Memory"
+    #lib "Player"
 
     using System.Runtime.InteropServices;
 
-    static bool Initialised = false;
+    static bool _isInitialised = false;
 
-    static Random Random = new Random();
+    static sbyte _playerType = -1;
 
-    static string[] AnimVariations = new[] { "U", "D", "L", "R" };
+    static Random _random = new Random();
 
-    static float AnimSpeed = 0.5f;
+    static string[] _animVariations = new[] { "U", "D", "L", "R" };
 
-    static IntPtr pAnimName = Marshal.AllocHGlobal(14);
+    static float _animSpeed = 0.5f;
+
+    static IntPtr _pAnimName = Marshal.AllocHGlobal(14);
 //
 {
-    string randAnimName = $"JUMP_TRICK_{AnimVariations[Random.Next(0, 4)]}{Random.Next(0, 3)}\0";
+    string randAnimName = $"JUMP_TRICK_{_animVariations[_random.Next(0, 4)]}{_random.Next(0, 3)}\0";
 
-    Marshal.Copy(System.Text.Encoding.UTF8.GetBytes(randAnimName), 0, pAnimName, randAnimName.Length);
+    Marshal.Copy(System.Text.Encoding.UTF8.GetBytes(randAnimName), 0, _pAnimName, randAnimName.Length);
 
-    if (!Initialised)
+    if (!_isInitialised)
     {
         /* 0x140823825 */
         long playAnimCallerAddr = ScanSignature
@@ -41,26 +46,33 @@ Code "Homing Attack Trick Animations" in "Animation" by "Hyper & Ahremic" does "
         /* 0x1407C9DB0 */
         long setAnimSpeedFuncAddr = Memory.ReadCall(setAnimSpeedCallerAddr);
 
-        fixed (float* pAnimSpeed = &AnimSpeed)
+        fixed (sbyte* p_playerType = &_playerType)
+        fixed (float* p_animSpeed = &_animSpeed)
         {
             WriteAsmHook
             (
                 $@"
-                    push  rax
-                    mov   rax, {(long)pAnimSpeed}
-                    movss xmm2, dword ptr [rax]
-                    pop   rax
-                    mov   rdx, {(long)Marshal.StringToHGlobalAnsi("SPEED_RATIO")}
-                    lea   rdx, [rdx]
+                    mov   rdx, {(long)p_playerType}
+                    cmp   byte ptr [rdx], 0
+                    jne   default
+                    mov   rdx, {(long)p_animSpeed}
+                    movss xmm2, dword ptr [rdx]
+                    mov   rdx, {TO_STRING_PTR("SPEED_RATIO")}
                     mov   rcx, rax
                     mov   rax, {setAnimSpeedFuncAddr}
                     mov   rbx, rcx
                     call  rax
-                    mov   rdx, {pAnimName}
-                    lea   rdx, [rdx]
+                    mov   rdx, {_pAnimName}
                     mov   rcx, rbx
                     mov   rax, {playAnimFuncAddr}
                     call  rax
+                    jmp   exit
+                default:
+                    mov   rdx, {TO_STRING_PTR("ATTACK_BOUNCE")}
+                    mov   rcx, rax
+                    mov   rax, {playAnimFuncAddr}
+                    call  rax
+                exit:
                 ",
 
                 /* 0x14082381B */
@@ -70,8 +82,10 @@ Code "Homing Attack Trick Animations" in "Animation" by "Hyper & Ahremic" does "
             );
         }
 
-        Initialised = true;
+        _isInitialised = true;
     }
+
+    _playerType = (sbyte)Player.GetPlayerType();
 }
 
 
