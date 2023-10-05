@@ -18,7 +18,11 @@ Code "Play Random Soundtrack in Cyber Space" in "Audio" by "Hyper" does "Plays a
 
         /* Ouranos */
         "bgm_w9d02", "bgm_w9d03", "bgm_w9d04", "bgm_w9d05", "bgm_w9d06",
-        "bgm_w9d07"
+        "bgm_w9d07",
+
+        /* Another Story */
+        "bgm_w6d21", "bgm_w6d22", "bgm_w6d23", "bgm_w7d21", "bgm_w7d22",
+        "bgm_w7d23", "bgm_w9d21", "bgm_w9d22", "bgm_w9d23"
     };
 //
 {
@@ -33,8 +37,6 @@ Code "Play Random Soundtrack in Cyber Space" in "Audio" by "Hyper" does "Plays a
     }
     else
     {
-        WriteProtected<byte>(Address, System.Text.Encoding.UTF8.GetBytes(BgmList[new Random().Next(0, 30)]));
+        WriteProtected<byte>(Address, System.Text.Encoding.UTF8.GetBytes(BgmList[new Random().Next(0, BgmList.Length)]));
     }
 }
-
-
