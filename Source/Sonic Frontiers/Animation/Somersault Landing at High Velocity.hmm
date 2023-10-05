@@ -11,6 +11,8 @@ This state lasts a fraction of a second, but keep in mind that within that time,
 
     #load "System.Numerics.dll"
 
+    #import "States"
+
     using System.Numerics;
     using System.Collections.Generic;
 
@@ -33,31 +35,6 @@ This state lasts a fraction of a second, but keep in mind that within that time,
 {
     if (!IsInitialised)
     {
-        fixed (bool* pIsRecoveryJumpCharging = &IsRecoveryJumpCharging)
-        {
-            WriteAsmHook
-            (
-                $@"
-                    movaps xmmword ptr [rsp + 0x38 + 0xFFFFFFFFFFFFFFE8], xmm6
-                    mov    rsi, rcx
-                    mov    rcx, {(long)pIsRecoveryJumpCharging}
-                    mov    dl, byte ptr [rsi + 0xC4]
-                    mov    byte ptr [rcx], dl
-                    mov    edx, 0x18
-                    mov    rcx, rdi
-                ",
-
-                /* 0x1408A0A1D */
-                ScanSignature
-                (
-                    "\x0F\x29\x74\x24\x20\x48\x8B\xF1\xBA\x18\x00\x00\x00",
-                    "xxxxxxxxxxxxx"
-                ),
-
-                HookBehavior.Replace
-            );
-        }
-
         Sonic.StateID NotifyStateSpringJumpHeadLandDamageCollision(Sonic.StateID in_stateId, Sonic.StateID[] in_stateStackTrace)
         {
             bool isStateSpringJumpHeadLand = in_stateId == Sonic.StateID.StateSpringJumpHeadLand;
@@ -83,6 +60,11 @@ This state lasts a fraction of a second, but keep in mind that within that time,
 
     if (kinematics == null)
         return;
+
+    var pStateRecoveryJump = Player.State.GetState<StateRecoveryJump>();
+
+    if (pStateRecoveryJump != null)
+        IsRecoveryJumpCharging = pStateRecoveryJump->IsDropDashCharge;
 
     if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateSpringJumpHeadLand)
     {
