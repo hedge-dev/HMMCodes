@@ -11,6 +11,9 @@ Library "Lua" by "Hyper & ĐeäTh"
     #lib "Resources"
     #lib "StringMapOperation"
 
+    #import "Allocators"
+    #import "Services"
+
     // Basic types
     #define LUA_TNONE          (-1)
     #define LUA_TNIL           0
@@ -40,14 +43,13 @@ Library "Lua" by "Hyper & ĐeäTh"
     using System.Threading;
 
     private static bool _isInitialised = false;
-    private static bool _isScriptSequenceInactive = true;
 
-    private static long _pLuaState = 0;
     private static long _sigScriptSequenceManagerStaticClassCtor = 0;
 
     private static List<string> _deniedGameModes = new()
     {
         "GameModeBattleRush",
+        "GameModeBossRush",
         "GameModeFishing",
         "GameModeHacking",
         "GameModeStage",
@@ -59,7 +61,7 @@ Library "Lua" by "Hyper & ĐeäTh"
 
     private static List<uint> _userScriptHandles = new();
 
-    private static (string ScriptName, long pResourceData) _currentScript = new();
+    private static (string ScriptName, long pResourceData) _currentResLuaData = new();
     private static Dictionary<string, string> _scriptData = new();
 
     public abstract class Hook
@@ -353,11 +355,11 @@ Library "Lua" by "Hyper & ĐeäTh"
 
     /* 0x14C25D880 */
     private static long _sigInitScriptSequenceManager = ScanSignature("\x48\x89\x5C\x24\x10\x48\x89\x6C\x24\x18\x56\x57\x41\x54\x41\x56\x41\x57\x48\x81\xEC\x30\x01\x00\x00\x48\x89", "xxxxxxxxxxxxxxxxxxxxxxxxxxx");
-    FUNCTION_PTR(int*, InitScriptSequenceManager, _sigInitScriptSequenceManager, GameService.Data* in_pScriptSequenceManager, uint* in_pStringHash, char a3)
+    FUNCTION_PTR(int*, InitScriptSequenceManager, _sigInitScriptSequenceManager, ScriptSequenceManager* in_pScriptSequenceManager, uint* in_pStringHash, char a3)
     
     /* 0x14C245AC0 */
     private static long _sigRegisterScriptSequenceManager = ScanSignature("\x40\x56\x48\x81\xEC\xC0\x00\x00\x00\x48\x89\xCE\x45", "xxxxxxxxxxxxx");
-    FUNCTION_PTR(long, RegisterScriptSequenceManager, _sigRegisterScriptSequenceManager, GameService.Data* in_pScriptSequenceManager)
+    FUNCTION_PTR(long, RegisterScriptSequenceManager, _sigRegisterScriptSequenceManager, ScriptSequenceManager* in_pScriptSequenceManager)
 
     [LibraryInitializer]
     public void Init()
@@ -365,52 +367,23 @@ Library "Lua" by "Hyper & ĐeäTh"
         if (_isInitialised)
             return;
 
-        fixed (bool* p_isScriptSequenceInactive = &_isScriptSequenceInactive)
-        fixed (long* p_pLuaState = &_pLuaState)
+        if (_sigScriptSequenceManagerStaticClassCtor == 0)
         {
-            WriteAsmHook
+            /* 0x140178E1E */
+            _sigScriptSequenceManagerStaticClassCtor = ScanSignature
             (
-                $@"
-                    push rbp
-                    sub  rsp, 0x50
-                    mov  r9b, byte ptr [r8 + 0x20]
-                    mov  rbp, {(long)p_isScriptSequenceInactive}
-                    mov  byte ptr [rbp], r9b
-                    cmp  r9b, 0
-                    jz   getLuaState
-                    mov  rbp, {(long)p_pLuaState}
-                    mov  qword ptr [rbp], 0
-                    jmp  exit
-                getLuaState:
-                    mov  r9, qword ptr [rcx + 0x10]
-                    cmp  r9, 0
-                    jz   exit
-                    mov  r9, qword ptr [r9]
-                    cmp  r9, 0
-                    jz   exit
-                    mov  r9, qword ptr [r9 + 0x48]
-                    cmp  r9, 0
-                    jz   exit
-                    mov  r9, qword ptr [r9 + 0x18]
-                    cmp  r9, 0
-                    jz   exit
-                    mov  rbp, {(long)p_pLuaState}
-                    mov  qword ptr [rbp], r9
-                exit:
-                    cmp  byte ptr [r8 + 0x20], 0
-                    mov  r9, r8
-                    mov  rbp, rcx
-                ",
-
-                /* 0x1409172E7 */
-                ScanSignature
-                (
-                    "\x55\x48\x83\xEC\x50\x41\x80\x78\x20\x00",
-                    "xxxxxxxxxx"
-                ),
-
-                HookBehavior.Replace
+                "\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD0\x48\x8B\xCF\xE8\xCC\xCC\xCC\xCC\x0F\xB7\x97\x58\x01\x00\x00",
+                "x????xxxxxxx????xxxxxxx"
             );
+
+            if (_sigScriptSequenceManagerStaticClassCtor == 0)
+            {
+                Logger.Error("[Lua] Failed to initialise script sequence!");
+                return;
+            }
+
+            /* 0x143DBE440 */
+            GameService.AddUserService(Memory.ReadEffectiveAddress(Memory.ReadCall(_sigScriptSequenceManagerStaticClassCtor)));
         }
 
         long HookService(string in_resourceName, string in_resourceType, long in_pResource)
@@ -420,7 +393,7 @@ Library "Lua" by "Hyper & ĐeäTh"
 
             var pResource = (Resources.Data*)in_pResource;
 
-            _currentScript = (in_resourceName, (long)in_pResource);
+            _currentResLuaData = (in_resourceName, (long)in_pResource);
 
             bool isHooked = false;
 
@@ -474,77 +447,62 @@ Library "Lua" by "Hyper & ĐeäTh"
     {
         if (_lastGameModeName != GameMode.GetName())
         {
-            InitScriptSequence();
-
             _lastGameModeName = GameMode.GetName();
-        }
-    }
 
-    public void InitScriptSequence()
-    {
-        if (_deniedGameModes.Contains(GameMode.GetName()) ||
-            GameMode.GetTutorialDestination() == GameMode.DestinationMode.GameModeStage)
-        {
-            return;
-        }
-
-        if (_sigScriptSequenceManagerStaticClassCtor == 0)
-        {
-            /* 0x140178E1E */
-            _sigScriptSequenceManagerStaticClassCtor = ScanSignature
-            (
-                "\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD0\x48\x8B\xCF\xE8\xCC\xCC\xCC\xCC\x0F\xB7\x97\x58\x01\x00\x00",
-                "x????xxxxxxx????xxxxxxx"
-            );
-
-            if (_sigScriptSequenceManagerStaticClassCtor == 0)
+            if (_deniedGameModes.Contains(GameMode.GetName()) ||
+                GameMode.GetTutorialDestination() == GameMode.DestinationMode.GameModeStage)
             {
-                Logger.Error("[Lua] Failed to initialise script sequence!");
                 return;
             }
 
-            /* 0x143DBE440 */
-            GameService.AddUserService(Memory.ReadEffectiveAddress(Memory.ReadCall(_sigScriptSequenceManagerStaticClassCtor)));
+            var pScriptSequenceManager = GameManager.GetService<ScriptSequenceManager>();
+
+            if (pScriptSequenceManager == null)
+                return;
+            
+            if (pScriptSequenceManager->ScriptSequences.Length <= 0)
+            {
+                // BuildLevel
+                uint hash = 0x59B595D6;
+
+                GET_FUNCTION_PTR(InitScriptSequenceManager)(pScriptSequenceManager, &hash, (char)0);
+                GET_FUNCTION_PTR(RegisterScriptSequenceManager)(pScriptSequenceManager);
+
+                Logger.Utility($"[Lua] Initialised app::ScriptSequenceManager at 0x{((long)pScriptSequenceManager):X}!");
+            }
         }
-
-        var pScriptSequenceManager = GameManager.GetService("ScriptSequenceManager");
-
-        if (pScriptSequenceManager == null)
-            return;
-
-        // BuildLevel
-        uint hash = 0x59B595D6;
-
-        GET_FUNCTION_PTR(InitScriptSequenceManager)(pScriptSequenceManager, &hash, (char)0);
-        GET_FUNCTION_PTR(RegisterScriptSequenceManager)(pScriptSequenceManager);
     }
 
     public long GetState()
     {
-        /*
-            This stupid null check validates the Lua state
-            by checking if lua_State.next is null. This won't
-            always mean the state is valid, of course, as any
-            bit of memory could have a null QWORD, but it works.
+        var pScriptSequenceManager = GameManager.GetService<ScriptSequenceManager>();
 
-            PUC-Rio should really add a signature to the lua_State
-            struct for external validation, because checking the
-            result of luaL_newstate is just not good enough.
-        */
-        if (_pLuaState != 0 && *(long*)_pLuaState != 0)
+        if (pScriptSequenceManager == null)
             return 0;
 
-        return _pLuaState;
+        var scriptSequences = pScriptSequenceManager->ScriptSequences;
+
+        if (scriptSequences.Length > 0)
+        {
+            var pScriptSequence = scriptSequences[0].pData;
+
+            if (pScriptSequence == null)
+                return 0;
+
+            return pScriptSequence->pScripts[0]->pLuaState;
+        }
+
+        return 0;
     }
 
     public (string ScriptName, long pResourceData) GetCurrentScriptResource()
     {
-        return (_currentScript.ScriptName, _currentScript.pResourceData);
+        return (_currentResLuaData.ScriptName, _currentResLuaData.pResourceData);
     }
 
     public string Peek(bool in_isOutput = true)
     {
-        long pResourceData = _currentScript.pResourceData;
+        long pResourceData = _currentResLuaData.pResourceData;
 
         if (pResourceData == 0)
             return string.Empty;
@@ -555,7 +513,7 @@ Library "Lua" by "Hyper & ĐeäTh"
 
         if (in_isOutput)
         {
-            Logger.Utility($"[Lua] Peeking \"{_currentScript.ScriptName}\" at 0x{pResourceData:X}...");
+            Logger.Utility($"[Lua] Peeking \"{_currentResLuaData.ScriptName}\" at 0x{pResourceData:X}...");
             Logger.Warning("[Lua] WARNING: console output may look mangled due to unsupported characters");
             Logger.Utility("[Lua] ///////////////////////////// PEEK START /////////////////////////////");
             Console.Write($"\n{result}\n");
@@ -656,9 +614,6 @@ Library "Lua" by "Hyper & ĐeäTh"
     private void CallHandled(long in_pLuaState, int in_args, int in_results)
     {
         if (in_pLuaState == 0)
-            return;
-
-        if (_isScriptSequenceInactive)
             return;
 
         if (GET_FUNCTION_PTR(lua_pcallk)(in_pLuaState, in_args, in_results, 0, 0, 0) != LUA_OK)

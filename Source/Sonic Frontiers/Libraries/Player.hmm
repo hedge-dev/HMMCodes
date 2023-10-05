@@ -4,13 +4,13 @@ Library "Player" by "Hyper, NM, Ahremic & Skyth"
     #include "Helpers" noemit
 
     #import "GOComponents"
+    #import "Services"
     #import "States"
 
     #lib "BlackboardStatus"
     #lib "Collections"
     #lib "GameManager"
     #lib "GameObject"
-    #lib "LevelInfo"
     #lib "Lua"
     #lib "Reflection"
     #lib "StringMapOperation"
@@ -867,7 +867,7 @@ Library "Player" by "Hyper, NM, Ahremic & Skyth"
     {
         public static bool IsGrounded()
         {
-            var pLevelInfo = LevelInfo.Get();
+            var pLevelInfo = GameManager.GetService<LevelInfo>();
 
             if (pLevelInfo == null)
                 return false;

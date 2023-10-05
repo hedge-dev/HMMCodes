@@ -43,7 +43,7 @@ Library "Blackboard" by "Hyper, ĐeäTh & Sajid" does "Provides access to `app::
         ///     var pBlackboardStatus = Blackboard.GetPlayerBlackboardContent<BlackboardStatus.Data>(pBlackboard);
         ///     
         ///     // Prints the name hash to the console.
-        ///     Console.WriteLine(((uint)pBlackboardStatus->GetNameHash().DynamicInvoke()).ToString("X"));
+        ///     Console.WriteLine(((uint)pBlackboardStatus->GetNameHash()()).ToString("X"));
         /// }
         /// ]]></code>
         /// </example>
@@ -80,7 +80,7 @@ Library "Blackboard" by "Hyper, ĐeäTh & Sajid" does "Provides access to `app::
         {
             var pBlackboardContent = blackboardContents[i].pData;
             
-            if ((uint)pBlackboardContent->GetNameHash().DynamicInvoke() == StringMapOperation.ComputeHash(in_name))
+            if ((uint)pBlackboardContent->GetNameHash()() == StringMapOperation.ComputeHash(in_name))
                 return (long)pBlackboardContent;
         }
 

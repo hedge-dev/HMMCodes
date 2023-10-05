@@ -48,7 +48,7 @@ Library "PlayerEffect" by "Hyper"
         {
             var pPlayerEffect = playerEffects[i].pData;
             
-            if ((uint)pPlayerEffect->GetNameHash().DynamicInvoke() == StringMapOperation.ComputeHash(in_name))
+            if ((uint)pPlayerEffect->GetNameHash()() == StringMapOperation.ComputeHash(in_name))
                 return pPlayerEffect;
         }
 

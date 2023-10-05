@@ -112,7 +112,7 @@ Library "Helpers" by "Hyper & Sajid"
     ///     }
     /// //
     /// {
-    ///     myInstanceOfMyStruct->GetNameHash()->DynamicInvoke();
+    ///     myInstanceOfMyStruct->GetNameHash()();
     /// }
     /// ]]></code>
     /// </example>
@@ -124,8 +124,8 @@ Library "Helpers" by "Hyper & Sajid"
     /// <param name="...">The arguments of the unmanaged function.</param>
     #define VFUNCTION_PTR(in_thisType, in_functionIndex, in_returnType, in_functionName, ...) \
         [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
-        private delegate in_returnType T##in_functionName(__VA_ARGS__); \
-        public Delegate in_functionName() \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public T##in_functionName in_functionName() \
         { \
             fixed (in_thisType* pThis = &this) \
                 return System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<T##in_functionName>((IntPtr)(*(long*)((*(long*)pThis) + (1 * sizeof(nint)) * in_functionIndex))); \

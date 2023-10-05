@@ -1,5 +1,13 @@
 Library "Services" by "Hyper"
 {
+    #include "Helpers" noemit
+
+    #lib "GameManager"
+    #lib "Helpers"
+    #lib "Memory"
+
+    #import "Collections"
+    
     using System.Runtime.InteropServices;
 
     /// <summary>
@@ -8,6 +16,34 @@ Library "Services" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0xF0)]
     public struct ExpManager
     {
+        /// <summary>
+        /// An instance of `hh::game::GameService`, the base class for `app::game::ExpManager`.
+        /// </summary>
+        [FieldOffset(0)]    public GameService.Data GameService;
+
+        /// <summary>
+        /// The experience data for Sonic.
+        /// </summary>
+        [FieldOffset(0x80)] public PlayerData Sonic;
+
+        /// <summary>
+        /// The experience data for Amy.
+        /// </summary>
+        [FieldOffset(0x9C)] public PlayerData Amy;
+
+        /// <summary>
+        /// The experience data for Knuckles.
+        /// </summary>
+        [FieldOffset(0xB8)] public PlayerData Knuckles;
+
+        /// <summary>
+        /// The experience data for Tails.
+        /// </summary>
+        [FieldOffset(0xD4)] public PlayerData Tails;
+
+        /// <summary>
+        /// A struct representation of the experience data for each character.
+        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         public struct PlayerData
         {
@@ -26,10 +62,144 @@ Library "Services" by "Hyper"
             /// </summary>
             public short TotalSkillPoints;
         }
+    }
 
-        [FieldOffset(0x80)] public PlayerData Sonic;
-        [FieldOffset(0x9C)] public PlayerData Amy;
-        [FieldOffset(0xB8)] public PlayerData Knuckles;
-        [FieldOffset(0xD4)] public PlayerData Tails;
+    /// <summary>
+    /// A struct representation of `app::level::LevelInfo`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x100)]
+    public struct LevelInfo
+    {
+        /// <summary>
+        /// An instance of `hh::game::GameService`, the base class for `app::level::LevelInfo`.
+        /// </summary>
+        [FieldOffset(0)]    public GameService.Data GameService;
+
+        /// <summary>
+        /// An array of pointers to `app::level::PlayerInformation` instances.
+        /// </summary>
+        [FieldOffset(0xC8)] UNMANAGED_FIXED_ARRAY(PlayerInformation*, PlayerInfo, 1)
+
+        /// <summary>
+        /// A struct representation of `app::level::PlayerInformation`.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit, Size = 0x540, Pack = 0x10)]
+        public struct PlayerInformation
+        {
+            /// <summary>
+            /// Determines if the current player is grounded.
+            /// </summary>
+            [FieldOffset(0x2EE)] public bool IsGrounded;
+        }
+    }
+
+    /// <summary>
+    /// A struct representation of `app::ScriptSequenceManager`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x170)]
+    public struct ScriptSequenceManager
+    {
+        /// <summary>
+        /// An instance of `hh::game::GameService`, the base class for `app::ScriptSequenceManager`.
+        /// </summary>
+        [FieldOffset(0)]     public GameService.Data GameService;
+
+        /// <summary>
+        /// A pointer to the vftable for the inherited `hh::game::GameStepListener`.
+        /// </summary>
+        [FieldOffset(0x70)]  public long pGameStepListener;
+
+        /// <summary>
+        /// A pointer to the vftable for the inherited `hh::game::SaveManagerListener`.
+        /// </summary>
+        [FieldOffset(0x78)]  public long pSaveManagerListener;
+
+        /// <summary>
+        /// An array of instances of `app::ScriptSequence`.
+        /// </summary>
+        [FieldOffset(0x80)]  public MoveArray<Memory.Pointer<ScriptSequence>> ScriptSequences;
+
+        /// <summary>
+        /// A pointer to an LPCRITICAL_SECTION.
+        /// </summary>
+        [FieldOffset(0xF8)]  public long pCriticalSection;
+
+        /// <summary>
+        /// An array of callback functions.
+        /// </summary>
+        [FieldOffset(0x120)] public MoveArray<CallbackData> CallbackFunctions;
+
+        /// <summary>
+        /// A pointer to an instance of `script.rfl`.
+        /// </summary>
+        [FieldOffset(0x140)] public Resources.Data* pRflScript;
+
+        /// <summary>
+        /// A pointer to an instance of `talk_event_camera_preset.rfl`.
+        /// </summary>
+        [FieldOffset(0x150)] public Resources.Data* pRflTalkEventCameraPreset;
+
+        /// <summary>
+        /// A struct representation of `app::ScriptSequence`.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit, Size = 0x250)]
+        public struct ScriptSequence
+        {
+            /// <summary>
+            /// A pointer to an instance of `app::ScriptSequenceManager`.
+            /// </summary>
+            [FieldOffset(0x38)] public ScriptSequenceManager* pScriptSequenceManager;
+
+            /// <summary>
+            /// A fixed array of instances of `app::game::Script`.
+            /// </summary>
+            [FieldOffset(0x48)] UNMANAGED_FIXED_ARRAY(Script*, pScripts, 5)
+
+            /// <summary>
+            /// The name of this sequence.
+            /// </summary>
+            [FieldOffset(0x74)] public fixed byte pSequenceName[64];
+
+            /// <summary>
+            /// The type of overlay being displayed for the current sequence.
+            /// </summary>
+            [FieldOffset(0xC0)] public int OverlayType;
+
+            /// <summary>
+            /// The amount of overlay jobs present in the current sequence.
+            /// </summary>
+            [FieldOffset(0xC8)] public int OverlayJobCount;
+
+            /// <summary>
+            /// A struct representation of `app::game::Script`.
+            /// </summary>
+            [StructLayout(LayoutKind.Explicit, Size = 0xD8)]
+            public struct Script
+            {
+                /// <summary>
+                /// A pointer to the Lua state.
+                /// </summary>
+                [FieldOffset(0x18)] public long pLuaState;
+            }
+        }
+
+        /// <summary>
+        /// A struct representation of the user data for storing callback functions.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit, Size = 0x30)]
+        public struct CallbackData
+        {
+            /// <summary>
+            /// The name of this callback function.
+            /// </summary>
+            [FieldOffset(0x08)] public Helpers.UnmanagedString Name;
+
+            /// <summary>
+            /// A pointer to the function pertaining to this callback.
+            /// </summary>
+            [FieldOffset(0x10)] public long pFunction;
+
+            public override string ToString() => Name.ToString();
+        }
     }
 }

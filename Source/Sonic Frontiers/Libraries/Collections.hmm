@@ -1,5 +1,7 @@
 Library "Collections" by "Sajid & Hyper" does "Provides extended collection types."
 {
+    #import "Allocators"
+
     using System.Collections.Generic;
     using System.Runtime.InteropServices;
 
@@ -13,7 +15,7 @@ Library "Collections" by "Sajid & Hyper" does "Provides extended collection type
         public T* pBuffer;
         public nint Length;
         public nint Capacity;
-        public nint pAllocator;
+        public IAllocator* pAllocator;
         
         public nint Count => Length;    
 
@@ -25,6 +27,59 @@ Library "Collections" by "Sajid & Hyper" does "Provides extended collection type
         private bool IsInplace()
         {
             return (Capacity & SIGN_BIT) != 0;
+        }
+        
+        public void Reserve(nint in_length)
+        {
+            if (in_length <= Capacity)
+                return;
+
+            var newLength = sizeof(T) * in_length;
+            var pNewBuffer = pAllocator->Alloc()(pAllocator, newLength, 16);
+
+            if (pBuffer != null)
+                Buffer.MemoryCopy(pBuffer, (T*)(long)pNewBuffer, newLength, newLength);
+
+            if (!IsInplace())
+                pAllocator->Free()(pAllocator, pBuffer);
+
+            Capacity = in_length;
+            pBuffer = (T*)(long)pNewBuffer;
+        }
+
+        public void Add(T in_item)
+        {
+            Length++;
+
+            if (Length > Capacity)
+                Reserve(Length * 2);
+
+            pBuffer[Length - 1] = in_item;
+        }
+
+        public void RemoveAt(nint in_index)
+        {
+            if (in_index > Length)
+                return;
+
+            pBuffer[in_index] = pBuffer[in_index + 1];
+            Length--;
+        }
+
+        public void Clear()
+        {
+            Length = 0; // TODO: free the buffer?
+        }
+
+        public nint IndexOf(T in_item)
+        {
+            for (nint i = 0; i < Length; i++)
+            {
+                if (this[i].Equals(in_item))
+                    return i;
+            }
+
+            return -1;
         }
     }
 
@@ -104,5 +159,3 @@ Library "Collections" by "Sajid & Hyper" does "Provides extended collection type
         }
     }
 }
-
-

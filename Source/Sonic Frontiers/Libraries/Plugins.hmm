@@ -17,5 +17,47 @@ Library "Plugins" by "Hyper"
         /// The current amount of boost for the player.
         /// </summary>
         [FieldOffset(0x40)] public float BoostAmount;
+
+        /// <summary>
+        /// The current time remaining for infinite boost.
+        /// </summary>
+        [FieldOffset(0x54)] public float InfiniteBoostTimer;
+
+        /// <summary>
+        /// Bit flags for the boost gauge.
+        /// </summary>
+        [FieldOffset(0xD0)] public BoostFlags Flags;
+
+        /// <summary>
+        /// An enum containing known flags for `app::player::StatePluginBoost`.
+        /// </summary>
+        [Flags]
+        public enum BoostFlags : int
+        {
+            /// <summary>
+            /// The gauge is currently recharging.
+            /// </summary>
+            IsGaugeRecharging = 1,
+
+            /// <summary>
+            /// The player is air boosting.
+            /// </summary>
+            IsAirBoost = 2,
+
+            /// <summary>
+            /// The gauge is empty and unusable by the player (in the red zone).
+            /// </summary>
+            IsGaugeEmpty = 8,
+
+            /// <summary>
+            /// The player is Cylooping whilst boosting.
+            /// </summary>
+            IsCyloopBoost = 0x20,
+
+            /// <summary>
+            /// The player is boosting.
+            /// </summary>
+            IsBoosting = 0x20000
+        }
     }
 }

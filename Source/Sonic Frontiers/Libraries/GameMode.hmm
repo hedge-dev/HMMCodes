@@ -197,6 +197,13 @@ Library "GameMode" by "Hyper"
         _isInitialised = true;
     }
 
+    [LibraryUpdate]
+    public void Update()
+    {
+        if (GameMode.GetName() != "GameModeTutorial")
+            _destinationMode = (sbyte)DestinationMode.Unknown;
+    }
+
     /// <summary>
     /// Gets the name of the current instance of `app::game::GameMode`.
     /// </summary>

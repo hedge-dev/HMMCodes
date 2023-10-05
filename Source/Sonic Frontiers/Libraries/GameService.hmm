@@ -4,6 +4,8 @@ Library "GameService" by "Hyper & Sajid"
 
     #lib "GameManager"
 
+    #import "Allocators"
+
     using System.Collections.Generic;
     using System.Linq;
     using System.Runtime.InteropServices;
@@ -18,6 +20,11 @@ Library "GameService" by "Hyper & Sajid"
     [StructLayout(LayoutKind.Explicit, Size = 0x70)]
     public struct Data
     {
+        /// <summary>
+        /// A pointer to a memory allocator.
+        /// </summary>
+        [FieldOffset(0x08)]  public IAllocator* pAllocator;
+
         /// <summary>
         /// A pointer to an instance of `app::GameManager`.
         /// </summary>
@@ -56,7 +63,12 @@ Library "GameService" by "Hyper & Sajid"
 
         // Add user service class pointers.
         foreach (var ptr in _userServiceClassPtrs)
+        {
+            if (classes.Contains(ptr))
+                continue;
+            
             classes.Add(ptr);
+        }
         
         classes.Add(0);
 
