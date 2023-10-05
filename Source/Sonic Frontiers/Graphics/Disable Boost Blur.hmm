@@ -1,0 +1,43 @@
+Code "Disable Boost Blur" in "Graphics" by "Hyper" does "Disables motion blur whilst boosting."
+//
+    #include "Reflection" noemit
+
+    #lib "Reflection"
+    #lib "SonicParameters"
+    #lib "AmyParameters"
+    #lib "KnucklesParameters"
+    #lib "TailsParameters"
+//
+{
+    var SonicParametersInfo = Reflection.GetDataInfo<SonicParameters.Root>("player_common");
+
+    if (SonicParametersInfo.pData != null)
+    {
+        for (int i = 0; i < 2; i++)
+            RFL_SET_CONTEXTUAL_PLAYER_PARAM(SonicParametersInfo, modePackage.boost.blurPowers[i], 0.0f);
+    }
+
+    var AmyParametersInfo = Reflection.GetDataInfo<AmyParameters.Root>("amy_common");
+
+    if (AmyParametersInfo.pData != null)
+    {
+        for (int i = 0; i < 2; i++)
+            RFL_SET_PARAM(AmyParametersInfo, forwardView.modePackage.boost.blurPowers[i], 0.0f);
+    }
+
+    var KnucklesParametersInfo = Reflection.GetDataInfo<KnucklesParameters.Root>("knuckles_common");
+
+    if (KnucklesParametersInfo.pData != null)
+    {
+        for (int i = 0; i < 2; i++)
+            RFL_SET_PARAM(KnucklesParametersInfo, forwardView.modePackage.boost.blurPowers[i], 0.0f);
+    }
+
+    var TailsParametersInfo = Reflection.GetDataInfo<TailsParameters.Root>("tails_common");
+
+    if (TailsParametersInfo.pData != null)
+    {
+        for (int i = 0; i < 2; i++)
+            RFL_SET_PARAM(TailsParametersInfo, forwardView.modePackage.boost.blurPowers[i], 0.0f);
+    }
+}
