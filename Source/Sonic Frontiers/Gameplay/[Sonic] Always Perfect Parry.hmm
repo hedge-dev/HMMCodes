@@ -1,0 +1,13 @@
+Code "[Sonic] Always Perfect Parry" by "ĐeäTh" in "Gameplay" does "Enables the perfect parry at all times for Sonic."
+///
+    #lib "BlackboardStatus"
+    #include "BlackboardStatus" noemit
+///
+{
+    var pBlackboardStatus = BlackboardStatus.Get();
+    if (pBlackboardStatus == null)
+        return;
+
+    if (!IS_COMBAT_FLAG(IsPerfectParry))
+        pBlackboardStatus->CombatFlags |= (1L << (int)BlackboardStatus.CombatFlags.IsPerfectParry);
+}
