@@ -137,55 +137,44 @@ Library "Player" by "Hyper, NM, Ahremic & Skyth"
 
         _isInitialised = true;
     }
-    
-    public (PlayerType Type, long pGameObject) GetPlayer()
-    {
-        var pLevelInfo = GameManager.GetService<LevelInfo>();
-        var playerType = PlayerType.Unknown;
-        var pGameObject = 0L;
-
-        if (pLevelInfo == null)
-            return (playerType, pGameObject);
-
-        switch (pLevelInfo->PlayerInfo[0]->CharacterIndex)
-        {
-            case 0:
-                playerType = PlayerType.Sonic;
-                pGameObject = (long)GameManager.GetGameObject("Sonic");
-                break;
-
-            case 1:
-                playerType = PlayerType.Amy;
-                pGameObject = (long)GameManager.GetGameObject("PlayerAmy");
-                break;
-
-            case 2:
-                playerType = PlayerType.Knuckles;
-                pGameObject = (long)GameManager.GetGameObject("PlayerKnuckles");
-                break;
-
-            case 3:
-                playerType = PlayerType.Tails;
-                pGameObject = (long)GameManager.GetGameObject("PlayerTails");
-                break;
-        }
-        
-        return (playerType, pGameObject);
-    }
 
     public PlayerType GetPlayerType()
     {
-        return GetPlayer().Type;
+        var pLevelInfo = GameManager.GetService<LevelInfo>();
+
+        if (pLevelInfo == null)
+            return PlayerType.Unknown;
+
+        return (PlayerType)pLevelInfo->PlayerInfo[0]->CharacterIndex;
     }
 
     public Data* GetPlayerData()
     {
-        var player = GetPlayer();
+        var pGameObject = 0L;
 
-        if (player.Type == PlayerType.Unknown || player.pGameObject == 0)
+        switch (GetPlayerType())
+        {
+            case PlayerType.Sonic:
+                pGameObject = (long)GameManager.GetGameObject("Sonic");
+                break;
+
+            case PlayerType.Amy:
+                pGameObject = (long)GameManager.GetGameObject("PlayerAmy");
+                break;
+
+            case PlayerType.Knuckles:
+                pGameObject = (long)GameManager.GetGameObject("PlayerKnuckles");
+                break;
+
+            case PlayerType.Tails:
+                pGameObject = (long)GameManager.GetGameObject("PlayerTails");
+                break;
+        }
+
+        if (pGameObject == 0)
             return null;
         
-        return (Data*)player.pGameObject;
+        return (Data*)pGameObject;
     }
 
     public PlayerHsmContext* GetPlayerContext()
