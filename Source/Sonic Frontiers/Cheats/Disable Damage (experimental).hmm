@@ -1,4 +1,4 @@
-Patch "Disable Damage (experimental)" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does 
+Patch "Disable Damage (experimental)" in "Cheats" by "Hyper" does 
 /*
 Disables damage completely and makes Sonic invulnerable.
 
@@ -8,15 +8,13 @@ Known issues;
 {
     WriteProtected<byte>
     (
-        /* 0x1407EE68A */
+        /* 0x140915C52 */
         ScanSignature
         (
-            "\x0F\x84\x2C\x01\x00\x00\x83\xEA\x02",
+            "\x0F\x84\x64\x01\x00\x00\x83\xEA\x02",
             "xxxxxxxxx"
         ),
 
-        0xE9, 0x1A, 0x02, 0x00, 0x00
+        0xE9, 0x80, 0x00, 0x00, 0x00
     );
 }
-
-
