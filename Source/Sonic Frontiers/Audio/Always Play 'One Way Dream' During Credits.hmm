@@ -1,15 +1,17 @@
-Patch "Always Play 'One Way Dream' During Credits" in "Audio" by "M&M" 
+Patch "Always Play 'One Way Dream' During Credits" in "Audio" by "M&M"
+//
+    #lib "Memory"
+//
 {
     /* v1.40: 0x1401EB95E */
-    WriteProtected<byte>
+    Memory.WriteForceJump
     (
         ScanSignature
         (
             "\x3C\x02\x0F\x8D\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x48\x8B\xD0",
             "xxxx????x????xxx"
-        ),
-
-        0xE9, 0xAF, 0x05, 0x00, 0x00
+        )
+        + 2
     );
 
     /* v1.40: 0x1409FFA9A */
@@ -17,8 +19,8 @@ Patch "Always Play 'One Way Dream' During Credits" in "Audio" by "M&M"
     (
         ScanSignature
         (
-            "\x3C\x02\x7C\x3B\x0F\x28\x05\x00\x00\x00\x00\x48\x8D\x54\x24\x00",
-            "xxxxxxx????xxxx?"
+            "\x3C\x02\x7C\x00\x0F\x28\x05\x00\x00\x00\x00\x48\x8D\x54\x24\x00",
+            "xxx?xxx????xxxx?"
         ),
 
         4

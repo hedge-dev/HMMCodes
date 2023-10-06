@@ -1,4 +1,7 @@
-Patch "Always Play 'Vandalize' During Credits" in "Audio" by "M&M" 
+Patch "Always Play 'Vandalize' During Credits" in "Audio" by "M&M"
+//
+    #lib "Memory"
+//
 {
     /* v1.40: 0x1401EB95E */
     WriteNop
@@ -13,14 +16,13 @@ Patch "Always Play 'Vandalize' During Credits" in "Audio" by "M&M"
     );
 
     /* v1.40: 0x1409FFA9A */
-    WriteProtected<byte>
+    Memory.WriteForceJump
     (
         ScanSignature
         (
-            "\x3C\x02\x7C\x3B\x0F\x28\x05\x00\x00\x00\x00\x48\x8D\x54\x24\x00",
-            "xxxxxxx????xxxx?"
-        ),
-
-        0xEB, 0x3D
+            "\x3C\x02\x7C\x00\x0F\x28\x05\x00\x00\x00\x00\x48\x8D\x54\x24\x00",
+            "xxx?xxx????xxxx?"
+        )
+        + 2
     );
 }
