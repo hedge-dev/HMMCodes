@@ -87,6 +87,16 @@ Library "Services" by "Hyper"
         public struct PlayerInformation
         {
             /// <summary>
+            /// The index of the current player character.
+            /// 
+            /// 0 - Sonic
+            /// 1 - Amy
+            /// 2 - Knuckles
+            /// 3 - Tails
+            /// </summary>
+            [FieldOffset(0x18)]  public byte CharacterIndex;
+
+            /// <summary>
             /// Determines if the current player is grounded.
             /// </summary>
             [FieldOffset(0x2EE)] public bool IsGrounded;

@@ -137,30 +137,40 @@ Library "Player" by "Hyper, NM, Ahremic & Skyth"
 
         _isInitialised = true;
     }
-
+    
     public (PlayerType Type, long pGameObject) GetPlayer()
     {
-        var pSonic = GameManager.GetGameObject("Sonic");
+        var pLevelInfo = GameManager.GetService<LevelInfo>();
+        var playerType = PlayerType.Unknown;
+        var pGameObject = 0L;
 
-        if (pSonic != null)
-            return (PlayerType.Sonic, (long)pSonic);
-        
-        var pPlayerAmy = GameManager.GetGameObject("PlayerAmy");
+        if (pLevelInfo == null)
+            return (playerType, pGameObject);
 
-        if (pPlayerAmy != null)
-            return (PlayerType.Amy, (long)pPlayerAmy);
-        
-        var pPlayerKnuckles = GameManager.GetGameObject("PlayerKnuckles");
+        switch (pLevelInfo->PlayerInfo[0]->CharacterIndex)
+        {
+            case 0:
+                playerType = PlayerType.Sonic;
+                pGameObject = (long)GameManager.GetGameObject("Sonic");
+                break;
 
-        if (pPlayerKnuckles != null)
-            return (PlayerType.Knuckles, (long)pPlayerKnuckles);
-        
-        var pPlayerTails = GameManager.GetGameObject("PlayerTails");
+            case 1:
+                playerType = PlayerType.Amy;
+                pGameObject = (long)GameManager.GetGameObject("PlayerAmy");
+                break;
 
-        if (pPlayerTails != null)
-            return (PlayerType.Tails, (long)pPlayerTails);
+            case 2:
+                playerType = PlayerType.Knuckles;
+                pGameObject = (long)GameManager.GetGameObject("PlayerKnuckles");
+                break;
+
+            case 3:
+                playerType = PlayerType.Tails;
+                pGameObject = (long)GameManager.GetGameObject("PlayerTails");
+                break;
+        }
         
-        return (PlayerType.Unknown, 0);
+        return (playerType, pGameObject);
     }
 
     public PlayerType GetPlayerType()
