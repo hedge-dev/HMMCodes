@@ -136,6 +136,15 @@ Library "GOComponents" by "Hyper"
     public struct GOCPlayerVisual {}
 
     /// <summary>
+    /// A struct representation of `hh::ui::GOCSprite`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x230)]
+    public struct GOCSprite
+    {
+        [FieldOffset(0x180)] public byte Flags;
+    }
+
+    /// <summary>
     /// A struct representation of `app::player::GOCTransform`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0x110)]

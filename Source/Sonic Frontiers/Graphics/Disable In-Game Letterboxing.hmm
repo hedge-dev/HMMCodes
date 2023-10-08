@@ -9,6 +9,8 @@ Notes;
     #lib "GameObject"
     #lib "PhotoMode"
 
+    #import "GOComponents"
+
     static bool _isInitialised = false;
 
     static GameObject.Data* _pUILetterBox;
@@ -48,6 +50,11 @@ Notes;
 
     if (PhotoMode.IsEnabled())
         return;
-    
-    _pUILetterBox->Kill();
+        
+    var pGOCSprite = GameObject.GetGOC<GOCSprite>(_pUILetterBox);
+
+    if (pGOCSprite == null)
+        return;
+        
+    pGOCSprite->Flags = 0;
 }
