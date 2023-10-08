@@ -10,6 +10,7 @@ Keyboard Layout;
     #lib "GameManager"
     #lib "Logger"
     #lib "Lua"
+    #lib "Time"
 
     #import "Services"
 
