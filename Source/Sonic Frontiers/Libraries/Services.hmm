@@ -249,4 +249,25 @@ Library "Services" by "Hyper"
             public override string ToString() => Name.ToString();
         }
     }
+
+    /// <summary>
+    /// A struct representation of `app::game::TimeService`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x140)]
+    public struct TimeService
+    {
+        [FieldOffset(0x88)] public Time CurrentTime;
+
+        [StructLayout(LayoutKind.Explicit, Size = 0x10)]
+        public struct Time
+        {
+            [FieldOffset(0)]    public int Days;
+
+            [FieldOffset(0x04)] public int Hours;
+
+            [FieldOffset(0x08)] public int Minutes;
+
+            [FieldOffset(0x0C)] public float Seconds;
+        }
+    }
 }

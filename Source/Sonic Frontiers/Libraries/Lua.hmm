@@ -43,6 +43,7 @@ Library "Lua" by "Hyper & ĐeäTh"
     using System.Threading;
 
     private static bool _isInitialised = false;
+    private static bool _isPrintPreviousError = true;
 
     private static long _sigScriptSequenceManagerStaticClassCtor = 0;
 
@@ -602,6 +603,11 @@ Library "Lua" by "Hyper & ĐeäTh"
         return code.ToString();
     }
 
+    public void SetPrintPreviousError(bool in_isEnabled)
+    {
+        _isPrintPreviousError = in_isEnabled;
+    }
+
     public string GetPreviousError(long in_pLuaState)
     {
         var pError = (IntPtr)GET_FUNCTION_PTR(lua_tolstring)(in_pLuaState, -1, 0);
@@ -618,7 +624,8 @@ Library "Lua" by "Hyper & ĐeäTh"
 
         if (GET_FUNCTION_PTR(lua_pcallk)(in_pLuaState, in_args, in_results, 0, 0, 0) != LUA_OK)
         {
-            Logger.Error($"[Lua] Error: {GetPreviousError(in_pLuaState)}");
+            if (_isPrintPreviousError)
+                Logger.Error($"[Lua] Error: {GetPreviousError(in_pLuaState)}");
         }
     }
 
