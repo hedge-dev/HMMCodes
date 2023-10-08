@@ -1,0 +1,53 @@
+Code "Disable In-Game Letterboxing" in "Graphics" by "Hyper" does 
+/*
+Disables letterboxing for in-game cutscenes and Training Simulator.
+
+Notes;
+- This does not work for pre-rendered cutscenes.
+*/
+//
+    #lib "GameObject"
+    #lib "PhotoMode"
+
+    static bool _isInitialised = false;
+
+    static GameObject.Data* _pUILetterBox;
+//
+{
+    if (!_isInitialised)
+    {
+        fixed (GameObject.Data** p_pUILetterBox = &_pUILetterBox)
+        {
+            WriteAsmHook
+            (
+                $@"
+                    mov rdx, {(long)p_pUILetterBox}
+                    mov qword ptr [rdx], rbx
+                    mov edx, 0x13
+                    mov qword ptr [rbx], rax
+                    mov rcx, rbx
+                    mov dword ptr [rbx + 0x248], 0x0E
+                ",
+
+                /* 0x140A74A58 */
+                ScanSignature
+                (
+                    "\xBA\x13\x00\x00\x00\x48\x89\x03\x48\x8B\xCB\xC7\x83\x48\x02\x00\x00\x0E\x00\x00\x00",
+                    "xxxxxxxxxxxxxxxxxxxxx"
+                ),
+
+                HookBehavior.Replace
+            );
+        }
+
+        _isInitialised = true;
+    }
+
+    if (_pUILetterBox == null)
+        return;
+
+    if (PhotoMode.IsEnabled())
+        return;
+    
+    _pUILetterBox->Kill();
+}

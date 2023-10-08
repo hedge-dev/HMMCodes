@@ -54,30 +54,6 @@ Library "Messages" by "Hyper, Sajid & ĐeäTh"
     }
 
     /// <summary>
-    /// A struct representation of `app::ui::MsgUISetGameCockpitEnabled`.
-    /// </summary>
-    [StructLayout(LayoutKind.Explicit, Size = 0x58)]
-    public struct MsgUISetGameCockpitEnabled
-    {
-        [FieldOffset(0)]    public Message Base = new Message(0x2406);
-
-        [FieldOffset(0x20)] public ulong Flags;
-
-        [FieldOffset(0x28)] public bool IsEnabled;
-
-        [FieldOffset(0x2C)] public uint Hash;
-
-        public MsgUISetGameCockpitEnabled(string in_name, ulong in_flags, bool in_isEnabled)
-        {
-            Base.Mask = 0x4000000;
-            
-            Flags = in_flags;
-            IsEnabled = in_isEnabled;
-            Hash = StringMapOperation.ComputeHash(in_name);
-        }
-    }
-
-    /// <summary>
     /// A struct representation of `app::game::MsgResumeWorld`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0x60)]
@@ -157,6 +133,30 @@ Library "Messages" by "Hyper, Sajid & ĐeäTh"
             // Set common defaults for unknown values.
             UnkFloat1 = -1.0f;
             UnkBool1 = true;
+        }
+    }
+
+    /// <summary>
+    /// A struct representation of `app::ui::MsgUISetGameCockpitEnabled`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x58)]
+    public struct MsgUISetGameCockpitEnabled
+    {
+        [FieldOffset(0)]    public Message Base = new Message(0x2406);
+
+        [FieldOffset(0x20)] public ulong Flags;
+
+        [FieldOffset(0x28)] public bool IsEnabled;
+
+        [FieldOffset(0x2C)] public uint Hash;
+
+        public MsgUISetGameCockpitEnabled(string in_name, ulong in_flags, bool in_isEnabled)
+        {
+            Base.Mask = 0x4000000;
+            
+            Flags = in_flags;
+            IsEnabled = in_isEnabled;
+            Hash = StringMapOperation.ComputeHash(in_name);
         }
     }
 

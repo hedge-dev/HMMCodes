@@ -23,6 +23,11 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
         [FieldOffset(0x18)] public GameManager.Data* pGameManager;
 
         /// <summary>
+        /// The flags for this game object.
+        /// </summary>
+        [FieldOffset(0x30)] public byte Flags;
+
+        /// <summary>
         /// An array of pointers to `hh::game::GOComponent` instances.
         /// </summary>
         [FieldOffset(0x58)] public MoveArray<Memory.Pointer<GOComponent>> Components;
@@ -33,6 +38,14 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
         [FieldOffset(0xB8)] public Helpers.UnmanagedString Name;
 
         public override string ToString() => Name.ToString();
+
+        /// <summary>
+        /// Destroys this game object.
+        /// </summary>
+        public void Kill()
+        {
+            Flags |= 1;
+        }
     }
 
     /// <summary>
