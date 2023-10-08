@@ -119,8 +119,6 @@ Library "Services" by "Hyper"
         /// </summary>
         [FieldOffset(0)]    public GameService.Data GameService;
 
-        [FieldOffset(0x20)] public Vector3 CameraPosition;
-
         /// <summary>
         /// A pointer to an instance of `photomode.rfl`.
         /// </summary>
