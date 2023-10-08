@@ -18,14 +18,19 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
     public struct Data
     {
         /// <summary>
+        /// The handle assigned by hh::fnd::MessageManager
+        /// </summary>
+        [FieldOffset(0x18)] public long Handle;
+
+        /// <summary>
         /// A pointer to an instance of `hh::fnd::MessageManager`.
         /// </summary>
-        [FieldOffset(0x18)] public long pMessageManager;
+        [FieldOffset(0x20)] public long pMessageManager;
 
         /// <summary>
         /// A pointer to an instance of `app::GameManager`.
         /// </summary>
-        [FieldOffset(0x78)] public GameManager.Data* pGameManager;
+        [FieldOffset(0x48)] public GameManager.Data* pGameManager;
 
         /// <summary>
         /// The flags for this game object.
