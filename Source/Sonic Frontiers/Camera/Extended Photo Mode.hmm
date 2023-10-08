@@ -19,7 +19,6 @@ Notes;
 - When toggling Photo Mode in Cyber Space, the Red Ring display will be hidden permanently.
 - When teleporting the player to the camera, the reset position will change to the position of the camera at that moment.
 - For the keyboard/mouse layout, X buttons refer to the back/forward buttons on the mouse respectively.
-- PlayStation controllers may require XInput emulation for the extra controls.
 */
 //
     #include "BlackboardStatus" noemit

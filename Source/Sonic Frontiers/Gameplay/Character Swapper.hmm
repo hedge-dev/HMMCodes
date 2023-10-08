@@ -1,4 +1,4 @@
-Code "Character Swapper (experimental)" in "Gameplay" by "Hyper, Skyth & Gordon Ramsay" does
+Code "Character Swapper" in "Gameplay" by "Hyper, Skyth & Gordon Ramsay" does
 /*
 Allows switching between Sonic, Amy, Knuckles and Tails using hotkeys.
 
@@ -14,9 +14,9 @@ Keyboard Layout;
 - 3 - switch to Knuckles
 - 4 - switch to Tails
 
-Known issues;
-- Characters other than Sonic will have the lowest stats and an incomplete skill tree outside of Another Story.
-- The hotkeys to switch characters using the D-Pad currently only works with Xbox controllers.
+Notes;
+- Whilst the other characters may share states with Sonic, there is still opportunity for the game to crash when using some of Sonic's gimmicks as the other characters.
+- Keep your expectations within reason; don't expect guardians outside of Another Story to work 100% correctly as the other characters, especially event-driven ones like Shark.
 */
 //
     #lib "PhotoMode"
