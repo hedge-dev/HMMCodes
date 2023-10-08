@@ -59,12 +59,17 @@ Notes;
 
     static List<Sonic.StateID> _forceExitTeleportStates = new()
     {
+        Sonic.StateID.StateCaught,
         Sonic.StateID.StateGrind,
-        Sonic.StateID.StateCaught
+        Sonic.StateID.StateJumpBoardLaunch,
+        Sonic.StateID.StateSpringJump
     };
 
     static bool IsKeyDown(Keys in_keys)
     {
+        if ((GetAsyncKeyState(Keys.LMenu) & 0x8000) != 0)
+            return false;
+        
         return (GetAsyncKeyState(in_keys) & 0x8000) != 0;
     }
 //
