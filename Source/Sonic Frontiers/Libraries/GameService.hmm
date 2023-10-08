@@ -23,7 +23,7 @@ Library "GameService" by "Hyper & Sajid"
         /// <summary>
         /// A pointer to a memory allocator.
         /// </summary>
-        [FieldOffset(0x08)]  public IAllocator* pAllocator;
+        [FieldOffset(0x08)] public IAllocator* pAllocator;
 
         /// <summary>
         /// A pointer to an instance of `app::GameManager`.

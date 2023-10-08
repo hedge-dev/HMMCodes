@@ -5,9 +5,14 @@ Library "Services" by "Hyper"
     #lib "GameManager"
     #lib "Helpers"
     #lib "Memory"
+    #lib "PhotoModeParameters"
+    #lib "Resources"
 
     #import "Collections"
+
+    #load "System.Numerics.dll"
     
+    using System.Numerics;
     using System.Runtime.InteropServices;
 
     /// <summary>
@@ -101,6 +106,40 @@ Library "Services" by "Hyper"
             /// </summary>
             [FieldOffset(0x2EE)] public bool IsGrounded;
         }
+    }
+
+    /// <summary>
+    /// A struct representation of `app::game::PhotoModeService`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x1F0, Pack = 0x10)]
+    public struct PhotoModeService
+    {
+        /// <summary>
+        /// An instance of `hh::game::GameService`, the base class for `app::game::PhotoModeService`.
+        /// </summary>
+        [FieldOffset(0)]    public GameService.Data GameService;
+
+        [FieldOffset(0x20)] public Vector3 CameraPosition;
+
+        /// <summary>
+        /// A pointer to an instance of `photomode.rfl`.
+        /// </summary>
+        [FieldOffset(0x88)] public Resources.Data* pRflPhotoMode;
+
+        /// <summary>
+        /// A pointer to the `PhotoModeParameters` struct from `photomode.rfl`.
+        /// </summary>
+        [FieldOffset(0x90)] public PhotoModeParameters.Root* pPhotoModeParameters;
+
+        /// <summary>
+        /// Determines whether Photo Mode is enabled.
+        /// </summary>
+        [FieldOffset(0xDC)] public bool IsEnabled;
+
+        /// <summary>
+        /// The index of the current filter applied to the viewport.
+        /// </summary>
+        [FieldOffset(0xE0)] public int FilterIndex;
     }
 
     /// <summary>

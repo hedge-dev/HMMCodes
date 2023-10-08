@@ -4,6 +4,14 @@ Library "VectorHelpers" by "Hyper"
 
     using System.Numerics;
 
+    public static Vector3 ClampMagnitude(Vector3 in_vector, float in_maxMagnitude)
+    {
+        if (in_vector.Length() > in_maxMagnitude * in_maxMagnitude)
+            return Vector3.Normalize(in_vector) * in_maxMagnitude;
+
+        return in_vector;
+    }
+
     public static Vector3 GetForward(Quaternion in_rotation)
     {
         return Vector3.Transform(Vector3.UnitZ, Quaternion.Normalize(in_rotation));
@@ -19,7 +27,12 @@ Library "VectorHelpers" by "Hyper"
         return (float)Math.Sqrt(in_velocity.X * in_velocity.X + in_velocity.Z * in_velocity.Z);
     }
 
-    public Quaternion LookRotation(Vector3 in_forward, Vector3 in_upward)
+    public static float GetVerticalMagnitude(Vector3 in_velocity)
+    {
+        return in_velocity.Y;
+    }
+
+    public static Quaternion LookRotation(Vector3 in_forward, Vector3 in_upward)
     {
         in_forward = Vector3.Normalize(in_forward);
         in_upward = Vector3.Normalize(in_upward);
@@ -38,7 +51,7 @@ Library "VectorHelpers" by "Hyper"
         return Quaternion.CreateFromRotationMatrix(m);
     }
 
-    public Quaternion LookRotation(Vector3 in_forward)
+    public static Quaternion LookRotation(Vector3 in_forward)
     {
         return LookRotation(in_forward, Vector3.UnitY);
     }

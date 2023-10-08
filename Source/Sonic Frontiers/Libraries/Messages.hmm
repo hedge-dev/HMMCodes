@@ -1,0 +1,190 @@
+Library "Messages" by "Hyper, Sajid & ĐeäTh"
+{
+    #include "Helpers" noemit
+
+    #lib "GameManager"
+    #lib "GameService"
+    #lib "Memory"
+    #lib "Player"
+    #lib "StringMapOperation"
+
+    #import "Allocators"
+
+    using System.Runtime.InteropServices;
+    using System.Text;
+
+    /* 0x146E5A6A0 */
+    private static long _sigSendMessageToPlayer = ScanSignature("\x48\x89\x5C\x24\x18\x56\x57\x41\x56\x48\x83\xEC\x20\x48\x8B\x59", "xxxxxxxxxxxxxxxx");
+    FUNCTION_PTR(long, fpSendMessageToPlayer, _sigSendMessageToPlayer, void* in_pPlayer, void* in_pMessage)
+
+    /* 0x146E60CB0 */
+    private static long _sigSendMessageToGameService = ScanSignature("\x48\x89\x5C\x24\x10\x55\x57\x41\x56\x48\x83\xEC\x20\x4C", "xxxxxxxxxxxxxx");
+    FUNCTION_PTR(long, fpSendMessageToGameService, _sigSendMessageToGameService, void* in_pGameService, void* in_pGameManager, void* in_pMessage)
+
+    /* 0x15306BF10 */
+    private static long _sigSendMessageToGameManager = ScanSignature("\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x63\x41\x38", "xxxxxxxxxxxxxx");
+    FUNCTION_PTR(long, fpSendMessageToGameManager, _sigSendMessageToGameManager, void* in_pGameManager, void* in_pMessage)
+
+    /// <summary>
+    /// A struct representation of `hh::fnd::Message`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x20)]
+    public struct Message
+    {
+        [FieldOffset(0)]    public long pVftable;
+
+        [FieldOffset(0x08)] public uint ID;
+
+        [FieldOffset(0x0C)] public uint Sender;
+
+        [FieldOffset(0x10)] public uint Receiver;
+
+        [FieldOffset(0x14)] public bool IsBroadcasted;
+
+        [FieldOffset(0x18)] public uint Mask = 0xFFFFFFFF;
+
+        public Message(uint in_id)
+        {
+            ID = in_id;
+        }
+
+        VFUNCTION_PTR(Message, 0, Message*, Clone, Message* in_pMessage, IAllocator* in_pAllocator)
+
+        VFUNCTION_PTR(Message, 1, Message*, Dtor, Message* in_pMessage, byte a2)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::ui::MsgUISetGameCockpitEnabled`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x58)]
+    public struct MsgUISetGameCockpitEnabled
+    {
+        [FieldOffset(0)]    public Message Base = new Message(0x2406);
+
+        [FieldOffset(0x20)] public ulong Flags;
+
+        [FieldOffset(0x28)] public bool IsEnabled;
+
+        [FieldOffset(0x2C)] public uint Hash;
+
+        public MsgUISetGameCockpitEnabled(string in_name, ulong in_flags, bool in_isEnabled)
+        {
+            Base.Mask = 0x4000000;
+            
+            Flags = in_flags;
+            IsEnabled = in_isEnabled;
+            Hash = StringMapOperation.ComputeHash(in_name);
+        }
+    }
+
+    /// <summary>
+    /// A struct representation of `app::game::MsgResumeWorld`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x60)]
+    public struct MsgResumeWorld
+    {
+        [FieldOffset(0)]    public Message Base = new Message(0x22CF);
+
+        [FieldOffset(0x20)] public fixed byte Name[16];
+
+        [FieldOffset(0x30)] public bool UnkBool1;
+
+        public MsgResumeWorld(string in_name)
+        {
+            /* 0x1414150E0 */
+            Base.pVftable = Memory.ReadEffectiveAddress
+            (
+                /* 0x1402090C0 */
+                ScanSignature
+                (
+                    "\x48\x8D\x05\xCC\xCC\xCC\xCC\x41\xB8\x10\x00\x00\x00\x48\x8D\x15\xCC\xCC\xCC\xCC\x48\x89\x45\xB7\x48\x8D\x4D\xD7\xE8\xCC\xCC\xCC\xCC\x48\x8B\x4E\x30",
+                    "xxx????xxxxxxxxx????xxxxxxxxx????xxxx"
+                )
+            );
+
+            fixed (byte* pName = Name)
+            {
+                var nameArr = Encoding.UTF8.GetBytes(in_name.Length <= 16 ? in_name : in_name.Substring(0, 16));
+
+                for (int i = 0; i < nameArr.Length; i++)
+                    pName[i] = nameArr[i];
+            }
+
+            // Set common defaults for unknown values.
+            UnkBool1 = true;
+        }
+    }
+
+    /// <summary>
+    /// A struct representation of `app::game::MsgSuspendWorld`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x68)]
+    public struct MsgSuspendWorld
+    {
+        [FieldOffset(0)]    public Message Base = new Message(0x2352);
+
+        [FieldOffset(0x20)] public fixed byte Name[16];
+
+        [FieldOffset(0x30)] public uint Flags;
+
+        [FieldOffset(0x34)] public float UnkFloat1;
+
+        [FieldOffset(0x38)] public bool UnkBool1;
+
+        public MsgSuspendWorld(string in_name, uint in_flags)
+        {
+            /* 0x1414150B0 */
+            Base.pVftable = Memory.ReadEffectiveAddress
+            (
+                /* 0x140208D70 */
+                ScanSignature
+                (
+                    "\x48\x8D\x05\xCC\xCC\xCC\xCC\x41\xB8\x10\x00\x00\x00\xF3\x0F\x11\x45\xEB\x48\x8D\x15\xCC\xCC\xCC\xCC\x48\x89\x45\xB7\x48\x8D\x4D\xD7\x44\x88\x75\xD7",
+                    "xxx????xxxxxxxxxxxxxx????xxxxxxxxxxxx"
+                )
+            );
+
+            fixed (byte* pName = Name)
+            {
+                var nameArr = Encoding.UTF8.GetBytes(in_name.Length <= 16 ? in_name : in_name.Substring(0, 16));
+
+                for (int i = 0; i < nameArr.Length; i++)
+                    pName[i] = nameArr[i];
+            }
+
+            Flags = in_flags;
+
+            // Set common defaults for unknown values.
+            UnkFloat1 = -1.0f;
+            UnkBool1 = true;
+        }
+    }
+
+    public void SendMessageToPlayer<T>(T in_message) where T : unmanaged
+    {
+        var pPlayer = Player.GetPlayerData();
+
+        if (pPlayer == null)
+            return;
+
+        GET_FUNCTION_PTR(fpSendMessageToPlayer)(pPlayer, &in_message);
+    }
+
+    public void SendMessageToGameService<T>(GameService.Data* in_pGameService, T in_message) where T : unmanaged
+    {
+        if (in_pGameService == null)
+            return;
+
+        GET_FUNCTION_PTR(fpSendMessageToGameService)(in_pGameService, in_pGameService->pGameManager, &in_message);
+    }
+
+    public void SendMessageToGameManager<T>(T in_message) where T : unmanaged
+    {
+        var pGameManager = GameManager.Get();
+
+        if (pGameManager == null)
+            return;
+
+        GET_FUNCTION_PTR(fpSendMessageToGameManager)((void*)(((long)pGameManager) + 0x300), &in_message);
+    }
+}

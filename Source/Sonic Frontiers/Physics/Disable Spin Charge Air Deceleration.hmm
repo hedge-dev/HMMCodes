@@ -2,7 +2,8 @@ Patch "Disable Spin Charge Air Deceleration" in "Physics" by "Hyper" does
 /*
 Disables the deceleration when charging a spin dash in the air.
 
-It is recommended that you use this with Disable Spin Charge Camera.
+Notes;
+- It is recommended that you use this with Disable Spin Charge Camera.
 */
 {
     WriteNop

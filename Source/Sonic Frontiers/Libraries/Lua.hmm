@@ -378,7 +378,7 @@ Library "Lua" by "Hyper & ĐeäTh"
 
             if (_sigScriptSequenceManagerStaticClassCtor == 0)
             {
-                Logger.Error("[Lua] Failed to initialise script sequence!");
+                Logger.Error("[Lua] Failed to register app::ScriptSequence!");
                 return;
             }
 

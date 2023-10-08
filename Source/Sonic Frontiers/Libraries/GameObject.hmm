@@ -94,6 +94,8 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
     /// <returns>A pointer to an instance of `hh::game::GOComponent`.</returns>
     public T* GetGOC<T>(Data* in_pGameObject) where T : unmanaged
     {
-        return (T*)(long)GetGOC(in_pGameObject, typeof(T).Name);
+        var name = Helpers.GetInternalName(typeof(T));
+        
+        return (T*)(long)GetGOC(in_pGameObject, string.IsNullOrEmpty(name) ? typeof(T).Name : name);
     }
 }

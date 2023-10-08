@@ -2,11 +2,11 @@ Library "GameManager" by "Hyper, ĐeäTh & Sajid"
 {
     #include "Helpers" noemit
 
-    #import "Collections"
-
     #lib "GameObject"
     #lib "GameService"
     #lib "Memory"
+    
+    #import "Collections"
 
     using System.Runtime.InteropServices;
 
@@ -132,7 +132,9 @@ Library "GameManager" by "Hyper, ĐeäTh & Sajid"
     /// <returns>A pointer to an instance of `hh::game::GameService`.</returns>
     public T* GetService<T>() where T : unmanaged
     {
-        return (T*)GetService(typeof(T).Name);
+        var name = Helpers.GetInternalName(typeof(T));
+        
+        return (T*)GetService(string.IsNullOrEmpty(name) ? typeof(T).Name : name);
     }
 
     /// <summary>
@@ -190,6 +192,8 @@ Library "GameManager" by "Hyper, ĐeäTh & Sajid"
     /// <returns>A pointer to an instance of `hh::game::GameObject`.</returns>
     public T* GetGameObject<T>() where T : unmanaged
     {
-        return (T*)GetGameObject(typeof(T).Name);
+        var name = Helpers.GetInternalName(typeof(T));
+        
+        return (T*)GetGameObject(string.IsNullOrEmpty(name) ? typeof(T).Name : name);
     }
 }

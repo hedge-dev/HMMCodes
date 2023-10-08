@@ -60,4 +60,17 @@ Library "MathHelpers" by "Hyper"
     {
         return in_start + (in_end - in_start) * in_time;
     }
+
+    public static float ToRadians(float in_degrees)
+    {
+        return in_degrees * (float)Math.PI / 180.0f;
+    }
+
+    public static float WrapToRadians(float in_value)
+    {
+        float sign = in_value > 0.0f ? 1.0f : -1.0f;
+        float mod = (float)Math.Abs(in_value) % 6.28319f;
+
+        return mod * sign;
+    }
 }

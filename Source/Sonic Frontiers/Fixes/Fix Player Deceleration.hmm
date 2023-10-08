@@ -8,12 +8,12 @@ Affected characters;
 - Tails
 */
 //
-	#include "Reflection" noemit
+    #include "Reflection" noemit
 
-	#lib "Reflection"
-	#lib "AmyParameters"
-	#lib "KnucklesParameters"
-	#lib "TailsParameters"
+    #lib "Reflection"
+    #lib "AmyParameters"
+    #lib "KnucklesParameters"
+    #lib "TailsParameters"
 //
 {
     var AmyParametersInfo = Reflection.GetDataInfo<AmyParameters.Root>("amy_common");

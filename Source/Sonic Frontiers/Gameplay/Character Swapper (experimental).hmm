@@ -19,6 +19,7 @@ Known issues;
 - The hotkeys to switch characters using the D-Pad currently only works with Xbox controllers.
 */
 //
+    #lib "PhotoMode"
     #lib "Player"
     #lib "XInput"
 
@@ -27,6 +28,11 @@ Known issues;
 
     [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
+
+    static bool IsKeyDown(Keys in_keys)
+    {
+        return (GetAsyncKeyState(in_keys) & 0x8000) != 0;
+    }
     
     static bool IsButtonDownSpecial(XInput.Buttons buttons)
     {
@@ -39,23 +45,26 @@ Known issues;
 {
     if (GetForegroundWindow() != Process.GetCurrentProcess().MainWindowHandle)
         return;
+
+    if (PhotoMode.IsEnabled())
+        return;
     
-    if ((GetAsyncKeyState(HMMCodes.Keys.D1) & 0x8000) != 0 || IsButtonDownSpecial(XInput.Buttons.DPAD_UP))
+    if (IsKeyDown(Keys.D1) || IsButtonDownSpecial(XInput.Buttons.DPAD_UP))
     {
         Player.SetPlayerType(Player.PlayerType.Sonic);
     }
 
-    if ((GetAsyncKeyState(HMMCodes.Keys.D2) & 0x8000) != 0 || IsButtonDownSpecial(XInput.Buttons.DPAD_RIGHT))
+    if (IsKeyDown(Keys.D2) || IsButtonDownSpecial(XInput.Buttons.DPAD_RIGHT))
     {
         Player.SetPlayerType(Player.PlayerType.Amy);
     }
 
-    if ((GetAsyncKeyState(HMMCodes.Keys.D3) & 0x8000) != 0 || IsButtonDownSpecial(XInput.Buttons.DPAD_DOWN))
+    if (IsKeyDown(Keys.D3) || IsButtonDownSpecial(XInput.Buttons.DPAD_DOWN))
     {
         Player.SetPlayerType(Player.PlayerType.Knuckles);
     }
 
-    if ((GetAsyncKeyState(HMMCodes.Keys.D4) & 0x8000) != 0 || IsButtonDownSpecial(XInput.Buttons.DPAD_LEFT))
+    if (IsKeyDown(Keys.D4) || IsButtonDownSpecial(XInput.Buttons.DPAD_LEFT))
     {
         Player.SetPlayerType(Player.PlayerType.Tails);
     }

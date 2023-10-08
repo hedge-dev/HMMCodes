@@ -28,9 +28,9 @@ Library "Helpers" by "Hyper & Sajid"
     /// <param name="...">The arguments of the unmanaged function.</param>
     #define UNMANAGED_FUNCTION(in_returnType, in_functionName, ...) \
         [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
-        private delegate in_returnType T##in_functionName(__VA_ARGS__); \
-        private static T##in_functionName _del##in_functionName = new T##in_functionName(in_functionName); \
-        private static long _fp##in_functionName = (long)System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate(_del##in_functionName); \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public static T##in_functionName _del##in_functionName = new T##in_functionName(in_functionName); \
+        public static long _fp##in_functionName = (long)System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate(_del##in_functionName); \
         public static in_returnType in_functionName(__VA_ARGS__)
 
     /// <summary>
@@ -55,7 +55,7 @@ Library "Helpers" by "Hyper & Sajid"
     /// <param name="...">The arguments of the unmanaged function.</param>
     #define UNMANAGED_FUNCTION_DELEGATE(in_returnType, in_functionName, ...) \
         [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
-        private delegate in_returnType in_functionName(__VA_ARGS__);
+        public delegate in_returnType in_functionName(__VA_ARGS__);
 
     /// <summary>
     /// Gets a pointer created by `UNMANAGED_FUNCTION` by name.
@@ -94,8 +94,8 @@ Library "Helpers" by "Hyper & Sajid"
     /// <param name="...">The arguments of the unmanaged function.</param>
     #define FUNCTION_PTR(in_returnType, in_functionName, in_location, ...) \
         [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
-        private delegate in_returnType T##in_functionName(__VA_ARGS__); \
-        private static long _addr##in_functionName = in_location;
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public static long _addr##in_functionName = in_location;
     
     /// <summary>
     /// Creates a function pointer to a virtual function at an instance of a struct.
@@ -257,6 +257,17 @@ Library "Helpers" by "Hyper & Sajid"
         }
     }
 
+    [AttributeUsage(AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
+    public sealed class InternalNameAttribute : Attribute
+    {
+        public string InternalName { get; }
+
+        public InternalNameAttribute(string in_internalName)
+        {
+            InternalName = in_internalName;
+        }
+    }
+
     /// <summary>
     /// Gets a list of indices where the input substring is found in a given string.
     /// </summary>
@@ -293,6 +304,18 @@ Library "Helpers" by "Hyper & Sajid"
         }
 
         return indices;
+    }
+
+    /// <summary>
+    /// Gets a name from a InternalNameAttribute attached to a type.
+    /// </summary>
+    /// <param name="in_type">The type to get the attribute from.</param>
+    /// <returns>A string representing the internal name of the input type.</returns>
+    public static string GetInternalName(Type in_type)
+    {
+        var attr = (InternalNameAttribute)Attribute.GetCustomAttribute(in_type, typeof(InternalNameAttribute));
+
+        return attr == null ? string.Empty : attr.InternalName;
     }
 
     // https://github.com/scripthookvdotnet/scripthookvdotnet/blob/main/source/core/StringMarshal.cs
