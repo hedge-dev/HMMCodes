@@ -1,4 +1,10 @@
-Patch "Disable Spin Charge Camera" in "Camera" by "Hyper" does "Disables the zoom camera when charging a Spin Dash." 
+Patch "Disable Spin Charge Camera" in "Camera" by "Hyper" does
+/*
+Disables the zoom camera when charging a Spin Dash.
+
+Notes;
+- It is recommended that you use this with Increased Spin Charge Rotation Speed.
+*/
 {
     WriteNop
     (
