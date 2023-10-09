@@ -9,5 +9,5 @@ Code "[Sonic] Always Perfect Parry" by "ĐeäTh" in "Gameplay" does "Enables the
         return;
 
     if (!IS_COMBAT_FLAG(IsPerfectParry))
-        pBlackboardStatus->CombatFlags |= (1L << (int)BlackboardStatus.CombatFlags.IsPerfectParry);
+        SET_COMBAT_FLAG(IsPerfectParry, true)
 }
