@@ -4,8 +4,6 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
 
     #lib "Player"
 
-    using System.Runtime.InteropServices;
-
     /// <summary>
     /// Determines whether a state flag is set.
     /// </summary>

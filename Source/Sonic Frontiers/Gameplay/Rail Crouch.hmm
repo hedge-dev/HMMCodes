@@ -1,4 +1,4 @@
-Code "Rail Crouch" in "! Incompatible - awaiting fixes for v1.40" by "WasifBoomz" does 
+Code "Rail Crouch" in "Gameplay" by "WasifBoomz" does 
 /*
 Allows Sonic to crouch on grind rails to gain or lose speed based on the angle of the rail.
 
@@ -7,77 +7,121 @@ Notes;
 - The boost has been modified to become an accelerator while grinding.
 */
 //
-    #include "BlackboardStatus" noemit
+    #include "Reflection" noemit
 
-    #lib "BlackboardStatus"
-    #lib "Bitwise"
+    #lib "Memory"
     #lib "Player"
+    #lib "Reflection"
+    #lib "SonicParameters"
+    #lib "AmyParameters"
+    #lib "KnucklesParameters"
+    #lib "TailsParameters"
 
     #load "System.Numerics.dll"
 	
     using System.Numerics;
 
-    const float grindCrouchSpeed = 40.0f;
-    const float boostGrindSpeedMin = 3.0f;
-    const float boostGrindSpeed = 45.0f;
-    static bool isInitialised = false;
-    static bool isRailCrouching = false;
-    static float* playerParamGrind = null;
-//
-{
-    if (!isInitialised)
-    {
-        fixed (float** pPlayerParamGrind = &playerParamGrind)
-        {
-            // Load Player Params Grind
-            WriteAsmHook
-            (
-                $@"
-                    mov rbx, {(long)pPlayerParamGrind}
-                    ; Get Pointer to Params
-                    mov qword ptr [rbx], rax
-                    ; Set Grind Speed to 100
-                    mov dword ptr [rax], 0x42C80000
-                    ; Set Boost Grind Speed to 0
-                    mov dword ptr [rax+4], 0x00000000
-                ",
+    static bool _isInitialised = false;
+    static bool _isRailCrouching = false;
 
-                /* 0x14080C75E */
-                ScanSignature
-                (
-                    "\x48\x8B\x4F\x40\x4C\x8D\x4C\x24\x30\x45\x33\xC0",
-                    "xxxxxxxxxxxx"
-                ),
-                        
-                HookBehavior.Before
-            );
+    const float _grindCrouchSpeed = 40.0f;
+    const float _boostGrindSpeedMin = 3.0f;
+    const float _boostGrindSpeed = 45.0f;
+
+    static Reflection.ReflectionInfo<SonicParameters.Root> _sonicParametersInfo;
+    static Reflection.ReflectionInfo<AmyParameters.Root> _amyParametersInfo;
+    static Reflection.ReflectionInfo<KnucklesParameters.Root> _knucklesParametersInfo;
+    static Reflection.ReflectionInfo<TailsParameters.Root> _tailsParametersInfo;
+
+    // TODO (Hyper): reduce boilerplate with library features.
+    static float GetAcceleration()
+    {
+        switch (Player.GetPlayerType())
+        {
+            case Player.PlayerType.Sonic:
+            {
+                if (_sonicParametersInfo != null && _sonicParametersInfo.pData != null)
+                    return RFL_GET_CONTEXTUAL_PLAYER_PARAM(_sonicParametersInfo, modePackage.grind.acceleForce);
+                
+                break;
+            }
+
+            case Player.PlayerType.Amy:
+            {
+                if (_amyParametersInfo != null && _amyParametersInfo.pData != null)
+                    return RFL_GET_PARAM(_amyParametersInfo, forwardView.modePackage.grind.acceleForce, in_acceleForce);
+                
+                break;
+            }
+
+            case Player.PlayerType.Knuckles:
+            {
+                if (_knucklesParametersInfo != null && _knucklesParametersInfo.pData != null)
+                    return RFL_GET_PARAM(_knucklesParametersInfo, forwardView.modePackage.grind.acceleForce, in_acceleForce);
+                
+                break;
+            }
+
+            case Player.PlayerType.Tails:
+            {
+                if (_tailsParametersInfo != null && _tailsParametersInfo.pData != null)
+                    return RFL_GET_PARAM(_tailsParametersInfo, forwardView.modePackage.grind.acceleForce, in_acceleForce);
+                
+                break;
+            }
         }
 
-        fixed (bool* pIsRailCrouching = &isRailCrouching)
+        return 0.0f;
+    }
+
+    // TODO (Hyper): reduce boilerplate with library features.
+    static void SetAcceleration(float in_acceleForce)
+    {
+        if (_sonicParametersInfo != null && _sonicParametersInfo.pData != null)
+            RFL_SET_CONTEXTUAL_PLAYER_PARAM(_sonicParametersInfo, modePackage.grind.acceleForce, in_acceleForce);
+
+        if (_amyParametersInfo != null && _amyParametersInfo.pData != null)
+            RFL_SET_PARAM(_amyParametersInfo, forwardView.modePackage.grind.acceleForce, in_acceleForce);
+
+        if (_knucklesParametersInfo != null && _knucklesParametersInfo.pData != null)
+            RFL_SET_PARAM(_knucklesParametersInfo, forwardView.modePackage.grind.acceleForce, in_acceleForce);
+
+        if (_tailsParametersInfo != null && _tailsParametersInfo.pData != null)
+            RFL_SET_PARAM(_tailsParametersInfo, forwardView.modePackage.grind.acceleForce, in_acceleForce);
+    }
+//
+{
+    if (!_isInitialised)
+    {
+        fixed (bool* p_isRailCrouching = &_isRailCrouching)
         {
-            // Modify animation when crouching on rails
+            // Modify animation when crouching on rails.
             WriteAsmHook
             (
                 $@"
                     ; Check if the Grind Land animation is playing
                     cmp byte ptr [r15 - 0x2], 0x52
                     jnz end
-                    mov rcx, {(long)pIsRailCrouching}
+                    mov rcx, {(long)p_isRailCrouching}
+
                     ; Check if the player is crouching
                     cmp byte ptr [rcx], 1
                     jnz reset
+
                     ; Set Transition Time and Next State
                     mov byte ptr [r15 + 0x2], 0x52
                     mov dword ptr [r15 + 0x4], 0x3F800000
                     jmp end
+
                 reset:
                     ; Reset Transition Time and Next State
                     mov byte ptr [r15 + 0x2], 0x51
                     mov dword ptr [r15 + 0x4], 0x3E4CCCCD
+
                 end:
                 ",
 
-		    /* 0x140DA25AC */
+		        /* 0x140E8B4DC */
                 ScanSignature
                 (
                     "\x41\x8B\x47\x08\xF2\x41\x0F\x10\x07",
@@ -88,54 +132,77 @@ Notes;
             );
         }
 
-	    // Jump over the grind boost code
-        WriteProtected<byte>
+	    // Jump over the grind boost code.
+        Memory.WriteForceJump
         (
-            /* 0x14AD7760A */
+            /* 0x14B30737A */
             ScanSignature
             (
-                "\x74\x0F\xBA\x01\x00\x00\x00\x48\x83\xC4\x20\x5B\xE9\xC5\x14\xAB\xF5",
+                "\x74\x0F\xBA\x01\x00\x00\x00\x48\x83\xC4\x20\x5B\xE9\xB5\xFB\x5C\xF5",
                 "xxxxxxxxxxxxxxxxx"
-            ),
-
-            0xEB
+            )
         );
 
-        isInitialised = true;
+        _isInitialised = true;
+    }
+
+    _sonicParametersInfo = Reflection.GetDataInfo<SonicParameters.Root>("player_common");
+
+    if (_sonicParametersInfo.pData != null)
+    {
+        RFL_SET_CONTEXTUAL_PLAYER_PARAM(_sonicParametersInfo, modePackage.grind.maxSpeed, 100.0f);
+        RFL_SET_CONTEXTUAL_PLAYER_PARAM(_sonicParametersInfo, modePackage.grind.maxBoostSpeed, 0.0f);
+    }
+
+    _amyParametersInfo = Reflection.GetDataInfo<AmyParameters.Root>("amy_common");
+
+    if (_amyParametersInfo.pData != null)
+    {
+        RFL_SET_PARAM(_amyParametersInfo, forwardView.modePackage.grind.maxSpeed, 100.0f);
+        RFL_SET_PARAM(_amyParametersInfo, forwardView.modePackage.grind.maxBoostSpeed, 0.0f);
+    }
+
+    _knucklesParametersInfo = Reflection.GetDataInfo<KnucklesParameters.Root>("knuckles_common");
+
+    if (_knucklesParametersInfo.pData != null)
+    {
+        RFL_SET_PARAM(_knucklesParametersInfo, forwardView.modePackage.grind.maxSpeed, 100.0f);
+        RFL_SET_PARAM(_knucklesParametersInfo, forwardView.modePackage.grind.maxBoostSpeed, 0.0f);
+    }
+
+    _tailsParametersInfo = Reflection.GetDataInfo<TailsParameters.Root>("tails_common");
+
+    if (_tailsParametersInfo.pData != null)
+    {
+        RFL_SET_PARAM(_tailsParametersInfo, forwardView.modePackage.grind.maxSpeed, 100.0f);
+        RFL_SET_PARAM(_tailsParametersInfo, forwardView.modePackage.grind.maxBoostSpeed, 0.0f);
     }
 
     var kinematics = Player.Kinematics.Get();
 
-    if (BlackboardStatus.Get() == null)
-        return;
-
     if (kinematics == null)
         return;
+        
+    SetAcceleration(0.0f);
 
-    if (playerParamGrind == null)
-        return;
-
-    float* grindAcceleration = &playerParamGrind[2];
-    *grindAcceleration = 0;
-    isRailCrouching = false;
-
-    // Run this code when crouching on rails
+    _isRailCrouching = false;
+    
     if (Player.Input.IsDown(Player.InputActionType.PlayerStomping))
     {
         if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateGrind)
         {
-            isRailCrouching = true;
             Player.Animation.SetAnimation("GRIND_LAND");
+            _isRailCrouching = true;
         }
 
-	    // Increase speed based on gravity
-        *grindAcceleration -= (Vector3.Normalize(kinematics->Velocity).Y) * grindCrouchSpeed;
+	    // Increase speed based on gravity.
+        SetAcceleration(GetAcceleration() - (Vector3.Normalize(kinematics->Velocity).Y) * _grindCrouchSpeed);
     }
     
-    // Increase acceleration when boosting on Grind Rails
+    // Increase acceleration when boosting.
     if (IS_STATE_FLAG(IsBoost))
     {
-        *grindAcceleration += (Vector3.Normalize(kinematics->Velocity).Y) * boostGrindSpeed;
-        *grindAcceleration = Math.Max(*grindAcceleration, boostGrindSpeedMin);
+        SetAcceleration(GetAcceleration() + (Vector3.Normalize(kinematics->Velocity).Y) * _boostGrindSpeed);
+        SetAcceleration(Math.Max(GetAcceleration(), _boostGrindSpeedMin));
     }
 }
