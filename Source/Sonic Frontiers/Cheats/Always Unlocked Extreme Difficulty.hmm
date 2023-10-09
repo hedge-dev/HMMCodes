@@ -1,4 +1,4 @@
-Patch "Always Unlocked Extreme Difficulty" in "Cheats" by "Hyper" 
+Patch "Always Unlocked Extreme Difficulty" in "Cheats" by "Hyper"
 {
     WriteNop
     (
@@ -12,5 +12,3 @@ Patch "Always Unlocked Extreme Difficulty" in "Cheats" by "Hyper"
         2
     );
 }
-
-
