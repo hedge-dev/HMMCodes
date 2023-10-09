@@ -2,11 +2,14 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
 {
     #include "Helpers" noemit
 
+    #import "GameTypes"
     #import "Collections"
     #import "GOComponents"
 
     #lib "Helpers"
     #lib "GameManager"
+    #lib "MessageManager"
+    #lib "HandleManagerBase"
     #lib "Memory"
 
     using System.Runtime.InteropServices;
@@ -15,17 +18,14 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
     /// A struct representation of `hh::game::GameObject`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0x258, Pack = 0x10)]
-    public struct Data
+    public struct Data : IMessenger
     {
-        /// <summary>
-        /// The handle assigned by `hh::fnd::MessageManager`.
-        /// </summary>
-        [FieldOffset(0x18)] public long Handle;
+        DEFINE_BASE_PROPERTY(void*, Allocator)
+        DEFINE_BASE_PROPERTY(int, RefCount)
+        DEFINE_BASE_PROPERTY(int, Handle)
+        DEFINE_BASE_PROPERTY(MessageManager.Data*, MessageManager)
 
-        /// <summary>
-        /// A pointer to an instance of `hh::fnd::MessageManager`.
-        /// </summary>
-        [FieldOffset(0x20)] public long pMessageManager;
+        [FieldOffset(0x00)] public Messenger Base;
 
         /// <summary>
         /// A pointer to an instance of `app::GameManager`.

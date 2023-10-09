@@ -1,0 +1,69 @@
+Library "HandleManagerBase" by "Sajid"
+{
+    #import "Collections"
+    #import "GameTypes"
+
+    using System.Runtime.InteropServices;
+    using HandleBase = HandleManagerBase.Handle<GameTypes.RefByHandleObject>;
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x70)]
+    public struct Data
+    {
+        [FieldOffset(0x18)] public MoveArray<HandleTableEntry> HandleTable;
+
+        public RefByHandleObject* GetObject(int id)
+        {
+            id &= 0xFFFF;
+            return (RefByHandleObject*)HandleTable[(nint)id].Object;
+        }
+
+        public HandleBase GetHandle(long id)
+        {
+            id &= 0xFFFF;
+            return new HandleBase(ref HandleTable[(nint)id]);
+        }
+
+        public Handle<T> GetHandle<T>(long id) where T : unmanaged
+        {
+            id &= 0xFFFF;
+            return new Handle<T>(ref HandleTable[(nint)id]);
+        }
+
+        public Handle<T> GetHandle<T>(in T obj) where T : unmanaged, IRefByHandleObject
+        {
+            var id = obj.Handle & 0xFFFF;
+            return new Handle<T>(ref HandleTable[(nint)id]);
+        }
+    }
+
+    public struct HandleTableEntry
+    {
+        public long Handle;
+        public void* Object;
+    }
+
+    public struct Handle<T> where T : unmanaged
+    {
+        public long Value;
+        public HandleTableEntry* TableEntry;
+
+        public Handle(ref HandleTableEntry entry)
+        {
+            Value = entry.Handle;
+            fixed(HandleTableEntry* pEntry = &entry)
+            {
+                TableEntry = pEntry;
+            }
+        }
+
+        public bool IsValid()
+        {
+            return TableEntry != null && (TableEntry->Handle == Value && TableEntry->Object != null);
+        }
+
+        public T* Get()
+        {
+            return IsValid() ? (T*)TableEntry->Object : null;
+        }
+    }
+}

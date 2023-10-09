@@ -1,4 +1,4 @@
-Library "Player" by "Hyper, NM, Ahremic & Skyth"
+Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
 {
     #include "BlackboardStatus" noemit
     #include "Helpers" noemit
@@ -10,6 +10,7 @@ Library "Player" by "Hyper, NM, Ahremic & Skyth"
     #lib "BlackboardStatus"
     #lib "Collections"
     #lib "GameManager"
+    #lib "MessageManager"
     #lib "GameObject"
     #lib "Lua"
     #lib "Reflection"
@@ -155,31 +156,11 @@ Library "Player" by "Hyper, NM, Ahremic & Skyth"
 
     public Data* GetPlayerData()
     {
-        var pGameObject = 0L;
-
-        switch (GetPlayerType())
-        {
-            case PlayerType.Sonic:
-                pGameObject = (long)GameManager.GetGameObject("Sonic");
-                break;
-
-            case PlayerType.Amy:
-                pGameObject = (long)GameManager.GetGameObject("PlayerAmy");
-                break;
-
-            case PlayerType.Knuckles:
-                pGameObject = (long)GameManager.GetGameObject("PlayerKnuckles");
-                break;
-
-            case PlayerType.Tails:
-                pGameObject = (long)GameManager.GetGameObject("PlayerTails");
-                break;
-        }
-
-        if (pGameObject == 0)
+        var pLevelInfo = GameManager.GetService<LevelInfo>();
+        if (pLevelInfo == null)
             return null;
-        
-        return (Data*)pGameObject;
+
+        return (Data*)MessageManager.GetMessengerFromHandle(pLevelInfo->PlayerInfo[0]->CharacterHandle);
     }
 
     public PlayerHsmContext* GetPlayerContext()

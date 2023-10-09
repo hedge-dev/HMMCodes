@@ -197,6 +197,16 @@ Library "Helpers" by "Hyper & Sajid"
     /// <returns>A UTF-8 string.</returns>
     #define FROM_U8STRING_PTR(in_ptr) Helpers.PtrToStringUTF8((nint)(in_ptr))
 
+
+    /// <summary>
+    /// Exposes a base field on the super class as a property
+    /// </summary>
+    /// <param name="TYPE">The field type.</param>
+    /// <param name="NAME">The field name.</param>
+    #define DEFINE_BASE_PROPERTY(TYPE, NAME) public TYPE NAME { get => Base.NAME; set => Base.NAME = value; }
+
+    #define DEFINE_INTERFACE_PROPERTY(INTERFACE, TYPE, NAME) TYPE INTERFACE.NAME { get => NAME; set => NAME = value; }
+
     /// <summary>
     /// A struct representation of a `const char*`.
     /// </summary>
