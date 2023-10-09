@@ -18,7 +18,7 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
     public struct Data
     {
         /// <summary>
-        /// The handle assigned by hh::fnd::MessageManager
+        /// The handle assigned by `hh::fnd::MessageManager`.
         /// </summary>
         [FieldOffset(0x18)] public long Handle;
 

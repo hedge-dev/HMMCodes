@@ -12,6 +12,11 @@ Library "States" by "Hyper"
         /// The amount of time the Drop Dash has been charged for.
         /// </summary>
         [FieldOffset(0xB4)] public float DropDashChargeTimer;
+
+        /// <summary>
+        /// Bit flags for the state of the A button.
+        /// </summary>
+        [FieldOffset(0xC4)] public byte InputFlags;
     }
 
     /// <summary>

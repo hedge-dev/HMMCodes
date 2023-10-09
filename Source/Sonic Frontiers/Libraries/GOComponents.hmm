@@ -141,6 +141,9 @@ Library "GOComponents" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x230)]
     public struct GOCSprite
     {
+        /// <summary>
+        /// Bit flags for the sprite state.
+        /// </summary>
         [FieldOffset(0x180)] public byte Flags;
     }
 
