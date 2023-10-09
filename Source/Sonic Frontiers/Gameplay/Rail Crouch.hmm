@@ -18,7 +18,7 @@ Notes;
     #lib "TailsParameters"
 
     #load "System.Numerics.dll"
-	
+    
     using System.Numerics;
 
     static bool _isInitialised = false;
@@ -121,7 +121,7 @@ Notes;
                 end:
                 ",
 
-		        /* 0x140E8B4DC */
+                /* 0x140E8B4DC */
                 ScanSignature
                 (
                     "\x41\x8B\x47\x08\xF2\x41\x0F\x10\x07",
@@ -132,7 +132,7 @@ Notes;
             );
         }
 
-	    // Jump over the grind boost code.
+        // Jump over the grind boost code.
         Memory.WriteForceJump
         (
             /* 0x14B30737A */
@@ -195,7 +195,7 @@ Notes;
             _isRailCrouching = true;
         }
 
-	    // Increase speed based on gravity.
+        // Increase speed based on gravity.
         SetAcceleration(GetAcceleration() - (Vector3.Normalize(kinematics->Velocity).Y) * _grindCrouchSpeed);
     }
     
