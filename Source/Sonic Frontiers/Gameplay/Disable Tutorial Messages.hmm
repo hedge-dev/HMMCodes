@@ -1,4 +1,4 @@
-Patch "Disable Tutorial Messages" in "Gameplay" by "Hyper" does "Disables all intrusive tutorial messages that appear under certain conditions for the first time." 
+Patch "Disable Tutorial Messages" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Disables all intrusive tutorial messages that appear under certain conditions for the first time." 
 {
     // Hide hint rings.
     WriteProtected<byte>
