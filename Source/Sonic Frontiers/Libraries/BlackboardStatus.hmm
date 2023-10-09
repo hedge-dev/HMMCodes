@@ -4,6 +4,8 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
 
     #lib "Player"
 
+    using System.Runtime.InteropServices;
+
     /// <summary>
     /// Determines whether a state flag is set.
     /// </summary>
@@ -37,7 +39,12 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     /// ]]></code>
     /// </example>
     /// <param name="in_name">The name of an enum member from the `StateFlags` enum.</param>
-    #define SET_STATE_FLAG(in_name) if (BlackboardStatus.Get() != null) BlackboardStatus.Get()->StateFlags |= (1U << (byte)((uint)BlackboardStatus.StateFlags.in_name & 0x3F))
+    #define SET_STATE_FLAG(in_name, in_isEnabled) \
+        if (BlackboardStatus.Get() != null) \
+            if (in_isEnabled) \
+                BlackboardStatus.Get()->StateFlags |= (1U << (byte)((uint)BlackboardStatus.StateFlags.in_name & 0x3F)); \
+            else \
+                BlackboardStatus.Get()->StateFlags &= ~(1U << (byte)((uint)BlackboardStatus.StateFlags.in_name & 0x3F));
     
     /// <summary>
     /// Determines whether a combat flag is set.
@@ -72,7 +79,12 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     /// ]]></code>
     /// </example>
     /// <param name="in_name">The name of an enum member from the `CombatFlags` enum.</param>
-    #define SET_COMBAT_FLAG(in_name) if (BlackboardStatus.Get() != null) BlackboardStatus.Get()->CombatFlags |= (1U << (byte)((uint)BlackboardStatus.CombatFlags.in_name & 0x3F))
+    #define SET_COMBAT_FLAG(in_name, in_isEnabled) \
+        if (BlackboardStatus.Get() != null) \
+            if (in_isEnabled) \
+                BlackboardStatus.Get()->CombatFlags |= (1U << (byte)((uint)BlackboardStatus.CombatFlags.in_name & 0x3F)); \
+            else \
+                BlackboardStatus.Get()->CombatFlags &= ~(1U << (byte)((uint)BlackboardStatus.CombatFlags.in_name & 0x3F));
 
     /// <summary>
     /// Determines whether a world flag is set.
@@ -107,7 +119,12 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     /// ]]></code>
     /// </example>
     /// <param name="in_name">The name of an enum member from the `WorldFlags` enum.</param>
-    #define SET_WORLD_FLAG(in_name) if (BlackboardStatus.Get() != null) BlackboardStatus.Get()->WorldFlags |= (1U << (byte)((uint)BlackboardStatus.WorldFlags.in_name & 0x3F))
+    #define SET_WORLD_FLAG(in_name, in_isEnabled) \
+        if (BlackboardStatus.Get() != null) \
+            if (in_isEnabled) \
+                BlackboardStatus.Get()->WorldFlags |= (1U << (byte)((uint)BlackboardStatus.WorldFlags.in_name & 0x3F)); \
+            else \
+                BlackboardStatus.Get()->WorldFlags &= ~(1U << (byte)((uint)BlackboardStatus.WorldFlags.in_name & 0x3F));
 
     using System.Runtime.InteropServices;
     
@@ -326,6 +343,11 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
         /// The player has taken damage or has been repelled by an enemy's shield.
         /// </summary>
         IsDamagedOrRepelled = 0x02,
+
+        /// <summary>
+        /// The player no longer has control.
+        /// </summary>
+        IsOutOfControl = 0x07,
 
         /// <summary>
         /// The player is in an auto run section.
