@@ -1,12 +1,12 @@
-Patch "Hide Skill Piece Transition" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Removes the transition when picking up skill pieces to put them into the skill points display." 
+Patch "Hide Skill Piece Transition" in "UI" by "Hyper" does "Removes the transition when picking up skill pieces to put them into the skill points display."
 {
     WriteNop
     (
-        /* 0x140864297 */
+        /* 0x14091857E */
         ScanSignature
         (
-            "\xE8\xCC\xCC\xCC\xCC\x48\x8D\x4C\x24\x50\xE8\xCC\xCC\xCC\xCC\x48\x8D\x4D\x80\xE8\xCC\xCC\xCC\xCC\x45\x84\xFF",
-            "x????xxxxxx????xxxxx????xxx"
+            "\xE8\xCC\xCC\xCC\xCC\x48\x8D\x4D\x40\xE8\xCC\xCC\xCC\xCC\x48\x8D\x4D\x10",
+            "x????xxxxx????xxxx"
         ),
 
         5
@@ -14,7 +14,7 @@ Patch "Hide Skill Piece Transition" in "! Incompatible - awaiting fixes for v1.4
 
     WriteNop
     (
-        /* 0x1408CCA29 */
+        /* 0x14098D862 */
         ScanSignature
         (
             "\xE8\xCC\xCC\xCC\xCC\x48\x8D\x4D\xD7\xE8\xCC\xCC\xCC\xCC\x48\x8D\x4D\xA7",
@@ -24,5 +24,3 @@ Patch "Hide Skill Piece Transition" in "! Incompatible - awaiting fixes for v1.4
         5
     );
 }
-
-
