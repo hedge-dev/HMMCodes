@@ -34,7 +34,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     ///     #include "BlackboardStatus" noemit
     /// //
     /// {
-    ///     SET_STATE_FLAG(IsBoost);
+    ///     SET_STATE_FLAG(IsBoost, true);
     /// }
     /// ]]></code>
     /// </example>
@@ -75,7 +75,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     ///     #include "BlackboardStatus" noemit
     /// //
     /// {
-    ///     SET_COMBAT_FLAG(IsPerfectParry);
+    ///     SET_COMBAT_FLAG(IsPerfectParry, true);
     /// }
     /// ]]></code>
     /// </example>
@@ -116,7 +116,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     ///     #include "BlackboardStatus" noemit
     /// //
     /// {
-    ///     SET_WORLD_FLAG(IsNoClip);
+    ///     SET_WORLD_FLAG(IsNoClip, true);
     /// }
     /// ]]></code>
     /// </example>
