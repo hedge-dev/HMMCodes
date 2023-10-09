@@ -6,6 +6,7 @@ Notes;
 - This does not work for pre-rendered cutscenes.
 */
 //
+    #lib "GameMode"
     #lib "GameObject"
     #lib "PhotoMode"
 
@@ -46,6 +47,9 @@ Notes;
     }
 
     if (_pUILetterBox == null)
+        return;
+
+    if (GameMode.GetName().Contains("CyberStage"))
         return;
 
     if (PhotoMode.IsEnabled())
