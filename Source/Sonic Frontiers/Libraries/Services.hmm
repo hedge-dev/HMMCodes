@@ -92,6 +92,11 @@ Library "Services" by "Hyper"
         public struct PlayerInformation
         {
             /// <summary>
+            /// The handle value for the character object.
+            /// </summary>
+            [FieldOffset(0x10)]  public int CharacterHandle;
+
+            /// <summary>
             /// The index of the current player character.
             /// 
             /// 0 - Sonic
