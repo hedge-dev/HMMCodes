@@ -39,6 +39,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     /// ]]></code>
     /// </example>
     /// <param name="in_name">The name of an enum member from the `StateFlags` enum.</param>
+    /// <param name="in_isEnabled">The enabled state of the specified flag.</param>
     #define SET_STATE_FLAG(in_name, in_isEnabled) \
         if (BlackboardStatus.Get() != null) \
             if (in_isEnabled) \
@@ -79,6 +80,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     /// ]]></code>
     /// </example>
     /// <param name="in_name">The name of an enum member from the `CombatFlags` enum.</param>
+    /// <param name="in_isEnabled">The enabled state of the specified flag.</param>
     #define SET_COMBAT_FLAG(in_name, in_isEnabled) \
         if (BlackboardStatus.Get() != null) \
             if (in_isEnabled) \
@@ -119,6 +121,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     /// ]]></code>
     /// </example>
     /// <param name="in_name">The name of an enum member from the `WorldFlags` enum.</param>
+    /// <param name="in_isEnabled">The enabled state of the specified flag.</param>
     #define SET_WORLD_FLAG(in_name, in_isEnabled) \
         if (BlackboardStatus.Get() != null) \
             if (in_isEnabled) \
