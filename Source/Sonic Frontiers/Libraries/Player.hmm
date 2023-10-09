@@ -61,6 +61,11 @@ Library "Player" by "Hyper, NM, Ahremic & Skyth"
     public struct PlayerHsmContext
     {
         /// <summary>
+        /// A pointer to an instance of `app::player::BlackboardStatus`.
+        /// </summary>
+        [FieldOffset(0x28)] public BlackboardStatus.Data* pBlackboardStatus;
+
+        /// <summary>
         /// A pointer to an instance of `app::player::GOCPlayerHsm`.
         /// </summary>
         [FieldOffset(0x38)] public GOCPlayerHsm* pGOCPlayerHsm;
