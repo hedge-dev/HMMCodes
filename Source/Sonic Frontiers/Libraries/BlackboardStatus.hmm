@@ -2,6 +2,8 @@ Library "BlackboardStatus" by "Hyper" does "Provides access to `app::player::Bla
 {
     #import "Blackboard"
 
+    #lib "Player"
+
     /// <summary>
     /// Determines whether a state flag is set.
     /// </summary>
@@ -121,6 +123,9 @@ Library "BlackboardStatus" by "Hyper" does "Provides access to `app::player::Bla
     /// <returns>A boolean value representing whether the current player is in their Super form.</returns>
     public bool IsSuper()
     {
+        if (Player.GetPlayerType() != Player.PlayerType.Sonic)
+            return false;
+        
         var pBlackboardStatus = Get();
 
         if (pBlackboardStatus == null)
