@@ -1,16 +1,14 @@
-Patch "Disable Soldier Eggs" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Disables the egg spawners for the Soldier enemy, allowing them to spawn instantly." 
+Patch "Disable Soldier Eggs" in "Enemy" by "Hyper" does "Disables the egg spawners for the Soldier enemy, allowing them to spawn instantly."
 {
     WriteNop
     (
-        /* 0x1404C542D */
+        /* 0x14057714D */
         ScanSignature
         (
-            "\x75\x07\x44\x88\xA5\x50\x04\x00\x00",
+            "\x75\x07\x40\x88\xB5\x60\x04\x00\x00",
             "xxxxxxxxx"
         ),
 
         2
     );
 }
-
-
