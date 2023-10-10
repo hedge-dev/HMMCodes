@@ -1,4 +1,4 @@
-Code "Always Stay on Climbing Walls" in "Gameplay" by "WasifBoomz" does "Prevents Sonic and Knuckles from detaching or sliding down climbing walls when hitting other walls and ceilings."
+Code "Always Stay on Climbable Walls" in "Gameplay" by "WasifBoomz" does "Prevents Sonic and Knuckles from detaching or sliding down climbable walls when hitting other walls and ceilings."
 //
     #lib "Player"
     #lib "Time"
@@ -21,10 +21,6 @@ Code "Always Stay on Climbing Walls" in "Gameplay" by "WasifBoomz" does "Prevent
     
     switch (Player.GetPlayerType())
     {
-        case Player.PlayerType.Amy:
-        case Player.PlayerType.Tails:
-            break;
-
         case Player.PlayerType.Sonic:
         {
             if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateWallLeave)
