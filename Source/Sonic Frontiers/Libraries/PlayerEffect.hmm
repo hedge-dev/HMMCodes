@@ -52,8 +52,6 @@ Library "PlayerEffect" by "Hyper"
         for (int i = 0; i < playerEffects.Length; i++)
         {
             var pPlayerEffect = playerEffects[i].pData;
-
-            Console.WriteLine(pPlayerEffect->GetNameHash()().ToString("X"));
             
             if ((uint)pPlayerEffect->GetNameHash()() == StringMapOperation.ComputeHash(in_name))
                 return pPlayerEffect;
