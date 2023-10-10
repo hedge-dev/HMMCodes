@@ -66,6 +66,14 @@ Library "Collections" by "Sajid & Hyper" does "Provides extended collection type
             Length--;
         }
 
+        public void Remove(T in_item)
+        {
+            var index = IndexOf(in_item);
+
+            if (index != -1)
+                RemoveAt(index);
+        }
+
         public void Clear()
         {
             Length = 0; // TODO: free the buffer?

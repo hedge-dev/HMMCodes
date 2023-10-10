@@ -275,4 +275,51 @@ Library "Services" by "Hyper"
             [FieldOffset(0x0C)] public float Seconds;
         }
     }
+
+    /// <summary>
+    /// A struct representation of `app::ui::UIOverlayService`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x160)]
+    public struct UIOverlayService
+    {
+        [FieldOffset(0x120)] public MoveArray<Memory.Pointer<OverlayJob>> OverlayJobs;
+
+        /// <summary>
+        /// A struct representation of `app::ui::RequestOverlayBegin`.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit)]
+        public struct RequestOverlayBegin
+        {
+            [FieldOffset(0x18)] public int OverlayType;
+
+            [FieldOffset(0x48)] public Helpers.UnmanagedString Caption;
+        }
+
+        /// <summary>
+        /// A struct representation of `app::ui::RequestOverlayCaption`.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit, Size = 0x70)]
+        public struct RequestOverlayCaption
+        {
+            [FieldOffset(0)] public RequestOverlayBegin Base;
+        }
+
+        /// <summary>
+        /// A struct representation of `app::ui::RequestOverlayWindow`.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit, Size = 0xC0)]
+        public struct RequestOverlayWindow
+        {
+            [FieldOffset(0)] public RequestOverlayBegin Base;
+        }
+
+        /// <summary>
+        /// A struct representation of `app::ui::UIOverlayService::OverlayJob`.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit, Size = 0x28)]
+        public struct OverlayJob
+        {
+            [FieldOffset(0x18)] public RequestOverlayBegin* pRequestOverlay;
+        }
+    }
 }
