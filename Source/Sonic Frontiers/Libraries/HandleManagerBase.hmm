@@ -14,24 +14,40 @@ Library "HandleManagerBase" by "Sajid"
         public RefByHandleObject* GetObject(int id)
         {
             id &= 0xFFFF;
+
+            if (id == 0)
+                return null;
+
             return (RefByHandleObject*)HandleTable[(nint)id].Object;
         }
 
         public HandleBase GetHandle(long id)
         {
             id &= 0xFFFF;
+
+            if (id == 0)
+                return default;
+
             return new HandleBase(ref HandleTable[(nint)id]);
         }
 
         public Handle<T> GetHandle<T>(long id) where T : unmanaged
         {
             id &= 0xFFFF;
+
+            if (id == 0)
+                return default;
+
             return new Handle<T>(ref HandleTable[(nint)id]);
         }
 
         public Handle<T> GetHandle<T>(in T obj) where T : unmanaged, IRefByHandleObject
         {
             var id = obj.Handle & 0xFFFF;
+
+            if (id == 0)
+                return default;
+
             return new Handle<T>(ref HandleTable[(nint)id]);
         }
     }
