@@ -45,6 +45,7 @@ Notes;
     private static extern IntPtr GetForegroundWindow();
 
     static bool _isInitialised = false;
+    static bool _isExitInputBuffered = false;
     static bool _isToggleKeyBuffered = false;
     static bool _isResumeInputReceivedOnce = false;
     static bool _isResumeMessageSent = false;
@@ -208,11 +209,23 @@ Notes;
             }
         }
 
-        if (XInput.IsButtonDown(XInput.Buttons.B) || IsKeyDown(Keys.Escape) || IS_WORLD_FLAG(IsDead))
-            PhotoMode.SetEnabled(false);
+        if (!_isExitInputBuffered)
+        {
+            if (XInput.IsButtonDown(XInput.Buttons.B) || IsKeyDown(Keys.Escape) || IS_WORLD_FLAG(IsDead))
+                PhotoMode.SetEnabled(false);
+        }
+        else if (!XInput.IsButtonDown(XInput.Buttons.B))
+        {
+            _isExitInputBuffered = false;
+        }
     }
     else
     {
+        /* Check B input before entering Photo Mode
+           in case the player is squatting. */
+        if (XInput.IsButtonDown(XInput.Buttons.B))
+            _isExitInputBuffered = true;
+        
         _isResumeInputReceivedOnce = false;
     }
 }
