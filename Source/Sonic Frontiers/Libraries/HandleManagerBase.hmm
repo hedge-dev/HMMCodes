@@ -40,7 +40,7 @@ Library "HandleManagerBase" by "Sajid"
 
         public Handle<T> GetHandle<T>(in T obj) where T : unmanaged, IRefByHandleObject
         {
-            if (!IsHandleValid(id))
+            if (!IsHandleValid(obj.Handle))
                 return default;
 
             var id = obj.Handle & 0xFFFF;
