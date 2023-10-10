@@ -366,6 +366,11 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
         IsPowerBoost = 0x28,
 
         /// <summary>
+        /// The player is air tricking.
+        /// </summary>
+        IsAirTrick = 0x2A,
+
+        /// <summary>
         /// The player is standing on collision pertaining to the height map.
         /// </summary>
         IsHeightMapCollision = 0x37,
