@@ -1,4 +1,4 @@
-Patch "Disable Loop Kick on Slide" in "Gameplay" by "Hyper" 
+Patch "Disable Loop Kick on Slide" in "! Incompatible - awaiting fixes for v1.40" by "Hyper"
 {
     WriteNop
     (
@@ -12,5 +12,3 @@ Patch "Disable Loop Kick on Slide" in "Gameplay" by "Hyper"
         5
     );
 }
-
-
