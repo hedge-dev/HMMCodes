@@ -227,6 +227,16 @@ Library "Collections" by "Sajid & Hyper" does "Provides extended collection type
         {
             return GetEnumerator();
         }
+
+        public List<T> ToList()
+        {
+            var l = new List<T>();
+            
+            foreach (var e in this)
+                l.Add(e);
+
+            return l;
+        }
     }
 
     /// <summary>
