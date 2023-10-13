@@ -1,16 +1,15 @@
-Patch "Disable Camera Shake" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Disables camera shake during combat." 
+Patch "Disable Camera Shake" in "Camera" by "Hyper" does "Disables camera shake during combat."
+//
+    #lib "Memory"
+//
 {
-    WriteProtected<byte>
+    Memory.WriteForceJump
     (
-        /* 0x1400B51E2 */
+        /* 0x1400C2C8C */
         ScanSignature
         (
-            "\x0F\x85\x08\x03\x00\x00\x48\x8B\x41\x28",
+            "\x0F\x85\xB6\x03\x00\x00\x48\x8B\x41\x28",
             "xxxxxxxxxx"
-        ),
-
-        0xE9, 0x09, 0x03, 0x00, 0x00
+        )
     );
 }
-
-
