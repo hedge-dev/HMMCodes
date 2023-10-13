@@ -9,7 +9,7 @@ Library "HandleManagerBase" by "Sajid"
     [StructLayout(LayoutKind.Explicit, Size = 0x70)]
     public struct Data
     {
-        [FieldOffset(0x18)] public MoveArray<HandleTableEntry> HandleTable;
+        [FieldOffset(0x18)] public ObjectMoveArray<HandleTableEntry> HandleTable;
 
         public RefByHandleObject* GetObject(int id)
         {

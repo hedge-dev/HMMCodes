@@ -4,7 +4,9 @@ Library "Collections" by "Sajid & Hyper" does "Provides extended collection type
 
     using System.Collections;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Text;
 
     private readonly nint SIGN_BIT = (nint)((1u << ((sizeof(nint) * sizeof(byte)) - 1)));
     
@@ -12,6 +14,128 @@ Library "Collections" by "Sajid & Hyper" does "Provides extended collection type
     /// A struct representation of `csl::ut::MoveArray<T>`.
     /// </summary>
     public struct MoveArray<T> : IEnumerable<T> where T : unmanaged
+    {
+        public T* pBuffer;
+        public int Length;
+        public int Capacity;
+        public IAllocator* pAllocator;
+        
+        public int Count => Length;    
+
+        public ref T this[int in_index]
+        {
+            get => ref pBuffer[in_index];
+        }
+
+        private bool IsInplace()
+        {
+            return (Capacity & SIGN_BIT) != 0;
+        }
+        
+        public void Reserve(int in_length)
+        {
+            if (in_length <= Capacity)
+                return;
+
+            var newLength = sizeof(T) * in_length;
+            var pNewBuffer = pAllocator->Alloc()(pAllocator, newLength, 16);
+
+            if (pBuffer != null)
+                Buffer.MemoryCopy(pBuffer, (T*)(long)pNewBuffer, newLength, newLength);
+
+            if (!IsInplace())
+                pAllocator->Free()(pAllocator, pBuffer);
+
+            Capacity = in_length;
+            pBuffer = (T*)(long)pNewBuffer;
+        }
+
+        public void Resize(int in_length)
+        {
+            Reserve(in_length);
+
+            Length = in_length;
+        }
+
+        public void Add(T in_item)
+        {
+            Length++;
+
+            if (Length > Capacity)
+                Reserve(Length * 2);
+
+            pBuffer[Length - 1] = in_item;
+        }
+
+        public void RemoveAt(int in_index)
+        {
+            if (in_index > Length)
+                return;
+
+            pBuffer[in_index] = pBuffer[in_index + 1];
+            Length--;
+        }
+
+        public void Remove(T in_item)
+        {
+            var index = IndexOf(in_item);
+
+            if (index != -1)
+                RemoveAt(index);
+        }
+
+        public void Clear()
+        {
+            Length = 0;
+        }
+
+        public int IndexOf(T in_item)
+        {
+            for (int i = 0; i < Length; i++)
+            {
+                if (this[i].Equals(in_item))
+                    return i;
+            }
+
+            return -1;
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            for (var i = 0; i < Count; i++)
+            {
+                yield return this[i];
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public List<T> ToList()
+        {
+            var l = new List<T>();
+            
+            foreach (var e in this)
+                l.Add(e);
+
+            return l;
+        }
+
+        public override string ToString()
+        {
+            if (typeof(T) == typeof(byte))
+                return Encoding.ASCII.GetString(ToList().Select(x => (byte)(object)x).ToArray());
+
+            return base.ToString();
+        }
+    }
+
+    /// <summary>
+    /// A struct representation of `csl::ut::ObjectMoveArray<T>`.
+    /// </summary>
+    public struct ObjectMoveArray<T> : IEnumerable<T> where T : unmanaged
     {
         public T* pBuffer;
         public nint Length;
@@ -77,7 +201,7 @@ Library "Collections" by "Sajid & Hyper" does "Provides extended collection type
 
         public void Clear()
         {
-            Length = 0; // TODO: free the buffer?
+            Length = 0;
         }
 
         public nint IndexOf(T in_item)

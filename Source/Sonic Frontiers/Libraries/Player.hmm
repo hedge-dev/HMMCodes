@@ -3,16 +3,12 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
     #include "BlackboardStatus" noemit
     #include "Helpers" noemit
 
-    #import "GOComponents"
-    #import "Services"
-    #import "States"
-
     #lib "BlackboardStatus"
     #lib "Collections"
     #lib "GameManager"
-    #lib "MessageManager"
     #lib "GameObject"
     #lib "Lua"
+    #lib "MessageManager"
     #lib "Reflection"
     #lib "StringMapOperation"
     #lib "VectorHelpers"
@@ -28,6 +24,10 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
 
     #lib "Tails"
     #lib "TailsParameters"
+
+    #import "GOComponents"
+    #import "Services"
+    #import "States"
 
     #load "System.Numerics.dll"
 

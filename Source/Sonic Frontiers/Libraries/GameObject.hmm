@@ -40,7 +40,7 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
         /// <summary>
         /// An array of pointers to `hh::game::GOComponent` instances.
         /// </summary>
-        [FieldOffset(0x58)] public MoveArray<Memory.Pointer<GOComponent>> Components;
+        [FieldOffset(0x58)] public ObjectMoveArray<Memory.Pointer<GOComponent>> Components;
 
         /// <summary>
         /// The name of this game object.

@@ -159,11 +159,6 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
         /// Bit flags representing world statuses.
         /// </summary>
         [FieldOffset(0x40)] public long WorldFlags;
-
-        /// <summary>
-        /// Determines if the current player is in an event.
-        /// </summary>
-        [FieldOffset(0x44)] public bool IsEvent;
     }
 
     /// <summary>

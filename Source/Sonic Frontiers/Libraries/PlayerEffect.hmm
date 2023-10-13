@@ -32,7 +32,7 @@ Library "PlayerEffect" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x50)]
     public struct EffectList
     {
-        [FieldOffset(0x28)] public MoveArray<Memory.Pointer<Data>> PlayerEffects;
+        [FieldOffset(0x28)] public ObjectMoveArray<Memory.Pointer<Data>> PlayerEffects;
     }
 
     public Data* Get(string in_name)

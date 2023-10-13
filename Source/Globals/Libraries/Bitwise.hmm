@@ -1,17 +1,17 @@
 Library "Bitwise" by "Hyper" 
 {
-    public long Set(long @base, uint offset, bool isOffsetBitIndex = true)
+    public long Set(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
     {
-        return @base | (isOffsetBitIndex ? (1L << (int)offset) : offset);
+        return in_base | (in_isOffsetBitIndex ? (1L << in_offset) : in_offset);
     }
 
-    public long Reset(long @base, uint offset, bool isOffsetBitIndex = true)
+    public long Reset(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
     {
-        return @base & (isOffsetBitIndex ? (1L << (int)offset) : offset);
+        return in_base & (in_isOffsetBitIndex ? ~(1L << in_offset) : in_offset);
     }
 
-    public bool Test(long @base, uint offset, bool isOffsetBitIndex = true)
+    public bool Test(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
     {
-        return (@base & (isOffsetBitIndex ? (1L << (int)offset) : offset)) != 0;
+        return (in_base & (in_isOffsetBitIndex ? (1L << in_offset) : in_offset)) != 0;
     }
 }
