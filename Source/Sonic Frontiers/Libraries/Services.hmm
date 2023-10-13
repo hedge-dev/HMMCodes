@@ -450,10 +450,20 @@ Library "Services" by "Hyper"
             SpecialParryEffect = 0x20
         }
 
+        public enum CyberModes
+        {
+            LowGravity = 0x01,
+            TimeExtend = 0x02,
+            SpeedScale = 0x03,
+            Nitro = 0x04,
+            MaxSpeedChallenge = 0x05
+        }
+
         public enum Missions
         {
             Goal = 0x01,
             Rank = 0x02,
+            NoDamage = 0x03,
             Ring = 0x04,
             RedRing = 0x05,
             NumberRing = 0x06,
