@@ -37,6 +37,8 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
     using System.Runtime.InteropServices;
 
     private static bool _isInitialised = false;
+
+    private static float _grindStepRadius = 0.0f;
     
     /// <summary>
     /// A struct representation of `app::player::Player`.
@@ -140,6 +142,36 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
             
             2
         );
+
+        fixed (float* p_grindStepRadius = &_grindStepRadius)
+        {
+            WriteAsmHook
+            (
+                $@"
+                    mov   rcx, {(long)p_grindStepRadius}
+                    cmp   dword ptr [rcx], 0
+                    je    zeroRadius
+                    movss xmm1, dword ptr [rcx]
+                    jmp   exit
+                zeroRadius:
+                    movss xmm1, dword ptr [rsp + 0x68 + 0x28]
+                exit:
+                    xor   ecx, ecx
+                    movss dword ptr [rsp + 0x68 + 0xFFFFFFFFFFFFFFE8], xmm1
+                    xorps xmm0, xmm0
+                    mov   qword ptr [rsp + 0x68 + 0xFFFFFFFFFFFFFFB8], rcx
+                ",
+
+                /* 0x1408B3E51 */
+                ScanSignature
+                (
+                    "\x33\xC9\xF3\x0F\x11\x4C\x24\x50",
+                    "xxxxxxxx"
+                ),
+
+                HookBehavior.Replace
+            );
+        }
 
         _isInitialised = true;
     }
@@ -285,6 +317,16 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
                 return;
             
             GET_FUNCTION_PTR(fpSetEntityCollision)(pPlayerContext, in_isEnabled);
+        }
+
+        public static void SetGrindStepRadius(float in_radius)
+        {
+            _grindStepRadius = in_radius;
+        }
+
+        public static void ResetGrindStepRadius()
+        {
+            _grindStepRadius = 0.0f;
         }
     }
 
