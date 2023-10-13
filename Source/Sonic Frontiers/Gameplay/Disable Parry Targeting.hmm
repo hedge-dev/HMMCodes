@@ -1,16 +1,14 @@
-Patch "Disable Parry Targeting" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" does "Disables Sonic automatically targeting the nearest enemy when parrying." 
+Patch "Disable Parry Targeting" in "Gameplay" by "Hyper" does "Disables the player automatically targeting the nearest enemy when parrying."
 {
     WriteNop
     (
-        /* 0x14087B767 */
+        /* 0x14093965E */
         ScanSignature
         (
-            "\xE8\xCC\xCC\xCC\xCC\x48\x8B\x46\x38\xBA\x01\x02\x8F\x12",
-            "x????xxxxxxxxx"
+            "\xE8\xCC\xCC\xCC\xCC\x48\x8B\xCE\x45\x32\xFF",
+            "x????xxxxxx"
         ),
 
         5
     );
 }
-
-
