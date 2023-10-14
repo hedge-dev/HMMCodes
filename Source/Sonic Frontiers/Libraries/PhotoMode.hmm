@@ -154,11 +154,18 @@ Library "PhotoMode" by "Hyper"
             _isPackfileLoaded = false;
         }
 
-        if (Lua.GetState() != 0 && _isNewGameMode)
+        if (Lua.GetState() != 0)
         {
-            Lua.Call("LoadLevel", "photomode_misc");
-            _isNewGameMode = false;
-            _isPackfileLoaded = true;
+            if (_isNewGameMode)
+            {
+                Lua.Call("LoadLevel", "photomode_misc");
+                _isNewGameMode = false;
+                _isPackfileLoaded = true;
+            }
+        }
+        else
+        {
+            _isPackfileLoaded = false;
         }
     }
 
