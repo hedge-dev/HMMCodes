@@ -19,6 +19,14 @@ Library "Bridge.DisableMessages" by "Hyper"
         "tu1000_590"
     };
 
+    private static List<string> _deniedMessages = new()
+    {
+        "tu1000dlc_060",
+        "tu1000dlc_050",
+        "tu1000dlc_150",
+        "tu1000dlc_140"
+    };
+
     UNMANAGED_FUNCTION(bool, CheckOverlayMessage, long in_pCaptionName)
     {
         bool result = false;
@@ -29,7 +37,10 @@ Library "Bridge.DisableMessages" by "Hyper"
         string captionName = FROM_STRING_PTR(in_pCaptionName);
 
         if (IsDisabledDLCMessages && GameMode.GetName() != "GameModeTitle")
-            result = captionName.Contains("dlc_") || captionName.StartsWith("extra_");
+        {
+            if (_deniedMessages.Contains(captionName))
+                result = true;
+        }
 
         if (IsDisabledTutorialMessages && !result)
         {
