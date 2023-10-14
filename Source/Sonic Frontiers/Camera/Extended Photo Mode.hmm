@@ -172,7 +172,7 @@ Notes;
             var pPhotoModeCamera = PhotoMode.GetCamera();
 
             // Force the player out of the current state when teleporting, if necessary.
-            if (_forceExitTeleportStates.Contains(Player.State.GetCurrentStateID<Sonic.StateID>()))
+            if (_forceExitTeleportStates.Contains(Player.State.GetCurrentStateID<Sonic.StateID>()) || IS_STATE_FLAG(IsWallClimb))
                 Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateStand);
 
             if (kinematics != null && pPhotoModeCamera != null)
