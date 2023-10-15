@@ -11,9 +11,7 @@ Notes;
     #lib "MathHelpers"
 
     #load "System.Numerics.dll"
-    #load "System.Linq.dll"
 
-    using System.Linq;
     using System.Numerics;
 
     const float airDragPowerMin = 0.1f;
@@ -45,11 +43,8 @@ Notes;
             );
         }
 
-        WriteProtected<byte>
-        (
-            0x1408A98CE,
-            0xC3
-        );
+        //Adds a return to the end of the function
+        WriteProtected<byte>(0x1408A98CE, 0xC3);
 
         isInitialised = true;
     }
