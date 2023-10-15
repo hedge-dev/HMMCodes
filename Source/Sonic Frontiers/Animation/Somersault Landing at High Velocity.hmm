@@ -73,6 +73,11 @@ This state lasts a fraction of a second, but keep in mind that within that time,
         {
             Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateRun);
         }
+
+        if (Player.Input.IsPressed(Player.InputActionType.PlayerSonicboom))
+        {
+            Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateSpinBoost);
+        }
     }
 
     if (Player.Status.IsGrounded())

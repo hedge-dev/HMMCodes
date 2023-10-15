@@ -19,32 +19,32 @@ Library "GameManager" by "Hyper, ĐeäTh & Sajid"
         /// <summary>
         /// An array of pointers to `hh::game::GameObject` instances.
         /// </summary>
-        [FieldOffset(0x130)] public MoveArray<Memory.Pointer<GameObject.Data>> GameObjects;
+        [FieldOffset(0x130)] public ObjectMoveArray<Memory.Pointer<GameObject.Data>> GameObjects;
 
         /// <summary>
         /// An array of pointers to `hh::game::GameService` instances.
         /// </summary>
-        [FieldOffset(0x150)] public MoveArray<Memory.Pointer<GameService.Data>> GameServices;
+        [FieldOffset(0x150)] public ObjectMoveArray<Memory.Pointer<GameService.Data>> GameServices;
 
         /// <summary>
         /// An array of pointers to `hh::game::GameManagerListener` instances.
         /// </summary>
-        [FieldOffset(0x190)] public MoveArray<long> GameManagerListeners;
+        [FieldOffset(0x190)] public ObjectMoveArray<long> GameManagerListeners;
 
         /// <summary>
         /// An array of pointers to `hh::game::GameObjectListener` instances.
         /// </summary>
-        [FieldOffset(0x1B0)] public MoveArray<long> GameObjectListeners;
+        [FieldOffset(0x1B0)] public ObjectMoveArray<long> GameObjectListeners;
 
         /// <summary>
         /// An array of pointers to `hh::game::ComponentListener` instances.
         /// </summary>
-        [FieldOffset(0x1D0)] public MoveArray<long> ComponentListeners;
+        [FieldOffset(0x1D0)] public ObjectMoveArray<long> ComponentListeners;
 
         /// <summary>
         /// An array of pointers to `hh::game::GameStepListener` instances.
         /// </summary>
-        [FieldOffset(0x210)] public MoveArray<long> GameStepListeners;
+        [FieldOffset(0x210)] public ObjectMoveArray<long> GameStepListeners;
     }
 
     /* 0x140C478D8 */

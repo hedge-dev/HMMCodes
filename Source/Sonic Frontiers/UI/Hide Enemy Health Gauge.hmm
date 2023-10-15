@@ -1,16 +1,15 @@
-Patch "Hide Enemy Health Gauge" in "! Incompatible - awaiting fixes for v1.40" by "Hyper & Gordon Ramsay" does "Hides the health gauge for standard enemies and guardians." 
+Patch "Hide Enemy Health Gauge" in "UI" by "Hyper & Gordon Ramsay" does "Hides the health gauge for standard enemies and guardians."
+//
+    #lib "Memory"
+//
 {
-    WriteProtected<byte>
+    Memory.WriteForceJump
     (
-        /* 0x14054E7AB */
+        /* 0x1405CA39B */
         ScanSignature
         (
-            "\x0F\x84\xF7\x00\x00\x00\xBA\x82\x23\x00\x00",
+            "\x0F\x84\xF7\x00\x00\x00\xBA\xC6\x23\x00\x00",
             "xxxxxxxxxxx"
-        ),
-
-        0xE9, 0xF8, 0x00, 0x00, 0x00
+        )
     );
 }
-
-

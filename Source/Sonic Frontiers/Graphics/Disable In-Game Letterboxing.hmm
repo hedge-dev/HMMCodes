@@ -21,9 +21,6 @@ Notes;
 
     if (pGOCSprite == null)
         return;
-
-    if (PhotoMode.IsEnabled())
-        return;
     
-    pGOCSprite->Flags = 0;
+    pGOCSprite->Flags = (byte)(PhotoMode.IsEnabled() ? 3 : 0);
 }

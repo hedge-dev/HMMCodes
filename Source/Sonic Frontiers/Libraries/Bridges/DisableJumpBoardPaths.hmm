@@ -1,20 +1,4 @@
-Patch "Disable Jump Board Paths on Islands" in "Gameplay" by "Hyper" does "Stops the player locking to a path when hitting jump boards on the islands, allowing him to fling off them like ramps."
-//
-    #lib "DisableJumpBoardPathsBridge"
-//
-{
-    DisableJumpBoardPathsBridge.IsDisabledOnIslands = true;
-}
-
-Patch "Disable Jump Board Paths in Cyber Space" in "Gameplay" by "Hyper" does "Stops the player locking to a path when hitting jump boards in Cyber Space, allowing him to fling off them like ramps."
-//
-    #lib "DisableJumpBoardPathsBridge"
-//
-{
-    DisableJumpBoardPathsBridge.IsDisabledInCyberSpace = true;
-}
-
-Library "DisableJumpBoardPathsBridge" by "Hyper"
+Library "Bridge.DisableJumpBoardPaths" by "Hyper"
 {
     #include "BlackboardStatus" noemit
 

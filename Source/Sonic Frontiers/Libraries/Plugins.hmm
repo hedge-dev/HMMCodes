@@ -32,7 +32,7 @@ Library "Plugins" by "Hyper"
         /// An enum containing known flags for `app::player::StatePluginBoost`.
         /// </summary>
         [Flags]
-        public enum BoostFlags : int
+        public enum BoostFlags : uint
         {
             /// <summary>
             /// The gauge is currently recharging.

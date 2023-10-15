@@ -1,16 +1,15 @@
-Patch "Disable Spin Slash on Drop Dash" in "! Incompatible - awaiting fixes for v1.40" by "Hyper" 
+Patch "Disable Spin Slash on Drop Dash" in "Gameplay" by "Hyper"
+//
+    #lib "Memory"
+//
 {
-    WriteProtected<byte>
+    Memory.WriteForceJump
     (
-        /* 0x14BBB68A6 */
+        /* 0x14BFF5046 */
         ScanSignature
         (
-            "\x74\x79\xBA\x2E\x00\x00\x00",
+            "\x74\x79\xBA\x30\x00\x00\x00",
             "xxxxxxx"
-        ),
-
-        0xEB
+        )
     );
 }
-
-

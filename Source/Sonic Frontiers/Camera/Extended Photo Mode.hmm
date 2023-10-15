@@ -45,6 +45,7 @@ Notes;
     private static extern IntPtr GetForegroundWindow();
 
     static bool _isInitialised = false;
+    static bool _isExitInputBuffered = false;
     static bool _isToggleKeyBuffered = false;
     static bool _isResumeInputReceivedOnce = false;
     static bool _isResumeMessageSent = false;
@@ -171,7 +172,7 @@ Notes;
             var pPhotoModeCamera = PhotoMode.GetCamera();
 
             // Force the player out of the current state when teleporting, if necessary.
-            if (_forceExitTeleportStates.Contains(Player.State.GetCurrentStateID<Sonic.StateID>()))
+            if (_forceExitTeleportStates.Contains(Player.State.GetCurrentStateID<Sonic.StateID>()) || IS_STATE_FLAG(IsWallClimb))
                 Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateStand);
 
             if (kinematics != null && pPhotoModeCamera != null)
@@ -208,11 +209,23 @@ Notes;
             }
         }
 
-        if (XInput.IsButtonDown(XInput.Buttons.B) || IsKeyDown(Keys.Escape) || IS_WORLD_FLAG(IsDead))
-            PhotoMode.SetEnabled(false);
+        if (!_isExitInputBuffered)
+        {
+            if (XInput.IsButtonDown(XInput.Buttons.B) || IsKeyDown(Keys.Escape) || IS_WORLD_FLAG(IsDead))
+                PhotoMode.SetEnabled(false);
+        }
+        else if (!XInput.IsButtonDown(XInput.Buttons.B))
+        {
+            _isExitInputBuffered = false;
+        }
     }
     else
     {
+        /* Check B input before entering Photo Mode
+           in case the player is squatting. */
+        if (XInput.IsButtonDown(XInput.Buttons.B))
+            _isExitInputBuffered = true;
+        
         _isResumeInputReceivedOnce = false;
     }
 }

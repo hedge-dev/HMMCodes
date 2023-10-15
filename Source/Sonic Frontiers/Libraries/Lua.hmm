@@ -53,6 +53,7 @@ Library "Lua" by "Hyper & ĐeäTh"
         "GameModeBossRush",
         "GameModeFishing",
         "GameModeHacking",
+        "GameModeMasterTrial",
         "GameModeStage",
         "GameModeTitle",
         "GameModeUnknown"

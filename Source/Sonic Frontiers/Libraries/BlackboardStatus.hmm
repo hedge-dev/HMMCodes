@@ -41,9 +41,9 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     #define SET_STATE_FLAG(in_name, in_isEnabled) \
         if (BlackboardStatus.Get() != null) \
             if (in_isEnabled) \
-                BlackboardStatus.Get()->StateFlags |= (1U << (byte)((uint)BlackboardStatus.StateFlags.in_name & 0x3F)); \
+                BlackboardStatus.Get()->StateFlags |= (1L << (uint)BlackboardStatus.StateFlags.in_name); \
             else \
-                BlackboardStatus.Get()->StateFlags &= ~(1U << (byte)((uint)BlackboardStatus.StateFlags.in_name & 0x3F));
+                BlackboardStatus.Get()->StateFlags &= ~(1L << (uint)BlackboardStatus.StateFlags.in_name);
     
     /// <summary>
     /// Determines whether a combat flag is set.
@@ -82,9 +82,9 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     #define SET_COMBAT_FLAG(in_name, in_isEnabled) \
         if (BlackboardStatus.Get() != null) \
             if (in_isEnabled) \
-                BlackboardStatus.Get()->CombatFlags |= (1U << (byte)((uint)BlackboardStatus.CombatFlags.in_name & 0x3F)); \
+                BlackboardStatus.Get()->CombatFlags |= (1L << (int)BlackboardStatus.CombatFlags.in_name); \
             else \
-                BlackboardStatus.Get()->CombatFlags &= ~(1U << (byte)((uint)BlackboardStatus.CombatFlags.in_name & 0x3F));
+                BlackboardStatus.Get()->CombatFlags &= ~(1L << (int)BlackboardStatus.CombatFlags.in_name);
 
     /// <summary>
     /// Determines whether a world flag is set.
@@ -123,9 +123,9 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     #define SET_WORLD_FLAG(in_name, in_isEnabled) \
         if (BlackboardStatus.Get() != null) \
             if (in_isEnabled) \
-                BlackboardStatus.Get()->WorldFlags |= (1U << (byte)((uint)BlackboardStatus.WorldFlags.in_name & 0x3F)); \
+                BlackboardStatus.Get()->WorldFlags |= (1L << (int)BlackboardStatus.WorldFlags.in_name); \
             else \
-                BlackboardStatus.Get()->WorldFlags &= ~(1U << (byte)((uint)BlackboardStatus.WorldFlags.in_name & 0x3F));
+                BlackboardStatus.Get()->WorldFlags &= ~(1L << (int)BlackboardStatus.WorldFlags.in_name);
 
     using System.Runtime.InteropServices;
     
@@ -159,11 +159,6 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
         /// Bit flags representing world statuses.
         /// </summary>
         [FieldOffset(0x40)] public long WorldFlags;
-
-        /// <summary>
-        /// Determines if the current player is in an event.
-        /// </summary>
-        [FieldOffset(0x44)] public bool IsEvent;
     }
 
     /// <summary>
@@ -364,6 +359,11 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
         /// The player has Power Boost.
         /// </summary>
         IsPowerBoost = 0x28,
+
+        /// <summary>
+        /// The player is air tricking.
+        /// </summary>
+        IsAirTrick = 0x2A,
 
         /// <summary>
         /// The player is standing on collision pertaining to the height map.

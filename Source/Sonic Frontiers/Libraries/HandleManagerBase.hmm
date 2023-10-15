@@ -9,30 +9,50 @@ Library "HandleManagerBase" by "Sajid"
     [StructLayout(LayoutKind.Explicit, Size = 0x70)]
     public struct Data
     {
-        [FieldOffset(0x18)] public MoveArray<HandleTableEntry> HandleTable;
+        [FieldOffset(0x18)] public ObjectMoveArray<HandleTableEntry> HandleTable;
 
         public RefByHandleObject* GetObject(int id)
         {
+            if (!IsHandleValid(id))
+                return default;
+
             id &= 0xFFFF;
             return (RefByHandleObject*)HandleTable[(nint)id].Object;
         }
 
-        public HandleBase GetHandle(long id)
+        public HandleBase GetHandle(int id)
         {
+            if (!IsHandleValid(id))
+                return default;
+            
             id &= 0xFFFF;
             return new HandleBase(ref HandleTable[(nint)id]);
         }
 
-        public Handle<T> GetHandle<T>(long id) where T : unmanaged
+        public Handle<T> GetHandle<T>(int id) where T : unmanaged
         {
+            if (!IsHandleValid(id))
+                return default;
+
             id &= 0xFFFF;
             return new Handle<T>(ref HandleTable[(nint)id]);
         }
 
         public Handle<T> GetHandle<T>(in T obj) where T : unmanaged, IRefByHandleObject
         {
+            if (!IsHandleValid(obj.Handle))
+                return default;
+
             var id = obj.Handle & 0xFFFF;
             return new Handle<T>(ref HandleTable[(nint)id]);
+        }
+
+        public static bool IsHandleValid(int id)
+        {
+            unchecked
+            {
+                return (0xFFFF0000 & id) != 0;
+            }
         }
     }
 

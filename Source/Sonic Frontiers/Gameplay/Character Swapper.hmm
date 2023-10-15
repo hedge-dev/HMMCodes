@@ -19,6 +19,8 @@ Notes;
 - Keep your expectations within reason; don't expect guardians outside of Another Story to work 100% correctly as the other characters, especially event-driven ones like Shark.
 */
 //
+    #lib "BlackboardItem"
+    #lib "MathHelpers"
     #lib "PhotoMode"
     #lib "Player"
     #lib "XInput"
@@ -27,7 +29,14 @@ Notes;
     using System.Runtime.InteropServices;
 
     [DllImport("user32.dll")]
-    private static extern IntPtr GetForegroundWindow();
+    static extern IntPtr GetForegroundWindow();
+
+    static bool _isCharacterUpdate = false;
+    static bool _isAwaitLastRingCount = false;
+
+    static Player.PlayerType _currentPlayer;
+
+    static int _lastRingCount = 0;
 
     static bool IsKeyDown(Keys in_keys)
     {
@@ -48,24 +57,49 @@ Notes;
 
     if (PhotoMode.IsEnabled())
         return;
+
+    var pBlackboardItem = BlackboardItem.Get();
+
+    if (pBlackboardItem == null)
+        return;
+    
+    /* Wait for new instance of BlackboardItem
+       to set the new ring count. */
+    if (_isAwaitLastRingCount)
+    {
+        pBlackboardItem->RingCount = MathHelpers.Clamp(_lastRingCount, 0, pBlackboardItem->RingCapacity);
+        _isAwaitLastRingCount = false;
+    }
     
     if (IsKeyDown(Keys.D1) || IsButtonDownSpecial(XInput.Buttons.DPAD_UP))
     {
-        Player.SetPlayerType(Player.PlayerType.Sonic);
+        _currentPlayer = Player.PlayerType.Sonic;
+        _isCharacterUpdate = true;
     }
 
     if (IsKeyDown(Keys.D2) || IsButtonDownSpecial(XInput.Buttons.DPAD_RIGHT))
     {
-        Player.SetPlayerType(Player.PlayerType.Amy);
+        _currentPlayer = Player.PlayerType.Amy;
+        _isCharacterUpdate = true;
     }
 
     if (IsKeyDown(Keys.D3) || IsButtonDownSpecial(XInput.Buttons.DPAD_DOWN))
     {
-        Player.SetPlayerType(Player.PlayerType.Knuckles);
+        _currentPlayer = Player.PlayerType.Knuckles;
+        _isCharacterUpdate = true;
     }
 
     if (IsKeyDown(Keys.D4) || IsButtonDownSpecial(XInput.Buttons.DPAD_LEFT))
     {
-        Player.SetPlayerType(Player.PlayerType.Tails);
+        _currentPlayer = Player.PlayerType.Tails;
+        _isCharacterUpdate = true;
+    }
+
+    if (_isCharacterUpdate)
+    {
+        Player.SetPlayerType(_currentPlayer);
+        _lastRingCount = pBlackboardItem->RingCount;
+        _isAwaitLastRingCount = true;
+        _isCharacterUpdate = false;
     }
 }

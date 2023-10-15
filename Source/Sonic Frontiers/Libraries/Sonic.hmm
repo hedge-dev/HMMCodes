@@ -2,9 +2,10 @@ Library "Sonic" by "Hyper, NM & Ahremic"
 {
     #include "Helpers" noemit
 
-    #import "Collections"
-
     #lib "PlayerEffect"
+
+    #import "Collections"
+    #import "Effects"
 
     using System.Runtime.InteropServices;
 
@@ -19,23 +20,6 @@ Library "Sonic" by "Hyper, NM & Ahremic"
         /* 0x1407EDA13 */
         private static long _sigSetVisualModelVisibility = ScanSignature("\xE8\xCC\xCC\xCC\xCC\x0F\x28\x74\x24\x60\x44\x0F\x28\x44\x24\x40\x48\x83\x7D\x50\x00", "x????xxxxxxxxxxxxxxxx");
         FUNCTION_PTR(bool, fpSetVisualModelVisibility, Memory.ReadCall(_sigSetVisualModelVisibility), long in_pVisualModel, bool in_isVisible, byte in_unk1)
-
-        /// <summary>
-        /// A struct representation of `app::player::SonicEffectCyloop`.
-        /// </summary>
-        [StructLayout(LayoutKind.Explicit, Size = 0xC8)]
-        public struct SonicEffectCyloop
-        {
-            /// <summary>
-            /// An instance of `app::player::PlayerEffect`, the base class for `app::player::SonicEffectCyloop`.
-            /// </summary>
-            [FieldOffset(0)]    public PlayerEffect.Data PlayerEffect;
-            
-            /// <summary>
-            /// Determines if the visual model should update locally within `app::player::SonicEffectCyloop` or externally.
-            /// </summary>
-            [FieldOffset(0xC0)] public bool IsLocalVisualModelUpdate;
-        }
 
         /// <summary>
         /// Sets whether the Cyloop aura should be rendered.

@@ -22,7 +22,10 @@ Code "Fix Rail Landing Direction" in "Fixes" by "Hyper" does "Fixes the player l
     
     if (IS_STATE_FLAG(IsGrind) && !_isGrindLand)
     {
-        kinematics->Rotation = VectorHelpers.LookRotation(_preGrindForward);
+        // Check if player is sideways before applying look rotation.
+        if (Vector3.Dot(Vector3.Transform(Vector3.UnitY, kinematics->Rotation), Vector3.UnitY) > 0.01f)
+            kinematics->Rotation = VectorHelpers.LookRotation(_preGrindForward);
+
         _isGrindLand = true;
     }
     else

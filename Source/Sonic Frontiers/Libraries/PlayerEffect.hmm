@@ -6,6 +6,7 @@ Library "PlayerEffect" by "Hyper"
     #import "GOComponents"
 
     #lib "GameObject"
+    #lib "Helpers"
     #lib "Memory"
     #lib "Player"
     #lib "StringMapOperation"
@@ -16,9 +17,13 @@ Library "PlayerEffect" by "Hyper"
     public struct Data
     {
         [FieldOffset(0x18)] public Player.Data* pPlayer;
+
         [FieldOffset(0x20)] public long pVisualHuman;
+
         [FieldOffset(0x28)] public GOCPlayerVisual* pGOCPlayerVisual;
+
         [FieldOffset(0x30)] public GOCPlayerKinematicParams* pGOCPlayerKinematicParams;
+
         [FieldOffset(0x38)] public GOCPlayerBlackboard* pGOCPlayerBlackboard;
 
         VFUNCTION_PTR(Data, 1, uint, GetNameHash)
@@ -27,7 +32,7 @@ Library "PlayerEffect" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x50)]
     public struct EffectList
     {
-        [FieldOffset(0x28)] public MoveArray<Memory.Pointer<Data>> PlayerEffects;
+        [FieldOffset(0x28)] public ObjectMoveArray<Memory.Pointer<Data>> PlayerEffects;
     }
 
     public Data* Get(string in_name)
@@ -57,6 +62,8 @@ Library "PlayerEffect" by "Hyper"
 
     public T* Get<T>() where T : unmanaged
     {
-        return (T*)(long)Get(typeof(T).Name);
+        var name = Helpers.GetInternalName(typeof(T));
+        
+        return (T*)(long)Get(string.IsNullOrEmpty(name) ? typeof(T).Name : name);
     }
 }

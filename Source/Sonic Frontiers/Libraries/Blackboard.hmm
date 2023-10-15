@@ -20,7 +20,7 @@ Library "Blackboard" by "Hyper, ĐeäTh & Sajid" does "Provides access to `app::
         /// <summary>
         /// An array of pointers to `app::player::BlackboardContent` instances.
         /// </summary>
-        [FieldOffset(0x18)] public MoveArray<Memory.Pointer<BlackboardContent>> BlackboardContents;
+        [FieldOffset(0x18)] public ObjectMoveArray<Memory.Pointer<BlackboardContent>> BlackboardContents;
     }
 
     /// <summary>

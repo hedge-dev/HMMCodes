@@ -1,0 +1,19 @@
+Code "[Cyber Space] Enable Terrain Flinging" in "Gameplay" by "Hyper" does
+/*
+Allows Sonic to fling off of terrain in Cyber Space.
+
+Notes;
+- This does not allow Sonic to perform air tricks from terrain, use the '[Cyber Space] Enable Air Tricks from Terrain' code to do so.
+*/
+//
+    #lib "Reflection"
+    #lib "SonicParameters"
+//
+{
+    var SonicParametersInfo = Reflection.GetDataInfo<SonicParameters.Root>("player_common");
+
+    if (SonicParametersInfo.pData == null)
+        return;
+
+    SonicParametersInfo.pData->cyberspace.modePackage.tumble = SonicParametersInfo.pData->forwardView.modePackage.tumble;
+}

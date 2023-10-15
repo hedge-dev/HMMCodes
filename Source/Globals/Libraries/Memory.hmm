@@ -2,6 +2,7 @@ Library "Memory" by "Hyper & Sajid"
 {
     using System.Collections.Generic;
     using System.Runtime.InteropServices;
+    using System.Runtime.CompilerServices;
     using System.Text;
 
     private static Dictionary<nint, List<byte>> _preservedMemory = new();
@@ -209,10 +210,43 @@ Library "Memory" by "Hyper & Sajid"
     {
         public T* pData;
 
+        public Pointer(ref T data)
+        {
+            fixed(T* dataPtr = &data)
+            {
+                pData = dataPtr;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Pointer(T* in_pData)
         {
             pData = in_pData;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool IsValid()
+        {
+            return pData != null;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref T Ref()
+        {
+            return ref *pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T* Get()
+        {
+            return pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator bool(Pointer<T> self) => self.IsValid();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator Pointer<T>(T* data) => new(data);
 
         public override string ToString() => $"0x{((long)pData):X}";
     }
