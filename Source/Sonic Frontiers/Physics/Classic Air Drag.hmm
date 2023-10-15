@@ -1,0 +1,75 @@
+Code "Classic Air Drag" by "WasifBoomz" in "Physics" does
+/*
+Forces air drag to be based on your current speed, similar to Classic Sonic games.
+
+Notes;
+- The "Jump Deceleration" option affects how much the air drag slows you down.
+*/
+//
+    #lib "Sonic"
+    #lib "Time"
+    #lib "MathHelpers"
+
+    #load "System.Numerics.dll"
+    #load "System.Linq.dll"
+
+    using System.Linq;
+    using System.Numerics;
+
+    const float airDragPowerMin = 0.1f;
+    const float airDragPowerMax = 1.1f;
+    const float maxYSpeed = 50;
+    const float minYSpeed = -50;
+
+    static float jumpDecelerationSetting;
+
+    static bool isInitialised = false;
+//
+{
+    if (!isInitialised)
+    {
+        fixed (float* pJumpDecelerationSetting = &jumpDecelerationSetting)
+        {
+            WriteAsmHook
+            (
+                $@"
+                    mov dword ptr [rcx+3Ch], 0
+                    mov r9, {(long)pJumpDecelerationSetting}
+                    movss dword ptr [r9], xmm1
+                ",
+                
+                //Writes to the Jump Deceleration setting value
+                0x1408A98C0,
+                    
+                HookBehavior.Replace
+            );
+        }
+
+        WriteProtected<byte>
+        (
+            0x1408A98CE,
+            0xC3
+        );
+
+        isInitialised = true;
+    }
+
+    var kinematics =  Player.Kinematics.Get();
+
+    if (kinematics == null)
+        return;
+
+    if (Player.Status.IsGroundedSpecial())
+        return;
+
+    float yVel = kinematics->Velocity.Y;
+    if (yVel < minYSpeed || yVel > maxYSpeed)
+        return;
+
+    if (Player.Kinematics.GetHorizontalMagnitude() < 5)
+        return;
+        
+    kinematics->Velocity = new Vector3(kinematics->Velocity.X, 0, kinematics->Velocity.Z);
+    kinematics->Velocity -= (Vector3.Normalize(kinematics->Velocity)) * (Player.Kinematics.GetHorizontalMagnitude() * Time.GetDeltaTime() * MathHelpers.Lerp(airDragPowerMin, airDragPowerMax,jumpDecelerationSetting));
+    kinematics->Velocity.Y = yVel;
+}
