@@ -193,7 +193,7 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
         if (pLevelInfo == null)
             return null;
 
-        return (Data*)MessageManager.GetMessengerFromHandle(pLevelInfo->PlayerInfo[0]->CharacterHandle);
+        return (Data*)MessageManager.GetMessengerFromHandle(pLevelInfo->PlayerInfo[0]->PlayerHandle);
     }
 
     public PlayerHsmContext* GetPlayerContext()

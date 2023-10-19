@@ -113,7 +113,7 @@ Library "Services" by "Hyper"
             /// <summary>
             /// The handle value for the character object.
             /// </summary>
-            [FieldOffset(0x10)]  public int CharacterHandle;
+            [FieldOffset(0x10)]  public int PlayerHandle;
 
             /// <summary>
             /// The index of the current player character.
