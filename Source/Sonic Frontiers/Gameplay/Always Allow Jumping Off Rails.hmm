@@ -3,6 +3,7 @@ Code "Always Allow Jumping Off Rails" in "Gameplay" by "Hyper" does "Allows the 
     #include "BlackboardStatus" noemit
 
     #lib "Player"
+    #lib "VectorHelpers"
 
     #load "System.Numerics.dll"
 
