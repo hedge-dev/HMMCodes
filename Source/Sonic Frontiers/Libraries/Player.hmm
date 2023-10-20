@@ -481,7 +481,7 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
 
         public static bool IsDown(InputActionType in_actionType)
         {
-            return !CheckButtonState(ButtonState.Down, in_actionType);
+            return GetPlayerContext() == null ? false : !CheckButtonState(ButtonState.Down, in_actionType);
         }
 
         public static bool IsReleased(InputActionType in_actionType)
