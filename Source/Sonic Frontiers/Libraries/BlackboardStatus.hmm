@@ -41,9 +41,9 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     #define SET_STATE_FLAG(in_name, in_isEnabled) \
         if (BlackboardStatus.Get() != null) \
             if (in_isEnabled) \
-                BlackboardStatus.Get()->StateFlags |= (1L << (uint)BlackboardStatus.StateFlags.in_name); \
+                BlackboardStatus.Get()->StateFlags |= (1L << (int)BlackboardStatus.StateFlags.in_name); \
             else \
-                BlackboardStatus.Get()->StateFlags &= ~(1L << (uint)BlackboardStatus.StateFlags.in_name);
+                BlackboardStatus.Get()->StateFlags &= ~(1L << (int)BlackboardStatus.StateFlags.in_name);
     
     /// <summary>
     /// Determines whether a combat flag is set.
