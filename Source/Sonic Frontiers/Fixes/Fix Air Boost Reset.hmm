@@ -19,7 +19,9 @@ Code "Fix Air Boost Reset" in "Fixes" by "Hyper" does "Allows Sonic to perform a
     static List<Sonic.StateID> DisallowedStates = new()
     {
         Sonic.StateID.StateAirBoost,
+        Sonic.StateID.StateAuraTrain,
         Sonic.StateID.StateCaught,
+        Sonic.StateID.StateHoldStand,
         Sonic.StateID.StateSpinBoost
     }
 
