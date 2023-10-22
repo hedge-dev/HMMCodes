@@ -1,4 +1,4 @@
-Patch "Always Trickable Jump Boards" in "Gameplay" by "Hyper" 
+Patch "[Islands] Always Trickable Jump Boards" in "Gameplay" by "Hyper"
 {
     WriteProtected<byte>
     (
@@ -12,5 +12,3 @@ Patch "Always Trickable Jump Boards" in "Gameplay" by "Hyper"
         Assemble("mov cl, 1; nop")
     );
 }
-
-

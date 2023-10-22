@@ -811,7 +811,37 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
 
         public static T* GetStatePlugin<T>() where T : unmanaged
         {
-            return (T*)GetStatePlugin(typeof(T).Name);
+            var name = Helpers.GetInternalName(typeof(T));
+        
+            return (T*)GetStatePlugin(string.IsNullOrEmpty(name) ? typeof(T).Name : name);
+        }
+
+        public static long GetStateParameter(string in_parameterName)
+        {
+            var pPlayerContext = GetPlayerContext();
+
+            if (pPlayerContext == null)
+                return 0;
+            
+            var pPlayerStateParameter = pPlayerContext->pGOCPlayerHsm->pPlayerStateParameter;
+
+            if (pPlayerStateParameter == null)
+                return 0;
+
+            foreach (var pStateParameter in pPlayerStateParameter->StateParameters)
+            {
+                if (pStateParameter.pData->GetNameHash()() == StringMapOperation.ComputeHash(in_parameterName))
+                    return (long)pStateParameter.pData;
+            }
+
+            return 0;
+        }
+
+        public static T* GetStateParameter<T>() where T : unmanaged
+        {
+            var name = Helpers.GetInternalName(typeof(T));
+        
+            return (T*)GetStateParameter(string.IsNullOrEmpty(name) ? typeof(T).Name : name);
         }
 
         public static void AddStateNotifyAction<T>(TStateNotifyAction<T> in_action)

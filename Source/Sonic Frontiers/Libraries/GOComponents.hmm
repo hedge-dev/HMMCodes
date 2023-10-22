@@ -7,6 +7,8 @@ Library "GOComponents" by "Hyper"
     #lib "Player"
     #lib "PlayerEffect"
 
+    #import "States"
+
     #load "System.Numerics.dll"
 
     using System.Numerics;
@@ -44,6 +46,21 @@ Library "GOComponents" by "Hyper"
     }
 
     /// <summary>
+    /// A struct representation of `app::player::GOCEventTimer`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0xC8)]
+    public struct GOCEventTimer
+    {
+        [StructLayout(LayoutKind.Explicit, Size = 0x20)]
+        public struct TimerData
+        {
+            [FieldOffset(0x04)] float Duration;
+            [FieldOffset(0x0C)] float TimeYellow;
+            [FieldOffset(0x10)] float TimeRed;
+        }
+    }
+
+    /// <summary>
     /// A struct representation of `app::player::GOCPlayerBlackboard`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0x88)]
@@ -77,6 +94,11 @@ Library "GOComponents" by "Hyper"
         /// A pointer to an instance of `app::player::PlayerStateActionBase`.
         /// </summary>
         [FieldOffset(0xC8)]  public long pState;
+
+        /// <summary>
+        /// A pointer to an instance of `app::player::PlayerStateParameter`.
+        /// </summary>
+        [FieldOffset(0x100)] public PlayerStateParameter* pPlayerStateParameter;
 
         /// <summary>
         /// A pointer to an instance of `app::player::StatePluginManager<app::player::PlayerHsmContext>`.

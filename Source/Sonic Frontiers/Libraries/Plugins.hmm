@@ -60,4 +60,13 @@ Library "Plugins" by "Hyper"
             IsBoosting = 0x20000
         }
     }
+
+    /// <summary>
+    /// A struct representation of `app::player::StatePluginAirTrick`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit)]
+    public struct StatePluginAirTrick
+    {
+        [FieldOffset(0x3D)] public bool IsEnabled;
+    }
 }

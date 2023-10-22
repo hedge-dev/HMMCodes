@@ -1,6 +1,42 @@
 Library "States" by "Hyper"
 {
+    #include "Helpers" noemit
+
+    #lib "Helpers"
+    #lib "Memory"
+
+    #import "Collections"
+
     using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `app::player::PlayerStateParameter`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct PlayerStateParameter
+    {
+        [FieldOffset(0x10)] public ObjectMoveArray<Memory.Pointer<StateParameter>> StateParameters;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::StateParameter`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct StateParameter
+    {
+        VFUNCTION_PTR(StateParameter, 2, uint, GetNameHash)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::StateSpringJump::Parameter`.
+    /// </summary>
+    [Helpers.InternalName("StateSpringJump::Parameter"), StructLayout(LayoutKind.Explicit)]
+    public struct StateSpringJumpParameter
+    {
+        [FieldOffset(0)] public StateParameter Base;
+
+        [FieldOffset(0x50)] public int Flags;
+    }
 
     /// <summary>
     /// A struct representation of `app::player::StateDoubleJump`.
