@@ -1,6 +1,17 @@
 Library "Plugins" by "Hyper"
 {
+    #lib "Player"
+
     using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `app::player::StatePluginAirTrick`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit)]
+    public struct StatePluginAirTrick
+    {
+        [FieldOffset(0x3D)] public bool IsEnabled;
+    }
 
     /// <summary>
     /// A struct representation of `app::player::StatePluginBoost`.
@@ -62,11 +73,73 @@ Library "Plugins" by "Hyper"
     }
 
     /// <summary>
-    /// A struct representation of `app::player::StatePluginAirTrick`.
+    /// A struct representation of `app::player::StatePluginQuickStep`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit)]
-    public struct StatePluginAirTrick
+    public struct StatePluginQuickStep
     {
-        [FieldOffset(0x3D)] public bool IsEnabled;
+        /// <summary>
+        /// The type of the current quick step spline.
+        /// </summary>
+        [FieldOffset(0x29)] public QuickStepLineType LineType;
+
+        /// <summary>
+        /// The index of the current quick step lane.
+        /// </summary>
+        [FieldOffset(0x2A)] public byte LineIndex;
+
+        /// <summary>
+        /// An enum representing the quick step line types.
+        /// </summary>
+        public enum QuickStepLineType : byte
+        {
+            Line2_Left,
+            Line2_Right,
+            Line3,
+            Line5,
+            Line1
+        }
+
+        public static bool IsQuickStepLegal(bool in_quickStepRight = false)
+        {
+            var pStatePluginQuickStep = Player.State.GetStatePlugin<StatePluginQuickStep>();
+
+            if (pStatePluginQuickStep == null)
+                return false;
+
+            if (in_quickStepRight)
+            {
+                switch (pStatePluginQuickStep->LineType)
+                {
+                    case QuickStepLineType.Line2_Left:
+                        return pStatePluginQuickStep->LineIndex == 0;
+
+                    case QuickStepLineType.Line3:
+                        return pStatePluginQuickStep->LineIndex != 2;
+
+                    // TODO: verify this.
+                    case QuickStepLineType.Line5:
+                        return pStatePluginQuickStep->LineIndex != 3;
+
+                    default:
+                        return false;
+                }
+            }
+            else
+            {
+                switch (pStatePluginQuickStep->LineType)
+                {
+                    case QuickStepLineType.Line2_Right:
+                        return pStatePluginQuickStep->LineIndex == 2;
+
+                    case QuickStepLineType.Line3:
+                    case QuickStepLineType.Line5: // TODO: verify this.
+                        return pStatePluginQuickStep->LineIndex != 1;
+
+                    default:
+                        return false;
+                }
+            }
+        }
     }
 }
