@@ -7,6 +7,7 @@ This state lasts a fraction of a second, but keep in mind that within that time,
 //
     #include "BlackboardStatus" noemit
     
+    #lib "HMM"
     #lib "Player"
 
     #load "System.Numerics.dll"
@@ -15,10 +16,14 @@ This state lasts a fraction of a second, but keep in mind that within that time,
 
     using System.Numerics;
     using System.Collections.Generic;
+    
+    static bool _isInitialised = false;
+    static bool _isRecoveryJumpCharging = false;
+    static bool _isSpinDashAutoRunAllowed = false;
 
-    static Vector3 LastGroundedPosition;
+    static Vector3 _lastGroundedPosition;
 
-    static List<Sonic.StateID> ExitStates = new()
+    static List<Sonic.StateID> _exitStates = new()
     {
         Sonic.StateID.StateJump,
         Sonic.StateID.StateRecoveryJump,
@@ -27,14 +32,14 @@ This state lasts a fraction of a second, but keep in mind that within that time,
         Sonic.StateID.StateRecovery
     };
 
-    static float HeightFallen = 0.0f;
-    
-    static bool IsInitialised = false;
-    static bool IsRecoveryJumpCharging = false;
+    static float _heightFallen = 0.0f;
 //
 {
-    if (!IsInitialised)
+    if (!_isInitialised)
     {
+        if (HMM.GetCodes().Contains("Allow Spin Dash During Auto Run"))
+            _isSpinDashAutoRunAllowed = true;
+            
         Sonic.StateID NotifyStateSpringJumpHeadLandDamageCollision(Sonic.StateID in_stateId, Sonic.StateID[] in_stateStackTrace)
         {
             bool isStateSpringJumpHeadLand = in_stateId == Sonic.StateID.StateSpringJumpHeadLand;
@@ -53,7 +58,7 @@ This state lasts a fraction of a second, but keep in mind that within that time,
 
         Player.State.AddStateNotifyAction<Sonic.StateID>(NotifyStateSpringJumpHeadLandDamageCollision);
 
-        IsInitialised = true;
+        _isInitialised = true;
     }
 
     var kinematics = Player.Kinematics.Get();
@@ -64,7 +69,7 @@ This state lasts a fraction of a second, but keep in mind that within that time,
     var pStateRecoveryJump = Player.State.GetState<StateRecoveryJump>();
 
     if (pStateRecoveryJump != null)
-        IsRecoveryJumpCharging = pStateRecoveryJump->IsDropDashCharge;
+        _isRecoveryJumpCharging = pStateRecoveryJump->IsDropDashCharge;
 
     if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateSpringJumpHeadLand)
     {
@@ -76,18 +81,22 @@ This state lasts a fraction of a second, but keep in mind that within that time,
 
         if (Player.Input.IsPressed(Player.InputActionType.PlayerSonicboom))
         {
+            if (!_isSpinDashAutoRunAllowed && IS_WORLD_FLAG(IsAutoRun))
+                goto CheckGrounded;
+            
             Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateSpinBoost);
         }
     }
 
+CheckGrounded:
     if (Player.Status.IsGrounded())
     {
-        LastGroundedPosition = kinematics->Position;
+        _lastGroundedPosition = kinematics->Position;
 
-        if (!ExitStates.Contains(Player.State.GetPreviousStateID<Sonic.StateID>()))
+        if (!_exitStates.Contains(Player.State.GetPreviousStateID<Sonic.StateID>()))
             goto Reset;
 
-        if (Player.Kinematics.GetHorizontalMagnitude() > 15.0f && HeightFallen >= 5.0f)
+        if (Player.Kinematics.GetHorizontalMagnitude() > 15.0f && _heightFallen >= 5.0f)
         {
             if (IS_STATE_FLAG(IsBoost))
             {
@@ -97,25 +106,25 @@ This state lasts a fraction of a second, but keep in mind that within that time,
             }
 
             // Allow StateRecoveryJump to enter StateDropDash.
-            if (Player.State.GetPreviousStateID<Sonic.StateID>() == Sonic.StateID.StateRecoveryJump && IsRecoveryJumpCharging)
+            if (Player.State.GetPreviousStateID<Sonic.StateID>() == Sonic.StateID.StateRecoveryJump && _isRecoveryJumpCharging)
                 goto Reset;
             
             Player.State.SetState(Sonic.StateID.StateSpringJumpHeadLand);
         }
         
     Reset:
-        HeightFallen = 0.0f;
+        _heightFallen = 0.0f;
     }
     else
     {
         /* Reset position if the player has reached
            apex height and has begun falling again. */
-        if ((LastGroundedPosition.Y - kinematics->Position.Y) < HeightFallen)
+        if ((_lastGroundedPosition.Y - kinematics->Position.Y) < _heightFallen)
         {
-            LastGroundedPosition = kinematics->Position;
+            _lastGroundedPosition = kinematics->Position;
         }
 
-        HeightFallen = LastGroundedPosition.Y - kinematics->Position.Y;
+        _heightFallen = _lastGroundedPosition.Y - kinematics->Position.Y;
     }
 }
 

@@ -3,7 +3,6 @@ Code "Allow Spin Dash During Auto Run" in "Gameplay" by "Hyper" does "Allows the
     #include "BlackboardStatus" noemit
 
     #lib "Player"
-    #lib "Time"
     #lib "XInput"
 
     #import "Plugins"
