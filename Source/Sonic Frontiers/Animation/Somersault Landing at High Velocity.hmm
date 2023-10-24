@@ -105,6 +105,10 @@ CheckGrounded:
                     goto Reset;
             }
 
+            // Prevent somersault landing on walls.
+            if (IS_STATE_FLAG(IsWallClimb))
+                goto Reset;
+
             // Allow StateRecoveryJump to enter StateDropDash.
             if (Player.State.GetPreviousStateID<Sonic.StateID>() == Sonic.StateID.StateRecoveryJump && _isRecoveryJumpCharging)
                 goto Reset;
