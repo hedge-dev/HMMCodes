@@ -917,6 +917,11 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
             
             GET_FUNCTION_PTR(fpSetState)(pPlayerContext->pGOCPlayerHsm, (int)(object)in_destination, 0);
         }
+
+        public static bool IsStateActive<T>(params T[] in_states)
+        {
+            return in_states.Contains(GetCurrentStateID<T>());
+        }
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
