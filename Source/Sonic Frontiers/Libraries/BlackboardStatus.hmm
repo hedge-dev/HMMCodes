@@ -306,12 +306,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
         /// <summary>
         /// The player has used a spring.
         /// </summary>
-        IsSpringJump = 0x21,
-
-        /// <summary>
-        /// The player has Phantom Rush.
-        /// </summary>
-        IsPhantomRush = 0x26
+        IsSpringJump = 0x21
     }
 
     /// <summary>
@@ -322,7 +317,47 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
         /// <summary>
         /// The player is using perfect parry.
         /// </summary>
-        IsPerfectParry = 0x10
+        IsPerfectParry = 0x10,
+
+        /// <summary>
+        /// The player has Cyclone Kick unlocked.
+        /// </summary>
+        IsCycloneKick = 0x2A,
+
+        /// <summary>
+        /// The player has Sonic Boom unlocked.
+        /// </summary>
+        IsSonicBoom = 0x2D,
+
+        /// <summary>
+        /// The player has Wild Rush unlocked.
+        /// </summary>
+        IsWildRush = 0x2E,
+
+        /// <summary>
+        /// The player has Loop Kick unlocked.
+        /// </summary>
+        IsLoopKick = 0x2F,
+
+        /// <summary>
+        /// The player has Spin Slash unlocked.
+        /// </summary>
+        IsSpinSlash = 0x30,
+
+        /// <summary>
+        /// The player has Stomp Attack unlocked.
+        /// </summary>
+        IsStompAttack = 0x31,
+
+        /// <summary>
+        /// The player has Homing Shot unlocked.
+        /// </summary>
+        IsHomingShot = 0x33,
+
+        /// <summary>
+        /// The player has Cross Slash unlocked.
+        /// </summary>
+        IsCrossSlash = 0x34
     }
 
     /// <summary>
