@@ -1,4 +1,4 @@
-Patch "59.94 FPS Cap" in "Graphics" by "PTKickass" 
+Patch "59.94 FPS Cap" in "Graphics" by "PTKay" 
 static float FPS = 59.94f; 
 
 fixed (float* pFPS = &FPS)
