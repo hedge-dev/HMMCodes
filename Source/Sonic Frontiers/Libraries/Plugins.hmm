@@ -73,6 +73,21 @@ Library "Plugins" by "Hyper"
     }
 
     /// <summary>
+    /// A struct representation of `app::player::StatePluginBattle`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit)]
+    public struct StatePluginBattle
+    {
+        [FieldOffset(0x7C)] public BattleFlags Flags;
+
+        [Flags]
+        public enum BattleFlags : short
+        {
+            IsPhantomRush = 0x200
+        }
+    }
+
+    /// <summary>
     /// A struct representation of `app::player::StatePluginBoost`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit)]
