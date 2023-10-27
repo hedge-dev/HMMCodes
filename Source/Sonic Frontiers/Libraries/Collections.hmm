@@ -8,6 +8,59 @@ Library "Collections" by "Sajid & Hyper" does "Provides extended collection type
     using System.Runtime.InteropServices;
     using System.Text;
 
+    #define MAKE_BITSET_TYPE(NAME, TYPE) \
+        public struct NAME \
+        { \
+            public TYPE Value; \
+\
+            public void Reset() \
+            { \
+                Value = 0; \
+            } \
+\
+            public void Reset(TYPE in_bitIndex) \
+            { \
+                Value &= (TYPE)(~((TYPE)1 << (int)in_bitIndex)); \
+            } \
+\
+            public void Flip(TYPE in_bitIndex) \
+            { \
+                Value ^= (TYPE)(((TYPE)1 << (int)in_bitIndex)); \
+            } \
+\
+            public void Set() \
+            { \
+                Value = TYPE.MaxValue; \
+            } \
+\
+            public void Set(TYPE in_bitIndex) \
+            { \
+                Value |= (TYPE)(((TYPE)1 << (int)in_bitIndex)); \
+            } \
+\
+            public void Set(TYPE in_bitIndex, bool in_isEnabled) \
+            { \
+                if (in_isEnabled) \
+                { \
+                    Set(in_bitIndex); \
+                } \
+                else \
+                { \
+                    Reset(in_bitIndex); \
+                } \
+            } \
+\
+            public bool Test(TYPE in_bitIndex) \
+            { \
+                return (Value & (TYPE)(((TYPE)1 << (int)in_bitIndex))) != 0; \
+            } \
+        }
+    
+    MAKE_BITSET_TYPE(BitSet8, byte);
+    MAKE_BITSET_TYPE(BitSet16, ushort);
+    MAKE_BITSET_TYPE(BitSet32, uint);
+    MAKE_BITSET_TYPE(BitSet64, ulong);
+
     private readonly nint SIGN_BIT = (nint)((1u << ((sizeof(nint) * sizeof(byte)) - 1)));
     
     /// <summary>
