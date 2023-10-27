@@ -10,6 +10,61 @@ Library "States" by "Hyper"
     using System.Runtime.InteropServices;
 
     /// <summary>
+    /// A struct representation of `hh::ut::internal::StateImpl`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x30)]
+    public struct StateImpl
+    {
+        [FieldOffset(0x18)] public int StateID;
+    }
+
+    /// <summary>
+    /// A struct representation of `hh::ut::internal::StateDescImpl`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct StateDescImpl
+    {
+        [FieldOffset(0)] public Helpers.UnmanagedString Name;
+    }
+
+    /// <summary>
+    /// A struct representation of `hh::ut::StateBase`.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Size = 0xB0)]
+    public struct StateBase
+    {
+        public StateImpl Base;
+    }
+
+    /// <summary>
+    /// A struct representation of `hh::ut::StateBase`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x20)]
+    public struct StateDesc { }
+
+    /// <summary>
+    /// A struct representation of `hh::ut::internal::HsmImpl`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x70)]
+    public struct HsmImpl
+    {
+        [FieldOffset(0x0C)] public int CurrentStateIndex;
+
+        [FieldOffset(0x20)] public ObjectMoveArray<Memory.Pointer<StateImpl>> States;
+
+        [FieldOffset(0x40)] public StateImpl* pState;
+    }
+
+    /// <summary>
+    /// A struct representation of `hh::ut::HsmBase`.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Size = 0x70)]
+    public struct HsmBase
+    {
+        public HsmImpl Base;
+    }
+
+    /// <summary>
     /// A struct representation of `app::player::PlayerStateParameter`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0x18)]

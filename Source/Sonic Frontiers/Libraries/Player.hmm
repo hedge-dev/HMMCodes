@@ -798,7 +798,7 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
             if (name != typeof(T).Name)
                 return null;
             
-            return (T*)pGOCPlayerHsm->pState;
+            return (T*)pGOCPlayerHsm->Hsm.Base.pState;
         }
 
         public static StatePluginBase* GetStatePlugin(string in_pluginName)

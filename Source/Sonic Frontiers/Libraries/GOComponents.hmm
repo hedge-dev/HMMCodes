@@ -92,9 +92,9 @@ Library "GOComponents" by "Hyper"
     public struct GOCPlayerHsm
     {
         /// <summary>
-        /// A pointer to an instance of `app::player::PlayerStateActionBase`.
+        /// A pointer to an instance of `hh::ut::HsmBase`.
         /// </summary>
-        [FieldOffset(0xC8)]  public long pState;
+        [FieldOffset(0x88)]  public HsmBase Hsm;
 
         /// <summary>
         /// A pointer to an instance of `app::player::PlayerStateParameter`.
@@ -115,6 +115,18 @@ Library "GOComponents" by "Hyper"
         /// The current state's parent ID.
         /// </summary>
         [FieldOffset(0x118)] public int ParentStateID;
+
+        /// <summary>
+        /// Gets the current state ID.
+        /// </summary>
+        /// <returns>The current state ID.</returns>
+        public int GetStateID()
+        {
+            if (Hsm.Base.CurrentStateIndex != 0)
+                return Hsm.Base.States[Hsm.Base.CurrentStateIndex - 1].pData->StateID;
+
+            return -1;
+        }
     }
 
     /// <summary>
