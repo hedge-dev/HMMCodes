@@ -823,25 +823,25 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
 
         MAKE_STATIC_GENERIC_API(GetStatePlugin)
 
-        public static long GetStateParameter(string in_parameterName)
+        public static StateParameter* GetStateParameter(string in_parameterName)
         {
             var pPlayerContext = GetPlayerContext();
 
             if (pPlayerContext == null)
-                return 0;
+                return null;
             
             var pPlayerStateParameter = pPlayerContext->pGOCPlayerHsm->pPlayerStateParameter;
 
             if (pPlayerStateParameter == null)
-                return 0;
+                return null;
 
             foreach (var pStateParameter in pPlayerStateParameter->StateParameters)
             {
                 if (pStateParameter.pData->GetNameHash()() == StringMapOperation.ComputeHash(in_parameterName))
-                    return (long)pStateParameter.pData;
+                    return pStateParameter.pData;
             }
 
-            return 0;
+            return null;
         }
 
         MAKE_STATIC_GENERIC_API(GetStateParameter)
