@@ -7,6 +7,7 @@ Library "GOComponents" by "Hyper"
     #lib "Player"
     #lib "PlayerEffect"
 
+    #import "Plugins"
     #import "States"
 
     #load "System.Numerics.dll"
@@ -103,7 +104,17 @@ Library "GOComponents" by "Hyper"
         /// <summary>
         /// A pointer to an instance of `app::player::StatePluginManager<app::player::PlayerHsmContext>`.
         /// </summary>
-        [FieldOffset(0x108)] public long pStatePluginManager;
+        [FieldOffset(0x108)] public StatePluginManager* pStatePluginManager;
+
+        /// <summary>
+        /// The current state ID.
+        /// </summary>
+        [FieldOffset(0x114)] public int StateID;
+
+        /// <summary>
+        /// The current state's parent ID.
+        /// </summary>
+        [FieldOffset(0x118)] public int ParentStateID;
     }
 
     /// <summary>

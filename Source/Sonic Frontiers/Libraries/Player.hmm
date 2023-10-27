@@ -26,6 +26,7 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
     #lib "TailsParameters"
 
     #import "GOComponents"
+    #import "Plugins"
     #import "Services"
     #import "States"
 
@@ -63,6 +64,11 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
     [StructLayout(LayoutKind.Explicit, Size = 0x88)]
     public struct PlayerHsmContext
     {
+        /// <summary>
+        /// A pointer to an instance of `app::player::Player`.
+        /// </summary>
+        [FieldOffset(0x20)] public Data* pPlayer;
+
         /// <summary>
         /// A pointer to an instance of `app::player::BlackboardStatus`.
         /// </summary>
@@ -336,11 +342,11 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
     {
         /* 0x1408DF420 */
         private static long _sigPlayEffect = ScanSignature("\x48\x8B\xC4\x48\x89\x58\x08\x48\x89\x68\x18\x48\x89\x70\x20\x57\x48\x81\xEC\xA0\x00\x00\x00\xF3", "xxxxxxxxxxxxxxxxxxxxxxxx");
-        FUNCTION_PTR(long, fpPlayEffect, _sigPlayEffect, long in_pStatePluginEffect, uint in_handleNameHash, long in_pEffectName)
+        FUNCTION_PTR(long, fpPlayEffect, _sigPlayEffect, StatePluginBase* in_pStatePluginEffect, uint in_handleNameHash, long in_pEffectName)
 
         /* 0x14B912E80 */
         private static long _sigStopEffect = ScanSignature("\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x8B\x41\x30\x48\x8D", "xxxxxxxxxxxxxxxx");
-        FUNCTION_PTR(long, fpStopEffect, _sigStopEffect, long in_pStatePluginEffect, uint in_handleNameHash)
+        FUNCTION_PTR(long, fpStopEffect, _sigStopEffect, StatePluginBase* in_pStatePluginEffect, uint in_handleNameHash)
 
         /* 0x140901E20 */
         private static long _sigPlayAnimationEffect = ScanSignature("\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x48\x8B\xF2\x48\x8B\xF9\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD8", "xxxxxxxxxxxxxxxxxxxxxx????xxx");
@@ -354,7 +360,7 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
         {
             var pStatePluginEffect = State.GetStatePlugin("StatePluginEffect");
 
-            if (pStatePluginEffect == 0)
+            if (pStatePluginEffect == null)
                 return;
 
             GET_FUNCTION_PTR(fpPlayEffect)(pStatePluginEffect, StringMapOperation.ComputeHash(in_handleName), TO_STRING_PTR(in_effectName));
@@ -364,7 +370,7 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
         {
             var pStatePluginEffect = State.GetStatePlugin("StatePluginEffect");
 
-            if (pStatePluginEffect == 0)
+            if (pStatePluginEffect == null)
                 return;
 
             GET_FUNCTION_PTR(fpStopEffect)(pStatePluginEffect, StringMapOperation.ComputeHash(in_handleName));
@@ -662,10 +668,6 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
         public delegate T TStateNotifyAction<T>(T in_stateId, T[] in_stateStackTrace);
         private static List<Delegate> _stateNotifyActions = new();
 
-        /* 0x140124200 */
-        private static long _sigGetStatePlugin = ScanSignature("\x48\x89\x5C\x24\x08\x48\x89\x6C\x24\x10\x48\x89\x74\x24\x18\x57\x48\x83\xEC\x20\x48\x8B\x59\x18\x8B", "xxxxxxxxxxxxxxxxxxxxxxxxx");
-        FUNCTION_PTR(long, fpGetStatePlugin, _sigGetStatePlugin, long in_pStatePluginManager, uint in_pluginNameHash)
-
         /* 0x140802400 */
         private static long _sigSetState = ScanSignature("\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x48\x8B\xD9\x41\x8B\xF8\x48\x81\xC1\x88\x00\x00\x00\x8B\xF2\xE8\xCC\xCC\xCC\xCC\x3B", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx????x");
         FUNCTION_PTR(void, fpSetState, _sigSetState, GOCPlayerHsm* in_pGOCPlayerHsm, int in_stateId, int in_unk1)
@@ -799,22 +801,27 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
             return (T*)pGOCPlayerHsm->pState;
         }
 
-        public static long GetStatePlugin(string in_pluginName)
+        public static StatePluginBase* GetStatePlugin(string in_pluginName)
         {
-            var pPlayerContext = GetPlayerContext();
+            var pPlayer = Player.GetPlayerData();
 
-            if (pPlayerContext == null)
-                return 0;
+            if (pPlayer == null)
+                return null;
 
-            return GET_FUNCTION_PTR(fpGetStatePlugin)(pPlayerContext->pGOCPlayerHsm->pStatePluginManager, StringMapOperation.ComputeHash(in_pluginName));
+            var pGOCPlayerHsm = pPlayer->pContext->pGOCPlayerHsm;
+
+            if (pGOCPlayerHsm == null)
+                return null;
+
+            var pStatePluginManager = pGOCPlayerHsm->pStatePluginManager;
+
+            if (pStatePluginManager == null)
+                return null;
+
+            return pStatePluginManager->GetStatePlugin(in_pluginName);
         }
 
-        public static T* GetStatePlugin<T>() where T : unmanaged
-        {
-            var name = Helpers.GetInternalName(typeof(T));
-        
-            return (T*)GetStatePlugin(string.IsNullOrEmpty(name) ? typeof(T).Name : name);
-        }
+        MAKE_STATIC_GENERIC_API(GetStatePlugin)
 
         public static long GetStateParameter(string in_parameterName)
         {
@@ -837,12 +844,7 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
             return 0;
         }
 
-        public static T* GetStateParameter<T>() where T : unmanaged
-        {
-            var name = Helpers.GetInternalName(typeof(T));
-        
-            return (T*)GetStateParameter(string.IsNullOrEmpty(name) ? typeof(T).Name : name);
-        }
+        MAKE_STATIC_GENERIC_API(GetStateParameter)
 
         public static void AddStateNotifyAction<T>(TStateNotifyAction<T> in_action)
         {

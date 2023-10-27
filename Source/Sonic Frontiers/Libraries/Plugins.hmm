@@ -1,8 +1,67 @@
 Library "Plugins" by "Hyper"
 {
+    #include "Helpers" noemit
+
+    #lib "Helpers"
+    #lib "Memory"
     #lib "Player"
+    #lib "StringMapOperation"
+
+    #import "Collections"
 
     using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `app::player::StatePluginBase`.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Size = 0x28)]
+    public struct StatePluginBase
+    {
+        VFUNCTION_PTR(StatePluginBase, 1, uint, GetNameHash)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::StatePlugin<T>`.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Size = 0x28)]
+    public struct StatePlugin
+    {
+        public StatePluginBase Base;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::PlayerStatePlugin`.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Size = 0x28)]
+    public struct PlayerStatePlugin
+    {
+        public StatePlugin Base;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::StatePluginManager`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x40)]
+    public struct StatePluginManager
+    {
+        [FieldOffset(0x18)] public ObjectMoveArray<Memory.Pointer<StatePluginBase>> Plugins;
+
+        public StatePluginBase* GetStatePlugin(string in_pluginName)
+        {
+            foreach (var pPlugin in Plugins)
+            {
+                if (pPlugin.pData == null)
+                    continue;
+
+                if (pPlugin.pData->GetNameHash()() == StringMapOperation.ComputeHash(in_pluginName))
+                    return pPlugin.pData;
+            }
+
+            return null;
+        }
+
+        MAKE_GENERIC_API(GetStatePlugin)
+    }
 
     /// <summary>
     /// A struct representation of `app::player::StatePluginAirTrick`.
@@ -59,6 +118,11 @@ Library "Plugins" by "Hyper"
             /// The gauge is empty and unusable by the player (in the red zone).
             /// </summary>
             IsGaugeEmpty = 8,
+
+            /// <summary>
+            /// The gauge is currently being displayed.
+            /// </summary>
+            IsGaugeVisible = 0x10,
 
             /// <summary>
             /// The player is Cylooping whilst boosting.
