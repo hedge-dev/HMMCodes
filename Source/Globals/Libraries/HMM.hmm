@@ -47,19 +47,15 @@ Library "HMM" by "Hyper"
         return result;
     }
 
-    public List<string> GetCodes()
+    public Mod GetModByID(string in_id)
     {
-        List<string> result = new();
+        foreach (var mod in GetMods())
+        {
+            if (mod.ID == in_id)
+                return mod;
+        }
 
-        var modsDb = GetModsDatabase();
-
-        if (modsDb == null)
-            return result;
-
-        foreach (var value in modsDb["Codes"].Values)
-            result.Add(value);
-
-        return result;
+        return null;
     }
 
     public List<Mod> FindModsByName(string name)
@@ -73,6 +69,21 @@ Library "HMM" by "Hyper"
                 result.Add(mod);
             }
         }
+
+        return result;
+    }
+
+    public List<string> GetCodes()
+    {
+        List<string> result = new();
+
+        var modsDb = GetModsDatabase();
+
+        if (modsDb == null)
+            return result;
+
+        foreach (var value in modsDb["Codes"].Values)
+            result.Add(value);
 
         return result;
     }
