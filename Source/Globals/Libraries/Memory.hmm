@@ -206,11 +206,11 @@ Library "Memory" by "Hyper & Sajid"
         WriteString(in_location, in_str, Encoding.ASCII);
     }
 
-    public void PrintMemory<T>(long in_address, int in_rowCount) where T : unmanaged
+    public void PrintMemory<T>(IntPtr in_address, int in_rowCount) where T : unmanaged
     {
         for (int i = 0; i < in_rowCount * 16; i += 16)
         {
-            Console.Write($"{(in_address + i):X16}: ");
+            Console.Write($"{(in_address + i).ToInt64():X16}: ");
 
             if (typeof(T) == typeof(byte) || typeof(T) == typeof(sbyte))
             {
@@ -247,7 +247,7 @@ Library "Memory" by "Hyper & Sajid"
         }
     }
 
-    public void PrintMemory(long in_address, int in_rowCount)
+    public void PrintMemory(IntPtr in_address, int in_rowCount)
     {
         PrintMemory<byte>(in_address, in_rowCount);
     }
