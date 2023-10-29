@@ -7,6 +7,9 @@ Library "States" by "Hyper"
 
     #import "Collections"
 
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
     using System.Runtime.InteropServices;
 
     /// <summary>
@@ -70,7 +73,7 @@ Library "States" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x18)]
     public struct PlayerStateParameter
     {
-        [FieldOffset(0x10)] public ObjectMoveArray<Memory.Pointer<StateParameter>> StateParameters;
+        [FieldOffset(0x10)] public ObjectMoveArray<long> StateParameters;
     }
 
     /// <summary>
@@ -79,18 +82,66 @@ Library "States" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x18)]
     public struct StateParameter
     {
+        [FieldOffset(0)]    public long pVftable;
+
+        [FieldOffset(0x08)] public int Flags;
+
+        public StateParameter() { }
+
+        public StateParameter(int in_flags)
+        {
+            Flags = in_flags;
+        }
+
         VFUNCTION_PTR(StateParameter, 2, uint, GetNameHash)
     }
 
     /// <summary>
-    /// A struct representation of `app::player::StateSpringJump::Parameter`.
+    /// A struct representation of `app::player::StateAvoid::Parameter`.
     /// </summary>
-    [Helpers.InternalName("StateSpringJump::Parameter"), StructLayout(LayoutKind.Explicit)]
-    public struct StateSpringJumpParameter
+    [Helpers.InternalName("StateAvoid::Parameter"), StructLayout(LayoutKind.Explicit, Size = 0x30)]
+    public struct StateAvoidParameter
     {
-        [FieldOffset(0)] public StateParameter Base;
+        [FieldOffset(0)]    public StateParameter Base = new StateParameter(1);
 
-        [FieldOffset(0x50)] public int Flags;
+        [FieldOffset(0x10)] public Quaternion Direction;
+
+        [FieldOffset(0x20)] public short UnkShort1;
+
+        public StateAvoidParameter(Quaternion in_direction)
+        {
+            /* 0x14154BE28 */
+            Base.pVftable = Memory.ReadEffectiveAddress
+            (
+                /* 0x1409C59D0 */
+                ScanSignature
+                (
+                    "\x48\x8D\x05\xCC\xCC\xCC\xCC\x8B\x53\x08\x49\x89\x00\x41\x89\x50\x08\x0F\x28\x43\x10\x41\x0F\x11\x40\x10\x0F\xB6\x4B\x20",
+                    "xxx????xxxxxxxxxxxxxxxxxxxxxxx"
+                )
+            );
+
+            Direction = in_direction;
+            UnkShort1 = 1;
+        }
+        
+        /* 0x1409C2AB0 */
+        private static long _sigGetDirectionRelativeToCameraPlane = ScanSignature("\x40\x55\x56\x41\x56\x48\x81\xEC\x00\x01\x00\x00\x48", "xxxxxxxxxxxxx");
+        FUNCTION_PTR(Quaternion*, fpGetDirectionRelativeToCameraPlane, _sigGetDirectionRelativeToCameraPlane, Quaternion* in_pDirection, Player.PlayerHsmContext* in_pPlayerContext, bool in_isLeft)
+
+        public static Quaternion GetDirectionRelativeToCameraPlane(bool in_isRight = false)
+        {
+            Quaternion result = Quaternion.Identity;
+
+            var pPlayerContext = Player.GetPlayerContext();
+
+            if (pPlayerContext == null)
+                return result;
+
+            GET_FUNCTION_PTR(fpGetDirectionRelativeToCameraPlane)(&result, pPlayerContext, !in_isRight);
+
+            return result;
+        }
     }
 
     /// <summary>
@@ -120,6 +171,17 @@ Library "States" by "Hyper"
         /// Determines whether the player is charging a Drop Dash.
         /// </summary>
         [FieldOffset(0xC4)] public bool IsDropDashCharge;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::StateSpringJump::Parameter`.
+    /// </summary>
+    [Helpers.InternalName("StateSpringJump::Parameter"), StructLayout(LayoutKind.Explicit)]
+    public struct StateSpringJumpParameter
+    {
+        [FieldOffset(0)] public StateParameter Base;
+
+        [FieldOffset(0x50)] public int Flags;
     }
 
     /// <summary>

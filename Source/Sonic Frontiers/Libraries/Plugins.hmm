@@ -83,6 +83,9 @@ Library "Plugins" by "Hyper"
         [Flags]
         public enum BattleFlags : short
         {
+            /// <summary>
+            /// The player has Phantom Rush.
+            /// </summary>
             IsPhantomRush = 0x200
         }
     }
