@@ -106,9 +106,9 @@ Library "States" by "Hyper"
 
         [FieldOffset(0x10)] public Quaternion Direction;
 
-        [FieldOffset(0x20)] public short UnkShort1;
+        [FieldOffset(0x20)] public short Flags;
 
-        public StateAvoidParameter(Quaternion in_direction)
+        public StateAvoidParameter()
         {
             /* 0x14154BE28 */
             Base.pVftable = Memory.ReadEffectiveAddress
@@ -120,9 +120,12 @@ Library "States" by "Hyper"
                     "xxx????xxxxxxxxxxxxxxxxxxxxxxx"
                 )
             );
+        }
 
+        public StateAvoidParameter(Quaternion in_direction) : this()
+        {
             Direction = in_direction;
-            UnkShort1 = 1;
+            Flags = 1;
         }
         
         /* 0x1409C2AB0 */
