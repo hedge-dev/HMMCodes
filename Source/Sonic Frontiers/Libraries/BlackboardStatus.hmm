@@ -303,7 +303,12 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     public enum CombatFlags : uint
     {
         /// <summary>
-        /// The player is using perfect parry.
+        /// The player has Parry.
+        /// </summary>
+        IsParry = 0x0F,
+
+        /// <summary>
+        /// The player has Perfect Parry.
         /// </summary>
         IsPerfectParry = 0x10,
 
