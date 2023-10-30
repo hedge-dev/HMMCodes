@@ -1,29 +1,85 @@
-Patch "Allow Boost to Damage Objects" in "Gameplay" by "Hyper" does "Allows Sonic to damage enemies and harder physics objects by boosting through them." 
+Code "Allow Boost to Damage Objects" in "Gameplay" by "Hyper & NM" does "Allows all characters to damage enemies and harder physics objects by boosting through them."
 //
     #include "BlackboardStatus" noemit
 
     #lib "Player"
 
-    static bool IsBoostPrevious = false;
-//
-{
-    Sonic.StateID NotifyStateRunDamageCollision(Sonic.StateID in_stateId, Sonic.StateID[] in_stateStackTrace)
+    // Just for the sake of readability, we'll be condensing multiple state checks for all characters into a single check
+    // We can achieve this through an enum containing state IDs shared between them
+    enum SharedStateID
     {
-        if (in_stateId == Sonic.StateID.StateRun && IS_STATE_FLAG(IsBoost))
-        {
-            Player.Collision.SetCollisionSphere(Player.CollisionType.Damage, 1.0f);
-            Player.Collision.SetEntityCollision(false);
-            IsBoostPrevious = true;
-        }
-        else if (IsBoostPrevious)
-        {
-            Player.Collision.SetCollisionSphere(Player.CollisionType.Default, 1.0f);
-            Player.Collision.SetEntityCollision(true);
-            IsBoostPrevious = false;
-        }
-
-        return in_stateId;
+        StateAirBoost     = 22,
+        StateBumpJump     = 16,
+        StateGrind        = 47,
+        StateGrindDamage  = 50,
+        StateGrindJump    = 48,
+        StateGrindRoot    = 46,
+        StateGrindStep    = 52,
+        StateJump         = 8,
+        StateLeftStepRun  = 74,
+        StateRightStepRun = 75,
+        StateRun          = 4,
+        StateWallMove     = 90,
     }
 
-    Player.State.AddStateNotifyAction<Sonic.StateID>(NotifyStateRunDamageCollision);
+    static bool IsDamageActive = false;
+
+    static bool IsBoosting()
+    {
+        if (!IS_STATE_FLAG(IsBoost))
+            return false;
+
+        // The player is still considered to be boosting if the respective input remains pressed after entering a new state,
+        // i.e parrying
+        // We'll need to make sure this doesn't affect the code in gameplay
+        if (!Player.State.IsStateActive(
+            SharedStateID.StateAirBoost,
+            SharedStateID.StateBumpJump,
+            SharedStateID.StateGrind,
+            SharedStateID.StateGrindDamage,
+            SharedStateID.StateGrindJump,
+            SharedStateID.StateGrindRoot,
+            SharedStateID.StateGrindStep,
+
+            // Valid when "Maintain boost during a jump" is enabled
+            SharedStateID.StateJump,
+
+            SharedStateID.StateLeftStepRun,
+            SharedStateID.StateRightStepRun,
+            SharedStateID.StateRun,
+            SharedStateID.StateWallMove
+        ))
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+//
+{
+    bool isBoosting = IsBoosting();
+
+    // If we've begun boosting, we'll need to make sure our collision sphere is set only once
+    if (isBoosting && !IsDamageActive)
+    {
+        IsDamageActive = true;
+
+        Player.Collision.SetCollisionSphere(Player.CollisionType.Damage, 1.0f);
+        Player.Collision.SetEntityCollision(true);
+
+        return;
+    }
+
+    // We've finished boosting, so we need to make sure our collision sphere is removed once
+    if (!isBoosting && IsDamageActive)
+    {
+        IsDamageActive = false;
+
+        Player.Collision.SetCollisionSphere(Player.CollisionType.Default, 1.0f);
+        Player.Collision.SetEntityCollision(false);
+
+        return;
+    }
 }
