@@ -1,4 +1,4 @@
-Patch "Disable Cyber Space CRT Effects" in "Graphics" by "Hyper & PTKickass" does "Disables the CRT scanline effect on distant terrain models in Cyber Space." 
+Patch "Disable Cyber Space CRT Effects" in "Graphics" by "Hyper & PTKay" does "Disables the CRT scanline effect on distant terrain models in Cyber Space." 
 {
     WriteProtected<byte>
     (

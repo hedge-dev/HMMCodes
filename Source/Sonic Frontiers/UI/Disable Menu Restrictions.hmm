@@ -1,4 +1,4 @@
-Patch "Disable Menu Restrictions" in "UI" by "Hyper" does 
+Patch "Disable Menu Restrictions" in "UI" by "Hyper" does
 /*
 Removes restrictions from accessing certain menu screens and options.
 
@@ -48,19 +48,6 @@ Notes;
         Assemble("mov byte ptr [rsp + 0x58 + 0xFFFFFFFFFFFFFFF0], 1")
     );
 
-    // Disable map marker lock.
-    WriteProtected<byte>
-    (
-        /* 0x140AB3EB1 */
-        ScanSignature
-        (
-            "\xF6\x87\x1C\x04\x00\x00\x02\x74\x29",
-            "xxxxxxxxx"
-        ),
-
-        Assemble("mov byte ptr [rsi + 0x41C], 2; nop; nop")
-    );
-
     // Disable "Unlock Cyloop" tutorial to prevent softlock.
     WriteNop
     (
@@ -85,5 +72,3 @@ Notes;
         )
     );
 }
-
-

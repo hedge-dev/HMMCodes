@@ -1,6 +1,9 @@
 Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `app::player::BlackboardStatus` from Sonic Frontiers."
 {
+    #include "Helpers" noemit
+
     #import "Blackboard"
+    #import "Collections"
 
     #lib "Player"
 
@@ -20,7 +23,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     /// </example>
     /// <param name="in_name">The name of an enum member from the `StateFlags` enum.</param>
     /// <returns>A boolean value representing whether the state flag is set.</returns>
-    #define IS_STATE_FLAG(in_name) (BlackboardStatus.Get() != null && (BlackboardStatus.Get()->StateFlags & (1L << (int)BlackboardStatus.StateFlags.in_name)) != 0)
+    #define IS_STATE_FLAG(in_name) (BlackboardStatus.Get() != null && BlackboardStatus.Get()->StateFlags.Test((ulong)BlackboardStatus.StateFlags.in_name))
 
     /// <summary>
     /// Sets a state flag.
@@ -38,12 +41,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     /// </example>
     /// <param name="in_name">The name of an enum member from the `StateFlags` enum.</param>
     /// <param name="in_isEnabled">The enabled state of the specified flag.</param>
-    #define SET_STATE_FLAG(in_name, in_isEnabled) \
-        if (BlackboardStatus.Get() != null) \
-            if (in_isEnabled) \
-                BlackboardStatus.Get()->StateFlags |= (1L << (uint)BlackboardStatus.StateFlags.in_name); \
-            else \
-                BlackboardStatus.Get()->StateFlags &= ~(1L << (uint)BlackboardStatus.StateFlags.in_name);
+    #define SET_STATE_FLAG(in_name, in_isEnabled) if (BlackboardStatus.Get() != null) BlackboardStatus.Get()->StateFlags.Set((ulong)BlackboardStatus.StateFlags.in_name, in_isEnabled)
     
     /// <summary>
     /// Determines whether a combat flag is set.
@@ -61,7 +59,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     /// </example>
     /// <param name="in_name">The name of an enum member from the `CombatFlags` enum.</param>
     /// <returns>A boolean value representing whether the combat flag is set.</returns>
-    #define IS_COMBAT_FLAG(in_name) (BlackboardStatus.Get() != null && (BlackboardStatus.Get()->CombatFlags & (1L << (int)BlackboardStatus.CombatFlags.in_name)) != 0)
+    #define IS_COMBAT_FLAG(in_name) (BlackboardStatus.Get() != null && BlackboardStatus.Get()->CombatFlags[(int)BlackboardStatus.CombatFlags.in_name >> 6].Test((ulong)BlackboardStatus.CombatFlags.in_name & 0x3F))
 
     /// <summary>
     /// Sets a combat flag.
@@ -79,12 +77,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     /// </example>
     /// <param name="in_name">The name of an enum member from the `CombatFlags` enum.</param>
     /// <param name="in_isEnabled">The enabled state of the specified flag.</param>
-    #define SET_COMBAT_FLAG(in_name, in_isEnabled) \
-        if (BlackboardStatus.Get() != null) \
-            if (in_isEnabled) \
-                BlackboardStatus.Get()->CombatFlags |= (1L << (int)BlackboardStatus.CombatFlags.in_name); \
-            else \
-                BlackboardStatus.Get()->CombatFlags &= ~(1L << (int)BlackboardStatus.CombatFlags.in_name);
+    #define SET_COMBAT_FLAG(in_name, in_isEnabled) if (BlackboardStatus.Get() != null) BlackboardStatus.Get()->CombatFlags[(int)BlackboardStatus.CombatFlags.in_name >> 6].Set((ulong)BlackboardStatus.CombatFlags.in_name, in_isEnabled)
 
     /// <summary>
     /// Determines whether a world flag is set.
@@ -102,7 +95,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     /// </example>
     /// <param name="in_name">The name of an enum member from the `WorldFlags` enum.</param>
     /// <returns>A boolean value representing whether the world flag is set.</returns>
-    #define IS_WORLD_FLAG(in_name) (BlackboardStatus.Get() != null && (BlackboardStatus.Get()->WorldFlags & (1L << (int)BlackboardStatus.WorldFlags.in_name)) != 0)
+    #define IS_WORLD_FLAG(in_name) (BlackboardStatus.Get() != null && BlackboardStatus.Get()->WorldFlags[(int)BlackboardStatus.WorldFlags.in_name >> 6].Test((ulong)BlackboardStatus.WorldFlags.in_name & 0x3F))
 
     /// <summary>
     /// Sets a world flag.
@@ -120,12 +113,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     /// </example>
     /// <param name="in_name">The name of an enum member from the `WorldFlags` enum.</param>
     /// <param name="in_isEnabled">The enabled state of the specified flag.</param>
-    #define SET_WORLD_FLAG(in_name, in_isEnabled) \
-        if (BlackboardStatus.Get() != null) \
-            if (in_isEnabled) \
-                BlackboardStatus.Get()->WorldFlags |= (1L << (int)BlackboardStatus.WorldFlags.in_name); \
-            else \
-                BlackboardStatus.Get()->WorldFlags &= ~(1L << (int)BlackboardStatus.WorldFlags.in_name);
+    #define SET_WORLD_FLAG(in_name, in_isEnabled) if (BlackboardStatus.Get() != null) BlackboardStatus.Get()->WorldFlags[(int)BlackboardStatus.WorldFlags.in_name >> 6].Set((ulong)BlackboardStatus.WorldFlags.in_name)
 
     using System.Runtime.InteropServices;
     
@@ -148,17 +136,17 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
         /// <summary>
         /// Bit flags representing combat statuses.
         /// </summary>
-        [FieldOffset(0x28)] public long CombatFlags;
+        [FieldOffset(0x28)] UNMANAGED_FIXED_ARRAY(BitSet64, CombatFlags, 2)
 
         /// <summary>
         /// Bit flags representing state statuses.
         /// </summary>
-        [FieldOffset(0x38)] public long StateFlags;
+        [FieldOffset(0x38)] public BitSet64 StateFlags;
 
         /// <summary>
         /// Bit flags representing world statuses.
         /// </summary>
-        [FieldOffset(0x40)] public long WorldFlags;
+        [FieldOffset(0x40)] UNMANAGED_FIXED_ARRAY(BitSet64, WorldFlags, 2)
     }
 
     /// <summary>
@@ -306,12 +294,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
         /// <summary>
         /// The player has used a spring.
         /// </summary>
-        IsSpringJump = 0x21,
-
-        /// <summary>
-        /// The player has Phantom Rush.
-        /// </summary>
-        IsPhantomRush = 0x26
+        IsSpringJump = 0x21
     }
 
     /// <summary>
@@ -320,9 +303,54 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     public enum CombatFlags : uint
     {
         /// <summary>
-        /// The player is using perfect parry.
+        /// The player has Parry.
         /// </summary>
-        IsPerfectParry = 0x10
+        IsParry = 0x0F,
+
+        /// <summary>
+        /// The player has Perfect Parry.
+        /// </summary>
+        IsPerfectParry = 0x10,
+
+        /// <summary>
+        /// The player has Cyclone Kick unlocked.
+        /// </summary>
+        IsCycloneKick = 0x2A,
+
+        /// <summary>
+        /// The player has Sonic Boom unlocked.
+        /// </summary>
+        IsSonicBoom = 0x2D,
+
+        /// <summary>
+        /// The player has Wild Rush unlocked.
+        /// </summary>
+        IsWildRush = 0x2E,
+
+        /// <summary>
+        /// The player has Loop Kick unlocked.
+        /// </summary>
+        IsLoopKick = 0x2F,
+
+        /// <summary>
+        /// The player has Spin Slash unlocked.
+        /// </summary>
+        IsSpinSlash = 0x30,
+
+        /// <summary>
+        /// The player has Stomp Attack unlocked.
+        /// </summary>
+        IsStompAttack = 0x31,
+
+        /// <summary>
+        /// The player has Homing Shot unlocked.
+        /// </summary>
+        IsHomingShot = 0x33,
+
+        /// <summary>
+        /// The player has Cross Slash unlocked.
+        /// </summary>
+        IsCrossSlash = 0x34
     }
 
     /// <summary>
@@ -378,6 +406,11 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
         /// <summary>
         /// The player is in battle.
         /// </summary>
-        IsBattle = 0x3A
+        IsBattle = 0x3A,
+
+        /// <summary>
+        /// The player has Nitro Boost.
+        /// </summary>
+        IsNitroBoost = 0x43
     }
 }

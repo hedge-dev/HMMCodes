@@ -84,7 +84,7 @@ Library "Reflection" by "Hyper"
     #define RFL_GET_CONTEXTUAL_PLAYER_PARAM(in_info, in_hierarchy) \
         (Player.Status.IsSideView() \
             ? in_info.pData->cyberspaceSV.in_hierarchy \
-            : (BlackboardStatus.Get() != null && (BlackboardStatus.Get()->WorldFlags & (1L << (int)BlackboardStatus.WorldFlags.IsCyberSpace)) != 0) \
+            : (BlackboardStatus.Get() != null && BlackboardStatus.Get()->WorldFlags[(int)BlackboardStatus.WorldFlags.IsCyberSpace >> 6].Test((ulong)BlackboardStatus.WorldFlags.IsCyberSpace)) \
                 ? in_info.pData->cyberspace.in_hierarchy \
                 : in_info.pData->forwardView.in_hierarchy)
 
@@ -108,7 +108,7 @@ Library "Reflection" by "Hyper"
     #define RFL_SET_CONTEXTUAL_PLAYER_PARAM(in_info, in_hierarchy, in_value) \
         if (Player.Status.IsSideView()) \
             in_info.pData->cyberspaceSV.in_hierarchy = in_value; \
-        else if ((BlackboardStatus.Get() != null && (BlackboardStatus.Get()->WorldFlags & (1L << (int)BlackboardStatus.WorldFlags.IsCyberSpace)) != 0)) \
+        else if (BlackboardStatus.Get() != null && BlackboardStatus.Get()->WorldFlags[(int)BlackboardStatus.WorldFlags.IsCyberSpace >> 6].Test((ulong)BlackboardStatus.WorldFlags.IsCyberSpace)) \
             in_info.pData->cyberspace.in_hierarchy = in_value; \
         else \
             in_info.pData->forwardView.in_hierarchy = in_value;
@@ -133,7 +133,7 @@ Library "Reflection" by "Hyper"
     #define RFL_RESET_CONTEXTUAL_PLAYER_PARAM(in_info, in_type, in_hierarchy) \
         if (Player.Status.IsSideView()) \
             in_info.pData->cyberspaceSV.in_hierarchy = ((in_type)Reflection.GetOriginalData(in_info.Name)).cyberspaceSV.in_hierarchy; \
-        else if ((BlackboardStatus.Get() != null && (BlackboardStatus.Get()->WorldFlags & (1L << (int)BlackboardStatus.WorldFlags.IsCyberSpace)) != 0)) \
+        else if (BlackboardStatus.Get() != null && BlackboardStatus.Get()->WorldFlags[(int)BlackboardStatus.WorldFlags.IsCyberSpace >> 6].Test((ulong)BlackboardStatus.WorldFlags.IsCyberSpace)) \
             in_info.pData->cyberspace.in_hierarchy = ((in_type)Reflection.GetOriginalData(in_info.Name)).cyberspace.in_hierarchy; \
         else \
             in_info.pData->forwardView.in_hierarchy = ((in_type)Reflection.GetOriginalData(in_info.Name)).forwardView.in_hierarchy;

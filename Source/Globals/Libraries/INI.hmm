@@ -1,4 +1,4 @@
-Library "INI" by "Hyper" 
+Library "INI" by "Hyper"
 {
     using System.Collections.Generic;
     using System.IO;
@@ -48,31 +48,31 @@ Library "INI" by "Hyper"
         return result;
     }
 
-    public T Parse<T>(string value, T defaultValue)
+    public T Parse<T>(string in_value, T in_defaultValue)
     {
-        T result = defaultValue;
+        T result = in_defaultValue;
 
         if (typeof(T) == typeof(string))
         {
-            result = (T)(object)value;
+            result = (T)(object)in_value;
         }
         else if (typeof(T) == typeof(int))
         {
-            if (int.TryParse(value, out int intValue))
+            if (int.TryParse(in_value, out int intValue))
             {
                 result = (T)(object)intValue;
             }
         }
         else if (typeof(T) == typeof(double))
         {
-            if (double.TryParse(value, out double doubleValue))
+            if (double.TryParse(in_value, out double doubleValue))
             {
                 result = (T)(object)doubleValue;
             }
         }
         else if (typeof(T) == typeof(float))
         {
-            if (float.TryParse(value, out float floatValue))
+            if (float.TryParse(in_value, out float floatValue))
             {
                 result = (T)(object)floatValue;
             }
@@ -80,6 +80,15 @@ Library "INI" by "Hyper"
 
         return result;
     }
+
+    public T GetField<T>(Dictionary<string, Dictionary<string, string>> in_ini, string in_section, string in_key, T in_defaultValue)
+    {
+        if (!in_ini.ContainsKey(in_section))
+            return in_defaultValue;
+
+        if (!in_ini[in_section].ContainsKey(in_key))
+            return in_defaultValue;
+
+        return Parse<T>(in_ini[in_section][in_key], in_defaultValue);
+    }
 }
-
-

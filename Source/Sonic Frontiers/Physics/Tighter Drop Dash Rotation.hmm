@@ -1,4 +1,4 @@
-Patch "Tighter Drop Dash Rotation" in "Physics" by "Hyper" does "Allows for tighter steering whilst rolling for more precise movement." 
+Patch "Tighter Drop Dash Rotation" in "Physics" by "Hyper" does "Allows for tighter steering whilst rolling for more precise movement."
 {
     // steeringSpeed#
     WriteAsmHook
@@ -46,5 +46,3 @@ Patch "Tighter Drop Dash Rotation" in "Physics" by "Hyper" does "Allows for tigh
         HookBehavior.Replace
     );
 }
-
-

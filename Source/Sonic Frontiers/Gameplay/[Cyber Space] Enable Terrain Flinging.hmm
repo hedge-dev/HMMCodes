@@ -6,14 +6,24 @@ Notes;
 - This does not allow Sonic to perform air tricks from terrain, use the '[Cyber Space] Enable Air Tricks from Terrain' code to do so.
 */
 //
+    #include "BlackboardStatus" noemit
+    #include "Reflection" noemit
+
     #lib "Reflection"
     #lib "SonicParameters"
 //
 {
+    if (!IS_WORLD_FLAG(IsCyberSpace))
+        return;
+    
     var SonicParametersInfo = Reflection.GetDataInfo<SonicParameters.Root>("player_common");
 
     if (SonicParametersInfo.pData == null)
         return;
 
     SonicParametersInfo.pData->cyberspace.modePackage.tumble = SonicParametersInfo.pData->forwardView.modePackage.tumble;
+
+    bool isNitroBoost = IS_WORLD_FLAG(IsNitroBoost);
+    
+    RFL_SET_PARAM(SonicParametersInfo, cyberspace.modePackage.tumble.enabled, !isNitroBoost);
 }

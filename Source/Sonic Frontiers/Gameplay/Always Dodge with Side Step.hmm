@@ -1,96 +1,61 @@
-Code "Always Dodge with Side Step" in "Gameplay" by "Hyper" does "Always makes Sonic dodge left or right instead of side stepping whilst not running." 
+Code "Always Dodge with Side Step" in "Gameplay" by "Hyper" does "Always makes Sonic dodge left or right instead of side stepping whilst not running."
 //
     #include "BlackboardStatus" noemit
-
-    #lib "Memory"
+    
+    #lib "HMM"
     #lib "Player"
+    #lib "StringMapOperation"
+
+    #import "States"
 
     static bool _isInitialised = false;
-    static bool _isAutoRun = false;
-    static bool _isCyberSpace = false;
-    static bool _isAboveVelocityThreshold = false;
+    static bool _isDodgeAnalog = false;
+    static bool _isDodgeInCyberSpace = false;
+
+    const float _sideStepThreshold = 15.0f;
 //
 {
     if (!_isInitialised)
     {
-        fixed (bool* p_isCyberSpace = &_isCyberSpace)
+        foreach (var code in HMM.GetCodes())
         {
-            /* 0x14BF59240 */
-            long sig = ScanSignature
-            (
-                "\x0F\x29\x7C\x24\x70\x48\x8B\x49\x28",
-                "xxxxxxxxx"
-            );
-
-            if (sig == 0)
-                return;
-
-            // StateStand
-            WriteAsmHook
-            (
-                $@"
-                    movaps xmmword ptr [rsp + 0x88 + 0xFFFFFFFFFFFFFFE8], xmm7
-                    mov    rcx, qword ptr [rcx + 0x28]
-                    mov    edx, 5
-                    mov    rax, {(long)p_isCyberSpace}
-                    cmp    byte ptr [rax], 0
-                    jnz    exit
-                    mov    rax, {Memory.ReadJump(sig + 0x1C)}
-                    jmp    rax
-                exit:
-                ",
-
-                sig,
-
-                HookBehavior.Replace
-            );
-            
-            /* 0x1409D07B6 */
-            sig = ScanSignature
-            (
-                "\x0F\x29\x70\xE8\x48\x8B\x49\x28\xBA\x05\x00\x00\x00\x0F\x29\x78\xD8\xE8\xCC\xCC\xCC\xCC\x84\xC0\x0F\x84\xBE\x02\x00\x00",
-                "xxxxxxxxxxxxxxxxxx????xxxxxxxx"
-            );
-
-            if (sig == 0)
-                return;
-
-            fixed (bool* p_isAutoRun = &_isAutoRun)
-            fixed (bool* p_isAboveVelocityThreshold = &_isAboveVelocityThreshold)
+            switch (code)
             {
-                // StateRun
-                WriteAsmHook
-                (
-                    $@"
-                        movaps xmmword ptr [rax - 0x18], xmm6
-                        mov    rcx, qword ptr [rcx + 0x28]
-                        mov    edx, 5
-                        movaps xmmword ptr [rax - 0x28], xmm7
-                        mov    rax, {(long)p_isCyberSpace}
-                        cmp    byte ptr [rax], 0
-                        jnz    exit
-                        mov    rax, {(long)p_isAutoRun}
-                        cmp    byte ptr [rax], 0
-                        jnz    exit
-                        mov    rax, {(long)p_isAboveVelocityThreshold}
-                        cmp    byte ptr [rax], 0
-                        jnz    exit
-                        mov    rax, {Memory.ReadJump(sig + 0x18)}
-                        jmp    rax
-                    exit:
-                    ",
+                case "Always Dodge in Stick Direction":
+                    _isDodgeAnalog = true;
+                    break;
 
-                    sig,
-
-                    HookBehavior.Replace
-                );
+                case "[Cyber Space] Enable Dodge and Parry":
+                    _isDodgeInCyberSpace = true;
+                    break;
             }
         }
 
         _isInitialised = true;
     }
 
-    _isAutoRun = IS_WORLD_FLAG(IsAutoRun);
-    _isCyberSpace = IS_WORLD_FLAG(IsCyberSpace);
-    _isAboveVelocityThreshold = Player.Kinematics.GetHorizontalMagnitude() >= 15.0f;
+    if (IS_WORLD_FLAG(IsCyberSpace) && !_isDodgeInCyberSpace)
+        return;
+
+    if (Player.Kinematics.GetHorizontalMagnitude() >= _sideStepThreshold)
+        return;
+
+    if (!Player.Status.IsGrounded()   ||
+        IS_WORLD_FLAG(IsOutOfControl) ||
+        IS_WORLD_FLAG(IsAutoRun))
+    {
+        return;
+    }
+
+    if (Player.Input.IsDown(Player.InputActionType.PlayerLeftStep) || Player.Input.IsDown(Player.InputActionType.PlayerRightStep))
+    {
+        if (!_isDodgeAnalog)
+        {
+            var dir = StateAvoidParameter.GetDirectionRelativeToCameraPlane(Player.Input.IsDown(Player.InputActionType.PlayerRightStep));
+
+            Player.State.AddStateParameter<StateAvoidParameter>(new StateAvoidParameter(dir));
+        }
+
+        Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateAvoid);
+    }
 }

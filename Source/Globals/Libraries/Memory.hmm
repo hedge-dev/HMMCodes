@@ -205,6 +205,52 @@ Library "Memory" by "Hyper & Sajid"
     {
         WriteString(in_location, in_str, Encoding.ASCII);
     }
+
+    public void PrintMemory<T>(IntPtr in_address, int in_rowCount) where T : unmanaged
+    {
+        for (int i = 0; i < in_rowCount * 16; i += 16)
+        {
+            Console.Write($"{(in_address + i).ToInt64():X16}: ");
+
+            if (typeof(T) == typeof(byte) || typeof(T) == typeof(sbyte))
+            {
+                for (int j = 0; j < 16; j++)
+                    Console.Write($"{Read<T>(in_address + i + j):X2} ");
+            }
+            else if (typeof(T) == typeof(short) || typeof(T) == typeof(ushort))
+            {
+                for (int j = 0; j < 16; j += 2)
+                    Console.Write($"{Read<T>(in_address + i + j):X4} ");
+            }
+            else if (typeof(T) == typeof(int) || typeof(T) == typeof(uint))
+            {
+                for (int j = 0; j < 16; j += 4)
+                    Console.Write($"{Read<T>(in_address + i + j):X8} ");
+            }
+            else if (typeof(T) == typeof(long) || typeof(T) == typeof(ulong))
+            {
+                for (int j = 0; j < 16; j += 8)
+                    Console.Write($"{Read<T>(in_address + i + j):X16} ");
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                for (int j = 0; j < 16; j += 4)
+                    Console.Write($"{Read<float>(in_address + i + j)} ");
+            }
+            else if (typeof(T) == typeof(double))
+            {
+                for (int j = 0; j < 16; j += 8)
+                    Console.Write($"{Read<double>(in_address + i + j)} ");
+            }
+
+            Console.WriteLine();
+        }
+    }
+
+    public void PrintMemory(IntPtr in_address, int in_rowCount)
+    {
+        PrintMemory<byte>(in_address, in_rowCount);
+    }
     
     public struct Pointer<T> where T : unmanaged
     {

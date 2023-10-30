@@ -5,6 +5,7 @@ Library "Blackboard" by "Hyper, ĐeäTh & Sajid" does "Provides access to `app::
     #import "Collections"
     #import "GOComponents"
 
+    #lib "Helpers"
     #lib "Memory"
     #lib "Player"
     #lib "StringMapOperation"
@@ -107,7 +108,9 @@ Library "Blackboard" by "Hyper, ĐeäTh & Sajid" does "Provides access to `app::
     /// <returns>A pointer to an instance of `app::player::BlackboardContent`.</returns>
     public T* GetBlackboardContent<T>(Data* in_pBlackboard) where T : unmanaged
     {
-        return (T*)GetBlackboardContent(in_pBlackboard, typeof(T).Name);
+        var name = Helpers.GetInternalName(typeof(T));
+        
+        return (T*)GetBlackboardContent(in_pBlackboard, string.IsNullOrEmpty(name) ? typeof(T).Name : name);
     }
 
     /// <summary>
@@ -184,6 +187,8 @@ Library "Blackboard" by "Hyper, ĐeäTh & Sajid" does "Provides access to `app::
     /// <returns>A pointer to an instance of `app::player::BlackboardContent`.</returns>
     public T* GetPlayerBlackboardContent<T>() where T : unmanaged
     {
-        return (T*)GetPlayerBlackboardContent(typeof(T).Name);
+        var name = Helpers.GetInternalName(typeof(T));
+        
+        return (T*)GetPlayerBlackboardContent(string.IsNullOrEmpty(name) ? typeof(T).Name : name);
     }
 }

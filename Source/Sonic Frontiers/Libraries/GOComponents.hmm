@@ -7,6 +7,9 @@ Library "GOComponents" by "Hyper"
     #lib "Player"
     #lib "PlayerEffect"
 
+    #import "Plugins"
+    #import "States"
+
     #load "System.Numerics.dll"
 
     using System.Numerics;
@@ -44,6 +47,21 @@ Library "GOComponents" by "Hyper"
     }
 
     /// <summary>
+    /// A struct representation of `app::player::GOCEventTimer`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0xC8)]
+    public struct GOCEventTimer
+    {
+        [StructLayout(LayoutKind.Explicit, Size = 0x20)]
+        public struct TimerData
+        {
+            [FieldOffset(0x04)] float Duration;
+            [FieldOffset(0x0C)] float TimeYellow;
+            [FieldOffset(0x10)] float TimeRed;
+        }
+    }
+
+    /// <summary>
     /// A struct representation of `app::player::GOCPlayerBlackboard`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0x88)]
@@ -74,14 +92,41 @@ Library "GOComponents" by "Hyper"
     public struct GOCPlayerHsm
     {
         /// <summary>
-        /// A pointer to an instance of `app::player::PlayerStateActionBase`.
+        /// A pointer to an instance of `hh::ut::HsmBase`.
         /// </summary>
-        [FieldOffset(0xC8)]  public long pState;
+        [FieldOffset(0x88)]  public HsmBase Hsm;
+
+        /// <summary>
+        /// A pointer to an instance of `app::player::PlayerStateParameter`.
+        /// </summary>
+        [FieldOffset(0x100)] public PlayerStateParameter* pPlayerStateParameter;
 
         /// <summary>
         /// A pointer to an instance of `app::player::StatePluginManager<app::player::PlayerHsmContext>`.
         /// </summary>
-        [FieldOffset(0x108)] public long pStatePluginManager;
+        [FieldOffset(0x108)] public StatePluginManager* pStatePluginManager;
+
+        /// <summary>
+        /// The current state ID.
+        /// </summary>
+        [FieldOffset(0x114)] public int StateID;
+
+        /// <summary>
+        /// The current state's parent ID.
+        /// </summary>
+        [FieldOffset(0x118)] public int ParentStateID;
+
+        /// <summary>
+        /// Gets the current state ID.
+        /// </summary>
+        /// <returns>The current state ID.</returns>
+        public int GetStateID()
+        {
+            if (Hsm.Base.CurrentStateIndex != 0)
+                return Hsm.Base.States[Hsm.Base.CurrentStateIndex - 1].pData->StateID;
+
+            return -1;
+        }
     }
 
     /// <summary>

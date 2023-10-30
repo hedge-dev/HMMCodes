@@ -16,15 +16,15 @@ Library "MessageManager" by "Sajid"
         [FieldOffset(0x00)] public ReferencedObject Base;
     }
 
-    /* 0x01525C0FDF */
-    private static long _sigMessageManagerSingleton = (long)ScanSignature
+    /* 0x1525C0FDF */
+    private static long _sigMessageManagerSingleton = ScanSignature
     (
         "\x48\x8B\x05\xCC\xCC\xCC\xCC\x48\x89\x43\x20",
         "xxx????xxxx"
     );
 
-    /* 0x01525C0FDF */
-    private static long _sigMessageManagerHandleManagerSingleton = (long)ScanSignature
+    /* 0x1525C0FDF */
+    private static long _sigMessageManagerHandleManagerSingleton = ScanSignature
     (
         "\x48\x89\x05\xCC\xCC\xCC\xCC\x48\x89\xF8",
         "xxx????xxx"
@@ -49,6 +49,7 @@ Library "MessageManager" by "Sajid"
     public Messenger* GetMessengerFromHandle(int handle)
     {
         var manager = GetHandleManager();
+        
         if (manager == null)
             return null;
 
