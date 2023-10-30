@@ -1,0 +1,41 @@
+Code "Gradual Stomp" by "WasifBoomz" in "Physics" does "Stomp slows you down gradually rather than instantly."
+//
+    #lib "Sonic"
+    
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+
+    const float stompStopForce = 60.0f;
+
+    static Vector3 prevVelocity;
+//
+{
+    var kinematics = Player.Kinematics.Get();
+
+    if (kinematics == null)
+        return;
+
+    float yVel = kinematics->Velocity.Y;
+
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateStompingLand)
+    {
+        if (Player.Input.IsDown(Player.InputActionType.PlayerStomping))
+            Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateBounceJump);
+        else
+            Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateRun);
+        kinematics->Velocity = prevVelocity;
+        kinematics->Velocity.Y = yVel;
+    }
+
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateStompingDown)
+    {
+        if (new Vector3(prevVelocity.X,0,prevVelocity.Z).Length() < stompStopForce * Time.GetDeltaTime())
+            kinematics->Velocity = Vector3.Zero;
+        else
+            kinematics->Velocity = Vector3.Normalize(new Vector3(prevVelocity.X, 0, prevVelocity.Z)) * (new Vector3(prevVelocity.X, 0, prevVelocity.Z).Length() - (stompStopForce * Time.GetDeltaTime()));
+        kinematics->Velocity.Y = yVel;
+    }
+
+    prevVelocity = kinematics->Velocity;
+}
