@@ -2,17 +2,17 @@ Library "Helpers" by "Hyper"
 {
     #define UNMANAGED_FUNCTION(returnType, functionName, ...) \
         [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
-        private delegate returnType T##functionName(__VA_ARGS__); \
-        private static T##functionName _del##functionName = new T##functionName(functionName); \
-        private static long _fp##functionName = (long)System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate(_del##functionName); \
-        public returnType functionName(__VA_ARGS__)
+        public delegate returnType T##functionName(__VA_ARGS__); \
+        public static T##functionName _del##functionName = new T##functionName(functionName); \
+        public static long _fp##functionName = (long)System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate(_del##functionName); \
+        public static returnType functionName(__VA_ARGS__)
 
     #define GET_UNMANAGED_FUNCTION_PTR(functionName) _fp##functionName
 
     #define CREATE_FUNCTION_PTR(returnType, functionName, location, ...) \
         [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
-        private delegate returnType T##functionName(__VA_ARGS__); \
-        private static long _addr##functionName = location;
+        public delegate returnType T##functionName(__VA_ARGS__); \
+        public static long _addr##functionName = location;
 
     #define GET_FUNCTION_PTR(functionName) System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<T##functionName>((IntPtr)_addr##functionName)
 
