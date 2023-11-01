@@ -20,7 +20,12 @@ Notes;
 
     #load "System.Numerics.dll"
 
+    using System.Diagnostics;
     using System.Numerics;
+    using System.Runtime.InteropServices;
+
+    [DllImport("user32.dll")]
+    static extern IntPtr GetForegroundWindow();
 
     static string _lastGameModeName = string.Empty;
 
@@ -39,6 +44,9 @@ Notes;
 
         _lastGameModeName = GameMode.GetName();
     }
+
+    if (GetForegroundWindow() != Process.GetCurrentProcess().MainWindowHandle)
+        return;
 
     var kinematics = Player.Kinematics.Get();
 
