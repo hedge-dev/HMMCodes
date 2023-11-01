@@ -1,4 +1,4 @@
-Patch "Hide Sixth Sense Effects" in "Graphics" by "Hyper" does "Hides the particle effect when Sonic senses an enemy attack." 
+Patch "Hide Sixth Sense Effects" in "Graphics/Effects/This/Is/A/Test" by "Hyper" does "Hides the particle effect when Sonic senses an enemy attack." 
 {
     WriteProtected<byte>
     (
