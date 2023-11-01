@@ -12,8 +12,6 @@ Patch "Add Print Function to RSDKv4" in "Debug" by "SuperSonic16" does "Reimplem
 
     long scriptEng_addr = (long)Memory.ReadEffectiveAddress(ProcessScriptv4_FUNC_PRINT + 0x12) - 0x08;
     long scriptText_addr = (long)Memory.ReadEffectiveAddress(ProcessScriptv4_FUNC_PRINT + 0x19);
-    Console.WriteLine($"scriptEng_addr: 0x{scriptEng_addr:X}");
-    Console.WriteLine($"scriptText_addr: 0x{scriptText_addr:X}");
 
     class ConsoleHelper
     {
