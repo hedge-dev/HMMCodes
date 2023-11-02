@@ -1,0 +1,6 @@
+Patch "Never Receive Boost From Drift" in "Gameplay/Items" by "Hyper" 
+WriteProtected<byte>(0xE03E46, 0xD9, 0xEE);
+WriteNop(0xE03E48, 6);
+WriteProtected<byte>(0x15E96B0, 0x00);
+
+

@@ -1,5 +1,0 @@
-Patch "Start Stages with ReadyGo" in "Gameplay" by "Hyper" 
-WriteProtected<byte>(0xD944D3, 0xE9, 0x60, 0x03, 0x00, 0x00);
-WriteNop(0xD94861, 6);
-
-

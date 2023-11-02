@@ -1,0 +1,4 @@
+Code "Disable Planar Reflections" in "Graphics/Quality" by "Skyth" 
+*(bool*)0x1B22E78 = false;
+
+

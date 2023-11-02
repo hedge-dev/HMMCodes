@@ -1,0 +1,4 @@
+Patch "Replay Rescue Cutscenes" in "Gameplay/Event" by "Muzzarino" does "Always plays the rescue cutscenes after finishing a stage and returning to White World." 
+WriteProtected<ushort>(0xD29532, 0x6EB)
+
+

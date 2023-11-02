@@ -1,5 +1,0 @@
-Patch "Start Stages with Dash" in "Gameplay" by "Hyper" 
-WriteProtected<byte>(0xD944D3, 0xE9, 0xC7, 0x00, 0x00, 0x00);
-WriteNop(0xD945C4, 2);
-
-

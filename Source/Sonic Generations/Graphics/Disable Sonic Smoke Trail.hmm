@@ -1,5 +1,0 @@
-Patch "Disable Sonic Smoke Trail" in "Graphics" by "Sajid" 
-Write<byte>(0x1A44AE2, 0)
-WriteNop(0x11A2D28, 23)
-
-

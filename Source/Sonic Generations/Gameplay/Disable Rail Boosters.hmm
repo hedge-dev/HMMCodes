@@ -1,4 +1,0 @@
-Patch "Disable Rail Boosters" in "Gameplay" by "Hyper" 
-WriteProtected<byte>(0x166F238, 0x00);
-
-

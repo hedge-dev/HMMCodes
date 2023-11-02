@@ -1,4 +1,0 @@
-Patch "Disable Homing Attack" in "Gameplay" by "Sajid" 
-WriteProtected<float>(0x1704800, 0)
-
-

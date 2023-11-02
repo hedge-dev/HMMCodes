@@ -1,4 +1,0 @@
-Patch "Disable Fast Fall Animation" in "Graphics" by "Skyth" 
-WriteProtected<byte>(0x111913A, 0xEB);
-
-

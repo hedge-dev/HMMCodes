@@ -1,4 +1,0 @@
-Patch "Win Challenges Without Meeting the Required Amount of Items" in "Cheats" by "Muzzarino" 
-WriteProtected<uint>(0xD0EAB9, 0xCCC301B0)
-
-

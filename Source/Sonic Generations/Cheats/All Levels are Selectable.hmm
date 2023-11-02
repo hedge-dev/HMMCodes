@@ -1,5 +1,0 @@
-Patch "All Levels are Selectable" in "Cheats" by "Muzzarino" 
-WriteProtected<byte>(0xEE5DE8, 0xC)
-WriteProtected<byte>(0xEE6134, 0xC)
-
-

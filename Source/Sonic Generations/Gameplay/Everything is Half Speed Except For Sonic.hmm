@@ -1,5 +1,0 @@
-Code "Everything is 1/2 Speed Except For Sonic" in "Gameplay" by "Sajid" 
-Write<byte>(GetPointer(0x1E0BE5C, 8, 0x19D), 1)
-Write<float>(GetPointer(0x1E0BE5C, 8, 0x1A4), 0.5f)
-
-
