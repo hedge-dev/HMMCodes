@@ -1,4 +1,0 @@
-Patch "Enable DLC Music in Battle Mode" in "Audio" by "ĐeäTh" does "Enables the level music of the DLC levels to play during the game's multiplayer mode." 
-WriteNop(ASLR(0x0095B570), 6)
-
-
