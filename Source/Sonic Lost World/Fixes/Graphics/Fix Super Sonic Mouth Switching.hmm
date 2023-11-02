@@ -1,4 +1,4 @@
-Patch "Fix Super Sonic Mouth Switching" in "Fixes/Animation" by "ĐeäTh & Sajid" does
+Patch "Fix Super Sonic Mouth Switching" in "Fixes/Graphics" by "ĐeäTh & Sajid" does
 /*
 Fixes the double mouth showing up on Super Sonic's Model instead of the mouth swapping working in real time.
 */
