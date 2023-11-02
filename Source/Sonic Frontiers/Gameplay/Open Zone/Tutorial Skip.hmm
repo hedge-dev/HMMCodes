@@ -1,0 +1,62 @@
+Code "Tutorial Skip" in "Gameplay/Open Zone" by "Gordon Ramsay & Hyper" does "Displays a prompt asking if you want to skip the tutorial section on a new save."
+//
+    #lib "Converse"
+    #lib "Lua"
+//
+{
+    Converse.Redirect("skip_tutorial_caption", "Skip the tutorial?");
+    Converse.Redirect("skip_tutorial_body", "Would you like to skip the tutorial? This will place you by\nthe 1-2 Portal with some rings and experience points.\nAll major tutorial flags will be marked as complete.");
+
+    Lua.CreateLineHook
+    (
+        """
+            end -- we're replacing code here and our query removes this from a previous function
+
+            if GetValue("Tutorial", 0) == 0 then
+                ShowYesNoWindowUI("skip_tutorial_caption", "skip_tutorial_body")
+                if GetSelectResult() == 0 then
+                    SetValue("Tutorial", 0, 15)
+                    SetObjStatus("Gate", 2, 0)
+                    SetObjStatus("SequenceCollider", 3, 0)
+                    SetObjStatus("SequenceCollider", 0, 0)
+                    SetObjStatus("Gate", 0, 0)
+                    SetObjStatus("SequenceCollider", 1, 0)
+                    SetValue("EggmanTalkEventStatus", 0, 1)
+                    SetObjStatus("ChaosEmeraldStorage", 1, 1)
+                    SetObjStatus("ChaosEmeraldStorage", 2, 1)
+                    SetObjStatus("ChaosEmeraldStorage", 3, 1)
+                    SetObjStatus("ChaosEmeraldStorage", 4, 1)
+                    SetObjStatus("SequenceCollider", 4, 0)
+                    SetObjStatus("SequenceCollider", 5, 0)
+                    SetObjStatus("SequenceCollider", 6, 0)
+                    SetObjStatus("GiantBridge", 0, 0)
+                    SetObjStatus("SequenceCollider", 2, 0)
+                    SetHUDEnabled("MainMenu", true)
+                    SetHUDEnabled("MapMenu", true)
+                    SetPlayerAbilityEnabled("WallAction", true)
+                    SetPlayerAbilityEnabled("Lockon", true)
+                    SetPlayerAbilityEnabled("Cyloop", true)
+                    SetPlayerAbilityEnabled("ControlMove", true)
+                    SetPlayerAbilityEnabled("ControlCamera", true)
+                    SetPlayerAbilityEnabled("Parry", true)
+                    SetPlayerAbilityEnabled("ComboAttack", true)
+                    SetPlayerAbilityEnabled("Jump", true)
+                    SetPlayerAbilityEnabled("Boost", true)
+                    SetPlayerAbilityEnabled("HomingAttack", true)
+                    PlayerGetItem("Ring", 100)
+                    PlayerGetItem("ExpPoint", 600)
+                    MovedPlayer("Locator_PortalSage1_Sonic", "CONTINUE")
+                    SetValue("PortalBitInputNum", 13, 1)
+                    WaitTime(1)
+                    NotifyAction("MiniBossSpawner0", "on")
+                else
+                    TutorialInitialize()
+                end
+            end
+        """,
+        
+        "w1r03_sequence05.lua", "end\n  TutorialInitialize()",
+        
+        HookBehavior.Replace
+    );
+}

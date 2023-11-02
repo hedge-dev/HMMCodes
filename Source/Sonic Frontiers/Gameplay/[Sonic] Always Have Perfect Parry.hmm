@@ -1,8 +1,0 @@
-Code "[Sonic] Always Have Perfect Parry" by "ĐeäTh" in "Gameplay" does "Enables the perfect parry at all times for Sonic."
-//
-    #include "BlackboardStatus" noemit
-//
-{
-    if (!IS_COMBAT_FLAG(IsPerfectParry))
-        SET_COMBAT_FLAG(IsPerfectParry, true)
-}

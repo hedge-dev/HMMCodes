@@ -1,0 +1,12 @@
+Code "Infinite Phantom Rush Gauge" in "Cheats/Skills" by "Hyper"
+//
+    #lib "BlackboardBattle"
+//
+{
+    var pBlackboardBattle = BlackboardBattle.Get();
+
+    if (pBlackboardBattle == null)
+        return;
+
+    pBlackboardBattle->PhantomRushAmount = 120.0f;
+}

@@ -1,0 +1,26 @@
+Patch "Hide Skill Piece Transition" in "UI/Display" by "Hyper" does "Removes the transition when picking up skill pieces to put them into the skill points display."
+{
+    WriteNop
+    (
+        /* 0x14091857E */
+        ScanSignature
+        (
+            "\xE8\xCC\xCC\xCC\xCC\x48\x8D\x4D\x40\xE8\xCC\xCC\xCC\xCC\x48\x8D\x4D\x10",
+            "x????xxxxx????xxxx"
+        ),
+
+        5
+    );
+
+    WriteNop
+    (
+        /* 0x14098D862 */
+        ScanSignature
+        (
+            "\xE8\xCC\xCC\xCC\xCC\x48\x8D\x4D\xD7\xE8\xCC\xCC\xCC\xCC\x48\x8D\x4D\xA7",
+            "x????xxxxx????xxxx"
+        ),
+
+        5
+    );
+}

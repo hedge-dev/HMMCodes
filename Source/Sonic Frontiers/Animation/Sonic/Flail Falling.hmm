@@ -1,0 +1,51 @@
+Code "Flail Falling" in "Animation/Sonic" by "Hyper" does "Replaces the spinning animation when flinging off terrain with a flailing animation."
+//
+    #include "Helpers" noemit
+
+    #lib "Memory"
+    #lib "Player"
+
+    static bool _isInitialised = false;
+    static bool _isPlayerSonic = false;
+//
+{
+    if (!_isInitialised)
+    {
+        /* 0x14B92ECE7 */
+        long sig = ScanSignature
+        (
+            "\x41\xB0\xFE\x48\x8D\x15\xCC\xCC\xCC\xCC\x48\x89\xC1\xE8\xCC\xCC\xCC\xCC\xB2\x01\x48\x89\xF9\xE8\xCC\xCC\xCC\xCC\x84\xC0",
+            "xxxxxx????xxxx????xxxxxx????xx"
+        );
+
+        fixed (bool* p_isPlayerSonic = &_isPlayerSonic)
+        {
+            WriteAsmHook
+            (
+                $@"
+                    mov  r8b, 0xFE
+                    mov  rdx, {(long)p_isPlayerSonic}
+                    mov  dl, byte ptr [rdx]
+                    cmp  dl, 1
+                    jne  isNotSonic
+                    mov  rdx, {TO_STRING_PTR("BUMP_JUMP")}
+                    jmp  exit
+                isNotSonic:
+                    mov  rdx, {TO_STRING_PTR("BUMP_JUMP_START")}
+                exit:
+                    mov  rcx, rax
+                    mov  rax, {Memory.ReadCall(sig + 0x0D)}
+                    call rax
+                ",
+
+                sig,
+
+                HookBehavior.Replace
+            );
+        }
+
+        _isInitialised = true;
+    }
+
+    _isPlayerSonic = Player.GetPlayerType() == Player.PlayerType.Sonic;
+}

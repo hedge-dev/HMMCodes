@@ -1,0 +1,14 @@
+Patch "Always Trickable Springs" in "Gameplay/Open Zone/Objects" by "Hyper"
+{
+    WriteNop
+    (
+        /* 0x1404A0B76 */
+        ScanSignature
+        (
+            "\x66\x44\x0F\x44\xC8\x66\x44\x89\x8B\x00\x03\x00\x00\x41\x0F\xB7\xC1\x66\x23\xC1\x66\x41\x83\xC9\x20",
+            "xxxxxxxxxxxxxxxxxxxxxxxxx"
+        ),
+
+        5
+    );
+}

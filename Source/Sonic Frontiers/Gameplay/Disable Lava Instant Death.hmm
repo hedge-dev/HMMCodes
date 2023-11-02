@@ -1,35 +1,69 @@
-Code "Disable Lava Instant Death" in "Gameplay" by "Hyper" does "Disables Sonic instantly drowning in lava and makes him jump up from the heat until running out of rings." 
+Code "Disable Lava Instant Death" in "Gameplay" by "Hyper" does "Disables the player instantly drowning in lava and makes them jump up from the heat until running out of rings." 
 //
+    #include "Helpers" noemit
+
     #lib "BlackboardItem"
     #lib "Memory"
+    #lib "Player"
+
+    #import "GOComponents"
 
     static bool _isInitialised = false;
+    static bool _isSonic = false;
 
     static int _ringCount = 0;
+
+    static long _pGOCPlayerVisual = 0;
 //
 {
     if (!_isInitialised)
     {
+        fixed (bool* p_isSonic = &_isSonic)
         fixed (int* p_ringCount = &_ringCount)
+        fixed (long* p_pGOCPlayerVisual = &_pGOCPlayerVisual)
         {
-            /* 0x1408D78F7 */
+            /* 0x14099D457 */
             long sig = ScanSignature
             (
                 "\xF6\x43\x54\x40\x0F\x84\xD0\x00\x00\x00",
                 "xxxxxxxxxx"
             );
+            
+            /* 0x1408122E0 */
+            long sigSetAnimation = ScanSignature
+            (
+                "\x40\x53\x48\x83\xEC\x20\xF6\x81\x78\x01\x00\x00\x10\x48\x8B\xDA",
+                "xxxxxxxxxxxxxxxx"
+            );
 
             WriteAsmHook
             (
                 $@"
-                    mov rcx, {(long)p_ringCount}
-                    cmp dword ptr [rcx], 0
-                    jnz exit
-                    mov rdx, {Memory.ReadJump(sig + 0x04)}
-                    jmp rdx
+                    mov  rcx, {(long)p_ringCount}
+                    cmp  dword ptr [rcx], 0
+                    jnz  doLavaJump
+                default:
+                    mov  rdx, {Memory.ReadJump(sig + 0x04)}
+                    jmp  rdx
+                reanimate:
+                    mov  rcx, {(long)p_pGOCPlayerVisual}
+                    cmp  qword ptr [rcx], 0
+                    je   default
+                    mov  rdx, {TO_STRING_PTR("BUMP_STAGGER_L")}
+                    mov  r8b, 0xFE
+                    mov  rax, {sigSetAnimation}
+                    cmp  qword ptr [rax], 0
+                    je   default
+                    call rax
+                    jmp  setLavaFlag
+                doLavaJump:
+                    mov  rcx, {(long)p_isSonic}
+                    cmp  byte ptr [rcx], 0
+                    je   reanimate
+                setLavaFlag:
+                    lea  edx, dword ptr [rax - 0x03]
+                    mov  r8d, 0x400000
                 exit:
-                    lea edx, dword ptr [rax - 0x03]
-                    mov r8d, 0x400000
                 ",
 
                 sig,
@@ -41,5 +75,7 @@ Code "Disable Lava Instant Death" in "Gameplay" by "Hyper" does "Disables Sonic 
         _isInitialised = true;
     }
 
+    _isSonic = Player.GetPlayerType() == Player.PlayerType.Sonic;
     _ringCount = BlackboardItem.Get() == null ? 0 : BlackboardItem.Get()->RingCount;
+    _pGOCPlayerVisual = Player.GetPlayerData() == null ? 0 : (long)GameObject.GetGOC<GOCPlayerVisual>(&Player.GetPlayerData()->GameObject);
 }

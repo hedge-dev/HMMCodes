@@ -11,15 +11,20 @@ Library "Helpers" by "Hyper & Sajid"
     /// </summary>
     /// <example>
     /// <code><![CDATA[
-    /// Code
-    /// //
+    /// Library
+    /// {
     ///     #include "Helpers" noemit
     ///     
     ///     UNMANAGED_FUNCTION(void, MyUnmanagedFunction, string in_str)
-    /// //
-    /// {
-    ///     // This can be used for mid-asm hooks to call your own functions from the game code.
-    ///     var ptrToMyUnmanagedFunction = GET_UNMANAGED_FUNCTION_PTR(MyUnmanagedFunction);
+    ///     {
+    ///         Console.WriteLine("Hello from native code!");
+    ///     }
+    ///     
+    ///     public void Init()
+    ///     {
+    ///         // This can be used for mid-asm hooks to call your own functions from the game code.
+    ///         var ptrToMyUnmanagedFunction = GET_UNMANAGED_FUNCTION_PTR(MyUnmanagedFunction);
+    ///     }
     /// }
     /// ]]></code>
     /// </example>

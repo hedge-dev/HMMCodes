@@ -1,0 +1,12 @@
+Code "Infinite Quick Cyloop Gauge" in "Cheats/Skills" by "Hyper"
+//
+    #lib "BlackboardBattle"
+//
+{
+    var pBlackboardBattle = BlackboardBattle.Get();
+
+    if (pBlackboardBattle == null)
+        return;
+
+    pBlackboardBattle->QuickCyloopAmount = 120.0f;
+}
