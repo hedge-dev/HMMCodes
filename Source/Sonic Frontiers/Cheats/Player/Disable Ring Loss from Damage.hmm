@@ -1,4 +1,4 @@
-Patch "Disable Ring Loss" in "Cheats/Player" by "M&M" 
+Patch "Disable Ring Loss from Damage" in "Cheats/Player" by "M&M" 
 {
     WriteProtected<byte>
     (
