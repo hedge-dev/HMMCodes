@@ -1,0 +1,7 @@
+Patch "Retain Horizontal Velocity from Jump Dash" in "Physics" by "Ahremic" 
+WriteProtected<byte>(0x01231B0C, 0xE8);// Modern
+WriteNop(0x01231B0D, 4);
+WriteProtected<byte>(0x0122E9BB, 0xE8);// Classic
+WriteNop(0x0122E9BC, 4);
+
+

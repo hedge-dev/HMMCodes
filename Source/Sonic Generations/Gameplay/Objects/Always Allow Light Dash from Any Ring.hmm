@@ -1,0 +1,5 @@
+Patch "Always Allow Light Dash from Any Ring" in "Gameplay/Objects" by "Skyth" 
+WriteProtected<uint>(0x105334D, 0x10C47C6)
+WriteNop(0x1053351, 16)
+
+

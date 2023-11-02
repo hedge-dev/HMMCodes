@@ -1,4 +1,0 @@
-Patch "Disable Loading Hints" in "UI" by "Hyper" does "Disables the Omochao hints on loading screens. This also removes the artificial load times that were added for the hints to be readable." 
-WriteProtected<byte>(0x448959, 0xE9, 0x12, 0x01, 0x00, 0x00);
-
-

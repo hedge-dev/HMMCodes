@@ -1,0 +1,7 @@
+Patch "Force B Rank" in "Cheats/Results" by "brianuuu" 
+string code = @"mov dword ptr [ebx+0x170],2
+mov dword ptr [ebx+0x174],2
+movq xmm0,qword ptr [eax+0x10]"
+WriteAsmHook(code, 0xCFE22B, HookBehavior.Replace)
+
+

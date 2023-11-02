@@ -1,0 +1,5 @@
+Patch "Disable Boost Energy from Enemies" in "Gameplay/Player/Modern Sonic" by "Hyper" does "Disables receiving boost from killing enemies."
+WriteProtected<byte>(0x112435C, 0xE9, 0xAB, 0x00, 0x00, 0x00);
+WriteNop(0x11246D9, 5);
+
+

@@ -1,0 +1,17 @@
+Code "Always Available Super Sonic" in "Cheats/Skills" by "Muzzarino" does "Allows Sonic to transform into Super Sonic, regardless of ring count or whether the skill is equipped." 
+WriteProtected<byte>(0x11D33A4, 0xEB)
+WriteProtected<byte>(0xE634C5, 0)
+WriteProtected<byte>(0x11D67DC, 0xEB)
+WriteProtected<byte>(0x111773A, 0xEB)
+WriteProtected<byte>(0xE55D6A, 0x0)
+WriteProtected<byte>(0xE632F1, 0x0)
+WriteProtected<byte>(0xE634C7, 0x0)
+var ptr0 = GetPointer(0x1E5E2F0, 0x1A5)
+var ptr1 = GetPointer(0x1E5E2F0, 0x1228)
+if (ptr0 != 0 && ptr1 != 0)
+{
+    Write<byte>(ptr0, (byte)(Read<byte>(ptr0) | 0x10))
+    Write<byte>(ptr1, (byte)(Read<byte>(ptr1) | 0x10))
+}
+
+
