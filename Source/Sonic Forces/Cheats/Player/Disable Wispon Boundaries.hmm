@@ -1,0 +1,4 @@
+Patch "Disable Wispon Boundaries" in "Cheats/Player" by "CodenameGamma" 
+WriteNop(0x140267527, 0x00000005)
+
+

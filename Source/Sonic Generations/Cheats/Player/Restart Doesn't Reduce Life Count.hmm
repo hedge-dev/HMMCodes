@@ -1,0 +1,3 @@
+Patch "Restart Doesn't Reduce Life Count" in "Cheats/Player" by "M&M" 
+WriteProtected<byte>(0xD06919, 0xEB, 0x29);
+

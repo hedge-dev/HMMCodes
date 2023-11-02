@@ -1,4 +1,4 @@
-Patch "Always Unlocked All Juke Box Songs" in "Cheats/Items" by "Hyper" 
+Patch "Always Unlocked All Juke Box Songs" in "Cheats/Player" by "Hyper" 
 {
     WriteProtected<byte>
     (

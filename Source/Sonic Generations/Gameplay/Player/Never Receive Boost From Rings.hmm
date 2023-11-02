@@ -1,4 +1,4 @@
-Patch "Never Receive Boost From Rings" in "Gameplay/Items" by "Hyper" 
+Patch "Never Receive Boost From Rings" in "Gameplay/Player" by "Hyper" 
 {
     void NOP(int floatInstrAddr, int paramStrAddr)
     {

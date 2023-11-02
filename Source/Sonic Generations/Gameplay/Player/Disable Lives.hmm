@@ -1,4 +1,4 @@
-Patch "Disable Lives" in "Gameplay/Items" by "Hyper" does "Prevents Sonic from losing lives and removes all 1-UP related items from the stages." 
+Patch "Disable Lives" in "Gameplay/Player" by "Hyper" does "Prevents Sonic from losing lives and removes all 1-UP related items from the stages." 
 WriteNop(0xD59A67, 6);
 WriteNop(0xE68562, 5);
 WriteProtected<byte>(0x1098C82, 0xEB);
