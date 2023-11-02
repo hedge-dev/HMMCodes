@@ -1,4 +1,4 @@
-Patch "Enable Extended Timer in S3K" in "UI" by "SuperSonic16" does "Enables the extended timer similar to what is used in Sonic Mania, Sonic CD and time attack."
+Patch "Enable Extended Timer" in "UI/Sonic 3 & Knuckles" by "SuperSonic16" does "Enables the extended timer similar to what is used in Sonic Mania, Sonic CD and time attack."
 {
     // 0x1401CE6DE + 0x15
     long HUD_Create_3E3 = ScanSignature(

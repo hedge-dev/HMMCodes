@@ -1,4 +1,4 @@
-Patch "Disable Auto Save Icon" in "UI" by "Hyper" 
+Patch "Disable Auto Save Icon" in "UI/Frontend" by "Hyper" 
 {
     WriteProtected<byte>
     (

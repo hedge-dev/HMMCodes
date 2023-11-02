@@ -1,4 +1,9 @@
-Code "Locked 30 FPS for Main Menu" in "Graphics" by "MegAmi" does "Limits the main menu to running at 30 FPS. This works similarly to how the Switch version's FPS cap works, meaning the actual games are unaffected."
+Code "30 FPS" in "Graphics/Frontend/FPS" by "MegAmi" does
+/*
+Limits the main menu to running at 30 FPS.
+
+This works similarly to how the Switch version's FPS cap works, meaning the actual games are unaffected.
+*/
 //
 	#include "ReflectionHelpers" noemit
 

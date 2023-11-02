@@ -1,4 +1,4 @@
-Patch "Enable Debug Mode in S3K" in "Cheats" by "SuperSonic16" does "Enables Debug Mode in Sonic 3 & Knuckles on stage load."
+Patch "Enable Debug Mode" in "Debug/Sonic 3 & Knuckles" by "SuperSonic16" does "Enables Debug Mode in Sonic 3 & Knuckles on stage load."
 {
     // 2.0.1: 0x1401E5BE2
     // mov ecx,00000001
