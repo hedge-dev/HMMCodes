@@ -1,4 +1,4 @@
-Code "Allow Boost to Damage Objects" in "Gameplay" by "Hyper & NM" does "Allows all characters to damage enemies and harder physics objects by boosting through them."
+Code "Allow Boost to Damage Objects" in "Gameplay" by "Hyper & NM" does "Allows the player to damage enemies and harder physics objects by boosting through them."
 //
     #include "BlackboardStatus" noemit
 
