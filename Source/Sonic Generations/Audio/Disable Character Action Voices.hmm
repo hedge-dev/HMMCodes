@@ -1,4 +1,4 @@
-Patch "Disable Character Action Voices" in "Audio/Voice" by "Hyper" 
+Patch "Disable Character Action Voices" in "Audio" by "Hyper" 
 WriteProtected<uint>(0xDF0B96, 0xFFFFFF);  /* 3002_action01 (used for Unleashed jump selector) */
 WriteProtected<uint>(0xDF0C08, 0xFFFFFF);  /* 3002_action01 (used for Unleashed jump selector) */
 WriteProtected<uint>(0xDFC993, 0xFFFFFF);  /* 3002_action01 (used for bouncing off physics objects) */

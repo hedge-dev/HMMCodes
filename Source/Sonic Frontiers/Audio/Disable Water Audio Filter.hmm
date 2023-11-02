@@ -1,4 +1,4 @@
-Patch "Disable Water Audio Filter" in "Audio/Post-processing" by "Hyper" 
+Patch "Disable Water Audio Filter" in "Audio" by "Hyper" 
 {
     WriteProtected<byte>
     (

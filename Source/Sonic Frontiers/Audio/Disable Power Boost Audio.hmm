@@ -1,4 +1,4 @@
-Patch "Disable Power Boost Audio" in "Audio/Skills" by "Hyper"
+Patch "Disable Power Boost Audio" in "Audio" by "Hyper"
 {
     // Activation SFX
     WriteNop
