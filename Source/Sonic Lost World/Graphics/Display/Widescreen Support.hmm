@@ -1,4 +1,4 @@
-Code "Widescreen Support" in "Graphics/Display/Aspect Ratio" by "Muzzarino" does "Dynamically adjusts the aspect ratio to match the game resolution (recommended for ultrawide)." 
+Code "Widescreen Support" in "Graphics/Display" by "Muzzarino" does "Dynamically adjusts the aspect ratio to match the game resolution (recommended for ultrawide)." 
 var ptr = GetPointer(ASLR(0x00FD3CA8))
 WriteProtected<float>(ASLR(0x00D56D30), ptr != 0 ? (float)(Read<uint>(ptr + 0xF8)) / (float)(Read<uint>(ptr + 0xFC)) : 16f / 9f)
 WriteProtected<double>(ASLR(0x00EB2E00), (Double)Read<float>(ASLR(0x00D56D30)))

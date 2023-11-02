@@ -1,0 +1,4 @@
+Patch "16:10" in "Graphics/Display/Internal Resolution" by "ĐeäTh" does "Changes the game in-game resolution to a 16:10 aspect ratio. Perfect for the Steam Deck." 
+WriteProtected<int>(ASLR(0x00D56D30), 0x3FCCCCCD)
+
+
