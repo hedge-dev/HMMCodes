@@ -21,6 +21,11 @@ Library "BlackboardBattle" by "Hyper & ĐeäTh" does "Provides access to `app::p
         [FieldOffset(0xAC)] public float PhantomRushAmount;
 
         /// <summary>
+        /// The number of attack combos performed by the player.
+        /// </summary>
+        [FieldOffset(0xA8)] public int ComboCount;
+
+        /// <summary>
         /// The value of the Quick Cyloop gauge.
         /// </summary>
         [FieldOffset(0xB8)] public float QuickCyloopAmount;
