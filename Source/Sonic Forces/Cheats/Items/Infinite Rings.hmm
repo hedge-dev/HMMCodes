@@ -1,4 +1,4 @@
-Patch "Max Rings" in "Cheats" by "SuperSonic16" 
+Patch "Infinite Rings" in "Cheats/Items" by "SuperSonic16" 
 WriteProtected<uint>(0x1403DA766, 0x0010BBE9)
 WriteProtected<ushort>(0x1403DA76A, 0x9000)
 WriteProtected<uint>(0x1403DB826, 0x0003E7B9)

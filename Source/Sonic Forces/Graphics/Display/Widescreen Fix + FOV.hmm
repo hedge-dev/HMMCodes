@@ -1,4 +1,4 @@
-Patch "Widescreen Fix + FOV" in "Graphics" by "Muzzarino Hezibeth" does "Dynamically adjusts the aspect ratio and field of view to match the game resolution (recommended for ultrawide)." 
+Patch "Widescreen Fix + FOV" in "Graphics/Display" by "Muzzarino Hezibeth" does "Dynamically adjusts the aspect ratio and field of view to match the game resolution (recommended for ultrawide)." 
 WriteProtected<float>(0x141DBED94, 1.7777777777777778f)
 WriteProtected<float>(0x14086BBE3, 1)
 WriteProtected<byte>(0x14086BA8B, 0xE9)
