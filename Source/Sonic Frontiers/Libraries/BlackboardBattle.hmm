@@ -7,7 +7,7 @@ Library "BlackboardBattle" by "Hyper & ĐeäTh" does "Provides access to `app::p
     /// <summary>
     /// A struct representation of `app::player::BlackboardBattle`.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit, Size = 0x100, Pack = 0x10)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x100)]
     public struct Data
     {
         /// <summary>
@@ -29,6 +29,11 @@ Library "BlackboardBattle" by "Hyper & ĐeäTh" does "Provides access to `app::p
         /// The value of the Quick Cyloop gauge.
         /// </summary>
         [FieldOffset(0xB8)] public float QuickCyloopAmount;
+
+        /// <summary>
+        /// Is the Quick Cyloop gauge Active (false) or Charging (true).
+        /// </summary>
+        [FieldOffset(0xF1)] public bool QuickCyloopCharging;
     }
 
     /// <summary>
