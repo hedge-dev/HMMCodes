@@ -7,6 +7,8 @@ Library "GOComponents" by "Hyper"
     #lib "Player"
     #lib "PlayerEffect"
 
+    #import "Cameras"
+    #import "Collections"
     #import "Plugins"
     #import "Postures"
     #import "States"
@@ -48,6 +50,31 @@ Library "GOComponents" by "Hyper"
     }
 
     /// <summary>
+    /// A struct representation of `app::player::GOCCamera`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0xA0)]
+    public struct GOCCamera
+    {
+        [FieldOffset(0x80)] public ObjectMoveArray<CameraControllerWrapper> Cameras;
+
+        public CameraController* GetCameraController(string in_cameraName)
+        {
+            foreach (var pWrapper in Cameras)
+            {
+                if (pWrapper.pCameraController == null)
+                    continue;
+                
+                if (FROM_STRING_PTR(pWrapper.pCameraController->GetName()()) == in_cameraName)
+                    return pWrapper.pCameraController;
+            }
+
+            return null;
+        }
+
+        MAKE_GENERIC_API(GetCameraController)
+    }
+
+    /// <summary>
     /// A struct representation of `app::player::GOCEventTimer`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0xC8)]
@@ -57,7 +84,9 @@ Library "GOComponents" by "Hyper"
         public struct TimerData
         {
             [FieldOffset(0x04)] float Duration;
+
             [FieldOffset(0x0C)] float TimeYellow;
+
             [FieldOffset(0x10)] float TimeRed;
         }
     }

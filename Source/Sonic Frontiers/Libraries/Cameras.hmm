@@ -1,0 +1,91 @@
+Library "Cameras" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    #lib "Helpers"
+    #lib "MathHelpers"
+    #lib "StandardCameraConfig"
+
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of a wrapper for storing instances of `app_cmn::camera::CameraController` in arrays.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct CameraControllerWrapper
+    {
+        [FieldOffset(0)] public CameraController* pCameraController;
+
+        [FieldOffset(0x08)] public long pUnk1;
+
+        [FieldOffset(0x10)] public long pUnk2;
+    }
+
+    /// <summary>
+    /// A struct representation of `app_cmn::camera::CameraController`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0xC8)]
+    public struct CameraController
+    {
+        [FieldOffset(0x20)] public Vector3 Position;
+
+        VFUNCTION_PTR(CameraController, 1, long, GetName)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::camera::StandardCamera`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit)]
+    public struct StandardCamera
+    {
+        [FieldOffset(0)]    public CameraController Base;
+
+        [FieldOffset(0xE8)] public StandardCameraContext* pContext;
+    }
+    
+    /// <summary>
+    /// A struct representation of `app::camera::StandardCameraContext`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x1E0)]
+    public struct StandardCameraContext
+    {
+        [FieldOffset(0x20)]  public StandardCameraConfig.Root* pRflStandardCamera;
+
+        [FieldOffset(0x30)]  public Vector3 Position;
+
+        [FieldOffset(0xB0)]  public float NearPlaneZ;
+
+        [FieldOffset(0xB4)]  public float FarPlaneZ;
+
+        [FieldOffset(0xB8)]  public float FieldOfView;
+
+        [FieldOffset(0xC0)]  public float Distance;
+
+        [FieldOffset(0xC4)]  public float DistanceSuspension;
+
+        [FieldOffset(0xF8)]  public float Elevation;
+
+        [FieldOffset(0x12C)] public float FieldOfViewY;
+
+        [FieldOffset(0x130)] public float FieldOfViewScalar;
+
+        public float GetFieldOfView()
+        {
+            return MathHelpers.ToDegrees(FieldOfView);
+        }
+
+        public void SetFieldOfView(float in_degrees)
+        {
+            float fovY = FieldOfViewY * pRflStandardCamera->option.minFovyRate;
+
+            // HACK (Hyper): temporary fix, limits FOV to 0-89 to prevent unstable game state.
+            // TODO (Hyper): figure out what's causing Bullet to throw up at 90+ FOV.
+            in_degrees = MathHelpers.Clamp(in_degrees, 0.0f, 89.0f);
+            
+            FieldOfViewScalar = ((MathHelpers.ToRadians(in_degrees) - fovY) / (FieldOfViewY - fovY));
+        }
+    }
+}
