@@ -1,4 +1,4 @@
-Code "Gradual Stomp" by "WasifBoomz" in "Physics" does "Stomp slows you down gradually rather than instantly."
+Code "Retain Horizontal Velocity from Stomp" by "WasifBoomz" in "Physics" does "Makes stomp partially retain your last horizontal velocity, rather than falling straight down."
 //
     #lib "Sonic"
     
