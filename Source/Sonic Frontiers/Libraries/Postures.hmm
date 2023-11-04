@@ -1,0 +1,88 @@
+Library "Postures" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    #lib "Memory"
+    #lib "StringMapOperation"
+
+    #import "Collections"
+
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `app::game::PostureImpl`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct PostureImpl { }
+
+    /// <summary>
+    /// A struct representation of `app::player::PostureListener`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit)]
+    public struct PostureListener { }
+
+    /// <summary>
+    /// A struct representation of `app::player::PlayerPosture`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x58)]
+    public struct PlayerPosture
+    {
+        [FieldOffset(0)] public PostureImpl Base;
+
+        VFUNCTION_PTR(PlayerPosture, 1, uint, GetNameHash)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::PostureMoveManager`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x58)]
+    public struct PostureMoveManager
+    {
+        [FieldOffset(0x10)] public ObjectMoveArray<Memory.Pointer<PostureListener>> PostureListeners;
+
+        [FieldOffset(0x50)] public PlayerPosture* pPlayerPosture;
+
+        public T* GetPlayerPosture<T>(string in_postureName) where T : unmanaged
+        {
+            if (pPlayerPosture->GetNameHash()() == StringMapOperation.ComputeHash(in_postureName))
+                return (T*)pPlayerPosture;
+
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::PostureDamageBlowOffHeavy`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit)]
+    public struct PostureDamageBlowOffHeavy
+    {
+        /// <summary>
+        /// The current phase of this posture.
+        /// </summary>
+        [FieldOffset(0x12C)] public PhaseType Phase;
+
+        public enum PhaseType : byte
+        {
+            /// <summary>
+            /// The player has taken damage.
+            /// </summary>
+            Damage,
+
+            /// <summary>
+            /// The player has recovered from the damage.
+            /// </summary>
+            Recover,
+
+            /// <summary>
+            /// The player is waiting to return to the arena.
+            /// </summary>
+            Wait,
+
+            /// <summary>
+            /// The player is returning to the arena.
+            /// </summary>
+            Release
+        }
+    }
+}

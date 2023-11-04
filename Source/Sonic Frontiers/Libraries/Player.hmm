@@ -27,6 +27,7 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
 
     #import "GOComponents"
     #import "Plugins"
+    #import "Postures"
     #import "Services"
     #import "States"
 
@@ -78,6 +79,11 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
         /// A pointer to an instance of `app::player::GOCPlayerHsm`.
         /// </summary>
         [FieldOffset(0x38)] public GOCPlayerHsm* pGOCPlayerHsm;
+
+        /// <summary>
+        /// A pointer to an instance of `app::player::GOCPlayerPosture`.
+        /// </summary>
+        [FieldOffset(0x40)] public GOCPlayerPosture* pGOCPlayerPosture;
 
         /// <summary>
         /// A pointer to an instance of `app::player::PlayerHsmContext::OutOfControlTimerList`.
@@ -586,6 +592,33 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
 
             return _currentMessageID;
         }
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public static class Posture
+    {
+        public static PlayerPosture* GetPosture(string in_postureName)
+        {
+            var pPlayerContext = GetPlayerContext();
+
+            if (pPlayerContext == null)
+                return null;
+
+            var pGOCPlayerPosture = pPlayerContext->pGOCPlayerPosture;
+
+            if (pGOCPlayerPosture == null)
+                return null;
+
+            var pPostureMoveManager = pGOCPlayerPosture->pPostureMoveManager;
+
+            if (pPostureMoveManager == null)
+                return null;
+
+            return pPostureMoveManager->GetPlayerPosture<PlayerPosture>(in_postureName);
+        }
+
+        MAKE_STATIC_GENERIC_API(GetPosture)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////

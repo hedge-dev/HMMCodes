@@ -8,6 +8,7 @@ Library "GOComponents" by "Hyper"
     #lib "PlayerEffect"
 
     #import "Plugins"
+    #import "Postures"
     #import "States"
 
     #load "System.Numerics.dll"
@@ -172,6 +173,19 @@ Library "GOComponents" by "Hyper"
             CyberSpace,
             SideView
         }
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::GOCPlayerPosture`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0xA0)]
+    public struct GOCPlayerPosture
+    {
+        [FieldOffset(0x80)] public void* pPlayerPostureContext;
+
+        [FieldOffset(0x88)] public PostureMoveManager* pPostureMoveManager;
+
+        [FieldOffset(0x90)] public void* pPostureInputManager;
     }
 
     /// <summary>
