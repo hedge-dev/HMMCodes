@@ -615,7 +615,7 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
             if (pPostureMoveManager == null)
                 return null;
 
-            return pPostureMoveManager->GetPlayerPosture<PlayerPosture>(in_postureName);
+            return pPostureMoveManager->GetPlayerPosture(in_postureName);
         }
 
         MAKE_STATIC_GENERIC_API(GetPosture)
@@ -832,7 +832,9 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
                     break;
             }
 
-            if (name != typeof(T).Name)
+            var nameAttr = Helpers.GetInternalName(typeof(T));
+
+            if (name != (string.IsNullOrEmpty(nameAttr) ? typeof(T).Name : nameAttr))
                 return null;
             
             return (T*)pGOCPlayerHsm->Hsm.Base.pState;

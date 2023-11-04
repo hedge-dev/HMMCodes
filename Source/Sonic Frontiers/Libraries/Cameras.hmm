@@ -17,11 +17,10 @@ Library "Cameras" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x18)]
     public struct CameraControllerWrapper
     {
+        /// <summary>
+        /// A pointer to an instance of `app_cmn::camera::CameraController`.
+        /// </summary>
         [FieldOffset(0)] public CameraController* pCameraController;
-
-        [FieldOffset(0x08)] public long pUnk1;
-
-        [FieldOffset(0x10)] public long pUnk2;
     }
 
     /// <summary>
@@ -30,6 +29,9 @@ Library "Cameras" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0xC8)]
     public struct CameraController
     {
+        /// <summary>
+        /// The position of the camera.
+        /// </summary>
         [FieldOffset(0x20)] public Vector3 Position;
 
         VFUNCTION_PTR(CameraController, 1, long, GetName)
@@ -127,6 +129,9 @@ Library "Cameras" by "Hyper"
     {
         [FieldOffset(0)]    public CameraController Base;
 
+        /// <summary>
+        /// A pointer to an instance of `app::camera::StandardCameraContext`.
+        /// </summary>
         [FieldOffset(0xE8)] public StandardCameraContext* pContext;
     }
     
@@ -136,34 +141,73 @@ Library "Cameras" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x1E0)]
     public struct StandardCameraContext
     {
-        [FieldOffset(0x20)]  public StandardCameraConfig.Root* pRflStandardCamera;
+        /// <summary>
+        /// A pointer to the `StandardCameraConfig` struct from `standard_camera.rfl`.
+        /// </summary>
+        [FieldOffset(0x20)]  public StandardCameraConfig.Root* pStandardCameraConfig;
 
+        /// <summary>
+        /// The position of the camera.
+        /// </summary>
         [FieldOffset(0x30)]  public Vector3 Position;
 
+        /// <summary>
+        /// The nearest point of the camera view frustum.
+        /// </summary>
         [FieldOffset(0xB0)]  public float NearPlaneZ;
 
+        /// <summary>
+        /// The furthest point of the camera view frustum.
+        /// </summary>
         [FieldOffset(0xB4)]  public float FarPlaneZ;
 
+        /// <summary>
+        /// The current field of view in radians.
+        /// </summary>
         [FieldOffset(0xB8)]  public float FieldOfView;
 
+        /// <summary>
+        /// The distance of the camera to the player.
+        /// </summary>
         [FieldOffset(0xC0)]  public float Distance;
 
+        /// <summary>
+        /// The suspension length when the player picks up speed (e.g. boost).
+        /// </summary>
         [FieldOffset(0xC4)]  public float DistanceSuspension;
 
+        /// <summary>
+        /// The height of the camera.
+        /// </summary>
         [FieldOffset(0xF8)]  public float Elevation;
 
+        /// <summary>
+        /// The current field of view on the Y axis in radians.
+        /// </summary>
         [FieldOffset(0x12C)] public float FieldOfViewY;
 
+        /// <summary>
+        /// The scalar for field of view, based on the user configuration.
+        /// </summary>
         [FieldOffset(0x130)] public float FieldOfViewScalar;
 
+        /// <summary>
+        /// Gets the current field of view in degrees.
+        /// </summary>
+        /// <returns>The current field of view in degrees.</returns>
         public float GetFieldOfView()
         {
             return MathHelpers.ToDegrees(FieldOfView);
         }
 
+        /// <summary>
+        /// Sets the current field of view.
+        /// NOTICE: this function currently has a hard limit of 89 FOV maximum.
+        /// </summary>
+        /// <param name="in_degrees">The field of view in degrees.</param>
         public void SetFieldOfView(float in_degrees)
         {
-            float fovY = FieldOfViewY * pRflStandardCamera->option.minFovyRate;
+            float fovY = FieldOfViewY * pStandardCameraConfig->option.minFovyRate;
 
             // HACK (Hyper): temporary fix, limits FOV to 0-89 to prevent unstable game state.
             // TODO (Hyper): figure out what's causing Bullet to throw up at 90+ FOV.

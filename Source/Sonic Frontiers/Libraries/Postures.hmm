@@ -101,17 +101,31 @@ Library "Postures" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x58)]
     public struct PostureMoveManager
     {
+        /// <summary>
+        /// An array of pointers to `app::player::PostureListener` instances.
+        /// </summary>
         [FieldOffset(0x10)] public ObjectMoveArray<Memory.Pointer<PostureListener>> PostureListeners;
 
+        /// <summary>
+        /// A pointer to an instance of `app::player::PlayerPosture`.
+        /// </summary>
         [FieldOffset(0x50)] public PlayerPosture* pPlayerPosture;
 
-        public T* GetPlayerPosture<T>(string in_postureName) where T : unmanaged
+        /// <summary>
+        /// Gets an instance of `app::player::PlayerPosture` by name and type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="in_postureName"></param>
+        /// <returns></returns>
+        public PlayerPosture* GetPlayerPosture(string in_postureName)
         {
             if (pPlayerPosture->GetNameHash()() == StringMapOperation.ComputeHash(in_postureName))
-                return (T*)pPlayerPosture;
+                return pPlayerPosture;
 
             return null;
         }
+
+        MAKE_GENERIC_API(GetPlayerPosture)
     }
 
     /// <summary>

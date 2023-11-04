@@ -18,6 +18,9 @@ Library "States" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x30)]
     public struct StateImpl
     {
+        /// <summary>
+        /// The unique ID pertaining to this state.
+        /// </summary>
         [FieldOffset(0x18)] public int StateID;
     }
 
@@ -27,6 +30,9 @@ Library "States" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x18)]
     public struct StateDescImpl
     {
+        /// <summary>
+        /// The name of this state.
+        /// </summary>
         [FieldOffset(0)] public Helpers.UnmanagedString Name;
     }
 
@@ -51,10 +57,19 @@ Library "States" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x70)]
     public struct HsmImpl
     {
+        /// <summary>
+        /// The index of the current state.
+        /// </summary>
         [FieldOffset(0x0C)] public int CurrentStateIndex;
 
+        /// <summary>
+        /// An array of pointers to `hh::ut::internal::StateImpl` instances.
+        /// </summary>
         [FieldOffset(0x20)] public ObjectMoveArray<Memory.Pointer<StateImpl>> States;
 
+        /// <summary>
+        /// A pointer to an instance of `hh::ut::internal::StateImpl`.
+        /// </summary>
         [FieldOffset(0x40)] public StateImpl* pState;
     }
 
@@ -73,6 +88,9 @@ Library "States" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x18)]
     public struct PlayerStateParameter
     {
+        /// <summary>
+        /// An array of pointers to `app::player::StateParameter` instances.
+        /// </summary>
         [FieldOffset(0x10)] public ObjectMoveArray<long> StateParameters;
     }
 
@@ -104,6 +122,9 @@ Library "States" by "Hyper"
     {
         [FieldOffset(0)]    public StateParameter Base = new StateParameter(1);
 
+        /// <summary>
+        /// The direction Sonic should dodge towards.
+        /// </summary>
         [FieldOffset(0x10)] public Quaternion Direction;
 
         [FieldOffset(0x20)] public short Flags;
@@ -132,6 +153,11 @@ Library "States" by "Hyper"
         private static long _sigGetDirectionRelativeToCameraPlane = ScanSignature("\x40\x55\x56\x41\x56\x48\x81\xEC\x00\x01\x00\x00\x48", "xxxxxxxxxxxxx");
         FUNCTION_PTR(Quaternion*, fpGetDirectionRelativeToCameraPlane, _sigGetDirectionRelativeToCameraPlane, Quaternion* in_pDirection, Player.PlayerHsmContext* in_pPlayerContext, bool in_isLeft)
 
+        /// <summary>
+        /// Gets the direction Sonic should dodge in relative to the camera plane.
+        /// </summary>
+        /// <param name="in_isRight">Determines if Sonic is dodging to the right.</param>
+        /// <returns>A quaternion facing the direction Sonic should dodge.</returns>
         public static Quaternion GetDirectionRelativeToCameraPlane(bool in_isRight = false)
         {
             Quaternion result = Quaternion.Identity;
@@ -184,6 +210,9 @@ Library "States" by "Hyper"
     {
         [FieldOffset(0)] public StateParameter Base;
 
+        /// <summary>
+        /// The flags determined by the type of spring.
+        /// </summary>
         [FieldOffset(0x50)] public int Flags;
     }
 
@@ -200,9 +229,24 @@ Library "States" by "Hyper"
 
         public enum PhaseType : int
         {
+            /// <summary>
+            /// The intro animation of Tails spinning beneath him.
+            /// </summary>
             Intro,
+
+            /// <summary>
+            /// The initial altitude rise after the previous animation is complete.
+            /// </summary>
             Rise,
+
+            /// <summary>
+            /// Tails is flying.
+            /// </summary>
             Flying,
+
+            /// <summary>
+            /// Tails is tired.
+            /// </summary>
             Tired
         }
     }

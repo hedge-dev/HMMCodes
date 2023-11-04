@@ -44,8 +44,16 @@ Library "Plugins" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x40)]
     public struct StatePluginManager
     {
+        /// <summary>
+        /// An array of pointers to `app::player::StatePluginBase` instances.
+        /// </summary>
         [FieldOffset(0x18)] public ObjectMoveArray<Memory.Pointer<StatePluginBase>> Plugins;
 
+        /// <summary>
+        /// Gets an instance of `app::player::StatePluginBase` by name.
+        /// </summary>
+        /// <param name="in_pluginName">The name of the state plugin.</param>
+        /// <returns>An instance of `app::player::StatePluginBase` requested by name.</returns>
         public StatePluginBase* GetStatePlugin(string in_pluginName)
         {
             foreach (var pPlugin in Plugins)
@@ -69,6 +77,9 @@ Library "Plugins" by "Hyper"
     [StructLayout(LayoutKind.Explicit)]
     public struct StatePluginAirTrick
     {
+        /// <summary>
+        /// Determines whether air tricks are enabled.
+        /// </summary>
         [FieldOffset(0x3D)] public bool IsEnabled;
     }
 
@@ -78,8 +89,14 @@ Library "Plugins" by "Hyper"
     [StructLayout(LayoutKind.Explicit)]
     public struct StatePluginBattle
     {
+        /// <summary>
+        /// Bit flags for the state of this battle.
+        /// </summary>
         [FieldOffset(0x7C)] public BattleFlags Flags;
 
+        /// <summary>
+        /// An enum containing known flags for `app::player::StatePluginBattle`.
+        /// </summary>
         [Flags]
         public enum BattleFlags : short
         {
@@ -182,6 +199,11 @@ Library "Plugins" by "Hyper"
             Line1
         }
 
+        /// <summary>
+        /// Gets whether the player is allowed to quick step in the specified direction.
+        /// </summary>
+        /// <param name="in_quickStepRight">Determines if the player is quick stepping to the right.</param>
+        /// <returns>A boolean representing whether the player can quick step in the specified direction.</returns>
         public static bool IsQuickStepLegal(bool in_quickStepRight = false)
         {
             var pStatePluginQuickStep = Player.State.GetStatePlugin<StatePluginQuickStep>();
