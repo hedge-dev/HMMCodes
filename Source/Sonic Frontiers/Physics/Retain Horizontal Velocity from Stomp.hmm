@@ -4,8 +4,8 @@ While holding down the stomp button, stomp partially retains your last horizonta
 
 Notes;
 - This will remove the cooldown before bounce jumps.
-- This will remove the shockwave from performing consecutive stomps
-- This does not affect the shockwave from 'Super Stomp'
+- This will remove the shockwave from performing consecutive stomps.
+- This does not affect the shockwave from the "Super Stomp" code.
 */
 //
     #lib "Sonic"
