@@ -1,6 +1,6 @@
-Patch "Retain Ground Velocity for Jump" in "Physics" by "Hyper" does
+Patch "Retain Horizontal Velocity from Jump" in "Physics" by "Hyper" does
 /*
-Retains the player's ground velocity when jumping.
+Retains the player's horizontal velocity when jumping.
 
 Notes;
 - This will allow you to retain velocity when jumping out of a Drop Dash.

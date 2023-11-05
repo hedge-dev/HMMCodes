@@ -77,7 +77,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     /// </example>
     /// <param name="in_name">The name of an enum member from the `CombatFlags` enum.</param>
     /// <param name="in_isEnabled">The enabled state of the specified flag.</param>
-    #define SET_COMBAT_FLAG(in_name, in_isEnabled) if (BlackboardStatus.Get() != null) BlackboardStatus.Get()->CombatFlags[(int)BlackboardStatus.CombatFlags.in_name >> 6].Set((ulong)BlackboardStatus.CombatFlags.in_name, in_isEnabled)
+    #define SET_COMBAT_FLAG(in_name, in_isEnabled) if (BlackboardStatus.Get() != null) BlackboardStatus.Get()->CombatFlags[(int)BlackboardStatus.CombatFlags.in_name >> 6].Set((ulong)BlackboardStatus.CombatFlags.in_name & 0x3F, in_isEnabled)
 
     /// <summary>
     /// Determines whether a world flag is set.
@@ -113,7 +113,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     /// </example>
     /// <param name="in_name">The name of an enum member from the `WorldFlags` enum.</param>
     /// <param name="in_isEnabled">The enabled state of the specified flag.</param>
-    #define SET_WORLD_FLAG(in_name, in_isEnabled) if (BlackboardStatus.Get() != null) BlackboardStatus.Get()->WorldFlags[(int)BlackboardStatus.WorldFlags.in_name >> 6].Set((ulong)BlackboardStatus.WorldFlags.in_name)
+    #define SET_WORLD_FLAG(in_name, in_isEnabled) if (BlackboardStatus.Get() != null) BlackboardStatus.Get()->WorldFlags[(int)BlackboardStatus.WorldFlags.in_name >> 6].Set((ulong)BlackboardStatus.WorldFlags.in_name & 0x3F, in_isEnabled)
 
     using System.Runtime.InteropServices;
     
@@ -303,6 +303,11 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     public enum CombatFlags : uint
     {
         /// <summary>
+        /// The player side steps, rather than dodging.
+        /// </summary>
+        IsSideStep = 0x05,
+
+        /// <summary>
         /// The player has Parry.
         /// </summary>
         IsParry = 0x0F,
@@ -382,6 +387,11 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
         /// The player is in Cyber Space.
         /// </summary>
         IsCyberSpace = 0x1E,
+
+        /// <summary>
+        /// The player has landed on a wall during a wall jump sequence.
+        /// </summary>
+        IsWallJumpLand = 0x22,
 
         /// <summary>
         /// The player has Power Boost.

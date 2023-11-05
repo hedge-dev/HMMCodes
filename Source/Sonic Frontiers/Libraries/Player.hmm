@@ -27,6 +27,7 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
 
     #import "GOComponents"
     #import "Plugins"
+    #import "Postures"
     #import "Services"
     #import "States"
 
@@ -78,6 +79,11 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
         /// A pointer to an instance of `app::player::GOCPlayerHsm`.
         /// </summary>
         [FieldOffset(0x38)] public GOCPlayerHsm* pGOCPlayerHsm;
+
+        /// <summary>
+        /// A pointer to an instance of `app::player::GOCPlayerPosture`.
+        /// </summary>
+        [FieldOffset(0x40)] public GOCPlayerPosture* pGOCPlayerPosture;
 
         /// <summary>
         /// A pointer to an instance of `app::player::PlayerHsmContext::OutOfControlTimerList`.
@@ -590,6 +596,33 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public static class Posture
+    {
+        public static PlayerPosture* GetPosture(string in_postureName)
+        {
+            var pPlayerContext = GetPlayerContext();
+
+            if (pPlayerContext == null)
+                return null;
+
+            var pGOCPlayerPosture = pPlayerContext->pGOCPlayerPosture;
+
+            if (pGOCPlayerPosture == null)
+                return null;
+
+            var pPostureMoveManager = pGOCPlayerPosture->pPostureMoveManager;
+
+            if (pPostureMoveManager == null)
+                return null;
+
+            return pPostureMoveManager->GetPlayerPosture(in_postureName);
+        }
+
+        MAKE_STATIC_GENERIC_API(GetPosture)
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     public static class Sound
     {
         /* 0x140AE69F0 */
@@ -799,7 +832,9 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
                     break;
             }
 
-            if (name != typeof(T).Name)
+            var nameAttr = Helpers.GetInternalName(typeof(T));
+
+            if (name != (string.IsNullOrEmpty(nameAttr) ? typeof(T).Name : nameAttr))
                 return null;
             
             return (T*)pGOCPlayerHsm->Hsm.Base.pState;
@@ -973,7 +1008,24 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
             return IsGrounded() ||
                 IS_STATE_FLAG(IsGrind) ||
                 IS_STATE_FLAG(IsSpringJump) ||
-                IS_STATE_FLAG(IsWallClimb);
+                IS_STATE_FLAG(IsWallClimb) ||
+                IS_STATE_FLAG(IsWallClimbIdle);
+        }
+
+        public static bool IsSpecialAction()
+        {
+            return IS_STATE_FLAG(IsGrind) ||
+                IS_STATE_FLAG(IsDiving) || 
+                IS_STATE_FLAG(IsDivingBoost) || 
+                IS_STATE_FLAG(IsDrift) || 
+                IS_STATE_FLAG(IsWallClimb) ||
+                IS_STATE_FLAG(IsWallClimbIdle) ||
+                IS_STATE_FLAG(IsBoarding) ||
+                IS_STATE_FLAG(IsSpringJump) ||
+                IS_WORLD_FLAG(IsDead) ||
+                IS_WORLD_FLAG(IsOutOfControl) ||
+                IS_WORLD_FLAG(IsAutoRun) ||
+                IS_WORLD_FLAG(IsNitroBoost);
         }
 
         public static bool IsDropDashCharge()

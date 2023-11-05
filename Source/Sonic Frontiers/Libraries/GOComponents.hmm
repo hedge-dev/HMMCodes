@@ -7,7 +7,10 @@ Library "GOComponents" by "Hyper"
     #lib "Player"
     #lib "PlayerEffect"
 
+    #import "Cameras"
+    #import "Collections"
     #import "Plugins"
+    #import "Postures"
     #import "States"
 
     #load "System.Numerics.dll"
@@ -47,6 +50,39 @@ Library "GOComponents" by "Hyper"
     }
 
     /// <summary>
+    /// A struct representation of `app::player::GOCCamera`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0xA0)]
+    public struct GOCCamera
+    {
+        /// <summary>
+        /// An array of pointers to `CameraControllerWrapper` instances.
+        /// </summary>
+        [FieldOffset(0x80)] public ObjectMoveArray<CameraControllerWrapper> Cameras;
+
+        /// <summary>
+        /// Gets an instance of `app_cmn::camera::CameraController` by name.
+        /// </summary>
+        /// <param name="in_cameraName">The name of the camera controller.</param>
+        /// <returns>An instance of `app_cmn::camera::CameraController` requested by name.</returns>
+        public CameraController* GetCameraController(string in_cameraName)
+        {
+            foreach (var pWrapper in Cameras)
+            {
+                if (pWrapper.pCameraController == null)
+                    continue;
+                
+                if (FROM_STRING_PTR(pWrapper.pCameraController->GetName()()) == in_cameraName)
+                    return pWrapper.pCameraController;
+            }
+
+            return null;
+        }
+
+        MAKE_GENERIC_API(GetCameraController)
+    }
+
+    /// <summary>
     /// A struct representation of `app::player::GOCEventTimer`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0xC8)]
@@ -55,8 +91,19 @@ Library "GOComponents" by "Hyper"
         [StructLayout(LayoutKind.Explicit, Size = 0x20)]
         public struct TimerData
         {
+            /// <summary>
+            /// The duration of this timer.
+            /// </summary>
             [FieldOffset(0x04)] float Duration;
+
+            /// <summary>
+            /// The time the display will turn yellow.
+            /// </summary>
             [FieldOffset(0x0C)] float TimeYellow;
+
+            /// <summary>
+            /// The time the display will turn red.
+            /// </summary>
             [FieldOffset(0x10)] float TimeRed;
         }
     }
@@ -167,11 +214,48 @@ Library "GOComponents" by "Hyper"
         /// </summary>
         public enum ModePackageType : int
         {
+            /// <summary>
+            /// The player is in 3D.
+            /// </summary>
             ForwardView,
+
+            /// <summary>
+            /// The player is underwater.
+            /// </summary>
             Water,
+
+            /// <summary>
+            /// The player is in Cyber Space 3D.
+            /// </summary>
             CyberSpace,
+
+            /// <summary>
+            /// The player is in 2D.
+            /// </summary>
             SideView
         }
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::GOCPlayerPosture`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0xA0)]
+    public struct GOCPlayerPosture
+    {
+        /// <summary>
+        /// A pointer to an instance of `app::player::PlayerPostureContext`.
+        /// </summary>
+        [FieldOffset(0x80)] public PlayerPostureContext* pPlayerPostureContext;
+
+        /// <summary>
+        /// A pointer to an instance of `app::player::PostureMoveManager`.
+        /// </summary>
+        [FieldOffset(0x88)] public PostureMoveManager* pPostureMoveManager;
+
+        /// <summary>
+        /// A pointer to an instance of `app::player::PostureInputManager`.
+        /// </summary>
+        [FieldOffset(0x90)] public void* pPostureInputManager;
     }
 
     /// <summary>
