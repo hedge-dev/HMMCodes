@@ -1008,7 +1008,24 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
             return IsGrounded() ||
                 IS_STATE_FLAG(IsGrind) ||
                 IS_STATE_FLAG(IsSpringJump) ||
-                IS_STATE_FLAG(IsWallClimb);
+                IS_STATE_FLAG(IsWallClimb) ||
+                IS_STATE_FLAG(IsWallClimbIdle);
+        }
+
+        public static bool IsSpecialAction()
+        {
+            return IS_STATE_FLAG(IsGrind) ||
+                IS_STATE_FLAG(IsDiving) || 
+                IS_STATE_FLAG(IsDivingBoost) || 
+                IS_STATE_FLAG(IsDrift) || 
+                IS_STATE_FLAG(IsWallClimb) ||
+                IS_STATE_FLAG(IsWallClimbIdle) ||
+                IS_STATE_FLAG(IsBoarding) ||
+                IS_STATE_FLAG(IsSpringJump) ||
+                IS_WORLD_FLAG(IsDead) ||
+                IS_WORLD_FLAG(IsOutOfControl) ||
+                IS_WORLD_FLAG(IsAutoRun) ||
+                IS_WORLD_FLAG(IsNitroBoost);
         }
 
         public static bool IsDropDashCharge()

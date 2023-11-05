@@ -303,6 +303,11 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     public enum CombatFlags : uint
     {
         /// <summary>
+        /// The player side steps, rather than dodging.
+        /// </summary>
+        IsSideStep = 0x05,
+
+        /// <summary>
         /// The player has Parry.
         /// </summary>
         IsParry = 0x0F,
@@ -382,6 +387,11 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
         /// The player is in Cyber Space.
         /// </summary>
         IsCyberSpace = 0x1E,
+
+        /// <summary>
+        /// The player has landed on a wall during a wall jump sequence.
+        /// </summary>
+        IsWallJumpLand = 0x22,
 
         /// <summary>
         /// The player has Power Boost.

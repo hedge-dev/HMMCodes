@@ -9,23 +9,42 @@ Code "[Cyber Space] Enable Dodge and Parry" in "Gameplay" by "Hyper" does "Enabl
     #import "States"
 
     static bool _isInitialised = false;
+    static bool _isDodgeAlways = false;
     static bool _isDodgeAnalog = false;
     static bool _isInputBuffered = false;
     static bool _isParried = false;
 
-    static float _airDodgeTimer = 0.0f;
-    static float _airDodgeTimerThreshold = 0.08f;
+    static float _dodgeTimer = 0.0f;
+    static float _dodgeTimerThreshold = 0.08f;
 
     static void PerformBumperActions(bool in_isRight = false)
     {
-        if (Player.Status.IsGrounded()    ||
-            IS_WORLD_FLAG(IsOutOfControl) ||
-            IS_WORLD_FLAG(IsAutoRun))
+        var state = Sonic.StateID.StateAvoid;
+
+        if (Player.Status.IsSpecialAction())
         {
-            _airDodgeTimer = 0.0f;
+            _dodgeTimer = 0.0f;
             _isInputBuffered = false;
             _isParried = false;
             return;
+        }
+
+        if (Player.Status.IsGrounded())
+        {
+            if (!_isDodgeAlways)
+                return;
+            
+            // Prevent dodge spam on input hold.
+            if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateAvoid)
+                return;
+            
+            if (Player.Kinematics.GetHorizontalMagnitude() >= 15.0f)
+            {
+                state = in_isRight ? Sonic.StateID.StateRightStepRun : Sonic.StateID.StateLeftStepRun;
+
+                if (IS_STATE_FLAG(IsIdle))
+                    state = in_isRight ? Sonic.StateID.StateRightStep : Sonic.StateID.StateLeftStep;
+            }
         }
         
         if (Player.Input.IsDown(Player.InputActionType.PlayerLeftStep) &&
@@ -60,9 +79,9 @@ Code "[Cyber Space] Enable Dodge and Parry" in "Gameplay" by "Hyper" does "Enabl
             ? Player.InputActionType.PlayerRightStep
             : Player.InputActionType.PlayerLeftStep))
         {
-            _airDodgeTimer += Time.GetDeltaTime();
+            _dodgeTimer += Time.GetDeltaTime();
 
-            if (_airDodgeTimer >= _airDodgeTimerThreshold)
+            if (_dodgeTimer >= _dodgeTimerThreshold)
             {
                 if (!_isDodgeAnalog)
                 {
@@ -71,9 +90,9 @@ Code "[Cyber Space] Enable Dodge and Parry" in "Gameplay" by "Hyper" does "Enabl
                     Player.State.AddStateParameter<StateAvoidParameter>(new StateAvoidParameter(dir));
                 }
 
-                Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateAvoid);
+                Player.State.SetState<Sonic.StateID>(state);
 
-                _airDodgeTimer = 0.0f;
+                _dodgeTimer = 0.0f;
             }
         }
     }
@@ -81,6 +100,7 @@ Code "[Cyber Space] Enable Dodge and Parry" in "Gameplay" by "Hyper" does "Enabl
 {
     if (!_isInitialised)
     {
+        _isDodgeAlways = HMM.GetCodes().Contains("Always Dodge with Side Step");
         _isDodgeAnalog = HMM.GetCodes().Contains("Always Dodge in Stick Direction");
         _isInitialised = true;
     }
