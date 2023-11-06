@@ -1,5 +1,0 @@
-Patch "Fix Input Delay at Arbitrary Framerates (experimental)" in "Fixes" by "Skyth" 
-WriteProtected<byte>(0xD6CBCA, 0xF3, 0x0F, 0x10, 0x44, 0x24, 0x24);
-WriteNop(0xD6CBD0, 14);
-
-

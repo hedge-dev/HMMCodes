@@ -1,4 +1,0 @@
-Patch "Force Language to English" in "System/Language" by "M&M & ĐeäTh" 
-WriteAsmHook(ASLR(0x004AB9FF), HookBehavior.Replace, "mov eax, 1");
-
-

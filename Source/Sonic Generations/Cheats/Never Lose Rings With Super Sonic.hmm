@@ -1,0 +1,4 @@
+Patch "Never Lose Rings With Super Sonic" in "Cheats" by "Muzzarino" 
+WriteNop(0xE64E80, 6)
+
+
