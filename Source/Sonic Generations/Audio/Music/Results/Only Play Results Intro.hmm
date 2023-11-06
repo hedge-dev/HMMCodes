@@ -1,6 +1,0 @@
-Patch "Only Play Results Intro" in "Audio/Music/Results" by "M&M" 
-WriteProtected<byte>(0xCFD47F, 0xE9, 0x95, 0x00, 0x00, 0x00)
-WriteProtected<byte>(0xCFD484, 0xC3)
-WriteNop(0xCFD485, 3)
-
-

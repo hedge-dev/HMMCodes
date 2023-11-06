@@ -1,4 +1,0 @@
-Patch "Disable Blue Trail" in "Graphics/Effects" by "Hyper" does "Removes the blue trail from Sonic after performing certain actions." 
-WriteProtected<byte>(0xE5FDE5, 0xE9, 0x19, 0x01, 0x00, 0x00);
-
-

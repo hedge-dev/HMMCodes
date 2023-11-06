@@ -1,5 +1,0 @@
-Patch "Infinite Boost Gauge" in "Cheats/Player" by "CodenameGamma" 
-WriteNop(0x1404CFD62, 0x00000005)
-WriteNop(0x1403DF93E, 0x00000007)
-
-
