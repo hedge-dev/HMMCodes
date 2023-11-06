@@ -1,0 +1,21 @@
+Patch "Disable FPS Limit in Cutscenes (experimental)" in "Graphics/Display" by "M&M" does 
+/*
+Disables the framerate limiter for (most) cutscenes, allowing them to run at 60 FPS.
+
+Known issues;
+- Certain cutscenes will still operate at 30 FPS due to how this game syncs cutscene audio.
+*/
+//
+    #lib "Memory"
+//
+{
+    /* 0x14014673C */
+    long jmpAddr = ScanSignature
+    (
+        "\x74\x23\x48\x8B\x05\x00\x00\x00\x00\xF3\x0F\x10\x0D\x00\x00\x00\x00\xC6\x40\x10\x01\x48\x8B\x0D\x00\x00\x00\x00\x48\x83\xC4\x28\xE9\x00\x00\x00\x00",
+        "xxxxx????xxxx????xxxxxxx????xxxxx????"
+    );
+
+    if (jmpAddr != 0)
+        Memory.WriteForceJump(jmpAddr);
+}

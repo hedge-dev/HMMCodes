@@ -1,0 +1,19 @@
+Code "Tighter Spin Dash Rotation" in "Physics/Cyber Space" by "Hyper"
+//
+    #include "Reflection" noemit
+
+    #lib "GameMode"
+    #lib "Reflection"
+    #lib "SonicParameters"
+//
+{
+    if (!GameMode.GetName().Contains("CyberStage"))
+        return;
+    
+    var SonicParametersInfo = Reflection.GetDataInfo<SonicParameters.Root>("player_common");
+
+    if (SonicParametersInfo.pData == null)
+        return;
+
+    RFL_SET_PARAM(SonicParametersInfo, cyberspace.spinBoost.speedBoost.baseRotateForce, 2250.0f);
+}

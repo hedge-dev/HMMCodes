@@ -1,0 +1,4 @@
+Patch "Disable Tricks from Rainbow Rings" in "Gameplay/Objects" by "Hyper" 
+WriteNop(0x115A6AF, 2);
+
+

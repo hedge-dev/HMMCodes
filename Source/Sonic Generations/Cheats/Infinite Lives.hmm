@@ -1,4 +1,0 @@
-Patch "Infinite Lives" in "Cheats" by "CodenameGamma" 
-WriteNop(0xD59A67, 0x6)
-
-

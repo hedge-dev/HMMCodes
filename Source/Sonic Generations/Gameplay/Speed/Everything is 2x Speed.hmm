@@ -1,0 +1,5 @@
+Code "Everything is 2x Speed" in "Gameplay/Speed" by "Darío" 
+Write<byte>(GetPointer(0x1E0BE5C, 8, 0x19C), 1)
+Write<float>(GetPointer(0x1E0BE5C, 8, 0x1A0), 2)
+
+

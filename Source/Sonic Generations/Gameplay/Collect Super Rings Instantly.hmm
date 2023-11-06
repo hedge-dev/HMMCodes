@@ -1,6 +1,0 @@
-Patch "Collect Super Rings Instantly" in "Gameplay" by "brianuuu" does "Immediately increases the ring counter by 10, instead of gradually adding 10 rings, similar to Sonic Unleashed." 
-WriteNop(0xE4155E, 2);
-WriteNop(0xE415C8, 2);
-WriteProtected<int>(0xE4157A, -1);
-
-

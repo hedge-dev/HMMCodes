@@ -1,0 +1,26 @@
+Patch "Disable Tutorial Messages" in "UI/Messages" by "Hyper" does
+/*
+Disables all intrusive tutorial messages that appear under certain conditions for the first time.
+
+Notes;
+- This also disables Hint Rings.
+*/
+//
+    #lib "Bridge.DisableMessages"
+//
+{
+    // Hide hint rings.
+    WriteProtected<byte>
+    (
+        /* 0x14954A9EF */
+        ScanSignature
+        (
+            "\x48\x89\xCF\xB2\x01\x48\x8D\x0D\xCC\xCC\xCC\xCC\xE8\xCC\xCC\xCC\xCC\xB2\x01\x48\x89\x47\x38\x48\x8D\x0D\xCC\xCC\xCC\xCC\xE8\xCC\xCC\xCC\xCC\x48\x89\x47\x40",
+            "xxxxxxxx????x????xxxxxxxxx????x????xxxx"
+        ),
+
+        0xEB, 0x63
+    );
+
+    Bridge.DisableMessages.IsDisabledTutorialMessages = true;
+}

@@ -1,5 +1,0 @@
-Patch "Disable Slide Particles" in "Graphics" by "Skyth" 
-WriteProtected<byte>(0x15E91B4, 0x00);
-WriteProtected<byte>(0x15E91CC, 0x00);
-
-

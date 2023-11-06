@@ -1,0 +1,4 @@
+Patch "Always Use Sphere Spin Dash" in "Animation/Classic Sonic" by "Hyper" 
+WriteProtected<byte>(0x1A545A4, 0xEC, 0xAD);
+
+

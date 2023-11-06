@@ -1,0 +1,27 @@
+Code "Always Start with Max Rings for Bosses" in "Cheats/Player" by "Trepe Serafin"
+//
+    #lib "Player"
+    #lib "BlackboardItem"
+
+    static bool Refill = false;
+//
+{
+    var pBlackboardItem = BlackboardItem.Get();
+
+    if (pBlackboardItem == null)
+        return;
+
+    int maxrings = pBlackboardItem->RingCapacity;
+    int rings = pBlackboardItem->RingCount;
+
+    if (BlackboardStatus.IsSuper() && !Refill)
+    {
+        pBlackboardItem->RingCount += (maxrings - rings);
+        Refill = true;
+    }
+
+    if (!BlackboardStatus.IsSuper())
+    {
+        Refill = false;
+    }
+}

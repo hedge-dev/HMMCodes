@@ -1,4 +1,0 @@
-Patch "All Cameras are Controllable" in "Gameplay" by "Skyth" 
-WriteNop(0x10E7515, 2);
-
-

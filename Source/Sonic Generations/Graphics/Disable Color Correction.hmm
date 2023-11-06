@@ -1,4 +1,0 @@
-Patch "Disable Color Correction" in "Graphics" by "M&M" 
-WriteProtected<byte>(0x1699F54, 0x00);
-
-

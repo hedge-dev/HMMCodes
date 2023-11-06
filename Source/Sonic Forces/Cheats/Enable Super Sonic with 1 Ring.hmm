@@ -1,5 +1,0 @@
-Patch "Enable Super Sonic with 1 Ring" in "Cheats" by "SuperSonic16" 
-WriteProtected<uint>(0x1404E1E8F, 0x4890C931)
-WriteProtected<byte>(0x1404E1E9B, 0x7E)
-
-

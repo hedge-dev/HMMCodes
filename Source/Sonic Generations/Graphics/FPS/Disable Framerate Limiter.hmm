@@ -1,0 +1,4 @@
+Patch "Disable Framerate Limiter" in "Graphics/FPS" by "Skyth" 
+WriteProtected<byte>(0xE7B580, 0xEB);
+
+

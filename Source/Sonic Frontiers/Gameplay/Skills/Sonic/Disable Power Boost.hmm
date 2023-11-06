@@ -1,0 +1,14 @@
+Patch "Disable Power Boost" in "Gameplay/Skills/Sonic" by "Hyper"
+{
+    WriteProtected<byte>
+    (
+        /* 0x140994D42 */
+        ScanSignature
+        (
+            "\x8B\x43\x28\x39\x43\x24",
+            "xxxxxx"
+        ),
+
+        0xEB, 0x45
+    );
+}

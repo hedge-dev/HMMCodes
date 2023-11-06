@@ -1,4 +1,0 @@
-Patch "Disable Light Dash Particles" in "Graphics" by "Hyper" does "Disables the particle effects that hint about a light dash trail." 
-WriteProtected<byte>(0x10538EB, 0xE9, 0x8F, 0x00, 0x00, 0x00, 0x90);
-
-

@@ -1,0 +1,33 @@
+Patch "Disable Orbit Camera (experimental)" in "Camera/Photo Mode" by "Hyper" does 
+/*
+Makes the camera in Photo Mode control more like a first-person camera, rather than orbiting a specific point.
+
+Known issues;
+- The camera will always point up in Supreme's arena.
+*/
+//
+    static float Distance = 0.1f;
+//
+{
+    fixed (float* pDistance = &Distance)
+    {
+        WriteAsmHook
+        (
+            $@"
+                mov   rcx, {(long)pDistance}
+                movss xmm8, dword ptr [rcx]
+                mov   rcx, rsi
+                lea   rcx, [rsi + 0x50]
+            ",
+
+            /* 0x1400B1E26 */
+            ScanSignature
+            (
+                "\x48\x8B\xCE\xE8\xCC\xCC\xCC\xCC\x48\x8D\x4E\x50\xF3\x44\x0F\x10\x40\x2C",
+                "xxxx????xxxxxxxxxx"
+            ),
+
+            HookBehavior.Replace
+        );
+    }
+}

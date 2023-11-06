@@ -1,5 +1,0 @@
-Patch "Tricks Don't Fill The Boost Gauge" in "Gameplay" by "PTKay"
-WriteNop(0xE4B323, 8)
-WriteNop(0xE4B353, 8)
-
-

@@ -1,0 +1,7 @@
+Patch "Disable DLC Messages on New Game" in "UI/Messages" by "Hyper" does "Disables the intrusive DLC-related messages when playing on a new save."
+//
+    #lib "Bridge.DisableMessages"
+//
+{
+    Bridge.DisableMessages.IsDisabledDLCMessages = true;
+}

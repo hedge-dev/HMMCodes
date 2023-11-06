@@ -1,0 +1,10 @@
+Code "Always Night" in "Time" by "Hyper" does "Forces the time to always be 12:00 AM on the islands."
+//
+    #lib "Lua"
+//
+{
+    Lua.SetPrintPreviousError(false);
+    Lua.Call("SetTime", 0.0f, 0.0f);
+    Lua.Call("SetTimePause", true);
+    Lua.SetPrintPreviousError(true);
+}

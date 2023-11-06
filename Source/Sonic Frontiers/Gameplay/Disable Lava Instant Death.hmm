@@ -1,9 +1,14 @@
 Code "Disable Lava Instant Death" in "Gameplay" by "Hyper" does "Disables Sonic instantly drowning in lava and makes him jump up from the heat until running out of rings." 
 //
+    #include "BlackboardStatus" noemit
+
     #lib "BlackboardItem"
     #lib "Memory"
-
+    #lib "Player"
+    
     static bool _isInitialised = false;
+    static bool _isDamageAnimQueued = false;
+    static bool _isLandAnimQueued = false;
 
     static int _ringCount = 0;
 //
@@ -11,8 +16,9 @@ Code "Disable Lava Instant Death" in "Gameplay" by "Hyper" does "Disables Sonic 
     if (!_isInitialised)
     {
         fixed (int* p_ringCount = &_ringCount)
+        fixed (bool* p_isDamageAnimQueued = &_isDamageAnimQueued)
         {
-            /* 0x1408D78F7 */
+            /* 0x14099D457 */
             long sig = ScanSignature
             (
                 "\xF6\x43\x54\x40\x0F\x84\xD0\x00\x00\x00",
@@ -28,6 +34,8 @@ Code "Disable Lava Instant Death" in "Gameplay" by "Hyper" does "Disables Sonic 
                     mov rdx, {Memory.ReadJump(sig + 0x04)}
                     jmp rdx
                 exit:
+                    mov rcx, {(long)p_isDamageAnimQueued}
+                    mov byte ptr [rcx], 1
                     lea edx, dword ptr [rax - 0x03]
                     mov r8d, 0x400000
                 ",
@@ -41,5 +49,33 @@ Code "Disable Lava Instant Death" in "Gameplay" by "Hyper" does "Disables Sonic 
         _isInitialised = true;
     }
 
-    _ringCount = BlackboardItem.Get() == null ? 0 : BlackboardItem.Get()->RingCount;
+    var pBlackboardItem = BlackboardItem.Get();
+
+    if (pBlackboardItem == null)
+        return;
+
+    _ringCount = pBlackboardItem->RingCount;
+
+    // Don't apply animation fixes to Sonic.
+    if (Player.GetPlayerType() == Player.PlayerType.Sonic)
+    {
+        _isDamageAnimQueued = false;
+        _isLandAnimQueued = false;
+        return;
+    }
+
+    if (_isDamageAnimQueued)
+    {
+        Player.Animation.SetAnimation("BUMP_JUMP_START");
+        _isDamageAnimQueued = false;
+        _isLandAnimQueued = true;
+    }
+
+    if (_isLandAnimQueued && Player.Status.IsGrounded())
+    {
+        if (IS_STATE_FLAG(IsIdle))
+            Player.Animation.SetAnimation("LANDING");
+        
+        _isLandAnimQueued = false;
+    }
 }

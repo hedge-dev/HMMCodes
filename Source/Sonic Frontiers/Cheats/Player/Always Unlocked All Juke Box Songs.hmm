@@ -1,0 +1,16 @@
+Patch "Always Unlocked All Juke Box Songs" in "Cheats/Player" by "Hyper" 
+{
+    WriteProtected<byte>
+    (
+        /* 0x1408BCE36 */
+        ScanSignature
+        (
+            "\x74\x34\x8B\xC6\xFF\xC6",
+            "xxxxxx"
+        ),
+
+        0xEB
+    );
+}
+
+

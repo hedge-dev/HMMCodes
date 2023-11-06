@@ -1,4 +1,0 @@
-Patch "Start Stages with None" in "Gameplay" by "Hyper" 
-WriteNop(0xD944D3, 6);
-
-

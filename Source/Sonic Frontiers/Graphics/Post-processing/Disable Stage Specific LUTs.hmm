@@ -1,0 +1,15 @@
+Patch "Disable Stage Specific LUTs" in "Graphics/Post-processing" by "M&M" does "Prevents the game from using the colour corrected LUTs stored in each stage's trr_cmn archive." 
+{
+    WriteProtected<byte>
+    (
+        ScanSignature
+        (
+            "%s_rgb_table%d",
+            "xxxxxxxxxxxxxx"
+        ),
+
+        System.Text.Encoding.UTF8.GetBytes("ColorGradingLUT_default\0")
+    );
+}
+
+
