@@ -1,4 +1,0 @@
-Patch "Buy Anything at the Skill Shop With Any Points" in "Cheats" by "Muzzarino" 
-WriteNop(0x4409D2, 6)
-
-

@@ -1,4 +1,0 @@
-Patch "Freeze Timer" in "Cheats" by "Muzzarino" 
-WriteNop(0xD02E48, 8)
-
-

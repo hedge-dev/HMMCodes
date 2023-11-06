@@ -1,0 +1,55 @@
+Code "Air Trick from Rails" in "Gameplay/Skills/Sonic" by "Hyper" does 
+/*
+Allows Sonic to perform Air Tricks when jumping off of grind rails.
+
+Notes;
+- Holding the jump button whilst jumping off of a grind rail will keep you in the usual grind jump state until released.
+- Releasing the jump button will give you a small frame window where you can perform a double jump.
+- Flinging off of a grind rail will automatically begin tricking.
+*/
+//
+    #lib "Player"
+
+    static bool BeginFrameCount = false;
+
+    static long GrindJumpReleaseFrameCount = 0;
+
+    static void ResetMembers()
+    {
+        BeginFrameCount = false;
+        GrindJumpReleaseFrameCount = 0;
+    }
+//
+{
+    if (Player.GetPlayerType() != Player.PlayerType.Sonic)
+        return;
+    
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateFall && Player.State.GetPreviousStateID<Sonic.StateID>() == Sonic.StateID.StateGrind)
+    {
+        // Enter into StateBumpJump when flinging off of grind rails.
+        Player.State.SetState(Sonic.StateID.StateBumpJump);
+    }
+
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateGrindJump)
+    {
+        if (Player.Input.IsReleased(Player.InputActionType.PlayerJump))
+            BeginFrameCount = true;
+
+        if (BeginFrameCount)
+            GrindJumpReleaseFrameCount++;
+
+        // Provide small frame window to allow for StateGrindDoubleJump.
+        if (GrindJumpReleaseFrameCount > 12)
+        {
+            Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateBumpJump);
+
+            ResetMembers();
+        }
+    }
+    else
+    {
+        ResetMembers();
+    }
+}
+
+

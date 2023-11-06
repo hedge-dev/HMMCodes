@@ -1,0 +1,4 @@
+Patch "Disable Dash Panels" in "Gameplay" by "SuperSonic16" 
+WriteProtected<byte>(0x14046F9A0, 0xC3)
+
+

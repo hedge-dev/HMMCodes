@@ -1,0 +1,21 @@
+Code "Allow Dodging from Homing Shot" in "Gameplay/Skills/Sonic" by "Hyper" does "Allows Sonic to exit from Homing Shot by dodging."
+//
+    #lib "Player"
+    #lib "VectorHelpers"
+
+    #import "States"
+//
+{
+    if (Player.GetPlayerType() != Player.PlayerType.Sonic)
+        return;
+    
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateHomingShot)
+    {
+        if (Player.Input.IsPressed(Player.InputActionType.PlayerLeftStep) ||
+            Player.Input.IsPressed(Player.InputActionType.PlayerRightStep))
+        {
+            var dir = VectorHelpers.LookRotation(-Player.Kinematics.GetForward());
+            Player.State.SetState<Sonic.StateID, StateAvoidParameter>(Sonic.StateID.StateAvoid, new StateAvoidParameter(dir));
+        }
+    }
+}

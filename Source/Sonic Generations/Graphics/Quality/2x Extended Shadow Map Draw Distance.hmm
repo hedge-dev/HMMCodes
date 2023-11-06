@@ -1,0 +1,6 @@
+Code "2x Extended Shadow Map Draw Distance" in "Graphics/Quality" by "Luig" does "Extends the draw distance of shadow maps by 2x, at the cost of resolution."
+Write<float>(0x01A57310, 50f)
+Write<float>(0x01A57314, 50f)
+Write<float>(0x01A57318, 60f)
+
+

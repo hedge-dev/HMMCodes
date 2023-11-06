@@ -1,4 +1,0 @@
-Patch "Ignore Ring Count When Getting Hit" in "Cheats" by "SuperSonic16" 
-WriteNop(0x14046E4EE, 0x06)
-
-

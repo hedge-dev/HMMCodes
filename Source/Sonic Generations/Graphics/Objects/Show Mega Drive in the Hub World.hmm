@@ -1,0 +1,4 @@
+Patch "Show Mega Drive in the Hub World" in "Graphics/Objects" by "Hyper" does "Restores the Mega Drive above Green Hill. This does not restore functionality." 
+WriteProtected<byte>(0xEED498, 0x01);
+
+

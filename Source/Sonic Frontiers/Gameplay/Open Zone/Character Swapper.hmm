@@ -1,0 +1,105 @@
+Code "Character Swapper" in "Gameplay/Open Zone" by "Hyper, Skyth & Gordon Ramsay" does
+/*
+Allows switching between Sonic, Amy, Knuckles and Tails using hotkeys.
+
+Controller Layout;
+- RS + D-Pad Up - switch to Sonic
+- RS + D-Pad Right - switch to Amy
+- RS + D-Pad Down - switch to Knuckles
+- RS + D-Pad Left - switch to Tails
+
+Keyboard Layout;
+- 1 - switch to Sonic
+- 2 - switch to Amy
+- 3 - switch to Knuckles
+- 4 - switch to Tails
+
+Notes;
+- Whilst the other characters may share states with Sonic, there is still opportunity for the game to crash when using some of Sonic's gimmicks as the other characters.
+- Keep your expectations within reason; don't expect guardians outside of Another Story to work 100% correctly as the other characters, especially event-driven ones like Shark.
+*/
+//
+    #lib "BlackboardItem"
+    #lib "MathHelpers"
+    #lib "PhotoMode"
+    #lib "Player"
+    #lib "XInput"
+
+    using System.Diagnostics;
+    using System.Runtime.InteropServices;
+
+    [DllImport("user32.dll")]
+    static extern IntPtr GetForegroundWindow();
+
+    static bool _isCharacterUpdate = false;
+    static bool _isAwaitLastRingCount = false;
+
+    static Player.PlayerType _currentPlayer;
+
+    static int _lastRingCount = 0;
+
+    static bool IsKeyDown(Keys in_keys)
+    {
+        return (GetAsyncKeyState(in_keys) & 0x8000) != 0;
+    }
+    
+    static bool IsButtonDownSpecial(XInput.Buttons buttons)
+    {
+        if (!XInput.IsButtonDown(XInput.Buttons.RIGHT_THUMB))
+            return false;
+
+        return XInput.IsButtonDown(buttons);
+    }
+//
+{
+    if (GetForegroundWindow() != Process.GetCurrentProcess().MainWindowHandle)
+        return;
+
+    if (PhotoMode.IsEnabled())
+        return;
+
+    var pBlackboardItem = BlackboardItem.Get();
+
+    if (pBlackboardItem == null)
+        return;
+    
+    /* Wait for new instance of BlackboardItem
+       to set the new ring count. */
+    if (_isAwaitLastRingCount)
+    {
+        pBlackboardItem->RingCount = MathHelpers.Clamp(_lastRingCount, 0, pBlackboardItem->RingCapacity);
+        _isAwaitLastRingCount = false;
+    }
+    
+    if (IsKeyDown(Keys.D1) || IsButtonDownSpecial(XInput.Buttons.DPAD_UP))
+    {
+        _currentPlayer = Player.PlayerType.Sonic;
+        _isCharacterUpdate = true;
+    }
+
+    if (IsKeyDown(Keys.D2) || IsButtonDownSpecial(XInput.Buttons.DPAD_RIGHT))
+    {
+        _currentPlayer = Player.PlayerType.Amy;
+        _isCharacterUpdate = true;
+    }
+
+    if (IsKeyDown(Keys.D3) || IsButtonDownSpecial(XInput.Buttons.DPAD_DOWN))
+    {
+        _currentPlayer = Player.PlayerType.Knuckles;
+        _isCharacterUpdate = true;
+    }
+
+    if (IsKeyDown(Keys.D4) || IsButtonDownSpecial(XInput.Buttons.DPAD_LEFT))
+    {
+        _currentPlayer = Player.PlayerType.Tails;
+        _isCharacterUpdate = true;
+    }
+
+    if (_isCharacterUpdate)
+    {
+        Player.SetPlayerType(_currentPlayer);
+        _lastRingCount = pBlackboardItem->RingCount;
+        _isAwaitLastRingCount = true;
+        _isCharacterUpdate = false;
+    }
+}

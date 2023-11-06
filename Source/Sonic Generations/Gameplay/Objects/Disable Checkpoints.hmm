@@ -1,0 +1,4 @@
+Patch "Disable Checkpoints" in "Gameplay/Objects" by "Hyper" 
+WriteNop(0x1033338, 2);
+
+

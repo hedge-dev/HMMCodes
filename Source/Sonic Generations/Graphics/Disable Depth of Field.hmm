@@ -1,4 +1,0 @@
-Code "Disable Depth of Field" in "Graphics" by "Luig" 
-Write<byte>(0x01A4358D, 0)
-
-

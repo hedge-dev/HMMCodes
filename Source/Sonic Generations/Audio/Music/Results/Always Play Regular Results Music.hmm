@@ -1,0 +1,4 @@
+Patch "Always Play Regular Results Music" in "Audio/Music/Results" by "M&M" 
+WriteProtected<byte>(0xCFD4CA, 0x00, 0x39)
+
+

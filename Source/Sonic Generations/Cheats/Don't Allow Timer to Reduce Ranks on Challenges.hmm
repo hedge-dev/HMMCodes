@@ -1,5 +1,0 @@
-Patch "Don't Allow Timer to Reduce Ranks on Challenges" in "Cheats" by "Muzzarino" does "Prevents the challenge timer from affecting your rank, always keeping it at an S rank." 
-WriteProtected<uint>(0xD611B3, 0x90C0570F)
-WriteNop(0xD611B7, 4)
-
-

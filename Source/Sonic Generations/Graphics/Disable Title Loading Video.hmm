@@ -1,4 +1,0 @@
-Patch "Disable Title Loading Video" in "Graphics" by "Hyper" does "Disables the few extra low resolution frames of Sonic falling when loading out of the title screen." 
-WriteProtected<byte>(0xD6966E, 0xE9, 0x14, 0x01, 0x00, 0x00);
-
-

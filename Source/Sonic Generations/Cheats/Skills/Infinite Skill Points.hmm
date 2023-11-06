@@ -1,0 +1,5 @@
+Patch "Infinite Skill Points" in "Cheats/Skills" by "Muzzarino" 
+WriteNop(0x4409D2, 6)
+WriteNop(0x440726, 6)
+
+

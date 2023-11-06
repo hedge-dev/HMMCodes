@@ -1,5 +1,0 @@
-Patch "Disable Homing Reticles" in "UI" by "Hyper" 
-WriteProtected<byte>(0xB6AB8C, 0xE9, 0xF7, 0x01, 0x00, 0x00);
-WriteProtected<byte>(0xDEBC36, 0x00);
-
-

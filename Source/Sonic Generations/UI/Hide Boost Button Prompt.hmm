@@ -1,0 +1,4 @@
+Patch "Hide Boost Button Prompt" in "UI" by "Hyper" 
+WriteProtected<byte>(0x109BC7C, 0xE9, 0x71, 0x01, 0x00, 0x00);
+
+

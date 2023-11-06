@@ -1,4 +1,0 @@
-Patch "Disable FPS Limit" in "Graphics" by "Skyth" 
-WriteProtected<byte>(0xE7B580, 0xEB);
-
-

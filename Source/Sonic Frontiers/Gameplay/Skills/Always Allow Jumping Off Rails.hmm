@@ -1,0 +1,60 @@
+Code "Always Allow Jumping Off Rails" in "Gameplay/Skills" by "Hyper" does "Allows the player to jump off of grind rails at any angle."
+//
+    #include "BlackboardStatus" noemit
+
+    #lib "Player"
+    #lib "Time"
+    #lib "VectorHelpers"
+
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+
+    static bool _isInitialised = false;
+//
+{
+    if (!_isInitialised)
+    {
+        WriteNop
+        (
+            /* 0x14BEFFDA4 */
+            ScanSignature
+            (
+                "\x76\x0D\xB0\x01\x48\x8B\x5C\x24\x50",
+                "xxxxxxxxx"
+            ),
+            
+            2
+        );
+
+        _isInitialised = true;
+    }
+
+    var kinematics = Player.Kinematics.Get();
+
+    if (kinematics == null)
+        return;
+
+    Time.CreateTimer("AlwaysAllowJumpingOffRails_RestoreStates", false);
+        
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateGrindJump)
+    {
+        if (Vector3.Dot(Vector3.Transform(Vector3.UnitY, kinematics->Rotation), Vector3.UnitY) < 0.7f)
+        {
+            var up = Vector3.Transform(Vector3.UnitY, Quaternion.Normalize(kinematics->Rotation));
+
+            kinematics->Position += up * 1.125f;
+            kinematics->Rotation = VectorHelpers.LookRotation(up);
+
+            /* Discard StateFall to prevent the player from
+               instantly double jumping out of StateGrindJump. */
+            Player.State.Discard<Sonic.StateID>(Sonic.StateID.StateFall);
+
+            Time.SetTimer("AlwaysAllowJumpingOffRails_RestoreStates", 0.0f, true);
+        }
+    }
+    else if (Time.GetTimer("AlwaysAllowJumpingOffRails_RestoreStates") > 0.2f)
+    {
+        Player.State.Restore<Sonic.StateID>(Sonic.StateID.StateFall);
+    }
+}

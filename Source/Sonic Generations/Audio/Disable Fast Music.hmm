@@ -1,4 +1,0 @@
-Patch "Disable Fast Music" in "Audio" by "Hyper" does "Prevents the 'faster' music from playing in Green Hill and Sky Sanctuary." 
-WriteNop(0xE2E30F, 2);
-
-

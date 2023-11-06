@@ -1,0 +1,8 @@
+Patch "Disable Skill Set Limiters" in "Cheats/Skills" by "Hyper" does "Allows skills to be equipped regardless of how many points they require." 
+WriteProtected<byte>(0x421CD7, 0xE9, 0xC6, 0x04, 0x00, 0x00, 0x90); /* disable point limit progress bar */
+WriteProtected<byte>(0x4235F4, 0xE9, 0x9A, 0x00, 0x00, 0x00, 0x90); /* disable greyed out selection animation */
+WriteProtected<byte>(0x4237D0, 0xE9, 0x9A, 0x00, 0x00, 0x00, 0x90); /* disable greyed out animation */
+WriteProtected<byte>(0x424410, 0xEB, 0x0E);
+WriteProtected<byte>(0x42445B, 0xEB, 0x6F);
+
+

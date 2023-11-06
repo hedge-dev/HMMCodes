@@ -1,4 +1,0 @@
-Patch "21:9 Ultrawide Support" in "Graphics" by "M&M" 
-Double aspect = 3440.0f / 1440.0f
-WriteProtected(ASLR(0x141030D4C), (float)aspect)
-

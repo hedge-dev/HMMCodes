@@ -1,0 +1,7 @@
+Patch "Disable Jump Board Paths" in "Gameplay/Open Zone/Objects" by "Hyper" does "Stops the player locking to a path when hitting jump boards on the islands, allowing him to fling off them like ramps."
+//
+    #lib "Bridge.DisableJumpBoardPaths"
+//
+{
+    Bridge.DisableJumpBoardPaths.IsDisabledOnIslands = true;
+}

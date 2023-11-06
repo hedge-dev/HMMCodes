@@ -1,0 +1,16 @@
+Patch "Disable Distance Limit" in "Camera/Photo Mode" by "Hyper" 
+{
+    WriteProtected<byte>
+    (
+        /* 0x1400A6B33 */
+        ScanSignature
+        (
+            "\x76\x79\x0F\x10\x23",
+            "xxxxx"
+        ),
+
+        0xEB
+    );
+}
+
+
