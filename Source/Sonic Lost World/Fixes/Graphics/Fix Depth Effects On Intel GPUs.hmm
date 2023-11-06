@@ -1,4 +1,4 @@
-Patch "Fix Depth Effects On Intel GPUs" in "Fixes/Graphics" by "Skyth" 
+Patch "Fix Depth Effects on Intel GPUs" in "Fixes/Graphics" by "Skyth" 
 WriteAsmHook(ASLR(0x00C2B233), HookBehavior.Replace, @"
 mov eax, dword ptr [ebp + 8]
 

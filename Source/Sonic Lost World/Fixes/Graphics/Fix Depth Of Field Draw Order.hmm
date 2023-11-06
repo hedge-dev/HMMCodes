@@ -1,4 +1,4 @@
-Patch "Fix Depth Of Field Draw Order" in "Fixes/Graphics" by "Sajid" does "Changes the pseudo-dof implementation of the game into the proper one seen on Wii U." 
+Patch "Fix Depth of Field Draw Order" in "Fixes/Graphics" by "Sajid" does "Changes the pseudo-dof implementation of the game into the proper one seen on Wii U." 
 static int p_DofRes = (int)ASLR(0x00FEFC7C);
 static int p_GrassRes = (int)ASLR(0x00FB6D1C);
 static int p_ShadowRes = (int)ASLR(0x00FB6D1D);

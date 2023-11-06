@@ -1,0 +1,5 @@
+Patch "1920x1080 Movie Player" in "Graphics/Display/Internal Resolution" by "N69" does "Forces the CRIWARE video player to use a 1920x1080 viewport. This is only useful for mods that have higher resolution video files." 
+WriteProtected<ushort>(0xB210A1, 1920)
+WriteProtected<ushort>(0xB210B1, 1080)
+
+
