@@ -97,7 +97,7 @@ Library "States" by "Hyper"
     /// <summary>
     /// A struct representation of `app::player::StateParameter`.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x0C)]
     public struct StateParameter
     {
         [FieldOffset(0)]    public long pVftable;
@@ -214,6 +214,51 @@ Library "States" by "Hyper"
         /// The flags determined by the type of spring.
         /// </summary>
         [FieldOffset(0x50)] public int Flags;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::StateStompingLand`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0xC0)]
+    public struct StateStompingLand
+    {
+        /// <summary>
+        /// The amount of times the player has stomp bounced.
+        /// </summary>
+        [FieldOffset(0xB0)] public int StompBounceCount;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::StateStompingLand::Parameter`.
+    /// </summary>
+    [Helpers.InternalName("StateStompingLand::Parameter"), StructLayout(LayoutKind.Explicit)]
+    public struct StateStompingLandParameter
+    {
+        [FieldOffset(0)]    public StateParameter Base = new StateParameter(1);
+
+        /// <summary>
+        /// The amount of times the player has stomp bounced.
+        /// </summary>
+        [FieldOffset(0x14)] public int StompBounceCount;
+
+        public StateStompingLandParameter()
+        {
+            /* 0x14153C238 */
+            Base.pVftable = Memory.ReadEffectiveAddress
+            (
+                /* 0x14096D7C5 */
+                ScanSignature
+                (
+                    "\x48\x8D\x05\xCC\xCC\xCC\xCC\x48\x8B\xCF\x48\x89\x45\xB7",
+                    "xxx????xxxxxxx"
+                )
+            );
+        }
+
+        public StateStompingLandParameter(int in_stompBounceCount) : this()
+        {
+            StompBounceCount = in_stompBounceCount;
+        }
     }
 
     /// <summary>

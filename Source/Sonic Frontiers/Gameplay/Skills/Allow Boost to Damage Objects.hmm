@@ -4,82 +4,44 @@ Code "Allow Boost to Damage Objects" in "Gameplay/Skills" by "Hyper & NM" does "
 
     #lib "Player"
 
-    // Just for the sake of readability, we'll be condensing multiple state checks for all characters into a single check
-    // We can achieve this through an enum containing state IDs shared between them
-    enum SharedStateID
+    using System.Collections.Generic;
+
+    static bool _isBoostPrevious = false;
+
+    static List<Sonic.StateID> _boostStates = new()
     {
-        StateAirBoost     = 22,
-        StateBumpJump     = 16,
-        StateGrind        = 47,
-        StateGrindDamage  = 50,
-        StateGrindJump    = 48,
-        StateGrindRoot    = 46,
-        StateGrindStep    = 52,
-        StateJump         = 8,
-        StateLeftStepRun  = 74,
-        StateRightStepRun = 75,
-        StateRun          = 4,
-        StateWallMove     = 90,
-    }
-
-    static bool IsDamageActive = false;
-
-    static bool IsBoosting()
-    {
-        if (!IS_STATE_FLAG(IsBoost))
-            return false;
-
-        // The player is still considered to be boosting if the respective input remains pressed after entering a new state,
-        // i.e parrying
-        // We'll need to make sure this doesn't affect the code in gameplay
-        if (!Player.State.IsStateActive(
-            SharedStateID.StateAirBoost,
-            SharedStateID.StateBumpJump,
-            SharedStateID.StateGrind,
-            SharedStateID.StateGrindDamage,
-            SharedStateID.StateGrindJump,
-            SharedStateID.StateGrindRoot,
-            SharedStateID.StateGrindStep,
-
-            // Valid when "Maintain boost during a jump" is enabled
-            SharedStateID.StateJump,
-
-            SharedStateID.StateLeftStepRun,
-            SharedStateID.StateRightStepRun,
-            SharedStateID.StateRun,
-            SharedStateID.StateWallMove
-        ))
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
+        Sonic.StateID.StateAirBoost,
+        Sonic.StateID.StateBumpJump,
+        Sonic.StateID.StateGrind,
+        Sonic.StateID.StateGrindDamage,
+        Sonic.StateID.StateGrindJump,
+        Sonic.StateID.StateGrindRoot,
+        Sonic.StateID.StateGrindStep,
+        Sonic.StateID.StateJump,
+        Sonic.StateID.StateLeftStepRun,
+        Sonic.StateID.StateRightStepRun,
+        Sonic.StateID.StateRun,
+        Sonic.StateID.StateWallMove
+    };
 //
 {
-    bool isBoosting = IsBoosting();
-
-    // If we've begun boosting, we'll need to make sure our collision sphere is set only once
-    if (isBoosting && !IsDamageActive)
+    Sonic.StateID NotifyStateRunDamageCollision(Sonic.StateID in_stateId, Sonic.StateID[] in_stateStackTrace)
     {
-        IsDamageActive = true;
+        if (_boostStates.Contains(in_stateId) && IS_STATE_FLAG(IsBoost))
+        {
+            Player.Collision.SetCollisionSphere(Player.CollisionType.Damage, 1.0f);
+            Player.Collision.SetEntityCollision(false);
+            _isBoostPrevious = true;
+        }
+        else if (_isBoostPrevious)
+        {
+            Player.Collision.SetCollisionSphere(Player.CollisionType.Default, 1.0f);
+            Player.Collision.SetEntityCollision(true);
+            _isBoostPrevious = false;
+        }
 
-        Player.Collision.SetCollisionSphere(Player.CollisionType.Damage, 1.0f);
-        Player.Collision.SetEntityCollision(true);
-
-        return;
+        return in_stateId;
     }
 
-    // We've finished boosting, so we need to make sure our collision sphere is removed once
-    if (!isBoosting && IsDamageActive)
-    {
-        IsDamageActive = false;
-
-        Player.Collision.SetCollisionSphere(Player.CollisionType.Default, 1.0f);
-        Player.Collision.SetEntityCollision(false);
-
-        return;
-    }
+    Player.State.AddStateNotifyAction<Sonic.StateID>(NotifyStateRunDamageCollision);
 }
