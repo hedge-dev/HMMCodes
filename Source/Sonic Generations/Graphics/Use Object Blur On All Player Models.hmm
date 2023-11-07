@@ -1,5 +1,0 @@
-Patch "Use Object Blur On All Player Models" in "Graphics" by "Skyth" 
-WriteProtected<uint>(0x13E0000, 8); // MTFx
-WriteProtected<uint>(0x10CDE69, 1); // FxPipeline
-
-

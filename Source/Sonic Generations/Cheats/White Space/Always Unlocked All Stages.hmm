@@ -1,0 +1,5 @@
+Patch "Always Unlocked All Stages" in "Cheats/White Space" by "Muzzarino" 
+WriteProtected<byte>(0xEE5DE8, 0xC)
+WriteProtected<byte>(0xEE6134, 0xC)
+
+

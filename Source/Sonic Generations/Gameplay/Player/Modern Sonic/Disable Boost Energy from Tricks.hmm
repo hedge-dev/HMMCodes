@@ -1,0 +1,5 @@
+Patch "Disable Boost Energy from Tricks" in "Gameplay/Player/Modern Sonic" by "PTKay" does "Disables receiving boost from performing tricks."
+WriteNop(0xE4B323, 8)
+WriteNop(0xE4B353, 8)
+
+

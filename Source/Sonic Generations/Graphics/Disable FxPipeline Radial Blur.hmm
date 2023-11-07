@@ -1,4 +1,0 @@
-Patch "Disable FxPipeline Radial Blur" in "Graphics" by "Hyper" 
-WriteProtected<byte>(0x15CE9B0, 0x00);
-
-

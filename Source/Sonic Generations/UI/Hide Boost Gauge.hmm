@@ -1,0 +1,4 @@
+Patch "Hide Boost Gauge" in "UI" by "Hyper" 
+WriteNop(0x109B8DD, 2);
+
+

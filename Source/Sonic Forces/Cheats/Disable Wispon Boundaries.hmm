@@ -1,4 +1,0 @@
-Patch "Disable Wispon Boundaries" in "Cheats" by "CodenameGamma" 
-WriteNop(0x140267527, 0x00000005)
-
-

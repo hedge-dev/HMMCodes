@@ -1,4 +1,0 @@
-Patch "Homing Attack on Boost" in "Gameplay" by "SWS90" does "Remaps the homing attack to the X button like Sonic Unleashed." 
-WriteProtected<byte>(0x015FA418, 0)
-
-

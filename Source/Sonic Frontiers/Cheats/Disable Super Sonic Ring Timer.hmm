@@ -1,5 +1,0 @@
-Patch "Disable Super Sonic Ring Timer" by "MegAmi" in "Cheats" does "Disables losing a ring every second as Super Sonic."
-{
-    /* 1.40: 0x14099A959 */
-    WriteNop(ScanSignature("\xE8\x92\x10\xF1\xFF", "xxxxx"), 5);
-}

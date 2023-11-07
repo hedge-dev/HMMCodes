@@ -1,4 +1,0 @@
-Patch "Never Subtract Points When Buying a Skill" in "Cheats" by "Muzzarino" 
-WriteNop(0x440726, 6)
-
-

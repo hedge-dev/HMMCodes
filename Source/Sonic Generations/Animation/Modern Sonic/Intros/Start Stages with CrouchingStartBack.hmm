@@ -1,0 +1,5 @@
+Patch "Start Stages with CrouchingStartBack" in "Animation/Modern Sonic/Intros" by "Hyper" 
+WriteProtected<byte>(0xD944D3, 0xE9, 0xEF, 0x01, 0x00, 0x00);
+WriteNop(0xD946F0, 2);
+
+

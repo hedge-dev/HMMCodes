@@ -1,6 +1,0 @@
-Patch "No Out of Control Balloons" in "Gameplay" by "N69" does "Prevents control being restricted after hitting a balloon." 
-WriteProtected<uint>(0x11BEBAA, 0xB6E9)
-WriteProtected<byte>(0x11BEBAE, 0x0)
-WriteNop(0x11BEBAF, 2)
-
-

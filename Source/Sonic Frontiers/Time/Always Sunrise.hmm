@@ -1,0 +1,10 @@
+Code "Always Sunrise" in "Time" by "Hyper" does "Forces the time to always be 4:15 AM on the islands."
+//
+    #lib "Lua"
+//
+{
+    Lua.SetPrintPreviousError(false);
+    Lua.Call("SetTime", 4.0f, 15.0f);
+    Lua.Call("SetTimePause", true);
+    Lua.SetPrintPreviousError(true);
+}

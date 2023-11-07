@@ -1,0 +1,37 @@
+Patch "Disable Challenge Rails" in "Gameplay/Open Zone/Objects" by "Hyper" does 
+/*
+Disables the white rails that appear after completing challenges.
+
+Your progress will still be saved, so disabling this code after completing challenges will still unlock their respective rails.
+*/
+{
+    WriteAsmHook
+    (
+        @"
+            add rsp, 0x40
+            pop rdi
+            ret
+        ",
+
+        /* 0x148E533EF */
+        ScanSignature
+        (
+            "\x48\x89\xD3\x48\x89\xCF\xE8\xCC\xCC\xCC\xCC\x48\x89\xC2\x48\x89\xF9\xE8\xCC\xCC\xCC\xCC\x48\x89\xDA",
+            "xxxxxxx????xxxxxxx????xxx"
+        ),
+
+        HookBehavior.Replace
+    );
+
+    /* 0x14033E730 */
+    long addr = ScanSignature
+    (
+        "\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x60\x8B\xDA\x48",
+        "xxxxxxxxxxxxx"
+    );
+
+    if (addr != 0)
+        WriteNop(addr + 0x5F, 5);
+}
+
+

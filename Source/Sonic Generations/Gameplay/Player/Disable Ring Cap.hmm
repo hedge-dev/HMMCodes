@@ -1,0 +1,5 @@
+Patch "Disable Ring Cap" in "Gameplay/Player" by "Darío" does "Allows the ring counter to exceed 999 rings." 
+WriteProtected<ushort>(0xE68522, 0xDEB)
+WriteProtected<byte>(0x1098E5F, 0xEB)
+
+

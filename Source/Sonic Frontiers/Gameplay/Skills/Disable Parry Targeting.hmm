@@ -1,0 +1,14 @@
+Patch "Disable Parry Targeting" in "Gameplay/Skills" by "Hyper" does "Disables the player automatically targeting the nearest enemy when parrying."
+{
+    WriteNop
+    (
+        /* 0x14093965E */
+        ScanSignature
+        (
+            "\xE8\xCC\xCC\xCC\xCC\x48\x8B\xCE\x45\x32\xFF",
+            "x????xxxxxx"
+        ),
+
+        5
+    );
+}

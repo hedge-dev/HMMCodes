@@ -1,0 +1,5 @@
+Patch "Disable Homing Delay" in "Gameplay/Player" by "Hyper" 
+WriteNop(0x1205D44, 8);
+WriteProtected<byte>(0x15FA49C, 0x00);
+
+

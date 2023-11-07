@@ -1,0 +1,33 @@
+Code "Fix Stomp Reset" in "Fixes/Gameplay" by "Hyper" does "Fixes the stomp attack only resetting once you hit the ground, allowing you to perform multiple stomps whilst still airborne." 
+//
+    #lib "Player"
+
+    static bool IsInitialised = false;
+//
+{
+    if (!IsInitialised)
+    {
+        WriteNop
+        (
+            /* 0x1409D1D4B */
+            ScanSignature
+            (
+                "\x74\x98\x45\x33\xC0",
+                "xxxxx"
+            ),
+
+            2
+        );
+
+        IsInitialised = true;
+    }
+
+    if (Player.GetPlayerType() != Player.PlayerType.Sonic)
+        return;
+    
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateBounceJump)
+    {
+        if (Player.Input.IsPressed(Player.InputActionType.PlayerStomping))
+            Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateStompingDown);
+    }
+}

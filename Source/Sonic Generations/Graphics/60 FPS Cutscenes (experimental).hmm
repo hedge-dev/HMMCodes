@@ -1,4 +1,0 @@
-Patch "60 FPS Cutscenes (experimental)" in "Graphics" by "M&M" 
-WriteProtected<byte>(0xB21F0B, 0xCC, 0xF8, 0x4A);
-
-

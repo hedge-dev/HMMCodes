@@ -1,4 +1,0 @@
-Patch "Colour Dodge Trail Blending" in "Graphics" by "Muzzarino" 
-WriteProtected<byte>(0xE8D3AC, 0x9)
-
-

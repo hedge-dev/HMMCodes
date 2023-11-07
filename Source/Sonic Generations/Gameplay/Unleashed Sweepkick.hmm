@@ -1,4 +1,0 @@
-Patch "Unleashed Sweepkick" in "Gameplay" by "N69" does "Replaces the crouch animation with the sweepkick animation. This does not restore functionality." 
-WriteProtected<ushort>(0xDFF8D6, 0x5608)
-
-

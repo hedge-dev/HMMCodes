@@ -1,7 +1,0 @@
-Patch "Disable Super Sonic Aura Particles" in "Graphics" by "Hyper" 
-WriteProtected<byte>(0xDA28DC, 0xEB);
-WriteNop(0xDA79B1, 5);
-WriteProtected<byte>(0xDA892C, 0xEB);
-WriteNop(0xDAD371, 5);
-
-

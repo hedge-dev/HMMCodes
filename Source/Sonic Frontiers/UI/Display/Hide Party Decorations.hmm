@@ -1,0 +1,28 @@
+Patch "Hide Party Decorations" in "UI/Display" by "Hyper" does "Disables the birthday party decorations on the HUD when using the Party Details option for Island Appearance in Extras." 
+{
+    WriteProtected<byte>
+    (
+        /* 0x140968F33 */
+        ScanSignature
+        (
+            "\x74\x0E\xE8\xCC\xCC\xCC\xCC\x48\x8D\x0D\xCC\xCC\xCC\xCC\xEB\x0C",
+            "xxx????xxx????xx"
+        ),
+
+        0xEB
+    );
+
+    WriteProtected<byte>
+    (
+        /* 0x140969157 */
+        ScanSignature
+        (
+            "\x74\x04\x80\x4F\x28\x04",
+            "xxxxxx"
+        ),
+
+        0xEB
+    );
+}
+
+

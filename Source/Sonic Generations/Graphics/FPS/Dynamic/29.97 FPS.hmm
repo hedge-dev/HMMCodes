@@ -1,0 +1,7 @@
+Patch "29.97 FPS" in "Graphics/FPS/Dynamic" by "PTKay"
+static float FPS = 29.97f; 
+
+fixed (float* pFPS = &FPS)
+    WriteProtected<uint>(0xE7B460, (uint)pFPS);
+
+

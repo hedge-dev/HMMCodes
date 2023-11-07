@@ -1,0 +1,4 @@
+Patch "Disable Prerequisites" in "Cheats/Challenges" by "Muzzarino" does "Allows challenges to be beaten without meeting their prerequisites."
+WriteProtected<uint>(0xD0EAB9, 0xCCC301B0)
+
+

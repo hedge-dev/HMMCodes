@@ -1,0 +1,5 @@
+Patch "Screen Trail Blending" in "Graphics/Effects/Blending" by "Muzzarino" 
+WriteProtected<byte>(0xE8D3AC, 0x2)
+WriteProtected<byte>(0xE8D3B7, 0x4)
+
+

@@ -1,5 +1,0 @@
-Patch "All Rings Can Be Light Dashed" in "Gameplay" by "Skyth" 
-WriteProtected<uint>(0x105334D, 0x10C47C6)
-WriteNop(0x1053351, 16)
-
-

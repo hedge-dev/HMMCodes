@@ -1,0 +1,16 @@
+Patch "Disable Idle Kocos" in "Gameplay/Open Zone/Objects" by "Hyper" does "Disables the Kocos appearing in front of Sonic when idle." 
+{
+    WriteNop
+    (
+        /* 0x1406B8199 */
+        ScanSignature
+        (
+            "\xE8\xCC\xCC\xCC\xCC\x48\x8B\x5C\x24\x50\x48\x8B\x6C\x24\x68",
+            "x????xxxxxxxxxx"
+        ),
+
+        5
+    );
+}
+
+

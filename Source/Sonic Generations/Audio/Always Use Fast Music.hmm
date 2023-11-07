@@ -1,6 +1,0 @@
-Patch "Always Use Fast Music" in "Audio" by "Hyper" does "Always plays the 'faster' music in Green Hill and Sky Sanctuary." 
-WriteProtected<byte>(0xE2E30F, 0xEB);
-WriteNop(0xE2E3A2, 2);
-WriteProtected<byte>(0xE2E3AC, 0xEB, 0x0E);
-
-

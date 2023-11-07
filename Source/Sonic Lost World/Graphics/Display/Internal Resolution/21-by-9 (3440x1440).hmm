@@ -1,0 +1,4 @@
+Patch "21:9 (3440x1440)" in "Graphics/Display/Internal Resolution" by "ĐeäTh" does "Changes the game in-game resolution to a 21:9 (3440x1440) aspect ratio." 
+WriteProtected<int>(ASLR(0x00D56D30), 0x4018E38E)
+
+

@@ -1,4 +1,0 @@
-Patch "Sparkles Remain on the Hub World" in "Gameplay" by "Muzzarino" does "Keeps the sparkle effects in White World for stages you haven't played yet." 
-WriteProtected<ushort>(0xEE3DA6, 0x6EB)
-
-

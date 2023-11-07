@@ -1,0 +1,6 @@
+Patch "Disable Stomp Particles" in "Graphics/Effects" by "Skyth" 
+WriteProtected<byte>(0x15E9094, 0x00);
+WriteProtected<byte>(0x15E90AC, 0x00);
+WriteProtected<byte>(0x15E90C4, 0x00);
+
+

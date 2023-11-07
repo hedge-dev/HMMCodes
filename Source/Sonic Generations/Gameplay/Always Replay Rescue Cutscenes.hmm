@@ -1,0 +1,4 @@
+Patch "Always Replay Rescue Cutscenes" in "Gameplay" by "Muzzarino" does "Always plays the rescue cutscenes after finishing a stage and returning to White Space." 
+WriteProtected<ushort>(0xD29532, 0x6EB)
+
+

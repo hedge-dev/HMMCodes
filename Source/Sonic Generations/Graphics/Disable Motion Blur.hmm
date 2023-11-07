@@ -1,4 +1,0 @@
-Code "Disable Motion Blur" in "Graphics" by "Skyth" 
-Write<byte>(0x1A43103, 0)
-
-

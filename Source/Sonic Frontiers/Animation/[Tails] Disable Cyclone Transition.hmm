@@ -1,7 +1,0 @@
-Patch "[Tails] Disable Cyclone Transition" in "Animation" by "Hyper"
-//
-    #lib "Player"
-//
-{
-    Player.State.Redirect<Tails.StateID>(Tails.StateID.StateCycloneAppear, Tails.StateID.StateCycloneBoost);
-}

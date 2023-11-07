@@ -1,0 +1,4 @@
+Patch "Disable Colour Correction" in "Graphics/Post-processing" by "M&M" 
+WriteProtected<byte>(0x1699F54, 0x00);
+
+

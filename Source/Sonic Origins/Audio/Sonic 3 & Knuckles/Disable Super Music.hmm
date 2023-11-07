@@ -1,0 +1,11 @@
+Code "Disable Super Music" in "Audio/Sonic 3 & Knuckles" by "MegAmi" does "Due to how the cheat works, the Super music may still play in some instances, such as after the AIZ Act 1 bombing cutscene." 
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsAbsPtr() == 0)
+        return;
+    
+    WriteProtected<byte>(RSDK.GetRSDKGlobalsAbsPtr() - 0x08, 0x00);
+}
+

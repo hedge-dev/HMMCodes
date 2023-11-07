@@ -1,0 +1,28 @@
+Patch "Always Play 'One Way Dream' During Credits" in "Audio/Music" by "M&M"
+//
+    #lib "Memory"
+//
+{
+    /* v1.40: 0x1401EB95E */
+    Memory.WriteForceJump
+    (
+        ScanSignature
+        (
+            "\x3C\x02\x0F\x8D\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x48\x8B\xD0",
+            "xxxx????x????xxx"
+        )
+        + 2
+    );
+
+    /* v1.40: 0x1409FFA9A */
+    WriteNop
+    (
+        ScanSignature
+        (
+            "\x3C\x02\x7C\x00\x0F\x28\x05\x00\x00\x00\x00\x48\x8D\x54\x24\x00",
+            "xxx?xxx????xxxx?"
+        ),
+
+        4
+    );
+}
