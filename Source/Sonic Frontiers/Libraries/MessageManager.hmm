@@ -1,9 +1,11 @@
-Library "MessageManager" by "Sajid"
+Library "MessageManager" by "Sajid & Hyper"
 {
     #lib "Memory"
     #lib "HandleManagerBase"
     
+    #import "Collections"
     #import "GameTypes"
+    #import "Messages"
 
     using System.Runtime.InteropServices;
 
@@ -13,7 +15,9 @@ Library "MessageManager" by "Sajid"
     [StructLayout(LayoutKind.Explicit, Size = 0x50)]
     public struct Data
     {
-        [FieldOffset(0)] public ReferencedObject Base;
+        [FieldOffset(0)]    public ReferencedObject Base;
+
+        [FieldOffset(0x20)] public MoveArray<Memory.Pointer<Message>> Messages;
     }
 
     /* 0x1525C0FDF */

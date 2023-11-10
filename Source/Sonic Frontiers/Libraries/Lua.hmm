@@ -475,26 +475,29 @@ Library "Lua" by "Hyper & ĐeäTh"
         }
     }
 
-    public long GetState()
+    public ScriptSequenceManager.ScriptSequence* GetScriptSequence()
     {
         var pScriptSequenceManager = GameManager.GetService<ScriptSequenceManager>();
 
         if (pScriptSequenceManager == null)
-            return 0;
+            return null;
 
         var scriptSequences = pScriptSequenceManager->ScriptSequences;
 
-        if (scriptSequences.Length > 0)
-        {
-            var pScriptSequence = scriptSequences[0].pData;
+        if (scriptSequences.Length <= 0)
+            return null;
 
-            if (pScriptSequence == null)
-                return 0;
+        return scriptSequences[0].pData;
+    }
 
-            return pScriptSequence->pScripts[0]->pLuaState;
-        }
+    public long GetState()
+    {
+        var pScriptSequence = GetScriptSequence();
 
-        return 0;
+        if (pScriptSequence == null)
+            return 0;
+        
+        return pScriptSequence->pScripts[0]->pLuaState;
     }
 
     public (string ScriptName, long pResourceData) GetCurrentScriptResource()

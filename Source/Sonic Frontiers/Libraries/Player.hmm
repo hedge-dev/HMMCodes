@@ -7,7 +7,6 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
     #lib "Collections"
     #lib "GameManager"
     #lib "GameObject"
-    #lib "Lua"
     #lib "MessageManager"
     #lib "Reflection"
     #lib "StringMapOperation"
@@ -26,6 +25,7 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
     #lib "TailsParameters"
 
     #import "GOComponents"
+    #import "Messages"
     #import "Plugins"
     #import "Postures"
     #import "Services"
@@ -101,20 +101,6 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
     {
         if (_isInitialised)
             return;
-        
-        // Allow character switching outside of Another Story.
-        Lua.CreateLineHook
-        (
-            @"""sonic"", ""tails"", ""knuckles"", ""amy"", ",
-
-            "script/resident/stagedata.lua",
-
-            @"attrs\s*=\s*\{",
-
-            HookBehavior.After,
-
-            true
-        );
 
         // Always construct app::player::AmyInfo.
         WriteNop
@@ -188,6 +174,26 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
         _isInitialised = true;
     }
 
+    [LibraryUpdate]
+    public void Update()
+    {
+        var pLevelInfo = GameManager.GetService<LevelInfo>();
+
+        if (pLevelInfo == null)
+            return;
+
+        var pStageData = pLevelInfo->pStageData;
+
+        if (pStageData == null)
+            return;
+        
+        // Update current stage attributes to include other characters.
+        pStageData->AttributeFlags |= (1 << (int)StageInfo.Attributes.Sonic);
+        pStageData->AttributeFlags |= (1 << (int)StageInfo.Attributes.Amy);
+        pStageData->AttributeFlags |= (1 << (int)StageInfo.Attributes.Knuckles);
+        pStageData->AttributeFlags |= (1 << (int)StageInfo.Attributes.Tails);
+    }
+
     public PlayerType GetPlayerType()
     {
         var pLevelInfo = GameManager.GetService<LevelInfo>();
@@ -223,10 +229,10 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
         if (in_playerType == PlayerType.Unknown)
             return;
 
-        Lua.Call("ChangePlayerCharacter", in_playerType.ToString());
+        Messages.SendMessageToGameManager(new MsgChangePlayerCharacter(in_playerType));
     }
 
-    public enum PlayerType
+    public enum PlayerType : sbyte
     {
         Unknown = -1,
         Sonic,

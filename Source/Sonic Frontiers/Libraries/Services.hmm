@@ -529,7 +529,7 @@ Library "Services" by "Hyper"
         /// <summary>
         /// An instance of `hh::game::GameService`, the base class for `app::game::TimeService`.
         /// </summary>
-        [FieldOffset(0)]     public GameService.Data GameService;
+        [FieldOffset(0)]    public GameService.Data GameService;
         
         [FieldOffset(0x88)] public Time CurrentTime;
 
