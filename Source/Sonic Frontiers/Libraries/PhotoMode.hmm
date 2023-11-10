@@ -13,6 +13,7 @@ Library "PhotoMode" by "Hyper"
 
     #import "Cameras"
     #import "GOComponents"
+    #import "Services"
     #import "Messages"
     #import "Services"
 
@@ -22,10 +23,10 @@ Library "PhotoMode" by "Hyper"
     using System.Runtime.InteropServices;
 
     private static bool _isInitialised = false;
-    private static bool _isNewGameMode = false;
+    private static bool _isNewLevel = false;
     private static bool _isPackfileLoaded = false;
 
-    private static string _lastGameModeName = "GameModeUnknown";
+    private static string _lastLevel = string.Empty;
 
     private static long _sigPhotoModeServiceStaticClassCtor = 0;
 
@@ -64,19 +65,21 @@ Library "PhotoMode" by "Hyper"
     [LibraryUpdate]
     public void Update()
     {
-        if (_lastGameModeName != GameMode.GetName())
+        var stageId = LevelInfo.GetCurrentStageID();
+
+        if (_lastLevel != stageId)
         {
-            _lastGameModeName = GameMode.GetName();
-            _isNewGameMode = true;
+            _lastLevel = stageId;
+            _isNewLevel = true;
             _isPackfileLoaded = false;
         }
 
         if (Lua.GetState() != 0)
         {
-            if (_isNewGameMode)
+            if (_isNewLevel)
             {
                 Lua.Call("LoadLevel", "photomode_misc");
-                _isNewGameMode = false;
+                _isNewLevel = false;
                 _isPackfileLoaded = true;
             }
         }
