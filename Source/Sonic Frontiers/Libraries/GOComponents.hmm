@@ -337,22 +337,39 @@ Library "GOComponents" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x5E0, Pack = 0x10)]
     public struct GOCPlayerKinematicParams
     {
-        [FieldOffset(0)]    public GOComponent Base;
+        [FieldOffset(0)]     public GOComponent Base;
         
         /// <summary>
         /// The current position of the player.
         /// </summary>
-        [FieldOffset(0x80)] public Vector3 Position;
+        [FieldOffset(0x80)]  public Vector3 Position;
 
         /// <summary>
         /// The current rotation of the player.
         /// </summary>
-        [FieldOffset(0x90)] public Quaternion Rotation;
+        [FieldOffset(0x90)]  public Quaternion Rotation;
 
         /// <summary>
         /// The current velocity of the player.
         /// </summary>
-        [FieldOffset(0xD0)] public Vector3 Velocity;
+        [FieldOffset(0xD0)]  public Vector3 Velocity;
+        
+        /// <summary>
+        /// Bit flags for kinematics.
+        /// </summary>
+        [FieldOffset(0x1C5)] public KinematicsFlags Flags;
+
+        /// <summary>
+        /// An enum containing known flags for player kinematics.
+        /// </summary>
+        [Flags]
+        public enum KinematicsFlags : byte
+        {
+            /// <summary>
+            /// The player is on the ground.
+            /// </summary>
+            IsGrounded = 2
+        }
     }
 
     /// <summary>
