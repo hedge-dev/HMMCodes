@@ -78,7 +78,7 @@ Notes;
     {
         foreach (var code in HMM.GetCodes())
         {
-            if (code == "Disable Orbit Camera (experimental)")
+            if (code == "Camera/Photo Mode/Disable Orbit Camera (experimental)")
             {
                 _isOrbitCamera = false;
                 break;
