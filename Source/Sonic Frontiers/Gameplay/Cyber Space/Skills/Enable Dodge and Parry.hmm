@@ -100,8 +100,8 @@ Code "Enable Dodge and Parry" in "Gameplay/Cyber Space/Skills" by "Hyper" does "
 {
     if (!_isInitialised)
     {
-        _isDodgeAlways = HMM.GetCodes().Contains("Always Dodge with Side Step");
-        _isDodgeAnalog = HMM.GetCodes().Contains("Always Dodge in Stick Direction");
+        _isDodgeAlways = HMM.GetCodes().Contains("Gameplay/Skills/Always Dodge with Side Step");
+        _isDodgeAnalog = HMM.GetCodes().Contains("Gameplay/Skills/Always Dodge in Stick Direction");
         _isInitialised = true;
     }
     

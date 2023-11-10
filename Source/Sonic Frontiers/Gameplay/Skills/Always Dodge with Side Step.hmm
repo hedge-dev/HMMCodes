@@ -88,11 +88,11 @@ Code "Always Dodge with Side Step" in "Gameplay/Skills" by "Hyper" does "Always 
         {
             switch (code)
             {
-                case "Always Dodge in Stick Direction":
+                case "Gameplay/Skills/Always Dodge in Stick Direction":
                     _isDodgeAnalog = true;
                     break;
 
-                case "Enable Dodge and Parry":
+                case "Gameplay/Cyber Space/Skills/Enable Dodge and Parry":
                     _isDodgeInCyberSpace = true;
                     break;
             }

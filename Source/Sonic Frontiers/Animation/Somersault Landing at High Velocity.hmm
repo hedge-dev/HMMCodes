@@ -37,7 +37,7 @@ This state lasts a fraction of a second, but keep in mind that within that time,
 {
     if (!_isInitialised)
     {
-        if (HMM.GetCodes().Contains("Allow Spin Dash During Auto Run"))
+        if (HMM.GetCodes().Contains("Gameplay/Skills/Allow Spin Dash During Auto Run"))
             _isSpinDashAutoRunAllowed = true;
             
         Sonic.StateID NotifyStateSpringJumpHeadLandDamageCollision(Sonic.StateID in_stateId, Sonic.StateID[] in_stateStackTrace)
