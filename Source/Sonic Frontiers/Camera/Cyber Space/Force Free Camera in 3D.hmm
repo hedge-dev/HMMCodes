@@ -1,0 +1,17 @@
+Code "Force Free Camera in 3D" in "Camera/Cyber Space" by "Hyper" does "Forces the camera to always be controllable in 3D, regardless of camera volumes."
+//
+    #include "BlackboardStatus" noemit
+
+    #lib "Player"
+
+    #import "Messages"
+//
+{
+    if (!IS_WORLD_FLAG(IsCyberSpace))
+        return;
+    
+    if (Player.Status.IsSideView())
+        return;
+    
+    Messages.SendMessageToLayer(16, new MsgStartFreeCamera());
+}

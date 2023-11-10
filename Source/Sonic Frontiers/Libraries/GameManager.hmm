@@ -6,7 +6,9 @@ Library "GameManager" by "Hyper, ĐeäTh & Sajid"
     #lib "GameService"
     #lib "Memory"
     
+    #import "Allocators"
     #import "Collections"
+    #import "Messages"
 
     using System.Runtime.InteropServices;
 
@@ -45,6 +47,11 @@ Library "GameManager" by "Hyper, ĐeäTh & Sajid"
         /// An array of pointers to `hh::game::GameStepListener` instances.
         /// </summary>
         [FieldOffset(0x210)] public ObjectMoveArray<long> GameStepListeners;
+
+        /// <summary>
+        /// An instance of `hh::fnd::MessageQueue`.
+        /// </summary>
+        [FieldOffset(0x300)] public MessageQueue MessageQueue;
     }
 
     /* 0x140C478D8 */

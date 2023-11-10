@@ -16,6 +16,35 @@ Library "Services" by "Hyper"
     using System.Runtime.InteropServices;
 
     /// <summary>
+    /// A struct representation of `app::camera::CameraService`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x1B8)]
+    public struct CameraService
+    {
+        /// <summary>
+        /// Determines if the camera is being controlled by the player.
+        /// </summary>
+        [FieldOffset(0x1AC)] public bool IsFreeCamera;
+
+        /// <summary>
+        /// Bit flags for the current camera.
+        /// </summary>
+        [FieldOffset(0x1AE)] public CameraFlags Flags;
+
+        [Flags]
+        public enum CameraFlags : short
+        {
+            IsControllable = 0x01
+        }
+
+        /// <summary>
+        /// A struct representation of `app::camera::CameraService::LockonInfo`.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit, Size = 0x78)]
+        public struct LockonInfo { }
+    }
+
+    /// <summary>
     /// A struct representation of `app::game::ExpManager`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0xF0)]
@@ -101,7 +130,23 @@ Library "Services" by "Hyper"
             if (pLevelInfo == null)
                 return string.Empty;
 
+            if (pLevelInfo->pStageData == null)
+                return string.Empty;
+
             return pLevelInfo->pStageData->Name.ToString();
+        }
+
+        public static bool IsCustomStage()
+        {
+            var pLevelInfo = GameManager.GetService<LevelInfo>();
+
+            if (pLevelInfo == null)
+                return false;
+
+            if (pLevelInfo->pStageData == null)
+                return false;
+
+            return pLevelInfo->pStageData->CyberName[1] != '-';
         }
 
         /// <summary>

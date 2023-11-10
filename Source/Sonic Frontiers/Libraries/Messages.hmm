@@ -13,17 +13,21 @@ Library "Messages" by "Hyper, Sajid & ĐeäTh"
     using System.Runtime.InteropServices;
     using System.Text;
 
-    /* 0x146E5A6A0 */
-    private static long _sigSendMessageToPlayer = ScanSignature("\x48\x89\x5C\x24\x18\x56\x57\x41\x56\x48\x83\xEC\x20\x48\x8B\x59", "xxxxxxxxxxxxxxxx");
-    FUNCTION_PTR(long, fpSendMessageToPlayer, _sigSendMessageToPlayer, void* in_pPlayer, void* in_pMessage)
+    /* 0x15306BF10 */
+    private static long _sigEnqueueMessage = ScanSignature("\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x63\x41\x38", "xxxxxxxxxxxxxx");
+    FUNCTION_PTR(long, fpEnqueueMessage, _sigEnqueueMessage, MessageQueue* in_pMessageQueue, void* in_pMessage)
+
+    /* 0x150128D20 */
+    private static long _sigSendMessageToLayer = ScanSignature("\x48\x89\x5C\x24\x18\x55\x48\x83\xEC\x20\x48\x63", "xxxxxxxxxxxx");
+    FUNCTION_PTR(long, fpSendMessageToLayer, _sigSendMessageToLayer, GameManager.Data* in_pGameManager, int in_layerIndex, void* in_pMessage)
 
     /* 0x146E60CB0 */
     private static long _sigSendMessageToGameService = ScanSignature("\x48\x89\x5C\x24\x10\x55\x57\x41\x56\x48\x83\xEC\x20\x4C", "xxxxxxxxxxxxxx");
-    FUNCTION_PTR(long, fpSendMessageToGameService, _sigSendMessageToGameService, void* in_pGameService, void* in_pGameManager, void* in_pMessage)
+    FUNCTION_PTR(long, fpSendMessageToGameService, _sigSendMessageToGameService, GameService.Data* in_pGameService, void* in_pGameManager, void* in_pMessage)
 
-    /* 0x15306BF10 */
-    private static long _sigSendMessageToGameManager = ScanSignature("\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x63\x41\x38", "xxxxxxxxxxxxxx");
-    FUNCTION_PTR(long, fpSendMessageToGameManager, _sigSendMessageToGameManager, void* in_pGameManager, void* in_pMessage)
+    /* 0x146E5A6A0 */
+    private static long _sigSendMessageToPlayer = ScanSignature("\x48\x89\x5C\x24\x18\x56\x57\x41\x56\x48\x83\xEC\x20\x48\x8B\x59", "xxxxxxxxxxxxxxxx");
+    FUNCTION_PTR(long, fpSendMessageToPlayer, _sigSendMessageToPlayer, Player.Data* in_pPlayer, void* in_pMessage)
 
     /// <summary>
     /// A struct representation of `hh::fnd::Message`.
@@ -54,6 +58,12 @@ Library "Messages" by "Hyper, Sajid & ĐeäTh"
     }
 
     /// <summary>
+    /// A struct representation of `hh::fnd::MessageQueue`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x40)]
+    public struct MessageQueue { }
+
+    /// <summary>
     /// A struct representation of `app::game::MsgResumeWorld`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0x60)]
@@ -65,7 +75,7 @@ Library "Messages" by "Hyper, Sajid & ĐeäTh"
 
         [FieldOffset(0x30)] public bool UnkBool1;
 
-        public MsgResumeWorld(string in_name)
+        public MsgResumeWorld()
         {
             /* 0x1414150E0 */
             Base.pVftable = Memory.ReadEffectiveAddress
@@ -77,7 +87,10 @@ Library "Messages" by "Hyper, Sajid & ĐeäTh"
                     "xxx????xxxxxxxxx????xxxxxxxxx????xxxx"
                 )
             );
+        }
 
+        public MsgResumeWorld(string in_name) : this()
+        {
             fixed (byte* pName = Name)
             {
                 var nameArr = Encoding.UTF8.GetBytes(in_name.Length <= 16 ? in_name : in_name.Substring(0, 16));
@@ -88,6 +101,22 @@ Library "Messages" by "Hyper, Sajid & ĐeäTh"
 
             // Set common defaults for unknown values.
             UnkBool1 = true;
+        }
+    }
+
+    /// <summary>
+    /// A struct representation of `app::camera::MsgStartFreeCamera`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x50)]
+    public struct MsgStartFreeCamera
+    {
+        [FieldOffset(0)]    public Message Base = new Message(0x2329);
+
+        [FieldOffset(0x20)] public float UnkFloat1;
+
+        public MsgStartFreeCamera()
+        {
+            UnkFloat1 = 0.4f;
         }
     }
 
@@ -107,7 +136,7 @@ Library "Messages" by "Hyper, Sajid & ĐeäTh"
 
         [FieldOffset(0x38)] public bool UnkBool1;
 
-        public MsgSuspendWorld(string in_name, uint in_flags)
+        public MsgSuspendWorld()
         {
             /* 0x1414150B0 */
             Base.pVftable = Memory.ReadEffectiveAddress
@@ -119,7 +148,10 @@ Library "Messages" by "Hyper, Sajid & ĐeäTh"
                     "xxx????xxxxxxxxxxxxxx????xxxxxxxxxxxx"
                 )
             );
+        }
 
+        public MsgSuspendWorld(string in_name, uint in_flags) : this()
+        {
             fixed (byte* pName = Name)
             {
                 var nameArr = Encoding.UTF8.GetBytes(in_name.Length <= 16 ? in_name : in_name.Substring(0, 16));
@@ -160,14 +192,24 @@ Library "Messages" by "Hyper, Sajid & ĐeäTh"
         }
     }
 
-    public void SendMessageToPlayer<T>(T in_message) where T : unmanaged
+    public void EnqueueMessage<T>(T in_message) where T : unmanaged
     {
-        var pPlayer = Player.GetPlayerData();
+        var pGameManager = GameManager.Get();
 
-        if (pPlayer == null)
+        if (pGameManager == null)
             return;
 
-        GET_FUNCTION_PTR(fpSendMessageToPlayer)(pPlayer, &in_message);
+        GET_FUNCTION_PTR(fpEnqueueMessage)(&pGameManager->MessageQueue, &in_message);
+    }
+
+    public void SendMessageToLayer<T>(int in_layerIndex, T in_message) where T : unmanaged
+    {
+        var pGameManager = GameManager.Get();
+
+        if (pGameManager == null)
+            return;
+
+        GET_FUNCTION_PTR(fpSendMessageToLayer)(pGameManager, in_layerIndex, &in_message);
     }
 
     public void SendMessageToGameService<T>(GameService.Data* in_pGameService, T in_message) where T : unmanaged
@@ -178,13 +220,13 @@ Library "Messages" by "Hyper, Sajid & ĐeäTh"
         GET_FUNCTION_PTR(fpSendMessageToGameService)(in_pGameService, in_pGameService->pGameManager, &in_message);
     }
 
-    public void SendMessageToGameManager<T>(T in_message) where T : unmanaged
+    public void SendMessageToPlayer<T>(T in_message) where T : unmanaged
     {
-        var pGameManager = GameManager.Get();
+        var pPlayer = Player.GetPlayerData();
 
-        if (pGameManager == null)
+        if (pPlayer == null)
             return;
 
-        GET_FUNCTION_PTR(fpSendMessageToGameManager)((void*)(((long)pGameManager) + 0x300), &in_message);
+        GET_FUNCTION_PTR(fpSendMessageToPlayer)(pPlayer, &in_message);
     }
 }
