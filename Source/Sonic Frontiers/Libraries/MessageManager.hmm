@@ -1,19 +1,19 @@
 Library "MessageManager" by "Sajid"
 {
-    #import "GameTypes"
-
     #lib "Memory"
     #lib "HandleManagerBase"
+    
+    #import "GameTypes"
 
     using System.Runtime.InteropServices;
 
     /// <summary>
     /// A struct representation of `hh::fnd::MessageManager`.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit, Size = 0x50, Pack = 0x08)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x50)]
     public struct Data
     {
-        [FieldOffset(0x00)] public ReferencedObject Base;
+        [FieldOffset(0)] public ReferencedObject Base;
     }
 
     /* 0x1525C0FDF */
@@ -23,7 +23,7 @@ Library "MessageManager" by "Sajid"
         "xxx????xxxx"
     );
 
-    /* 0x1525C0FDF */
+    /* 0x152BA6262 */
     private static long _sigMessageManagerHandleManagerSingleton = ScanSignature
     (
         "\x48\x89\x05\xCC\xCC\xCC\xCC\x48\x89\xF8",
@@ -46,13 +46,13 @@ Library "MessageManager" by "Sajid"
         return *(HandleManagerBase.Data**)Memory.ReadEffectiveAddress(_sigMessageManagerHandleManagerSingleton);
     }
 
-    public Messenger* GetMessengerFromHandle(int handle)
+    public Messenger* GetMessengerFromHandle(int in_handle)
     {
         var manager = GetHandleManager();
         
         if (manager == null)
             return null;
 
-        return (Messenger*)manager->GetObject(handle);
+        return (Messenger*)manager->GetObject(in_handle);
     }
 }

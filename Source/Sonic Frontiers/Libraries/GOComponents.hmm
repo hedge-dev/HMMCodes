@@ -2,10 +2,13 @@ Library "GOComponents" by "Hyper"
 {
     #include "Helpers" noemit
 
+    #lib "GameObject"
+    #lib "GOComponentManager"
     #lib "Helpers"
     #lib "Memory"
     #lib "Player"
     #lib "PlayerEffect"
+    #lib "StringMapOperation"
 
     #import "Cameras"
     #import "Collections"
@@ -25,9 +28,9 @@ Library "GOComponents" by "Hyper"
     public struct GOComponent
     {
         /// <summary>
-        /// A pointer to an instance of `app::player::Player`.
+        /// A pointer to an instance of `hh::game::GameObject` acting as the parent of this component.
         /// </summary>
-        [FieldOffset(0x28)] public Player.Data* pPlayer;
+        [FieldOffset(0x28)] public GameObject.Data* pGameObject;
 
         /// <summary>
         /// A pointer to an instance of `GOComponentStaticClass`.
@@ -55,6 +58,8 @@ Library "GOComponents" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0xA0)]
     public struct GOCCamera
     {
+        [FieldOffset(0)]    public GOComponent Base;
+
         /// <summary>
         /// An array of pointers to `CameraControllerWrapper` instances.
         /// </summary>
@@ -88,6 +93,8 @@ Library "GOComponents" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0xC8)]
     public struct GOCEventTimer
     {
+        [FieldOffset(0)] public GOComponent Base;
+        
         [StructLayout(LayoutKind.Explicit, Size = 0x20)]
         public struct TimerData
         {
@@ -114,6 +121,8 @@ Library "GOComponents" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x88)]
     public struct GOCPlayerBlackboard
     {
+        [FieldOffset(0)]    public GOComponent Base;
+        
         /// <summary>
         /// A pointer to an instance of `app::player::Blackboard`.
         /// </summary>
@@ -126,10 +135,154 @@ Library "GOComponents" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0xE0)]
     public struct GOCPlayerEffect
     {
+        [FieldOffset(0)]    public GOComponent Base;
+        
         /// <summary>
         /// A pointer to an instance of `app::player::EffectList`.
         /// </summary>
         [FieldOffset(0x88)] public PlayerEffect.EffectList* pEffectList;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::GOCPlayerEyesight`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0xA0)]
+    public struct GOCPlayerEyesight
+    {
+        [FieldOffset(0)]    public GOComponent Base;
+        
+        [FieldOffset(0x80)] public ObjectMoveArray<Memory.Pointer<PlayerEyesightComponent>> EyesightComponents;
+
+        public PlayerEyesightComponent* GetEyesightComponent(string in_eyesightName)
+        {
+            foreach (var pEyesight in EyesightComponents)
+            {
+                if (pEyesight.pData->GetNameHash()() == StringMapOperation.ComputeHash(in_eyesightName))
+                    return pEyesight.pData;
+            }
+
+            return null;
+        }
+
+        MAKE_GENERIC_API(GetEyesightComponent)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::PlayerEyesightComponent`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x90)]
+    public struct PlayerEyesightComponent
+    {
+        VFUNCTION_PTR(PlayerEyesightComponent, 3, uint, GetNameHash)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::HomingEyesight`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x150, Pack = 0x10)]
+    public struct HomingEyesight
+    {
+        [FieldOffset(0)]    public PlayerEyesightComponent Base;
+
+        [FieldOffset(0xD8)] public ObjectMoveArray<Memory.Pointer<TargetData>> Targets;
+
+        /// <summary>
+        /// Gets the target based on its priority.
+        /// The highest priority (0) is the current homing target.
+        /// </summary>
+        /// <param name="in_isLow">Determines if this function retrieves the lowest priority homing target.</param>
+        /// <returns>The homing target at the requested priority.</returns>
+        public TargetData* GetPriorityTarget(bool in_isLow = false)
+        {
+            if (Targets.Length == 0)
+                return null;
+            
+            return Targets[in_isLow ? Targets.Length - 1 : 0].pData;
+        }
+
+        /// <summary>
+        /// Gets the target nearest to the player based on its relative position.
+        /// </summary>
+        /// <returns>The nearest target to the player.</returns>
+        public TargetData* GetNearestTarget()
+        {
+            if (Targets.Length == 0)
+                return null;
+
+            var minTarget = Targets[0];
+            var minDist = minTarget.pData->Distance;
+
+            foreach (var pTarget in Targets)
+            {
+                if (pTarget.pData->Distance < minDist)
+                {
+                    minTarget = pTarget;
+                    minDist = pTarget.pData->Distance;
+                }
+            }
+
+            return minTarget.pData;
+        }
+
+        /// <summary>
+        /// Determines if the input target data belongs to an enemy.
+        /// </summary>
+        /// <param name="in_pTarget">The target to check.</param>
+        /// <returns>A boolean representation of whether the input target data belongs to an enemy.</returns>
+        public bool IsTargetEnemy(TargetData* in_pTarget = null)
+        {
+            if (in_pTarget == null)
+            {
+                in_pTarget = GetPriorityTarget();
+
+                if (in_pTarget == null)
+                    return false;
+            }
+
+            var pGameObject = in_pTarget->GetGameObject();
+                
+            if (pGameObject == null)
+                return false;
+
+            // Enemies will always use GOCHealth.
+            return GameObject.GetGOC(pGameObject, "GOCHealth") != null;
+        }
+
+        /// <summary>
+        /// A struct representation of `app::player::HomingEyesight::TargetData`.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit, Size = 0xE0, Pack = 0x10)]
+        public struct TargetData
+        {
+            /// <summary>
+            /// The handle value for the collider component for the target object.
+            /// </summary>
+            [FieldOffset(0x20)] public int ColliderHandle;
+        
+            /// <summary>
+            /// The position of the target object.
+            /// </summary>
+            [FieldOffset(0x30)] public Vector3 Position;
+
+            /// <summary>
+            /// The distance between the player and the target object.
+            /// </summary>
+            [FieldOffset(0xC0)] public float Distance;
+
+            /// <summary>
+            /// Gets the instance of `hh::game::GameObject` associated with this target data.
+            /// </summary>
+            /// <returns>An instance of `hh::game::GameObject`.</returns>
+            public GameObject.Data* GetGameObject()
+            {
+                var pGOComponent = GOComponentManager.GetGOCFromHandle(ColliderHandle);
+
+                if (pGOComponent == null)
+                    return null;
+                
+                return pGOComponent->pGameObject;
+            }
+        }
     }
 
     /// <summary>
@@ -138,6 +291,8 @@ Library "GOComponents" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x170)]
     public struct GOCPlayerHsm
     {
+        [FieldOffset(0)]    public GOComponent Base;
+        
         /// <summary>
         /// A pointer to an instance of `hh::ut::HsmBase`.
         /// </summary>
@@ -182,6 +337,8 @@ Library "GOComponents" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x5E0, Pack = 0x10)]
     public struct GOCPlayerKinematicParams
     {
+        [FieldOffset(0)]    public GOComponent Base;
+        
         /// <summary>
         /// The current position of the player.
         /// </summary>
@@ -204,6 +361,8 @@ Library "GOComponents" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x1A8)]
     public struct GOCPlayerParameter
     {
+        [FieldOffset(0)]    public GOComponent Base;
+        
         /// <summary>
         /// The current mode package type.
         /// </summary>
@@ -242,6 +401,8 @@ Library "GOComponents" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0xA0)]
     public struct GOCPlayerPosture
     {
+        [FieldOffset(0)]    public GOComponent Base;
+        
         /// <summary>
         /// A pointer to an instance of `app::player::PlayerPostureContext`.
         /// </summary>
@@ -262,7 +423,10 @@ Library "GOComponents" by "Hyper"
     /// A struct representation of `app::player::GOCPlayerVisual`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0x180)]
-    public struct GOCPlayerVisual {}
+    public struct GOCPlayerVisual
+    {
+        [FieldOffset(0)] public GOComponent Base;
+    }
 
     /// <summary>
     /// A struct representation of `hh::ui::GOCSprite`.
@@ -270,6 +434,8 @@ Library "GOComponents" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x230)]
     public struct GOCSprite
     {
+        [FieldOffset(0)]     public GOComponent Base;
+        
         /// <summary>
         /// Bit flags for the sprite state.
         /// </summary>
@@ -282,6 +448,8 @@ Library "GOComponents" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x110)]
     public struct GOCTransform
     {
+        [FieldOffset(0)]    public GOComponent Base;
+        
         /// <summary>
         /// The current position of the transform.
         /// </summary>
