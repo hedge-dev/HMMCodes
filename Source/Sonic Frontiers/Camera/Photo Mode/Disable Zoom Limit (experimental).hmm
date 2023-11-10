@@ -1,0 +1,18 @@
+Patch "Disable Zoom Limit (experimental)" in "Camera/Photo Mode" by "Hyper" does
+/*
+Allows the Photo Mode camera to zoom in and out past the base limit.
+
+Known issues;
+- Setting the camera zoom to 90+ FOV causes the game to become unstable.
+*/
+{
+    /* 0x1400A5D69 */
+    var addr = ScanSignature
+    (
+        "\x72\x1C\x41\x0F\x2F\xF0",
+        "xxxxxx"
+    );
+
+    WriteNop(addr, 2);
+    WriteProtected<byte>(addr + 0x16, Assemble("mov rax, rcx; nop"));
+}
