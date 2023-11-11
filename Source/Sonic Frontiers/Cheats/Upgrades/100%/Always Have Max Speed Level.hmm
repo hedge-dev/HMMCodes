@@ -1,0 +1,20 @@
+Code "Always Have Max Speed Level" in "Cheats/Upgrades/100%" by "Hyper" does
+/*
+Gives the player the maximum level for Speed.
+
+WARNING: this will affect your save data!
+*/
+//
+    #lib "SaveData"
+//
+{
+    var saveData = SaveData.GetCurrentSaveData();
+
+    if (saveData == null)
+        return;
+
+    saveData->character.speedLevel = 98;
+
+    for (int i = 0; i < 3; i++)
+        saveData->extraCharacters.characters[i].speedLevel = 98;
+}
