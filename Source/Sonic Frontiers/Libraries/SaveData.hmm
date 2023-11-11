@@ -18,17 +18,17 @@ Library "SaveData" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x490)]
     public struct SaveInterface
     {
-        [FieldOffset(0x18)]  public void* pUserInfoEventListener;
+        [FieldOffset(0x18)] public void* pUserInfoEventListener;
 
         /// <summary>
         /// An array of pointers to instances of `app::save::UserElement`.
         /// </summary>
-        [FieldOffset(0x98)]  public ObjectMoveArray<Memory.Pointer<UserElement>> UserElements;
+        [FieldOffset(0x98)] public ObjectMoveArray<Memory.Pointer<UserElement>> UserElements;
 
         /// <summary>
         /// The last save data header loaded, for some reason.
         /// </summary>
-        [FieldOffset(0xB8)]  public GameData.HeaderData LastLoadedHeader;
+        [FieldOffset(0xB8)] public GameData.HeaderData LastLoadedHeader;
     }
 
     /// <summary>

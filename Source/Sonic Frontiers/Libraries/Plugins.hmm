@@ -1,6 +1,7 @@
 Library "Plugins" by "Hyper"
 {
     #include "Helpers" noemit
+    #include "SaveData" noemit
 
     #lib "Helpers"
     #lib "Memory"
@@ -132,6 +133,30 @@ Library "Plugins" by "Hyper"
         /// Bit flags for the boost gauge.
         /// </summary>
         [FieldOffset(0xD0)] public BoostFlags Flags;
+    
+        /// <summary>
+        /// Gets the boost gauge level from the current boost capacity.
+        /// </summary>
+        /// <returns>The current boost gauge level guessed from the boost capacity.</returns>
+        public ushort GetBoostLevelFromCapacity()
+        {
+            return (ushort)((BoostCapacity - 100.0f) / 12.5f);
+        }
+
+        /// <summary>
+        /// Gets the boost capacity from the current boost gauge level.
+        /// </summary>
+        /// <param name="in_boostGaugeLevel">The boost gauge level.</param>
+        /// <returns>The current boost capacity guessed from the boost gauge level.</returns>
+        public float GetBoostCapacityFromLevel()
+        {
+            ushort? boostGaugeLevel = SAVE_GET_PARAM(character.boostGaugeLevel);
+
+            if (boostGaugeLevel == null)
+                return 100.0f;
+            
+            return 100.0f + (boostGaugeLevel.Value * 12.5f);
+        }
 
         /// <summary>
         /// An enum containing known flags for `app::player::StatePluginBoost`.
