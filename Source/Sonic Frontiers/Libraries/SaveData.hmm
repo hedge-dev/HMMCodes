@@ -1,4 +1,4 @@
-Library "Save" by "Hyper"
+Library "SaveData" by "Hyper"
 {
     #lib "GameData"
     #lib "GameManager"
@@ -35,7 +35,7 @@ Library "Save" by "Hyper"
     public struct UserElement
     {
         /// <summary>
-        /// A read-only instance of the current save data.
+        /// An instance of the current save data.
         /// </summary>
         [FieldOffset(0x50)]     public GameData.Root GameData;
 
