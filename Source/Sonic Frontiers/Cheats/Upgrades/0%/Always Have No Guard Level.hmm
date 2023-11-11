@@ -5,16 +5,11 @@ Resets the level to 1/99 for Guard.
 WARNING: this will affect your save data!
 */
 //
-    #lib "SaveData"
+    #include "SaveData" noemit
 //
 {
-    var saveData = SaveData.GetCurrentSaveData();
-
-    if (saveData == null)
-        return;
-
-    saveData->character.guardLevel = 0;
+    SAVE_SET_PARAM(character.guardLevel, 0);
 
     for (int i = 0; i < 3; i++)
-        saveData->extraCharacters.characters[i].guardLevel = 0;
+        SAVE_SET_PARAM(extraCharacters.characters[i].guardLevel, 0);
 }

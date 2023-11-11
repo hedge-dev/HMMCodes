@@ -5,16 +5,11 @@ Resets the level to 1/99 for Speed.
 WARNING: this will affect your save data!
 */
 //
-    #lib "SaveData"
+    #include "SaveData" noemit
 //
 {
-    var saveData = SaveData.GetCurrentSaveData();
-
-    if (saveData == null)
-        return;
-
-    saveData->character.speedLevel = 0;
+    SAVE_SET_PARAM(character.speedLevel, 0);
 
     for (int i = 0; i < 3; i++)
-        saveData->extraCharacters.characters[i].speedLevel = 0;
+        SAVE_SET_PARAM(extraCharacters.characters[i].speedLevel, 0);
 }

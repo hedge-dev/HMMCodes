@@ -7,6 +7,9 @@ Library "SaveData" by "Hyper"
     #import "Collections"
     #import "Services"
 
+    #define SAVE_GET_PARAM(in_hierarchy) (SaveData.GetCurrentSaveData() == null ? null : SaveData.GetCurrentSaveData()->in_hierarchy)
+    #define SAVE_SET_PARAM(in_hierarchy, in_value) if (SaveData.GetCurrentSaveData() != null) SaveData.GetCurrentSaveData()->in_hierarchy = in_value
+
     using System.Runtime.InteropServices;
 
     /// <summary>

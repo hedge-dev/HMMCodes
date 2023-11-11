@@ -5,16 +5,11 @@ Gives the player the maximum level for Speed.
 WARNING: this will affect your save data!
 */
 //
-    #lib "SaveData"
+    #include "SaveData" noemit
 //
 {
-    var saveData = SaveData.GetCurrentSaveData();
-
-    if (saveData == null)
-        return;
-
-    saveData->character.speedLevel = 98;
+    SAVE_SET_PARAM(character.speedLevel, 98);
 
     for (int i = 0; i < 3; i++)
-        saveData->extraCharacters.characters[i].speedLevel = 98;
+        SAVE_SET_PARAM(extraCharacters.characters[i].speedLevel, 98);
 }
