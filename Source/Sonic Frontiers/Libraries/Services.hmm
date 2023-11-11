@@ -9,6 +9,7 @@ Library "Services" by "Hyper"
     #lib "Resources"
 
     #import "Collections"
+    #import "Save"
 
     #load "System.Numerics.dll"
     
@@ -210,6 +211,23 @@ Library "Services" by "Hyper"
     }
 
     /// <summary>
+    /// A struct representation of `app::save::SaveManager`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x228)]
+    public struct SaveManager
+    {
+        [FieldOffset(0x70)] public void* pGameStepListener;
+
+        [FieldOffset(0x78)] public void* pFrameworkNotificationListener;
+
+        [FieldOffset(0x80)] public void* pUserInfoEventListener;
+
+        [FieldOffset(0x88)] public void* pStatsListener;
+
+        [FieldOffset(0xB8)] public SaveInterface* pSaveInterface;
+    }
+
+    /// <summary>
     /// A struct representation of `app::ScriptSequenceManager`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0x170)]
@@ -231,7 +249,7 @@ Library "Services" by "Hyper"
         [FieldOffset(0x78)]  public long pSaveManagerListener;
 
         /// <summary>
-        /// An array of instances of `app::ScriptSequence`.
+        /// An array of pointers to instances of `app::ScriptSequence`.
         /// </summary>
         [FieldOffset(0x80)]  public ObjectMoveArray<Memory.Pointer<ScriptSequence>> ScriptSequences;
 
