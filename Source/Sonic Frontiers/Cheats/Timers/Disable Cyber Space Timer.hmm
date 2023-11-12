@@ -1,0 +1,19 @@
+Code "Disable Cyber Space Timer" in "Cheats/Timers" by "Hyper"
+//
+    #lib "GameMode"
+
+    #import "GameModes"
+//
+{
+    var pGameModeCyberStage = GameMode.Get("GameModeCyberStage");
+
+    if (pGameModeCyberStage == null)
+        return;
+        
+    var pGameModeStageTimeExtension = pGameModeCyberStage->GetExtension<GameModeStageTimeExtension>();
+
+    if (pGameModeStageTimeExtension == null)
+        return;
+        
+    pGameModeStageTimeExtension->Time = 0.0f;
+}
