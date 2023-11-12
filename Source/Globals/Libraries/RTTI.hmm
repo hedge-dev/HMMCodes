@@ -33,7 +33,7 @@ Library "RTTI" by "Hyper"
         }
 
         public override string ToString()
-            => $"RTTI Complete Object Locator";
+            => $"const {GetTypeDescriptor()->GetName()}::`RTTI Complete Object Locator'";
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -73,7 +73,7 @@ Library "RTTI" by "Hyper"
         }
 
         public override string ToString()
-            => $"RTTI Type Descriptor";
+            => $"class {GetName()} `RTTI Type Descriptor'";
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -88,12 +88,13 @@ Library "RTTI" by "Hyper"
         {
             if (in_index > BaseClassCount)
                 return null;
-            
-            return (BaseClassDescriptor*)(RESOLVE_RELATIVE_PTR(pBaseClasses) + (in_index * 4));
+                
+            var ptr = *(int*)(RESOLVE_RELATIVE_PTR(pBaseClasses) + (in_index * 4));
+            return (BaseClassDescriptor*)(RESOLVE_RELATIVE_PTR(ptr));
         }
 
         public override string ToString()
-            => $"RTTI Class Hierarchy Descriptor";
+            => $"{GetBaseClass(0)->GetTypeDescriptor()->GetName()}::`RTTI Class Hierarchy Descriptor'";
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -109,18 +110,16 @@ Library "RTTI" by "Hyper"
 
         public TypeDescriptor* GetTypeDescriptor()
         {
-            var ptr = *(int*)RESOLVE_RELATIVE_PTR(pTypeDescriptor);
-            return (TypeDescriptor*)RESOLVE_RELATIVE_PTR(ptr);
+            return (TypeDescriptor*)RESOLVE_RELATIVE_PTR(pTypeDescriptor);
         }
 
         public ClassHierarchyDescriptor* GetClassHierarchyDescriptor()
         {
-            var ptr = *(int*)RESOLVE_RELATIVE_PTR(pClassHierarchyDescriptor);
-            return (ClassHierarchyDescriptor*)RESOLVE_RELATIVE_PTR(ptr);
+            return (ClassHierarchyDescriptor*)RESOLVE_RELATIVE_PTR(pClassHierarchyDescriptor);
         }
 
         public override string ToString()
-            => $"RTTI Base Class Descriptor at ({MemberDisplacement}, {VftableDisplacement}, {DisplacementWithinVftable}, {BaseClassAttributes})";
+            => $"{GetTypeDescriptor()->GetName()}::`RTTI Base Class Descriptor at ({MemberDisplacement}, {VftableDisplacement}, {DisplacementWithinVftable}, {BaseClassAttributes})'";
     }
 
     public CompleteObjectLocator* GetRuntimeInfoFromVftable(void* in_pVftable)
