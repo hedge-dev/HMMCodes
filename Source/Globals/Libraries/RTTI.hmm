@@ -2,6 +2,7 @@ Library "RTTI" by "Hyper"
 {
     #lib "Memory"
 
+    // TODO: support 32-bit address space.
     #define RESOLVE_RELATIVE_PTR(in_offset) (0x140000000 + in_offset)
 
     using System.Collections.Generic;
@@ -54,11 +55,11 @@ Library "RTTI" by "Hyper"
         }
     }
 
-    [StructLayout(LayoutKind.Explicit)]
+    [StructLayout(LayoutKind.Sequential)]
     public struct TypeDescriptor
     {
-        [FieldOffset(0)]    public void* pTypeInfo;
-        [FieldOffset(0x08)] public void* pRuntimeRef;
+        public void* pTypeInfo;
+        public void* pRuntimeRef;
         
         public string GetName()
         {
@@ -240,7 +241,7 @@ Library "RTTI" by "Hyper"
         /// Do not undecorate function arguments.
         /// </summary>
         NO_ARGUMENTS = 0x2000,
-        
+
         /// <summary>
         /// Do not undecorate special names, such as vtable, vcall, vector, metatype, and so on.
         /// </summary>
