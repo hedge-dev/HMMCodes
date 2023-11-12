@@ -3,9 +3,14 @@ Library "GameMode" by "Hyper"
     #include "Helpers" noemit
 
     #lib "GameManager"
+    #lib "GameService"
+    #lib "Memory"
     #lib "RTTI"
+    #lib "StringMapOperation"
 
+    #import "Collections"
     #import "GameApplication"
+    #import "GameModes"
     
     using System.Linq;
     using System.Runtime.InteropServices;
@@ -20,8 +25,25 @@ Library "GameMode" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0xE0)]
     public struct Data
     {
+        /// <summary>
+        /// A pointer to an instance of `hh::game::GameManager`.
+        /// </summary>
         [FieldOffset(0x30)] public GameManager.Data* pGameManager;
 
+        /// <summary>
+        /// An array of pointers to instances of `hh::game::GameService`.
+        /// </summary>
+        [FieldOffset(0x90)] public ObjectMoveArray<Memory.Pointer<GameService.Data>> GameServices;
+
+        /// <summary>
+        /// An array of pointers to instances of `app::game::GameModeExtension`.
+        /// </summary>
+        [FieldOffset(0xB0)] public ObjectMoveArray<Memory.Pointer<GameModeExtension>> Extensions;
+
+        /// <summary>
+        /// Gets the name of this `app::game::GameMode` instance via runtime info.
+        /// </summary>
+        /// <returns>The name of this `app::game::GameMode` instance.</returns>
         public string GetName()
         {
             fixed (Data* pThis = &this)
@@ -38,6 +60,24 @@ Library "GameMode" by "Hyper"
                 }
             }
         }
+
+        /// <summary>
+        /// Gets an instance of `app::game::GameModeExtension` by name.
+        /// </summary>
+        /// <param name="in_extensionName">The name of the extension.</param>
+        /// <returns>The requested extension by name.</returns>
+        public GameModeExtension* GetExtension(string in_extensionName)
+        {
+            foreach (var pExtension in Extensions)
+            {
+                if (pExtension.pData->GetNameHash()() == StringMapOperation.ComputeHash(in_extensionName))
+                    return pExtension.pData;
+            }
+
+            return null;
+        }
+
+        MAKE_GENERIC_API(GetExtension)
     }
 
     [LibraryInitializer]
@@ -119,7 +159,7 @@ Library "GameMode" by "Hyper"
     [LibraryUpdate]
     public void Update()
     {
-        if (GameMode.GetName() != "GameModeTutorial")
+        if (GetName() != "GameModeTutorial")
             _destinationMode = (sbyte)DestinationMode.Unknown;
     }
 
