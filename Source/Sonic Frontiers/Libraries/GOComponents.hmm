@@ -53,6 +53,36 @@ Library "GOComponents" by "Hyper"
     }
 
     /// <summary>
+    /// A struct representation of `hh::anim::GOCAnimationSingle`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x100)]
+    public struct GOCAnimationSingle
+    {
+        [FieldOffset(0)]    public GOComponent Base;
+
+        [FieldOffset(0x90)] public void* pUnknownClass;
+    }
+
+    /// <summary>
+    /// A struct representation of `hh::anim::GOCAnimator`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x130)]
+    public struct GOCAnimator
+    {
+        [FieldOffset(0)]     public GOCAnimationSingle Base;
+
+        /// <summary>
+        /// A pointer to an instance of `hh::anim::TriggerListener`.
+        /// </summary>
+        [FieldOffset(0x100)] public void* pTriggerListener;
+
+        /// <summary>
+        /// A pointer to an instance of `hh::anim::AnimationStateListener`.
+        /// </summary>
+        [FieldOffset(0x108)] public void* pAnimationStateListener;
+    }
+
+    /// <summary>
     /// A struct representation of `app::player::GOCCamera`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0xA0)]
@@ -452,11 +482,52 @@ Library "GOComponents" by "Hyper"
     public struct GOCSprite
     {
         [FieldOffset(0)]     public GOComponent Base;
+
+        /// <summary>
+        /// A pointer to an instance of `hh::ui::GOCSprite::Renderable`.
+        /// </summary>
+        [FieldOffset(0x178)] public Renderable* pRenderable;
         
         /// <summary>
         /// Bit flags for the sprite state.
         /// </summary>
         [FieldOffset(0x180)] public byte Flags;
+
+        /// <summary>
+        /// A struct representation of `hh::ui::GOCSprite::Renderable`.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit, Size = 0x58)]
+        public struct Renderable
+        {
+            /// <summary>
+            /// The name of this renderable.
+            /// </summary>
+            [FieldOffset(0x38)] public Helpers.UnmanagedString Name;
+
+            /// <summary>
+            /// A pointer to an instance of `hh::ui::GOCSprite` acting as the parent of this object.
+            /// </summary>
+            [FieldOffset(0x50)] public GOCSprite* pGOCSprite;
+        }
+    }
+
+    /// <summary>
+    /// A struct representation of `app_cmn::fsm::GOCTinyFsm`.
+    /// </summary>
+    [Helpers.InternalName("GOCTinyFsm2"), StructLayout(LayoutKind.Explicit, Size = 0x168)]
+    public struct GOCTinyFsm
+    {
+        [FieldOffset(0)]    public GOComponent Base;
+
+        /// <summary>
+        /// A pointer to an instance of `app_cmn::fsm::GOCTinyFsmContext`.
+        /// </summary>
+        [FieldOffset(0x80)] public void* pGOCTinyFsmContext;
+
+        public T* GetContext<T>() where T : unmanaged
+        {
+            return (T*)pGOCTinyFsmContext;
+        }
     }
 
     /// <summary>

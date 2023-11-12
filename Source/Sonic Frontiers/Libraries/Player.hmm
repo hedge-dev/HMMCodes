@@ -26,6 +26,7 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
 
     #import "GOComponents"
     #import "Messages"
+    #import "Objects"
     #import "Plugins"
     #import "Postures"
     #import "Services"
@@ -1016,6 +1017,26 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
                 IS_STATE_FLAG(IsSpringJump) ||
                 IS_STATE_FLAG(IsWallClimb) ||
                 IS_STATE_FLAG(IsWallClimbIdle);
+        }
+
+        public static bool IsLockOnCursorVisible()
+        {
+            var pUICursor = GameManager.GetGameObject<UICursor>();
+
+            if (pUICursor == null)
+                return false;
+                
+            var pGOCTinyFsm = GameObject.GetGOC<GOCTinyFsm>(&pUICursor->Base);
+
+            if (pGOCTinyFsm == null)
+                return false;
+
+            var pUILockonContext = pGOCTinyFsm->GetContext<UILockonContext>();
+
+            if (pUILockonContext == null)
+                return false;
+                
+            return pUILockonContext->pCollider != null;
         }
 
         public static bool IsSpecialAction()

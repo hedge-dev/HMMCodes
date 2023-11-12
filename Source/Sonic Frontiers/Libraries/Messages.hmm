@@ -17,21 +17,25 @@ Library "Messages" by "Hyper, Sajid & ĐeäTh"
     private static long _sigEnqueueMessage = ScanSignature("\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x63\x41\x38", "xxxxxxxxxxxxxx");
     FUNCTION_PTR(long, fpEnqueueMessage, _sigEnqueueMessage, MessageQueue* in_pMessageQueue, void* in_pMessage)
 
-    /* 0x150128D20 */
-    private static long _sigSendMessageToLayer = ScanSignature("\x48\x89\x5C\x24\x18\x55\x48\x83\xEC\x20\x48\x63", "xxxxxxxxxxxx");
-    FUNCTION_PTR(long, fpSendMessageToLayer, _sigSendMessageToLayer, GameManager.Data* in_pGameManager, int in_layerIndex, void* in_pMessage)
+    /* 0x150880130 */
+    private static long _sigSendMessageToGameManager = ScanSignature("\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x31\xFF\x48\x89\xD6\x48\x89\xCB\x48\x39\xB9\xB8\x01\x00\x00\x76\x28\x48\x8B\x83\xB0\x01\x00\x00\x48\x8B\x0C\xF8\x48\x85\xC9\x74\x0C\x48\x8B\x01\x49\x89\xF0\x48\x89\xDA\xFF\x50\xCC\x48\xFF\xC7\x48\x3B\xBB\xB8\x01\x00\x00\x72\xD8\x83\xBB\xD0\x02\x00\x00\x00\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx?xxxxxxxxxxxxxxxxxxxx");
+    FUNCTION_PTR(void, fpSendMessageToGameManager, _sigSendMessageToGameManager, GameManager.Data* in_pGameManager, void* in_pMessage)
+
+    /* 0x146E56F10 */
+    private static long _sigSendMessageToGameObject = ScanSignature("\x48\x89\x5C\x24\x08\x48\x89\x6C\x24\x10\x48\x89\x74\x24\x18\x57\x48\x83\xEC\x30\x4C\x89\xCF\x41", "xxxxxxxxxxxxxxxxxxxxxxxx");
+    FUNCTION_PTR(byte, fpSendMessageToGameObject, _sigSendMessageToGameObject, void* in_pGameObject, void* in_pGameManager, byte in_layerIndex, void* in_pMessage)
 
     /* 0x146E60CB0 */
     private static long _sigSendMessageToGameService = ScanSignature("\x48\x89\x5C\x24\x10\x55\x57\x41\x56\x48\x83\xEC\x20\x4C", "xxxxxxxxxxxxxx");
     FUNCTION_PTR(long, fpSendMessageToGameService, _sigSendMessageToGameService, GameService.Data* in_pGameService, void* in_pGameManager, void* in_pMessage)
 
+    /* 0x150128D20 */
+    private static long _sigSendMessageToLayer = ScanSignature("\x48\x89\x5C\x24\x18\x55\x48\x83\xEC\x20\x48\x63", "xxxxxxxxxxxx");
+    FUNCTION_PTR(long, fpSendMessageToLayer, _sigSendMessageToLayer, GameManager.Data* in_pGameManager, int in_layerIndex, void* in_pMessage)
+
     /* 0x146E5A6A0 */
     private static long _sigSendMessageToPlayer = ScanSignature("\x48\x89\x5C\x24\x18\x56\x57\x41\x56\x48\x83\xEC\x20\x48\x8B\x59", "xxxxxxxxxxxxxxxx");
     FUNCTION_PTR(long, fpSendMessageToPlayer, _sigSendMessageToPlayer, Player.Data* in_pPlayer, void* in_pMessage)
-
-    /* 0x150880130 */
-    private static long _sigSendMessageToGameManager = ScanSignature("\x48\x89\x5C\x24\x08\x48\x89\x74\x24\x10\x57\x48\x83\xEC\x20\x31\xFF\x48\x89\xD6\x48\x89\xCB\x48\x39\xB9\xB8\x01\x00\x00\x76\x28\x48\x8B\x83\xB0\x01\x00\x00\x48\x8B\x0C\xF8\x48\x85\xC9\x74\x0C\x48\x8B\x01\x49\x89\xF0\x48\x89\xDA\xFF\x50\xCC\x48\xFF\xC7\x48\x3B\xBB\xB8\x01\x00\x00\x72\xD8\x83\xBB\xD0\x02\x00\x00\x00\x48", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx?xxxxxxxxxxxxxxxxxxxx");
-    FUNCTION_PTR(void, fpSendMessageToGameManager, _sigSendMessageToGameManager, GameManager.Data* in_pGameManager, void* in_pMessage)
 
     /// <summary>
     /// A struct representation of `hh::fnd::Message`.
@@ -123,6 +127,27 @@ Library "Messages" by "Hyper, Sajid & ĐeäTh"
 
             // Set common defaults for unknown values.
             UnkBool1 = true;
+        }
+    }
+
+    /// <summary>
+    /// A struct representation of `app::MsgSpringRoute`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x58)]
+    public struct MsgSpringRoute
+    {
+        [FieldOffset(0)]    public Message Base = new Message(0x231E);
+
+        [FieldOffset(0x20)] public int Handle;
+
+        [FieldOffset(0x24)] public float Velocity;
+
+        public MsgSpringRoute() { }
+
+        public MsgSpringRoute(GameObject.Data* in_sender, float in_velocity)
+        {
+            Handle = in_sender->Handle;
+            Velocity = in_velocity;
         }
     }
 
@@ -224,14 +249,26 @@ Library "Messages" by "Hyper, Sajid & ĐeäTh"
         GET_FUNCTION_PTR(fpEnqueueMessage)(&pGameManager->MessageQueue, &in_message);
     }
 
-    public void SendMessageToLayer<T>(int in_layerIndex, T in_message) where T : unmanaged
+    public void SendMessageToGameManager<T>(T in_message) where T : unmanaged
     {
         var pGameManager = GameManager.Get();
 
         if (pGameManager == null)
             return;
 
-        GET_FUNCTION_PTR(fpSendMessageToLayer)(pGameManager, in_layerIndex, &in_message);
+        GET_FUNCTION_PTR(fpSendMessageToGameManager)(pGameManager, &in_message);
+    }
+
+    public void SendMessageToGameObject<T1, T2>(T1 in_gameObject, T2 in_message)
+        where T1 : unmanaged
+        where T2 : unmanaged
+    {
+        var pGameManager = GameManager.Get();
+
+        if (pGameManager == null)
+            return;
+
+        GET_FUNCTION_PTR(fpSendMessageToGameObject)(&in_gameObject, pGameManager, 0, &in_message);
     }
 
     public void SendMessageToGameService<T>(GameService.Data* in_pGameService, T in_message) where T : unmanaged
@@ -242,14 +279,14 @@ Library "Messages" by "Hyper, Sajid & ĐeäTh"
         GET_FUNCTION_PTR(fpSendMessageToGameService)(in_pGameService, in_pGameService->pGameManager, &in_message);
     }
 
-    public void SendMessageToGameManager<T>(T in_message) where T : unmanaged
+    public void SendMessageToLayer<T>(int in_layerIndex, T in_message) where T : unmanaged
     {
         var pGameManager = GameManager.Get();
 
         if (pGameManager == null)
             return;
 
-        GET_FUNCTION_PTR(fpSendMessageToGameManager)(pGameManager, &in_message);
+        GET_FUNCTION_PTR(fpSendMessageToLayer)(pGameManager, in_layerIndex, &in_message);
     }
 
     public void SendMessageToPlayer<T>(T in_message) where T : unmanaged
