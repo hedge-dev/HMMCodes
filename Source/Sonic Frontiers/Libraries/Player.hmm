@@ -247,7 +247,7 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
     public static class Animation
     {
         /* 0x1408122E0 */
-        private static long _sigSetAnimation = ScanSignature("\x40\x53\x48\x83\xEC\x20\xF6\x81\x78\x01\x00\x00\x10\x48\x8B\xDA", "xxxxxxxxxxxxxxxx");
+        private static long _sigSetAnimation = Memory.ReadCall(ScanSignature("\xE8\xCC\xCC\xCC\xCC\x80\xBD\xB0\x00\x00\x00\x00\x48\x8B\x9C\x24\xB8\x00\x00\x00", "x????xxxxxxxxxxxxxxx"));
         FUNCTION_PTR(void, fpSetAnimation, _sigSetAnimation, GOCPlayerVisual* in_pGOCPlayerVisual, long in_pAnimationName, byte in_unk1)
 
         /* 0x140813140 */
