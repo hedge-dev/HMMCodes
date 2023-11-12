@@ -8,6 +8,7 @@ Library "GameManager" by "Hyper, ĐeäTh & Sajid"
     
     #import "Allocators"
     #import "Collections"
+    #import "GameApplication"
     #import "Messages"
 
     using System.Runtime.InteropServices;
@@ -52,6 +53,11 @@ Library "GameManager" by "Hyper, ĐeäTh & Sajid"
         /// An instance of `hh::fnd::MessageQueue`.
         /// </summary>
         [FieldOffset(0x300)] public MessageQueue MessageQueue;
+
+        /// <summary>
+        /// A pointer to an instance of `app::MyApplication`.
+        /// </summary>
+        [FieldOffset(0x350)] public MyApplication* pMyApplication;
     }
 
     /* 0x140C478D8 */
