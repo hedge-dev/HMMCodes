@@ -7,6 +7,7 @@ Library "GameMode" by "Hyper"
 
     #import "GameApplication"
     
+    using System.Linq;
     using System.Runtime.InteropServices;
 
     private static bool _isInitialised = false;
@@ -25,15 +26,15 @@ Library "GameMode" by "Hyper"
         {
             fixed (Data* pThis = &this)
             {
-                var name = RTTI.GetClassName<Data>(pThis);
+                var namespaces = RTTI.GetClassNamespaces(pThis);
 
-                if (string.IsNullOrEmpty(name))
+                if (namespaces.Length <= 0)
                 {
                     return "GameModeUnknown";
                 }
                 else
                 {
-                    return name.Replace("app::game::AV", "");
+                    return namespaces.Last();
                 }
             }
         }

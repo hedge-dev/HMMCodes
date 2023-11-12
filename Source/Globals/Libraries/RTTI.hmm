@@ -13,28 +13,6 @@ Library "RTTI" by "Hyper"
     private static extern uint UnDecorateSymbolName([MarshalAs(UnmanagedType.LPStr)] string name, byte[] outputString, uint maxStringLength, uint flags);
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct BaseClassDescriptor
-    {
-        public int pTypeDescriptor;
-        public int SubElementCount;
-        public int MemberDisplacement;
-        public int VftableDisplacement;
-        public int DisplacementWithinVftable;
-        public int Attributes;
-        public int pClassHierarchyDescriptor;
-
-        public TypeDescriptor* GetTypeDescriptor()
-        {
-            return (TypeDescriptor*)RESOLVE_RELATIVE_PTR(pTypeDescriptor);
-        }
-
-        public ClassHierarchyDescriptor* GetClassHierarchyDescriptor()
-        {
-            return (ClassHierarchyDescriptor*)RESOLVE_RELATIVE_PTR(pClassHierarchyDescriptor);
-        }
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
     public struct CompleteObjectLocator
     {
         public int Signature;
@@ -53,6 +31,9 @@ Library "RTTI" by "Hyper"
         {
             return (ClassHierarchyDescriptor*)RESOLVE_RELATIVE_PTR(pClassHierarchyDescriptor);
         }
+
+        public override string ToString()
+            => $"RTTI Complete Object Locator";
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -61,7 +42,7 @@ Library "RTTI" by "Hyper"
         public void* pTypeInfo;
         public void* pRuntimeRef;
         
-        public string GetName()
+        public string GetName(bool in_isDemangled = true, IEnumerable<DemanglerFlags> in_demanglerFlags = null)
         {
             fixed (TypeDescriptor* pThis = &this)
             {
@@ -70,9 +51,29 @@ Library "RTTI" by "Hyper"
                 if (string.IsNullOrEmpty(result))
                     return string.Empty;
 
-                return result.Remove(0, 1);
+                result = result.TrimStart('.');
+                
+                if (in_isDemangled)
+                {
+                    if (in_demanglerFlags == null)
+                        in_demanglerFlags = new[] { RTTI.DemanglerFlags.NAME_ONLY };
+                    
+                    return Demangle(result, in_demanglerFlags);
+                }
+                else
+                {
+                    return result;
+                }
             }
         }
+
+        public string[] GetNamespaces()
+        {
+            return GetName().Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        public override string ToString()
+            => $"RTTI Type Descriptor";
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -83,13 +84,46 @@ Library "RTTI" by "Hyper"
         public int BaseClassCount;
         public int pBaseClasses;
 
-        public BaseClassDescriptor* BaseClasses
+        public BaseClassDescriptor* GetBaseClass(int in_index)
         {
-            get => (BaseClassDescriptor*)RESOLVE_RELATIVE_PTR(pBaseClasses);
+            if (in_index > BaseClassCount)
+                return null;
+            
+            return (BaseClassDescriptor*)(RESOLVE_RELATIVE_PTR(pBaseClasses) + (in_index * 4));
         }
+
+        public override string ToString()
+            => $"RTTI Class Hierarchy Descriptor";
     }
 
-    public CompleteObjectLocator* GetCompleteObjectLocatorFromVftable(void* in_pVftable)
+    [StructLayout(LayoutKind.Sequential)]
+    public struct BaseClassDescriptor
+    {
+        public int pTypeDescriptor;
+        public int SubElementCount;
+        public int MemberDisplacement;
+        public int VftableDisplacement;
+        public int DisplacementWithinVftable;
+        public int BaseClassAttributes;
+        public int pClassHierarchyDescriptor;
+
+        public TypeDescriptor* GetTypeDescriptor()
+        {
+            var ptr = *(int*)RESOLVE_RELATIVE_PTR(pTypeDescriptor);
+            return (TypeDescriptor*)RESOLVE_RELATIVE_PTR(ptr);
+        }
+
+        public ClassHierarchyDescriptor* GetClassHierarchyDescriptor()
+        {
+            var ptr = *(int*)RESOLVE_RELATIVE_PTR(pClassHierarchyDescriptor);
+            return (ClassHierarchyDescriptor*)RESOLVE_RELATIVE_PTR(ptr);
+        }
+
+        public override string ToString()
+            => $"RTTI Base Class Descriptor at ({MemberDisplacement}, {VftableDisplacement}, {DisplacementWithinVftable}, {BaseClassAttributes})";
+    }
+
+    public CompleteObjectLocator* GetRuntimeInfoFromVftable(void* in_pVftable)
     {
         if (in_pVftable == null)
             return null;
@@ -100,38 +134,39 @@ Library "RTTI" by "Hyper"
         return (CompleteObjectLocator*)(*(long*)((long)in_pVftable - 0x08));
     }
 
-    public string GetClassName<T>(void* in_pClass, bool in_isDemangled = true, IEnumerable<DemanglerFlags> in_demanglerFlags = null) where T : unmanaged
+    public CompleteObjectLocator* GetRuntimeInfo(void* in_pClass)
     {
-        var pCompleteObjectLocator = RTTI.GetCompleteObjectLocatorFromVftable((void*)*(long*)in_pClass);
+        return GetRuntimeInfoFromVftable((void*)*(long*)in_pClass);
+    }
 
-        if (pCompleteObjectLocator == null)
+    public string GetClassName(void* in_pClass, bool in_isDemangled = true, IEnumerable<DemanglerFlags> in_demanglerFlags = null)
+    {
+        var pRuntimeInfo = RTTI.GetRuntimeInfo(in_pClass);
+
+        if (pRuntimeInfo == null)
             return string.Empty;
 
-        var pTypeDescriptor = pCompleteObjectLocator->GetTypeDescriptor();
+        var pTypeDescriptor = pRuntimeInfo->GetTypeDescriptor();
 
         if (pTypeDescriptor == null)
             return string.Empty;
-
-        if (in_isDemangled)
-        {
-            if (in_demanglerFlags == null)
-                in_demanglerFlags = new[] { RTTI.DemanglerFlags.NAME_ONLY };
             
-            return RTTI.Demangle(pTypeDescriptor->GetName(), in_demanglerFlags);
-        }
-        else
-        {
-            return pTypeDescriptor->GetName();
-        }
+        return pTypeDescriptor->GetName(in_isDemangled, in_demanglerFlags);
     }
 
-    public static string Demangle(string in_mangledName, IEnumerable<DemanglerFlags> in_flags)
+    public string[] GetClassNamespaces(void* in_pClass)
     {
+        return GetClassName(in_pClass).Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    public string Demangle(string in_mangledName, IEnumerable<DemanglerFlags> in_flags)
+    {
+        var result = string.Empty;
+        var flags = 0U;
         var demangledBytes = new byte[1024];
-        uint resultFlag = 0;
 
         foreach (var flag in in_flags)
-            resultFlag |= (uint)flag;
+            flags |= (uint)flag;
 
         while (true)
         {
@@ -140,7 +175,7 @@ Library "RTTI" by "Hyper"
                 in_mangledName,
                 demangledBytes,
                 (uint)demangledBytes.Length,
-                (uint)resultFlag
+                (uint)flags
             );
 
             if (resultLength == (demangledBytes.Length - 2))
@@ -155,9 +190,28 @@ Library "RTTI" by "Hyper"
                 if (count < 0)
                     count = demangledBytes.Length;
 
-                return Encoding.ASCII.GetString(demangledBytes, 0, count);
+                result = Encoding.ASCII.GetString(demangledBytes, 0, count);
+
+                break;
             }
         }
+
+        if (string.IsNullOrEmpty(result))
+            return result;
+        
+        var namespaces = result.Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (namespaces.Length > 0)
+        {
+            var last = namespaces[namespaces.Length - 1];
+            
+            if (last.StartsWith("AV"))
+                namespaces[namespaces.Length - 1] = last.Remove(0, 2);
+
+            result = string.Join("::", namespaces);
+        }
+
+        return result;
     }
 
     public enum DemanglerFlags
