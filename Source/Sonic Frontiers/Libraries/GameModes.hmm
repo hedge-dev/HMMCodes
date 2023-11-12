@@ -1,0 +1,18 @@
+Library "GameModes" by "Hyper"
+{
+    #lib "Helpers"
+
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `app::game::GameModeCyberStageChallenge`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x170)]
+    public struct GameModeCyberStageChallenge
+    {
+        /// <summary>
+        /// The directory location of the current stage.
+        /// </summary>
+        [FieldOffset(0xE0)] public Helpers.UnmanagedString Location;
+    }
+}

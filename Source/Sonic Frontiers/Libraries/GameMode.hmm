@@ -127,7 +127,7 @@ Library "GameMode" by "Hyper"
     /// Gets the current instance of `app::game::GameMode`.
     /// </summary>
     /// <returns>The current instance of `app::game::GameMode`.</returns>
-    public Data* Get()
+    public Data* GetCurrentGameMode()
     {
         var pGameManager = GameManager.Get();
 
@@ -152,13 +152,23 @@ Library "GameMode" by "Hyper"
         return pGameMode;
     }
 
+    public Data* Get(string in_gameModeName)
+    {
+        if (in_gameModeName != GetName())
+            return null;
+
+        return GetCurrentGameMode();
+    }
+
+    MAKE_GENERIC_API(Get)
+
     /// <summary>
     /// Gets the name of the current instance of `app::game::GameMode`.
     /// </summary>
     /// <returns>The name of the current instance of `app::game::GameMode`.</returns>
     public string GetName()
     {
-        var pGameMode = Get();
+        var pGameMode = GetCurrentGameMode();
 
         if (pGameMode == null)
             return "GameModeUnknown";
