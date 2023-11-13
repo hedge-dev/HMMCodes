@@ -1,32 +1,19 @@
 Code "Disable Sonic Boom for Regular Objects" in "Gameplay/Skills/Sonic" by "Hyper" does "Disables the Sonic Boom skill when Sonic is targeting anything but enemies, allowing him to freely charge a Spin Dash around targetable objects."
 //
-    #include "BlackboardStatus" noemit
-
     #lib "GameObject"
     #lib "Player"
-
-    #import "GOComponents"
 //
 {
     if (Player.GetPlayerType() != Player.PlayerType.Sonic)
         return;
 
-    var pPlayer = Player.GetPlayerData();
+    var pGameObject = Player.Status.GetLockOnTarget();
 
-    if (pPlayer == null)
-        return;
-
-    var pGOCPlayerEyesight = GameObject.GetGOC<GOCPlayerEyesight>(&pPlayer->GameObject);
-
-    if (pGOCPlayerEyesight == null)
-        return;
-
-    var pHomingEyesight = pGOCPlayerEyesight->GetEyesightComponent<HomingEyesight>();
-
-    if (pHomingEyesight == null)
+    if (pGameObject == null)
         return;
     
-    if (pHomingEyesight->IsTargetEnemy())
+    // Target is an enemy if it has the GOCHealth component.
+    if (GameObject.GetGOC(pGameObject, "GOCHealth") != null)
     {
         Player.State.Restore<Sonic.StateID>(Sonic.StateID.StateSonicBoomKick);
     }
