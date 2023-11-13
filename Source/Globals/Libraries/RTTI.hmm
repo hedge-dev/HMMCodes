@@ -2,8 +2,7 @@ Library "RTTI" by "Hyper"
 {
     #lib "Memory"
 
-    // TODO: support 32-bit address space.
-    #define RESOLVE_RELATIVE_PTR(in_offset) (0x140000000 + in_offset)
+    #define RESOLVE_RELATIVE_PTR(in_offset) (IntPtr.Size == 4 ? in_offset : (0x140000000 + in_offset))
 
     using System.Collections.Generic;
     using System.Runtime.InteropServices;
@@ -46,7 +45,7 @@ Library "RTTI" by "Hyper"
         {
             fixed (TypeDescriptor* pThis = &this)
             {
-                var result = Marshal.PtrToStringAnsi((nint)((long)pThis + 0x10));
+                var result = Marshal.PtrToStringAnsi((nint)((long)pThis + (IntPtr.Size == 4 ? 0x08 : 0x10)));
 
                 if (string.IsNullOrEmpty(result))
                     return string.Empty;
@@ -127,10 +126,12 @@ Library "RTTI" by "Hyper"
         if (in_pVftable == null)
             return null;
 
-        if (!Memory.IsAccessible((nint)in_pVftable))
+        var runtimeInfoOffset = *(long*)((long)in_pVftable - IntPtr.Size);
+
+        if (!Memory.IsAccessible((nint)runtimeInfoOffset))
             return null;
         
-        return (CompleteObjectLocator*)(*(long*)((long)in_pVftable - 0x08));
+        return (CompleteObjectLocator*)runtimeInfoOffset;
     }
 
     public CompleteObjectLocator* GetRuntimeInfo(void* in_pClass)
