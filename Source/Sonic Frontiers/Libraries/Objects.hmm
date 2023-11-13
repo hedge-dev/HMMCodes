@@ -3,6 +3,8 @@ Library "Objects" by "Hyper"
     #lib "GameObject"
     #lib "Helpers"
 
+    #import "GOComponents"
+
     using System.Runtime.InteropServices;
 
     /// <summary>
@@ -23,6 +25,6 @@ Library "Objects" by "Hyper"
         /// <summary>
         /// A pointer to the collider component for the target object.
         /// </summary>
-        [FieldOffset(0x50)] public void* pCollider;
+        [FieldOffset(0x50)] public GOComponent* pGOCCollider;
     }
 }

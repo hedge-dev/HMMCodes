@@ -287,7 +287,7 @@ Library "GOComponents" by "Hyper"
             /// <summary>
             /// The handle value for the collider component for the target object.
             /// </summary>
-            [FieldOffset(0x20)] public int ColliderHandle;
+            [FieldOffset(0x20)] public int GOCColliderHandle;
         
             /// <summary>
             /// The position of the target object.
@@ -305,7 +305,7 @@ Library "GOComponents" by "Hyper"
             /// <returns>An instance of `hh::game::GameObject`.</returns>
             public GameObject.Data* GetGameObject()
             {
-                var pGOComponent = GOComponentManager.GetGOCFromHandle(ColliderHandle);
+                var pGOComponent = GOComponentManager.GetGOCFromHandle(GOCColliderHandle);
 
                 if (pGOComponent == null)
                     return null;

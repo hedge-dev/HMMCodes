@@ -1036,7 +1036,32 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
             if (pUILockonContext == null)
                 return false;
                 
-            return pUILockonContext->pCollider != null;
+            return pUILockonContext->pGOCCollider != null;
+        }
+
+        public static GameObject.Data* GetLockOnTarget()
+        {
+            var pUICursor = GameManager.GetGameObject<UICursor>();
+
+            if (pUICursor == null)
+                return null;
+                
+            var pGOCTinyFsm = GameObject.GetGOC<GOCTinyFsm>(&pUICursor->Base);
+
+            if (pGOCTinyFsm == null)
+                return null;
+
+            var pUILockonContext = pGOCTinyFsm->GetContext<UILockonContext>();
+
+            if (pUILockonContext == null)
+                return null;
+                
+            var pGOCCollider = pUILockonContext->pGOCCollider;
+
+            if (pGOCCollider == null)
+                return null;
+                
+            return pGOCCollider->pGameObject;
         }
 
         public static bool IsSpecialAction()

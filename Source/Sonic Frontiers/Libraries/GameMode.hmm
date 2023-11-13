@@ -49,15 +49,10 @@ Library "GameMode" by "Hyper"
             fixed (Data* pThis = &this)
             {
                 var namespaces = RTTI.GetClassNamespaces(pThis);
-
-                if (namespaces.Length <= 0)
-                {
-                    return "GameModeUnknown";
-                }
-                else
-                {
-                    return namespaces.Last();
-                }
+                
+                return namespaces.Length <= 0
+                    ? "GameModeUnknown"
+                    : namespaces.Last();
             }
         }
 

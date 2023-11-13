@@ -89,6 +89,7 @@ Library "RTTI" by "Hyper"
                 return null;
                 
             var ptr = *(int*)(RESOLVE_RELATIVE_PTR(pBaseClasses) + (in_index * 4));
+            
             return (BaseClassDescriptor*)(RESOLVE_RELATIVE_PTR(ptr));
         }
 
