@@ -9,6 +9,8 @@ Library "Services" by "Hyper"
     #lib "Resources"
 
     #import "Collections"
+    #import "GameTypes"
+    #import "Graphics"
     #import "SaveData"
 
     #load "System.Numerics.dll"
@@ -175,6 +177,57 @@ Library "Services" by "Hyper"
             /// Determines if the current player is grounded.
             /// </summary>
             [FieldOffset(0x2EE)] public bool IsGrounded;
+        }
+    }
+
+    /// <summary>
+    /// A struct representation of `hh::fmv::MovieManager`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0xE8)]
+    public struct MovieManager
+    {
+        /// <summary>
+        /// An array of handles to instances of `app::gfx::MoviePlayerObject`.
+        /// </summary>
+        [FieldOffset(0x98)] public ObjectMoveArray<int> Handles;
+
+        public static HandleManagerBase.Data* GetHandleManager()
+        {
+            /* 0x150274D5F */
+            long sig = ScanSignature
+            (
+                "\x48\x8B\x0D\xCC\xCC\xCC\xCC\x48\x8B\xD6\xE8\xCC\xCC\xCC\xCC\x38\x5C\x24\x70",
+                "xxx????xxxx????xxxx"
+            );
+
+            if (sig == 0)
+                return null;
+
+            /* 0x143DAB038 */
+            return *(HandleManagerBase.Data**)Memory.ReadEffectiveAddress(sig);
+        }
+
+        public static MoviePlayerObject* GetMoviePlayerObjectFromHandle(int in_handle)
+        {
+            var manager = GetHandleManager();
+            
+            if (manager == null)
+                return null;
+
+            return (MoviePlayerObject*)manager->GetObject(in_handle);
+        }
+
+        public MoviePlayer* GetCurrentMoviePlayer()
+        {
+            if (Handles.Length <= 0)
+                return null;
+
+            var pMoviePlayerObject = GetMoviePlayerObjectFromHandle(Handles[0]);
+
+            if (pMoviePlayerObject == null)
+                return null;
+
+            return pMoviePlayerObject->pMoviePlayer;
         }
     }
 
