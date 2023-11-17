@@ -1,0 +1,26 @@
+Library "PlayerVisual" by "NM"
+{
+    #include "Helpers" noemit
+
+    using System.Runtime.InteropServices;
+    
+    /// <summary>
+    /// A struct representation of `app::player::PlayerVisual`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x40)]
+    public struct Data
+    {
+        VFUNCTION_PTR(Data, 1, uint, GetNameHash)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::VisualSuperSonic`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x11C /* ? */)]
+    public struct VisualSuperSonic
+    {
+        [FieldOffset(0x000)] public PlayerVisual.Data Base;
+
+        [FieldOffset(0x118)] public bool              IsSuperSonic2;
+    }
+}

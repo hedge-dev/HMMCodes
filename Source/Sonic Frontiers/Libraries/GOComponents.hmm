@@ -8,6 +8,7 @@ Library "GOComponents" by "Hyper"
     #lib "Memory"
     #lib "Player"
     #lib "PlayerEffect"
+    #lib "PlayerVisual"
     #lib "StringMapOperation"
 
     #import "Cameras"
@@ -472,7 +473,37 @@ Library "GOComponents" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x180)]
     public struct GOCPlayerVisual
     {
-        [FieldOffset(0)] public GOComponent Base;
+        /* 0x1408BA540 */
+        private static long _sigInternalGetVisualAs = ScanSignature(
+            "\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x8B\xD9\x8B\xFA\x48\x8B\x89\x08",
+            "xxxxxxxxxxxxxxxxxxx"
+        );
+
+        [FieldOffset(0x000)] public GOComponent        Base;
+
+        /// <summary>
+        /// A pointer to an instance of `app::player::PlayerVisual`.
+        /// </summary>
+        [FieldOffset(0x108)] public PlayerVisual.Data *pPlayerVisual;
+
+        FUNCTION_PTR(PlayerVisual.Data *, fpInternalGetVisualAs, _sigInternalGetVisualAs, GOCPlayerVisual *_this, uint in_nameHash)
+
+        /// <summary>
+        /// Attempts to cast <see cref="pPlayerVisual"/> to the specified <see cref="Type"/>.
+        /// </summary>
+        /// <typeparam name="T">The <see cref="Type"/> to be used in the cast.</typeparam>
+        /// <returns>The casted <see cref="pPlayerVisual"/> if successful; otherwise, false.</returns>
+        public T *GetVisualAs<T>() where T : unmanaged
+        {
+            Type type = typeof(T);
+            uint hash = StringMapOperation.ComputeHash(type.Name);
+
+            fixed (GOCPlayerVisual *pThis = &this)
+            {
+                PlayerVisual.Data *result = GET_FUNCTION_PTR(fpInternalGetVisualAs)(pThis, hash);
+                return (T *)result;
+            }
+        }
     }
 
     /// <summary>
