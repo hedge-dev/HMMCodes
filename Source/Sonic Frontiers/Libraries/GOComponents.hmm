@@ -492,7 +492,7 @@ Library "GOComponents" by "Hyper"
         /// Attempts to cast <see cref="pPlayerVisual"/> to the specified <see cref="Type"/>.
         /// </summary>
         /// <typeparam name="T">The <see cref="Type"/> to be used in the cast.</typeparam>
-        /// <returns>The casted <see cref="pPlayerVisual"/> if successful; otherwise, false.</returns>
+        /// <returns>If successful, the casted <see cref="pPlayerVisual"/>; otherwise, null.</returns>
         public T *GetVisualAs<T>() where T : unmanaged
         {
             Type type = typeof(T);
