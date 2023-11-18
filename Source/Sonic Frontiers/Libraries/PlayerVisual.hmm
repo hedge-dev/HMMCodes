@@ -21,6 +21,6 @@ Library "PlayerVisual" by "NM"
     {
         [FieldOffset(0x000)] public PlayerVisual.Data Base;
 
-        [FieldOffset(0x118)] public bool              IsSuperSonic2;
+        [FieldOffset(0x118)] public bool IsSuperSonic2;
     }
 }

@@ -479,29 +479,29 @@ Library "GOComponents" by "Hyper"
             "xxxxxxxxxxxxxxxxxxx"
         );
 
-        [FieldOffset(0x000)] public GOComponent        Base;
+        [FieldOffset(0x000)] public GOComponent Base;
 
         /// <summary>
         /// A pointer to an instance of `app::player::PlayerVisual`.
         /// </summary>
-        [FieldOffset(0x108)] public PlayerVisual.Data *pPlayerVisual;
+        [FieldOffset(0x108)] public PlayerVisual.Data* pPlayerVisual;
 
-        FUNCTION_PTR(PlayerVisual.Data *, fpInternalGetVisualAs, _sigInternalGetVisualAs, GOCPlayerVisual *_this, uint in_nameHash)
+        FUNCTION_PTR(PlayerVisual.Data*, fpInternalGetVisualAs, _sigInternalGetVisualAs, GOCPlayerVisual* _this, uint in_nameHash)
 
         /// <summary>
         /// Attempts to cast <see cref="pPlayerVisual"/> to the specified <see cref="Type"/>.
         /// </summary>
         /// <typeparam name="T">The <see cref="Type"/> to be used in the cast.</typeparam>
         /// <returns>If successful, the casted <see cref="pPlayerVisual"/>; otherwise, null.</returns>
-        public T *GetVisualAs<T>() where T : unmanaged
+        public T* GetVisualAs<T>() where T : unmanaged
         {
             Type type = typeof(T);
             uint hash = StringMapOperation.ComputeHash(type.Name);
 
-            fixed (GOCPlayerVisual *pThis = &this)
+            fixed (GOCPlayerVisual* pThis = &this)
             {
-                PlayerVisual.Data *result = GET_FUNCTION_PTR(fpInternalGetVisualAs)(pThis, hash);
-                return (T *)result;
+                PlayerVisual.Data* result = GET_FUNCTION_PTR(fpInternalGetVisualAs)(pThis, hash);
+                return (T*)result;
             }
         }
     }
