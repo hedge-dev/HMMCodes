@@ -1,4 +1,4 @@
-Library "BlackboardBattle" by "Hyper & ĐeäTh" does "Provides access to `app::player::BlackboardBattle` from Sonic Frontiers."
+Library "BlackboardBattle" by "Hyper, ĐeäTh & NM" does "Provides access to `app::player::BlackboardBattle` from Sonic Frontiers."
 {
     #import "Blackboard"
 

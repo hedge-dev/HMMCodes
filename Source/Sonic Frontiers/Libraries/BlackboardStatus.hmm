@@ -1,4 +1,4 @@
-Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `app::player::BlackboardStatus` from Sonic Frontiers."
+Library "BlackboardStatus" by "Hyper, ĐeäTh, NM & Sora" does "Provides access to `app::player::BlackboardStatus` from Sonic Frontiers."
 {
     #include "Helpers" noemit
 
