@@ -1,4 +1,4 @@
-Library "PlayerVisual" by "Hyper & NM"
+Library "PlayerVisuals" by "Hyper & NM"
 {
     #include "Helpers" noemit
 
@@ -8,9 +8,9 @@ Library "PlayerVisual" by "Hyper & NM"
     /// A struct representation of `app::player::PlayerVisual`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0x40)]
-    public struct Data
+    public struct PlayerVisual
     {
-        VFUNCTION_PTR(Data, 1, uint, GetNameHash)
+        VFUNCTION_PTR(PlayerVisual, 1, uint, GetNameHash)
     }
 
     /// <summary>
@@ -19,7 +19,7 @@ Library "PlayerVisual" by "Hyper & NM"
     [StructLayout(LayoutKind.Explicit, Size = 0x130)]
     public struct VisualSuperSonic
     {
-        [FieldOffset(0x000)] public PlayerVisual.Data Base;
+        [FieldOffset(0x000)] public PlayerVisual Base;
 
         [FieldOffset(0x118)] public bool IsSuperSonic2;
     }

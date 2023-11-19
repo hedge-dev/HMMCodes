@@ -8,11 +8,11 @@ Library "GOComponents" by "Hyper"
     #lib "Memory"
     #lib "Player"
     #lib "PlayerEffect"
-    #lib "PlayerVisual"
     #lib "StringMapOperation"
 
     #import "Cameras"
     #import "Collections"
+    #import "PlayerVisuals"
     #import "Plugins"
     #import "Postures"
     #import "States"
@@ -473,37 +473,27 @@ Library "GOComponents" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x180)]
     public struct GOCPlayerVisual
     {
-        /* 0x1408BA540 */
-        private static long _sigInternalGetVisualAs = ScanSignature(
-            "\x48\x89\x5C\x24\x08\x57\x48\x83\xEC\x20\x48\x8B\xD9\x8B\xFA\x48\x8B\x89\x08",
-            "xxxxxxxxxxxxxxxxxxx"
-        );
-
         [FieldOffset(0x000)] public GOComponent Base;
 
         /// <summary>
         /// A pointer to an instance of `app::player::PlayerVisual`.
         /// </summary>
-        [FieldOffset(0x108)] public PlayerVisual.Data* pPlayerVisual;
-
-        FUNCTION_PTR(PlayerVisual.Data*, fpInternalGetVisualAs, _sigInternalGetVisualAs, GOCPlayerVisual* _this, uint in_nameHash)
+        [FieldOffset(0x108)] public PlayerVisual* pPlayerVisual;
 
         /// <summary>
-        /// Attempts to cast <see cref="pPlayerVisual"/> to the specified <see cref="Type"/>.
+        /// Retrieves the contained <see cref="PlayerVisual"/>, given that its name matches <see cref="in_visualName"/>.
         /// </summary>
-        /// <typeparam name="T">The <see cref="Type"/> to be used in the cast.</typeparam>
-        /// <returns>If successful, the casted <see cref="pPlayerVisual"/>; otherwise, null.</returns>
-        public T* GetVisualAs<T>() where T : unmanaged
+        /// <param name="in_visualName">The name of the visual to retrieve.</param>
+        /// <returns>A pointer to the <see cref="PlayerVisual"/> if the names match; otherwise, null.</returns>
+        public PlayerVisual* GetVisual(string in_visualName)
         {
-            Type type = typeof(T);
-            uint hash = StringMapOperation.ComputeHash(type.Name);
-
-            fixed (GOCPlayerVisual* pThis = &this)
-            {
-                PlayerVisual.Data* result = GET_FUNCTION_PTR(fpInternalGetVisualAs)(pThis, hash);
-                return (T*)result;
-            }
+            if (pPlayerVisual->GetNameHash()() == StringMapOperation.ComputeHash(in_visualName))
+                return pPlayerVisual;
+            else
+                return null;
         }
+
+        MAKE_GENERIC_API(GetVisual)
     }
 
     /// <summary>
