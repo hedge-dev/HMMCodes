@@ -118,6 +118,17 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
     using System.Runtime.InteropServices;
     
     /// <summary>
+    /// An enum containing each of the game's difficulty settings.
+    /// </summary>
+    public enum DifficultySetting : byte
+    {
+        Easy = 0x00,
+        Normal = 0x01,
+        Hard = 0x02,
+        Extreme = 0x03
+    }
+
+    /// <summary>
     /// A struct representation of `app::player::BlackboardStatus`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0x180, Pack = 0x10)]
@@ -126,27 +137,32 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh & Sora" does "Provides access to `
         /// <summary>
         /// An instance of `app::player::BlackboardContent`, the base class for `app::player::BlackboardStatus`.
         /// </summary>
-        [FieldOffset(0)]    public BlackboardContent BlackboardContent;
+        [FieldOffset(0x000)] public BlackboardContent BlackboardContent;
 
         /// <summary>
         /// Determines if the current player is in their Super form.
         /// </summary>
-        [FieldOffset(0x24)] public bool IsSuper;
+        [FieldOffset(0x024)] public bool IsSuper;
 
         /// <summary>
         /// Bit flags representing combat statuses.
         /// </summary>
-        [FieldOffset(0x28)] UNMANAGED_FIXED_ARRAY(BitSet64, CombatFlags, 2)
+        [FieldOffset(0x028)] UNMANAGED_FIXED_ARRAY(BitSet64, CombatFlags, 2)
 
         /// <summary>
         /// Bit flags representing state statuses.
         /// </summary>
-        [FieldOffset(0x38)] public BitSet64 StateFlags;
+        [FieldOffset(0x038)] public BitSet64 StateFlags;
 
         /// <summary>
         /// Bit flags representing world statuses.
         /// </summary>
-        [FieldOffset(0x40)] UNMANAGED_FIXED_ARRAY(BitSet64, WorldFlags, 2)
+        [FieldOffset(0x040)] UNMANAGED_FIXED_ARRAY(BitSet64, WorldFlags, 2)
+
+        /// <summary>
+        /// The player's chosen difficulty setting in the game's options.
+        /// </summary>
+        [FieldOffset(0x170)] public DifficultySetting Difficulty;
     }
 
     /// <summary>
