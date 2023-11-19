@@ -13,7 +13,17 @@ Library "BlackboardBattle" by "Hyper & ĐeäTh" does "Provides access to `app::p
         /// <summary>
         /// An instance of `app::player::BlackboardContent`, the base class for `app::player::BlackboardBattle`.
         /// </summary>
-        [FieldOffset(0)]    public BlackboardContent BlackboardContent;
+        [FieldOffset(0x00)] public BlackboardContent BlackboardContent;
+
+        /// <summary>
+        /// The player's current power (attack) level.
+        /// </summary>
+        [FieldOffset(0x20)] public byte PowerLevel;
+
+        /// <summary>
+        /// The player's current defense level.
+        /// </summary>
+        [FieldOffset(0x21)] public byte DefenseLevel;
 
         /// <summary>
         /// The value of the Phantom Rush gauge.
