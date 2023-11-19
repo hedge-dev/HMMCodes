@@ -1,4 +1,4 @@
-Library "GOComponents" by "Hyper"
+Library "GOComponents" by "Hyper & NM"
 {
     #include "Helpers" noemit
 
