@@ -1,4 +1,4 @@
-Patch "Disable Thorn Cylinders" in "Gameplay/Objects" by "Hyper" does "Disables the cylindrical thorn objects placed at the most inconvenient locations in Cyber Space." 
+Patch "Disable Thorn Cylinders" in "Gameplay/Objects" by "Hyper" does "Disables the cylindrical thorn objects placed at the most inconvenient locations." 
 {
     WriteProtected<byte>
     (
