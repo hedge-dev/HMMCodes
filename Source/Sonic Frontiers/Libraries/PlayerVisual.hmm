@@ -16,7 +16,7 @@ Library "PlayerVisual" by "NM"
     /// <summary>
     /// A struct representation of `app::player::VisualSuperSonic`.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit, Size = 0x11C /* ? */)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x130)]
     public struct VisualSuperSonic
     {
         [FieldOffset(0x000)] public PlayerVisual.Data Base;
