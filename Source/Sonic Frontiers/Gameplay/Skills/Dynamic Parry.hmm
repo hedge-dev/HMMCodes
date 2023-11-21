@@ -1,0 +1,95 @@
+Patch "Dynamic Parry" in "Gameplay/Skills" by "NM" does
+/*
+Gradually reduces the player's parry window based on combo count and the active difficulty.
+
+Notes:
+- Each difficulty is given a combo threshold; the smaller the threshold, the faster the window decreases.
+  These are defined as follows:
+  - Easy: 100
+  - Normal: 75
+  - Hard: 40
+  - Extreme: 20
+- If a combo is not active, the parry window will be set to zero, meaning an infinite duration.
+- Perfect Parry is not affected.
+- You may customize the base window per difficulty by editing "maxRecieveTimes" in the character's RFL.
+*/
+//
+    #include "Helpers" noemit
+
+    #import "SonicParameters"
+
+    #lib "BlackboardBattle"
+    #lib "BlackboardStatus"
+
+    // TODO: Move unmanaged implementation into code once compiler issue is addressed
+    static class GetParryWindow
+    {
+        private static float[] ComboThresholds = new float[]
+        {
+            100.0f /* Easy    */,
+            75.0f  /* Normal  */,
+            40.0f  /* Hard    */,
+            20.0f  /* Extreme */,
+        };
+
+        // PlayerParamParry has a definition for each character, but the implementation is the same
+        // Use the one from SonicParameters
+        UNMANAGED_FUNCTION(float, Impl, PlayerParamParry *inParamParry)
+        {
+            // The BlackboardContent we use here will never be null in this case
+            var battle = BlackboardBattle.Get();
+            var status = BlackboardStatus.Get();
+
+            var combo = (float)(battle->ComboCount);
+            if (combo == 0)
+                return 0.0f;
+
+            var difficulty = (int)(status->Difficulty);
+            var threshold = ComboThresholds[difficulty];
+            
+            // By default, we use values from the RFL as our base window
+            var result = inParamParry->maxRecieveTimes[difficulty];
+            result *= Math.Max((1.0f - (combo / threshold)), (0.3f / result));
+
+            return result;
+        }
+
+        public static long Address() => GET_UNMANAGED_FUNCTION_PTR(Impl);
+    }
+//
+{
+    /* 0x140939B61 */
+    long address = ScanSignature("\x84\xC0\x74\x08\xF3\x0F\x10\x74\xBB\x14", "xxxxxxxxxx");
+
+    string instructions = @$"
+        push rax
+        sub  rsp, 0x28
+
+        movaps [rsp], xmm0
+
+        test al, al
+        jnz  PerfectParry
+    NormalParry:
+        push rcx
+        sub  rsp, 0x08
+        mov  rcx, rbx
+
+        mov  rax, {GetParryWindow.Address()}
+        call rax
+
+        add rsp, 0x08
+        pop rcx
+        jmp End
+    PerfectParry:
+        movss xmm0, [rbx + rdi * 4 + 14h]
+    End:
+        movss  xmm6, xmm0
+        movaps xmm0, [rsp]
+
+        add rsp, 0x28
+        pop rax
+    ";
+
+    // Just for some added efficiency, we'll use an asm hook that retrieves the parry window
+    WriteAsmHook(instructions, address, HookBehavior.Replace);
+}
