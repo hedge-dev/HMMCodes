@@ -1,7 +1,4 @@
-Patch "Jukebox In Another Story" in "Audio" by "angryzor" does
-/*
-Enables the Jukebox while playing Another Story.
-*/
+Patch "Allow Juke Box in Another Story" in "Audio/Music" by "angryzor" does "Allows using Juke Box whilst playing Another Story."
 {
     WriteNop
     (
@@ -11,6 +8,7 @@ Enables the Jukebox while playing Another Story.
             "xxxxxxxxxxxxxx????xxxxx????xxxxxxx????xxxx????xxxxxxxxxxxxx"
         )
         + 0x14,
+
         2
     );
 }
