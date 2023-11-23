@@ -1,0 +1,33 @@
+Library "Blackboards" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `app::player::BlackboardContent`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct BlackboardContent
+    {
+        VFUNCTION_PTR(BlackboardContent, 1, Helpers.UnmanagedString, GetName)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::BlackboardBoost`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x68)]
+    public struct BlackboardBoost
+    {
+        [FieldOffset(0x18)] public float BoostAmount;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::BlackboardItem`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x28)]
+    public struct BlackboardItem
+    {
+        [FieldOffset(0x1C)] public int RingCount;
+    }
+}

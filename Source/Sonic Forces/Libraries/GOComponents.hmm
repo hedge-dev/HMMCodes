@@ -1,0 +1,40 @@
+Library "GOComponents" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    #lib "GameObject"
+    #lib "Helpers"
+    
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `hh::game::GOComponent`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x80)]
+    public struct GOComponent
+    {
+        /// <summary>
+        /// A pointer to an instance of `hh::game::GameObject` acting as the parent of this component.
+        /// </summary>
+        [FieldOffset(0x28)] public GameObject.Data* pGameObject;
+
+        /// <summary>
+        /// A pointer to an instance of `GOComponentStaticClass`.
+        /// </summary>
+        [FieldOffset(0x48)] public GOComponentStaticClass* pStaticClass;
+    }
+
+    /// <summary>
+    /// A struct representation of the static class for storing information about a game object component.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct GOComponentStaticClass
+    {
+        /// <summary>
+        /// The name of this game object component.
+        /// </summary>
+        [FieldOffset(0)] public Helpers.UnmanagedString Name;
+
+        public override string ToString() => Name.ToString();
+    }
+}

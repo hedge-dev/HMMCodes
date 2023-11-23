@@ -1,0 +1,30 @@
+Library "Services" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    #lib "Memory"
+
+    #import "Blackboards"
+    #import "Collections"
+
+    using System.Runtime.InteropServices;
+
+    [StructLayout(LayoutKind.Explicit, Size = 0xA0)]
+    public struct PlayerBlackboardService
+    {
+        [FieldOffset(0x60)] public ObjectMoveArray<Memory.Pointer<BlackboardContent>> Blackboards;
+
+        public BlackboardContent* GetBlackboardContent(string in_blackboardName)
+        {
+            foreach (var pBlackboard in Blackboards)
+            {
+                if (pBlackboard.pData->GetName()() == in_blackboardName)
+                    return pBlackboard.pData;
+            }
+
+            return null;
+        }
+
+        MAKE_GENERIC_API(GetBlackboardContent)
+    }
+}

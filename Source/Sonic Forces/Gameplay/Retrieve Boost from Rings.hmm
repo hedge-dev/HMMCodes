@@ -1,0 +1,40 @@
+Code "Retrieve Boost from Rings" in "Gameplay" by "Hyper"
+//
+    #lib "GameManager"
+    #lib "MathHelpers"
+
+    #import "Blackboards"
+    #import "Services"
+
+    static int _lastRingCount = 0;
+//
+{
+    var pPlayerBlackboardService = GameManager.GetService<PlayerBlackboardService>();
+
+    if (pPlayerBlackboardService == null)
+        return;
+        
+    var pBlackboardBoost = pPlayerBlackboardService->GetBlackboardContent<BlackboardBoost>();
+
+    if (pBlackboardBoost == null)
+        return;
+
+    var pBlackboardItem = pPlayerBlackboardService->GetBlackboardContent<BlackboardItem>();
+    
+    if (pBlackboardItem == null)
+        return;
+
+    int currentRings = pBlackboardItem->RingCount;
+
+    if (_lastRingCount != currentRings && currentRings > 0)
+    {
+        pBlackboardBoost->BoostAmount = MathHelpers.Clamp
+        (
+            pBlackboardBoost->BoostAmount + ((currentRings - _lastRingCount) * 5.0f),
+            0.0f,
+            120.0f
+        );
+        
+        _lastRingCount = currentRings;
+    }
+}

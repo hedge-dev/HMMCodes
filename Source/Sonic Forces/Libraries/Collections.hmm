@@ -1,0 +1,370 @@
+Library "Collections" by "Sajid & Hyper" does "Provides extended collection types."
+{
+    #import "Allocators"
+
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
+    #define MAKE_BITSET_TYPE(NAME, TYPE) \
+        public struct NAME \
+        { \
+            public TYPE Value; \
+\
+            public void Reset() \
+            { \
+                Value = 0; \
+            } \
+\
+            public void Reset(TYPE in_bitIndex) \
+            { \
+                Value &= (TYPE)(~((TYPE)1 << (int)in_bitIndex)); \
+            } \
+\
+            public void Flip(TYPE in_bitIndex) \
+            { \
+                Value ^= (TYPE)(((TYPE)1 << (int)in_bitIndex)); \
+            } \
+\
+            public void Set() \
+            { \
+                Value = TYPE.MaxValue; \
+            } \
+\
+            public void Set(TYPE in_bitIndex) \
+            { \
+                Value |= (TYPE)(((TYPE)1 << (int)in_bitIndex)); \
+            } \
+\
+            public void Set(TYPE in_bitIndex, bool in_isEnabled) \
+            { \
+                if (in_isEnabled) \
+                { \
+                    Set(in_bitIndex); \
+                } \
+                else \
+                { \
+                    Reset(in_bitIndex); \
+                } \
+            } \
+\
+            public bool Test(TYPE in_bitIndex) \
+            { \
+                return (Value & (TYPE)(((TYPE)1 << (int)in_bitIndex))) != 0; \
+            } \
+        }
+    
+    MAKE_BITSET_TYPE(BitSet8, byte);
+    MAKE_BITSET_TYPE(BitSet16, ushort);
+    MAKE_BITSET_TYPE(BitSet32, uint);
+    MAKE_BITSET_TYPE(BitSet64, ulong);
+
+    private readonly nint SIGN_BIT = (nint)((1u << ((sizeof(nint) * sizeof(byte)) - 1)));
+    
+    /// <summary>
+    /// A struct representation of `csl::ut::MoveArray<T>`.
+    /// </summary>
+    public struct MoveArray<T> : IEnumerable<T> where T : unmanaged
+    {
+        public T* pBuffer;
+        public int Length;
+        public int Capacity;
+        public IAllocator* pAllocator;
+        
+        public int Count => Length;    
+
+        public ref T this[int in_index]
+        {
+            get => ref pBuffer[in_index];
+        }
+
+        private bool IsInplace()
+        {
+            return (Capacity & SIGN_BIT) != 0;
+        }
+        
+        public void Reserve(int in_length)
+        {
+            if (in_length <= Capacity)
+                return;
+
+            var newLength = sizeof(T) * in_length;
+            var pNewBuffer = pAllocator->Alloc()(pAllocator, newLength, 16);
+
+            if (pBuffer != null)
+                Buffer.MemoryCopy(pBuffer, (T*)(long)pNewBuffer, newLength, newLength);
+
+            if (!IsInplace())
+                pAllocator->Free()(pAllocator, pBuffer);
+
+            Capacity = in_length;
+            pBuffer = (T*)(long)pNewBuffer;
+        }
+
+        public void Resize(int in_length)
+        {
+            Reserve(in_length);
+
+            Length = in_length;
+        }
+
+        public void Add(T in_item)
+        {
+            Length++;
+
+            if (Length > Capacity)
+                Reserve(Length * 2);
+
+            pBuffer[Length - 1] = in_item;
+        }
+
+        public void RemoveAt(int in_index)
+        {
+            if (in_index > Length)
+                return;
+
+            pBuffer[in_index] = pBuffer[in_index + 1];
+            Length--;
+        }
+
+        public void Remove(T in_item)
+        {
+            var index = IndexOf(in_item);
+
+            if (index != -1)
+                RemoveAt(index);
+        }
+
+        public void Clear()
+        {
+            Length = 0;
+        }
+
+        public int IndexOf(T in_item)
+        {
+            for (int i = 0; i < Length; i++)
+            {
+                if (this[i].Equals(in_item))
+                    return i;
+            }
+
+            return -1;
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            for (var i = 0; i < Count; i++)
+            {
+                yield return this[i];
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public List<T> ToList()
+        {
+            var l = new List<T>();
+            
+            foreach (var e in this)
+                l.Add(e);
+
+            return l;
+        }
+
+        public override string ToString()
+        {
+            if (typeof(T) == typeof(byte))
+                return Encoding.ASCII.GetString(ToList().Select(x => (byte)(object)x).ToArray());
+
+            return base.ToString();
+        }
+    }
+
+    /// <summary>
+    /// A struct representation of `csl::ut::ObjectMoveArray<T>`.
+    /// </summary>
+    public struct ObjectMoveArray<T> : IEnumerable<T> where T : unmanaged
+    {
+        public T* pBuffer;
+        public nint Length;
+        public nint Capacity;
+        public IAllocator* pAllocator;
+        
+        public nint Count => Length;    
+
+        public ref T this[nint in_index]
+        {
+            get => ref pBuffer[in_index];
+        }
+
+        private bool IsInplace()
+        {
+            return (Capacity & SIGN_BIT) != 0;
+        }
+        
+        public void Reserve(nint in_length)
+        {
+            if (in_length <= Capacity)
+                return;
+
+            var newLength = sizeof(T) * in_length;
+            var pNewBuffer = pAllocator->Alloc()(pAllocator, newLength, 16);
+
+            if (pBuffer != null)
+                Buffer.MemoryCopy(pBuffer, (T*)(long)pNewBuffer, newLength, newLength);
+
+            if (!IsInplace())
+                pAllocator->Free()(pAllocator, pBuffer);
+
+            Capacity = in_length;
+            pBuffer = (T*)(long)pNewBuffer;
+        }
+
+        public void Add(T in_item)
+        {
+            Length++;
+
+            if (Length > Capacity)
+                Reserve(Length * 2);
+
+            pBuffer[Length - 1] = in_item;
+        }
+
+        public void RemoveAt(nint in_index)
+        {
+            if (in_index > Length)
+                return;
+
+            pBuffer[in_index] = pBuffer[in_index + 1];
+            Length--;
+        }
+
+        public void Remove(T in_item)
+        {
+            var index = IndexOf(in_item);
+
+            if (index != -1)
+                RemoveAt(index);
+        }
+
+        public void Clear()
+        {
+            Length = 0;
+        }
+
+        public nint IndexOf(T in_item)
+        {
+            for (nint i = 0; i < Length; i++)
+            {
+                if (this[i].Equals(in_item))
+                    return i;
+            }
+
+            return -1;
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            for (var i = 0; i < Count; i++)
+            {
+                yield return this[i];
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public List<T> ToList()
+        {
+            var l = new List<T>();
+            
+            foreach (var e in this)
+                l.Add(e);
+
+            return l;
+        }
+    }
+
+    /// <summary>
+    /// A custom `System.Collections.Generic.List<T>` where items are added and retrieved like a stack.
+    /// </summary>
+    public class StackList<T> : List<T>
+    {
+        private int _capacity;
+
+        public StackList(int in_capacity)
+        {
+            _capacity = in_capacity;
+        }
+
+        /// <summary>
+        /// Adds an item to the top of the stack.
+        /// </summary>
+        /// <param name="in_item">The item to add.</param>
+        public new void Add(T in_item)
+        {
+            if (Count >= _capacity)
+            {
+                RemoveAt(Count - 1);
+            }
+
+            Insert(0, in_item);
+        }
+
+        /// <summary>
+        /// Gets an item from any index in the stack.
+        /// </summary>
+        /// <param name="in_index">The index to get the item from in the stack.</param>
+        /// <returns>The item in the stack at the requested index.</returns>
+        public T GetItemAt(int in_index)
+        {
+            if (Count == 0)
+                return default;
+
+            if (in_index >= Count)
+            {
+                return this[Count - 1];
+            }
+
+            return this[in_index];
+        }
+
+        /// <summary>
+        /// Adds an item to the top of the stack.
+        /// </summary>
+        /// <param name="in_item">The item to add.</param>
+        public void Push(T in_item)
+        {
+            Add(in_item);
+        }
+
+        /// <summary>
+        /// Gets an item from the top of the stack and removes it.
+        /// </summary>
+        /// <returns>The item at the top of the stack.</returns>
+        public T Pop()
+        {
+            T item = GetItemAt(0);
+
+            RemoveAt(0);
+
+            return item;
+        }
+
+        /// <summary>
+        /// Gets the item at the top of the stack.
+        /// </summary>
+        /// <returns>The item at the top of the stack.</returns>
+        public T Peek()
+        {
+            return GetItemAt(0);
+        }
+    }
+}
