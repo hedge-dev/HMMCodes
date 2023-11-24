@@ -7,7 +7,7 @@ Library "BlackboardBattle" by "Hyper & ĐeäTh" does "Provides access to `app::p
     /// <summary>
     /// A struct representation of `app::player::BlackboardBattle`.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit, Size = 0x100)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x100, Pack = 0x10)]
     public struct Data
     {
         /// <summary>
