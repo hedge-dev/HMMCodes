@@ -22,7 +22,7 @@ Patch "Enable Debug Mode" in "Debug" by "SuperSonic16 & MegAmi" does "Forces Deb
         ),
         0xB8, 0x01, 0x00, 0x00, 0x00, 0x90, 0x90);
 
-	// Set the S3&K Debug Mode flag to be enabled upon stage load
+    // Set the S3&K Debug Mode flag to be enabled upon stage load
     // 2.0.1: 0x1401E5BE2
     // mov ecx,00000001
     WriteProtected<byte>(
