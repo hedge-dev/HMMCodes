@@ -1,6 +1,6 @@
 #!/usr/bin/env dotnet-script
 #r "nuget: Microsoft.CodeAnalysis.CSharp, 4.7.0"
-#r "nuget: HedgeModManager.CodeCompiler, 0.2.29"
+#r "nuget: HedgeModManager.CodeCompiler, 0.2.37"
 
 using HedgeModManager.CodeCompiler;
 var StartDirectory = Environment.CurrentDirectory;
