@@ -4,7 +4,7 @@ Disables the Headcannon Path Tracer technology used for Sonic 3 & Knuckles' play
 
 Notes;
 - The player's life/coins icon will be replaced with a shoe icon to signify that Path Tracer is off.
-- The lack of Path Tracer will produce many collision bugs; this code exists purely for fun and is not meant for serious use.
+- The lack of Path Tracer will produce many collision bugs; this code was made for fun and is not meant for serious use.
 */
 {
     // 2.0.2: 0x14285AB3C
