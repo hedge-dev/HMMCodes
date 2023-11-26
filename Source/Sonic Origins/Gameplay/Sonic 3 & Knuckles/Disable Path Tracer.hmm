@@ -1,0 +1,18 @@
+Patch "Disable Path Tracer" in "Gameplay/Sonic 3 & Knuckles" by "MegAmi" does
+/*
+Disables the Headcannon Path Tracer technology used for Sonic 3 & Knuckles' player collision, using regular Retro Engine collision instead.
+
+Notes;
+- The player's life/coins icon will be replaced with a shoe icon to signify that Path Tracer is off.
+- The lack of Path Tracer will produce many collision bugs; this code was made for fun and is not meant for serious use.
+*/
+{
+    // 2.0.2: 0x14285AB3C
+    WriteProtected<byte>(
+        ScanSignature
+        (
+            "\x01\x00\x00\x00\x00\x02\x01\x01\x02\x01\x03\x03\x02\x01\x02\x00\x01\x03\x02\x02\x02\x01\x01\x03\x01\x01\x02\x02\x02\x03\x03\x03",
+            "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        ),
+        0x00);
+}
