@@ -1,4 +1,10 @@
-Code "Disable Super Music" in "Audio/Sonic 3 & Knuckles" by "MegAmi" does "Due to how the cheat works, the Super music may still play in some instances, such as after the AIZ Act 1 bombing cutscene." 
+Code "Disable Super Music" in "Audio/Sonic 3 & Knuckles" by "MegAmi" does
+/*
+Forces the flag for the Super music in Sonic 3 & Knuckles to be disabled.
+
+Notes;
+- Due to how the Super music is coded, it may still play in some instances, such as after the AIZ Act 1 bombing cutscene.
+*/
 //
     #lib "RSDK"
 //
