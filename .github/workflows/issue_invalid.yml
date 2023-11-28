@@ -1,4 +1,4 @@
-name: Close invalid issue
+name: Close invalid issues
 on:
   issues:
     types: [opened]
@@ -6,6 +6,7 @@ on:
 jobs:
   close-issues:
     runs-on: ubuntu-latest
+    if: contains(github.event.issue.body, 'Error Compiling Codes') == true
     permissions:
       issues: write
     steps:
@@ -15,38 +16,34 @@ jobs:
         with:
           text: ${{ github.event.issue.body }}
           regex: '-\s+?(?<mod>.+?)\\(?<code>.+)'
+
       - name: Create comment
         uses: actions-cool/issues-helper@v3
         if: ${{ steps.regex-match.outputs.match != '' }}
         with:
           actions: 'create-comment'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.issue.number }}
           body: |
             This issue was caused by a mod and not by a code from this repository.
 
             As a quick troubleshoot, make sure your codes are up to date by going to the Codes tab and clicking Download/Update Community Codes.
 
             If this issue still persists after that, then contact the author(s) of the mod.
+
       - name: Add invalid label
         uses: actions-cool/issues-helper@v3
         if: ${{ steps.regex-match.outputs.match != '' }}
         with:
           actions: 'add-labels'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.issue.number }}
           labels: 'invalid'
+
       - name: Close issue
         uses: actions-cool/issues-helper@v3
         if: ${{ steps.regex-match.outputs.match != '' }}
         with:
           actions: 'close-issue'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.issue.number }}
+
       - name: Lock issue
         uses: actions-cool/issues-helper@v3
         if: ${{ steps.regex-match.outputs.match != '' }}
         with:
           actions: 'lock-issue'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.issue.number }}
