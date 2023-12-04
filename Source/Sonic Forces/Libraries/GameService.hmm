@@ -11,7 +11,7 @@ Library "GameService" by "Hyper"
     /// <summary>
     /// A struct representation of `hh::game::GameService`.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit, Size = 0x70)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x60)]
     public struct Data
     {
         /// <summary>

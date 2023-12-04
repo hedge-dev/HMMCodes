@@ -1,0 +1,78 @@
+Library "Player" by "Hyper"
+{
+    #lib "GameManager"
+    #lib "GameObject"
+
+    #import "Blackboards"
+    #import "GOComponents"
+    #import "PlayerTargets"
+    #import "Services"
+
+    using System.Runtime.InteropServices;
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x208)]
+    public struct Data
+    {
+        [FieldOffset(0)] public GameObject.Data Base;
+        
+        public PlayerContext* GetContext()
+        {
+            fixed (Data* pThis = &this)
+            {
+                var pGOCPlayerHsm = GameObject.GetGOC<GOCPlayerHsm>(&pThis->Base);
+
+                if (pGOCPlayerHsm == null)
+                    return null;
+                
+                return pGOCPlayerHsm->pPlayerContext;
+            }
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0xA8)]
+    public struct PlayerContext
+    {
+        [FieldOffset(0x18)] public Data* pPlayer;
+        
+        [FieldOffset(0x20)] public BlackboardStatus* pBlackboardStatus;
+
+        [FieldOffset(0x38)] public GOCPlayerHsm* pGOCPlayerHsm;
+    }
+    
+    public Data* GetSonicData()
+    {
+        return (Data*)GameManager.GetGameObject("Sonic");
+    }
+
+    public Data* GetClassicSonicData()
+    {
+        return (Data*)GameManager.GetGameObject("SonicClassic");
+    }
+
+    public Data* GetBuddyData()
+    {
+        return (Data*)GameManager.GetGameObject("Buddy");
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public static class Status
+    {
+        public static GameObject.Data* GetLockOnTarget()
+        {
+            var pPlayerTargetService = GameManager.GetService<PlayerTargetService>();
+
+            if (pPlayerTargetService == null)
+                return null;
+                
+            var pHomingTarget = pPlayerTargetService->GetTargetComponent<HomingTarget>();
+
+            if (pHomingTarget == null)
+                return null;
+                
+            // TODO: check if homing reticle is visible.
+
+            return pHomingTarget->GetPriorityTarget();
+        }
+    }
+}

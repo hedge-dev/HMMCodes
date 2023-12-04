@@ -1,0 +1,33 @@
+Library "Messages" by "Hyper, Sajid & ĐeäTh"
+{
+    #include "Helpers" noemit
+    
+    #import "Allocators"
+    
+    using System.Runtime.InteropServices;
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x20)]
+    public struct Message
+    {
+        [FieldOffset(0)]    public long pVftable;
+
+        [FieldOffset(0x08)] public int ID;
+
+        [FieldOffset(0x0C)] public int Sender;
+
+        [FieldOffset(0x10)] public int Receiver;
+
+        [FieldOffset(0x14)] public bool IsBroadcasted;
+
+        [FieldOffset(0x18)] public uint Mask = 0xFFFFFFFF;
+
+        public Message(int in_id)
+        {
+            ID = in_id;
+        }
+
+        VFUNCTION_PTR(Message, 0, Message*, Clone, Message* in_pMessage, IAllocator* in_pAllocator)
+
+        VFUNCTION_PTR(Message, 1, Message*, Dtor, Message* in_pMessage, byte a2)
+    }
+}

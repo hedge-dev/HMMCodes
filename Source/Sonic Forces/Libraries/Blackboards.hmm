@@ -2,6 +2,10 @@ Library "Blackboards" by "Hyper"
 {
     #include "Helpers" noemit
 
+    #lib "Memory"
+
+    #import "Collections"
+
     using System.Runtime.InteropServices;
 
     /// <summary>
@@ -11,6 +15,15 @@ Library "Blackboards" by "Hyper"
     public struct BlackboardContent
     {
         VFUNCTION_PTR(BlackboardContent, 1, Helpers.UnmanagedString, GetName)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::Blackboard2`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x38)]
+    public struct Blackboard2
+    {
+        [FieldOffset(0x18)] public ObjectMoveArray<Memory.Pointer<BlackboardContent>> Blackboards;
     }
 
     /// <summary>
@@ -29,5 +42,14 @@ Library "Blackboards" by "Hyper"
     public struct BlackboardItem
     {
         [FieldOffset(0x1C)] public int RingCount;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::BlackboardStatus`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x170)]
+    public struct BlackboardStatus
+    {
+        [FieldOffset(0x30)] public bool IsSideView;
     }
 }

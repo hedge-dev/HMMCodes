@@ -4,6 +4,8 @@ Library "GOComponents" by "Hyper"
 
     #lib "GameObject"
     #lib "Helpers"
+
+    #import "Player"
     
     using System.Runtime.InteropServices;
 
@@ -16,12 +18,12 @@ Library "GOComponents" by "Hyper"
         /// <summary>
         /// A pointer to an instance of `hh::game::GameObject` acting as the parent of this component.
         /// </summary>
-        [FieldOffset(0x28)] public GameObject.Data* pGameObject;
+        [FieldOffset(0x20)] public GameObject.Data* pParent;
 
         /// <summary>
         /// A pointer to an instance of `GOComponentStaticClass`.
         /// </summary>
-        [FieldOffset(0x48)] public GOComponentStaticClass* pStaticClass;
+        [FieldOffset(0x38)] public GOComponentStaticClass* pStaticClass;
     }
 
     /// <summary>
@@ -36,5 +38,15 @@ Library "GOComponents" by "Hyper"
         [FieldOffset(0)] public Helpers.UnmanagedString Name;
 
         public override string ToString() => Name.ToString();
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x140)]
+    public struct GOCPlayerHsm
+    {
+        [FieldOffset(0)]    public GOComponent Base;
+
+        [FieldOffset(0x90)] public PlayerContext* pPlayerContext;
+
+        [FieldOffset(0xC8)] public void* pPlayerStateParameter;
     }
 }
