@@ -106,10 +106,12 @@ Library "SonicParameters"
     {
         [FieldOffset(0x00)] public float damageRate;
         [FieldOffset(0x04)] public float damageRateSS;
-        [FieldOffset(0x08)] public float damageRateAcceleMode;
-        [FieldOffset(0x0C)] public float damageRateManual;
-        [FieldOffset(0x10)] public float stunPoint;
-        [FieldOffset(0x14)] public float staggerPoint;
+        [FieldOffset(0x08)] public ushort pointMin;
+        [FieldOffset(0x0A)] public ushort pointMax;
+        [FieldOffset(0x0C)] public float damageRateAcceleMode;
+        [FieldOffset(0x10)] public float damageRateManual;
+        [FieldOffset(0x14)] public float stunPoint;
+        [FieldOffset(0x18)] public float staggerPoint;
         [FieldOffset(0x20)] public Vector3 velocity;
         [FieldOffset(0x30)] public float velocityKeepTime;
         [FieldOffset(0x34)] public float addComboValue;
@@ -142,7 +144,7 @@ Library "SonicParameters"
         [FieldOffset(0x150)] public UnmanagedString hitVibrationNameSS;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x4910)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x4A70)]
     public struct PlayerParamAttack
     {
         [FieldOffset(0x00)] public PlayerParamAttackCommon common;
@@ -194,11 +196,12 @@ Library "SonicParameters"
         [FieldOffset(0x3E10)] public PlayerParamAttackData amyTarotAttack2;
         [FieldOffset(0x3F70)] public PlayerParamAttackData amyTarotRolling;
         [FieldOffset(0x40D0)] public PlayerParamAttackData amyCharmAttack;
-        [FieldOffset(0x4230)] public PlayerParamAttackData tailsSpanner;
-        [FieldOffset(0x4390)] public PlayerParamAttackData tailsSpannerFloat;
-        [FieldOffset(0x44F0)] public PlayerParamAttackData tailsPowerBoost;
-        [FieldOffset(0x4650)] public PlayerParamAttackData tailsWaveCannon;
-        [FieldOffset(0x47B0)] public PlayerParamAttackData tailsWaveCannonFinish;
+        [FieldOffset(0x4230)] public PlayerParamAttackData amyTarotBoost;
+        [FieldOffset(0x4390)] public PlayerParamAttackData tailsSpanner;
+        [FieldOffset(0x44F0)] public PlayerParamAttackData tailsSpannerFloat;
+        [FieldOffset(0x4650)] public PlayerParamAttackData tailsPowerBoost;
+        [FieldOffset(0x47B0)] public PlayerParamAttackData tailsWaveCannon;
+        [FieldOffset(0x4910)] public PlayerParamAttackData tailsWaveCannonFinish;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x10)]
@@ -312,19 +315,19 @@ Library "SonicParameters"
         [FieldOffset(0x10)] public uint comboRateAccele;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x4A10)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x4B70)]
     public struct CommonPackage
     {
         [FieldOffset(0x00)] public PlayerParamAttack attack;
-        [FieldOffset(0x4910)] public PlayerParamWaterAct wateract;
-        [FieldOffset(0x4920)] public PlayerParamBaseJump basejump;
-        [FieldOffset(0x4938)] public PlayerParamBallMove ballmove;
-        [FieldOffset(0x4954)] public PlayerParamLocus locus;
-        [FieldOffset(0x4994)] public PlayerParamAuraTrain auratrain;
-        [FieldOffset(0x49A4)] public PlayerParamLevel level;
-        [FieldOffset(0x49A8)] public PlayerParamBarrierWall barrierWall;
-        [FieldOffset(0x49AC)] public PlayerParamDamageRate damageRate;
-        [FieldOffset(0x49FC)] public PlayerParamAcceleMode acceleMode;
+        [FieldOffset(0x4A70)] public PlayerParamWaterAct wateract;
+        [FieldOffset(0x4A80)] public PlayerParamBaseJump basejump;
+        [FieldOffset(0x4A98)] public PlayerParamBallMove ballmove;
+        [FieldOffset(0x4AB4)] public PlayerParamLocus locus;
+        [FieldOffset(0x4AF4)] public PlayerParamAuraTrain auratrain;
+        [FieldOffset(0x4B04)] public PlayerParamLevel level;
+        [FieldOffset(0x4B08)] public PlayerParamBarrierWall barrierWall;
+        [FieldOffset(0x4B0C)] public PlayerParamDamageRate damageRate;
+        [FieldOffset(0x4B5C)] public PlayerParamAcceleMode acceleMode;
     }
 
     public enum Condition : sbyte
@@ -1181,30 +1184,30 @@ Library "SonicParameters"
         [FieldOffset(0x08)] public float radiusHigh;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x8040)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x81A0)]
     public struct CommonPackageSonic
     {
         [FieldOffset(0)]     public CommonPackage commonPackage;
-        [FieldOffset(0x4A10)] public PlayerParamAcceleComboSet acceleComboSet;
-        [FieldOffset(0x4AD0)] public PlayerParamLoopKickSet loopKickSet;
-        [FieldOffset(0x4B90)] public PlayerParamCrasherSet crasherSet;
-        [FieldOffset(0x4D40)] public PlayerParamSpinSlashSet spinSlashSet;
-        [FieldOffset(0x4FB0)] public PlayerParamChargeAttackSet chargeAtackSet;
-        [FieldOffset(0x5190)] public PlayerParamStompingAttackSet stompingAttackSet;
-        [FieldOffset(0x5400)] public PlayerParamComboFinishSet comboFinishSet;
-        [FieldOffset(0x54C0)] public PlayerParamSonicBoomSet sonicboomSet;
-        [FieldOffset(0x5580)] public PlayerParamCrossSlashSet crossSlashSet;
-        [FieldOffset(0x5790)] public PlayerParamHomingShotSet homingShotSet;
-        [FieldOffset(0x5940)] public PlayerParamSmashSet smashSet;
-        [FieldOffset(0x5D60)] public PlayerParamBehind behind;
-        [FieldOffset(0x5D74)] public PlayerParamCombo combo;
-        [FieldOffset(0x6058)] public PlayerParamCyloop cyloop;
-        [FieldOffset(0x74C0)] public PlayerParamSuperSonic supersonic;
-        [FieldOffset(0x7EE0)] public PlayerParamSandSki sandski;
-        [FieldOffset(0x7F10)] public PlayerParamSlingshot slingshot;
-        [FieldOffset(0x7F70)] public PlayerParamRunawayBee runawayBee;
-        [FieldOffset(0x7F84)] public PlayerParamRunWithKodama runWithKodama;
-        [FieldOffset(0x802C)] public PlayerParamMine mine;
+        [FieldOffset(0x4B70)] public PlayerParamAcceleComboSet acceleComboSet;
+        [FieldOffset(0x4C30)] public PlayerParamLoopKickSet loopKickSet;
+        [FieldOffset(0x4CF0)] public PlayerParamCrasherSet crasherSet;
+        [FieldOffset(0x4EA0)] public PlayerParamSpinSlashSet spinSlashSet;
+        [FieldOffset(0x5110)] public PlayerParamChargeAttackSet chargeAtackSet;
+        [FieldOffset(0x52F0)] public PlayerParamStompingAttackSet stompingAttackSet;
+        [FieldOffset(0x5560)] public PlayerParamComboFinishSet comboFinishSet;
+        [FieldOffset(0x5620)] public PlayerParamSonicBoomSet sonicboomSet;
+        [FieldOffset(0x56E0)] public PlayerParamCrossSlashSet crossSlashSet;
+        [FieldOffset(0x58F0)] public PlayerParamHomingShotSet homingShotSet;
+        [FieldOffset(0x5AA0)] public PlayerParamSmashSet smashSet;
+        [FieldOffset(0x5EC0)] public PlayerParamBehind behind;
+        [FieldOffset(0x5ED4)] public PlayerParamCombo combo;
+        [FieldOffset(0x61B8)] public PlayerParamCyloop cyloop;
+        [FieldOffset(0x7620)] public PlayerParamSuperSonic supersonic;
+        [FieldOffset(0x8040)] public PlayerParamSandSki sandski;
+        [FieldOffset(0x8070)] public PlayerParamSlingshot slingshot;
+        [FieldOffset(0x80D0)] public PlayerParamRunawayBee runawayBee;
+        [FieldOffset(0x80E4)] public PlayerParamRunWithKodama runWithKodama;
+        [FieldOffset(0x818C)] public PlayerParamMine mine;
     }
 
     public enum SupportedPlane : sbyte
@@ -2422,14 +2425,14 @@ Library "SonicParameters"
         [FieldOffset(0x174)] public PlayerParamAirBoost airboost;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0xAE90)]
+    [StructLayout(LayoutKind.Explicit, Size = 0xAFF0)]
     public struct Root
     {
         [FieldOffset(0x00)] public CommonPackageSonic common;
-        [FieldOffset(0x8040)] public ModePackageSonic forwardView;
-        [FieldOffset(0x8F20)] public WaterModePackage water;
-        [FieldOffset(0x90D0)] public ModePackageSonic cyberspace;
-        [FieldOffset(0x9FB0)] public ModePackageSonic cyberspaceSV;
+        [FieldOffset(0x81A0)] public ModePackageSonic forwardView;
+        [FieldOffset(0x9080)] public WaterModePackage water;
+        [FieldOffset(0x9230)] public ModePackageSonic cyberspace;
+        [FieldOffset(0xA110)] public ModePackageSonic cyberspaceSV;
     }
 
 }

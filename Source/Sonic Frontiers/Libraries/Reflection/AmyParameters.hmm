@@ -106,10 +106,12 @@ Library "AmyParameters"
     {
         [FieldOffset(0x00)] public float damageRate;
         [FieldOffset(0x04)] public float damageRateSS;
-        [FieldOffset(0x08)] public float damageRateAcceleMode;
-        [FieldOffset(0x0C)] public float damageRateManual;
-        [FieldOffset(0x10)] public float stunPoint;
-        [FieldOffset(0x14)] public float staggerPoint;
+        [FieldOffset(0x08)] public ushort pointMin;
+        [FieldOffset(0x0A)] public ushort pointMax;
+        [FieldOffset(0x0C)] public float damageRateAcceleMode;
+        [FieldOffset(0x10)] public float damageRateManual;
+        [FieldOffset(0x14)] public float stunPoint;
+        [FieldOffset(0x18)] public float staggerPoint;
         [FieldOffset(0x20)] public Vector3 velocity;
         [FieldOffset(0x30)] public float velocityKeepTime;
         [FieldOffset(0x34)] public float addComboValue;
@@ -142,7 +144,7 @@ Library "AmyParameters"
         [FieldOffset(0x150)] public UnmanagedString hitVibrationNameSS;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x4910)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x4A70)]
     public struct PlayerParamAttack
     {
         [FieldOffset(0x00)] public PlayerParamAttackCommon common;
@@ -194,11 +196,12 @@ Library "AmyParameters"
         [FieldOffset(0x3E10)] public PlayerParamAttackData amyTarotAttack2;
         [FieldOffset(0x3F70)] public PlayerParamAttackData amyTarotRolling;
         [FieldOffset(0x40D0)] public PlayerParamAttackData amyCharmAttack;
-        [FieldOffset(0x4230)] public PlayerParamAttackData tailsSpanner;
-        [FieldOffset(0x4390)] public PlayerParamAttackData tailsSpannerFloat;
-        [FieldOffset(0x44F0)] public PlayerParamAttackData tailsPowerBoost;
-        [FieldOffset(0x4650)] public PlayerParamAttackData tailsWaveCannon;
-        [FieldOffset(0x47B0)] public PlayerParamAttackData tailsWaveCannonFinish;
+        [FieldOffset(0x4230)] public PlayerParamAttackData amyTarotBoost;
+        [FieldOffset(0x4390)] public PlayerParamAttackData tailsSpanner;
+        [FieldOffset(0x44F0)] public PlayerParamAttackData tailsSpannerFloat;
+        [FieldOffset(0x4650)] public PlayerParamAttackData tailsPowerBoost;
+        [FieldOffset(0x47B0)] public PlayerParamAttackData tailsWaveCannon;
+        [FieldOffset(0x4910)] public PlayerParamAttackData tailsWaveCannonFinish;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x10)]
@@ -312,19 +315,19 @@ Library "AmyParameters"
         [FieldOffset(0x10)] public uint comboRateAccele;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x4A10)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x4B70)]
     public struct CommonPackage
     {
         [FieldOffset(0x00)] public PlayerParamAttack attack;
-        [FieldOffset(0x4910)] public PlayerParamWaterAct wateract;
-        [FieldOffset(0x4920)] public PlayerParamBaseJump basejump;
-        [FieldOffset(0x4938)] public PlayerParamBallMove ballmove;
-        [FieldOffset(0x4954)] public PlayerParamLocus locus;
-        [FieldOffset(0x4994)] public PlayerParamAuraTrain auratrain;
-        [FieldOffset(0x49A4)] public PlayerParamLevel level;
-        [FieldOffset(0x49A8)] public PlayerParamBarrierWall barrierWall;
-        [FieldOffset(0x49AC)] public PlayerParamDamageRate damageRate;
-        [FieldOffset(0x49FC)] public PlayerParamAcceleMode acceleMode;
+        [FieldOffset(0x4A70)] public PlayerParamWaterAct wateract;
+        [FieldOffset(0x4A80)] public PlayerParamBaseJump basejump;
+        [FieldOffset(0x4A98)] public PlayerParamBallMove ballmove;
+        [FieldOffset(0x4AB4)] public PlayerParamLocus locus;
+        [FieldOffset(0x4AF4)] public PlayerParamAuraTrain auratrain;
+        [FieldOffset(0x4B04)] public PlayerParamLevel level;
+        [FieldOffset(0x4B08)] public PlayerParamBarrierWall barrierWall;
+        [FieldOffset(0x4B0C)] public PlayerParamDamageRate damageRate;
+        [FieldOffset(0x4B5C)] public PlayerParamAcceleMode acceleMode;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x04)]
@@ -727,13 +730,13 @@ Library "AmyParameters"
         [FieldOffset(0x1458)] public float recoveryFriendsQuickCyloopEnergyByRing;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x6160)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x62C0)]
     public struct CommonPackageAmy
     {
         [FieldOffset(0)]     public CommonPackage commonPackage;
-        [FieldOffset(0x4A10)] public PlayerParamCombo combo;
-        [FieldOffset(0x4CF0)] public AmyParamParryDebuff parryDebuff;
-        [FieldOffset(0x4D00)] public PlayerParamCyloop cyloop;
+        [FieldOffset(0x4B70)] public PlayerParamCombo combo;
+        [FieldOffset(0x4E50)] public AmyParamParryDebuff parryDebuff;
+        [FieldOffset(0x4E60)] public PlayerParamCyloop cyloop;
     }
 
     public enum SupportedPlane : sbyte
@@ -1885,13 +1888,13 @@ Library "AmyParameters"
         [FieldOffset(0x174)] public PlayerParamAirBoost airboost;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x7D70)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x7ED0)]
     public struct Root
     {
         [FieldOffset(0x00)] public CommonPackageAmy common;
-        [FieldOffset(0x6160)] public ModePackageAmy forwardView;
-        [FieldOffset(0x6E90)] public WaterModePackage water;
-        [FieldOffset(0x7040)] public ModePackageAmy cyberspaceSV;
+        [FieldOffset(0x62C0)] public ModePackageAmy forwardView;
+        [FieldOffset(0x6FF0)] public WaterModePackage water;
+        [FieldOffset(0x71A0)] public ModePackageAmy cyberspaceSV;
     }
 
 }

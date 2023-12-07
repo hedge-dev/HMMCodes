@@ -48,4 +48,5 @@ Library "PhotoModeParameters"
         [FieldOffset(0x00)] public PhotoModeCameraParameters camera;
         [FieldOffset(0x30)] public PhotoModeFilterParameters filter;
     }
+
 }

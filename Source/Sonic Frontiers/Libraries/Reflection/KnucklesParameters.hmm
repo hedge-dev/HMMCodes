@@ -106,10 +106,12 @@ Library "KnucklesParameters"
     {
         [FieldOffset(0x00)] public float damageRate;
         [FieldOffset(0x04)] public float damageRateSS;
-        [FieldOffset(0x08)] public float damageRateAcceleMode;
-        [FieldOffset(0x0C)] public float damageRateManual;
-        [FieldOffset(0x10)] public float stunPoint;
-        [FieldOffset(0x14)] public float staggerPoint;
+        [FieldOffset(0x08)] public ushort pointMin;
+        [FieldOffset(0x0A)] public ushort pointMax;
+        [FieldOffset(0x0C)] public float damageRateAcceleMode;
+        [FieldOffset(0x10)] public float damageRateManual;
+        [FieldOffset(0x14)] public float stunPoint;
+        [FieldOffset(0x18)] public float staggerPoint;
         [FieldOffset(0x20)] public Vector3 velocity;
         [FieldOffset(0x30)] public float velocityKeepTime;
         [FieldOffset(0x34)] public float addComboValue;
@@ -142,7 +144,7 @@ Library "KnucklesParameters"
         [FieldOffset(0x150)] public UnmanagedString hitVibrationNameSS;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x4910)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x4A70)]
     public struct PlayerParamAttack
     {
         [FieldOffset(0x00)] public PlayerParamAttackCommon common;
@@ -194,11 +196,12 @@ Library "KnucklesParameters"
         [FieldOffset(0x3E10)] public PlayerParamAttackData amyTarotAttack2;
         [FieldOffset(0x3F70)] public PlayerParamAttackData amyTarotRolling;
         [FieldOffset(0x40D0)] public PlayerParamAttackData amyCharmAttack;
-        [FieldOffset(0x4230)] public PlayerParamAttackData tailsSpanner;
-        [FieldOffset(0x4390)] public PlayerParamAttackData tailsSpannerFloat;
-        [FieldOffset(0x44F0)] public PlayerParamAttackData tailsPowerBoost;
-        [FieldOffset(0x4650)] public PlayerParamAttackData tailsWaveCannon;
-        [FieldOffset(0x47B0)] public PlayerParamAttackData tailsWaveCannonFinish;
+        [FieldOffset(0x4230)] public PlayerParamAttackData amyTarotBoost;
+        [FieldOffset(0x4390)] public PlayerParamAttackData tailsSpanner;
+        [FieldOffset(0x44F0)] public PlayerParamAttackData tailsSpannerFloat;
+        [FieldOffset(0x4650)] public PlayerParamAttackData tailsPowerBoost;
+        [FieldOffset(0x47B0)] public PlayerParamAttackData tailsWaveCannon;
+        [FieldOffset(0x4910)] public PlayerParamAttackData tailsWaveCannonFinish;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x10)]
@@ -312,19 +315,19 @@ Library "KnucklesParameters"
         [FieldOffset(0x10)] public uint comboRateAccele;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x4A10)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x4B70)]
     public struct CommonPackage
     {
         [FieldOffset(0x00)] public PlayerParamAttack attack;
-        [FieldOffset(0x4910)] public PlayerParamWaterAct wateract;
-        [FieldOffset(0x4920)] public PlayerParamBaseJump basejump;
-        [FieldOffset(0x4938)] public PlayerParamBallMove ballmove;
-        [FieldOffset(0x4954)] public PlayerParamLocus locus;
-        [FieldOffset(0x4994)] public PlayerParamAuraTrain auratrain;
-        [FieldOffset(0x49A4)] public PlayerParamLevel level;
-        [FieldOffset(0x49A8)] public PlayerParamBarrierWall barrierWall;
-        [FieldOffset(0x49AC)] public PlayerParamDamageRate damageRate;
-        [FieldOffset(0x49FC)] public PlayerParamAcceleMode acceleMode;
+        [FieldOffset(0x4A70)] public PlayerParamWaterAct wateract;
+        [FieldOffset(0x4A80)] public PlayerParamBaseJump basejump;
+        [FieldOffset(0x4A98)] public PlayerParamBallMove ballmove;
+        [FieldOffset(0x4AB4)] public PlayerParamLocus locus;
+        [FieldOffset(0x4AF4)] public PlayerParamAuraTrain auratrain;
+        [FieldOffset(0x4B04)] public PlayerParamLevel level;
+        [FieldOffset(0x4B08)] public PlayerParamBarrierWall barrierWall;
+        [FieldOffset(0x4B0C)] public PlayerParamDamageRate damageRate;
+        [FieldOffset(0x4B5C)] public PlayerParamAcceleMode acceleMode;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x04)]
@@ -517,20 +520,26 @@ Library "KnucklesParameters"
         [FieldOffset(0x20)] public Vector3 shapeOffset;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x40)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x50)]
     public struct KnucklesParamComboPunch1
     {
         [FieldOffset(0x00)] public PlayerParamAttackCollider hit;
         [FieldOffset(0x30)] public float motionScale;
         [FieldOffset(0x34)] public float motionSpeedRate;
+        [FieldOffset(0x38)] public int fallSpeedBaseCount;
+        [FieldOffset(0x3C)] public float fallSpeedStep;
+        [FieldOffset(0x40)] public float fallSpeedMax;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x40)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x50)]
     public struct KnucklesParamComboPunch2
     {
         [FieldOffset(0x00)] public PlayerParamAttackCollider hit;
         [FieldOffset(0x30)] public float motionScale;
         [FieldOffset(0x34)] public float motionSpeedRate;
+        [FieldOffset(0x38)] public int fallSpeedBaseCount;
+        [FieldOffset(0x3C)] public float fallSpeedStep;
+        [FieldOffset(0x40)] public float fallSpeedMax;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x40)]
@@ -773,16 +782,16 @@ Library "KnucklesParameters"
         [FieldOffset(0x1458)] public float recoveryFriendsQuickCyloopEnergyByRing;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x6220)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x63A0)]
     public struct CommonPackageKnuckles
     {
         [FieldOffset(0)]     public CommonPackage commonPackage;
-        [FieldOffset(0x4A10)] public PlayerParamCombo combo;
-        [FieldOffset(0x4CF0)] public KnucklesParamComboPunch1 comboPunch1;
-        [FieldOffset(0x4D30)] public KnucklesParamComboPunch2 comboPunch2;
-        [FieldOffset(0x4D70)] public KnucklesParamComboUppercut comboUppercut;
-        [FieldOffset(0x4DB0)] public KnucklesParamParryDebuff parryDebuff;
-        [FieldOffset(0x4DB8)] public PlayerParamCyloop cyloop;
+        [FieldOffset(0x4B70)] public PlayerParamCombo combo;
+        [FieldOffset(0x4E50)] public KnucklesParamComboPunch1 comboPunch1;
+        [FieldOffset(0x4EA0)] public KnucklesParamComboPunch2 comboPunch2;
+        [FieldOffset(0x4EF0)] public KnucklesParamComboUppercut comboUppercut;
+        [FieldOffset(0x4F30)] public KnucklesParamParryDebuff parryDebuff;
+        [FieldOffset(0x4F38)] public PlayerParamCyloop cyloop;
     }
 
     public enum SupportedPlane : sbyte
@@ -1612,7 +1621,7 @@ Library "KnucklesParameters"
         [FieldOffset(0x04)] public float elevationOffset;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x40)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x5C)]
     public struct KnucklesParamGliding
     {
         [FieldOffset(0x00)] public float minSpeed;
@@ -1624,12 +1633,19 @@ Library "KnucklesParameters"
         [FieldOffset(0x18)] public float maxSteerSpeed;
         [FieldOffset(0x1C)] public float rollSpeed;
         [FieldOffset(0x20)] public float neutralRollSpeed;
-        [FieldOffset(0x24)] public float yawSpeed;
-        [FieldOffset(0x28)] public float maxRollAngle;
-        [FieldOffset(0x2C)] public float height;
-        [FieldOffset(0x30)] public float startHeight;
-        [FieldOffset(0x34)] public KnucklesParamGlidingCamera camera;
-        [FieldOffset(0x3C)] public float practiceTime;
+        [FieldOffset(0x24)] public float rollSpeedRingMax;
+        [FieldOffset(0x28)] public float neutralRollSpeedRingMax;
+        [FieldOffset(0x2C)] public float yawSpeed;
+        [FieldOffset(0x30)] public float yawSpeedRingMax;
+        [FieldOffset(0x34)] public float maxRollAngle;
+        [FieldOffset(0x38)] public float rollAngleRatioMin;
+        [FieldOffset(0x3C)] public float rollAngleRatioMax;
+        [FieldOffset(0x40)] public float rollAngleRatioMinRingMax;
+        [FieldOffset(0x44)] public float rollAngleRatioMaxRingMax;
+        [FieldOffset(0x48)] public float height;
+        [FieldOffset(0x4C)] public float startHeight;
+        [FieldOffset(0x50)] public KnucklesParamGlidingCamera camera;
+        [FieldOffset(0x58)] public float practiceTime;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x20)]
@@ -1754,19 +1770,19 @@ Library "KnucklesParameters"
         [FieldOffset(0xE8)] public UnmanagedString cameraShakeName;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0xC00)]
+    [StructLayout(LayoutKind.Explicit, Size = 0xC10)]
     public struct ModePackageKnuckles
     {
         [FieldOffset(0)]    public ModePackage modePackage;
         [FieldOffset(0x8F0)] public KnucklesParamGliding gliding;
-        [FieldOffset(0x930)] public KnucklesParamCyKnuckle cyknuckle;
-        [FieldOffset(0x950)] public KnucklesParamCyKnuckleDig cyknuckleDig;
-        [FieldOffset(0x960)] public KnucklesParamCyKnuckleWarp cyknuckleWarp;
-        [FieldOffset(0x964)] public KnucklesParamCyKnucklePopupItem cyknucklePopupItem;
-        [FieldOffset(0x968)] public KnucklesParamCyKnuckleAppearGimmick cyknuckleAppearGimmick;
-        [FieldOffset(0x9E0)] public KnucklesParamMaximumHeatKnuckle maximumHeatKnuckle;
-        [FieldOffset(0xB00)] public KnucklesParamDrillBoost drillBoost;
-        [FieldOffset(0xB08)] public PlayerParamSpinBoost spinBoost;
+        [FieldOffset(0x94C)] public KnucklesParamCyKnuckle cyknuckle;
+        [FieldOffset(0x96C)] public KnucklesParamCyKnuckleDig cyknuckleDig;
+        [FieldOffset(0x97C)] public KnucklesParamCyKnuckleWarp cyknuckleWarp;
+        [FieldOffset(0x980)] public KnucklesParamCyKnucklePopupItem cyknucklePopupItem;
+        [FieldOffset(0x984)] public KnucklesParamCyKnuckleAppearGimmick cyknuckleAppearGimmick;
+        [FieldOffset(0x9F0)] public KnucklesParamMaximumHeatKnuckle maximumHeatKnuckle;
+        [FieldOffset(0xB10)] public KnucklesParamDrillBoost drillBoost;
+        [FieldOffset(0xB18)] public PlayerParamSpinBoost spinBoost;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x1A8)]
@@ -1780,13 +1796,13 @@ Library "KnucklesParameters"
         [FieldOffset(0x174)] public PlayerParamAirBoost airboost;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x7BD0)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x7D70)]
     public struct Root
     {
         [FieldOffset(0x00)] public CommonPackageKnuckles common;
-        [FieldOffset(0x6220)] public ModePackageKnuckles forwardView;
-        [FieldOffset(0x6E20)] public WaterModePackage water;
-        [FieldOffset(0x6FD0)] public ModePackageKnuckles cyberspaceSV;
+        [FieldOffset(0x63A0)] public ModePackageKnuckles forwardView;
+        [FieldOffset(0x6FB0)] public WaterModePackage water;
+        [FieldOffset(0x7160)] public ModePackageKnuckles cyberspaceSV;
     }
 
 }
