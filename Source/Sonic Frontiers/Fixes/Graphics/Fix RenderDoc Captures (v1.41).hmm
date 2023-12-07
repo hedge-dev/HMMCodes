@@ -1,0 +1,5 @@
+Patch "Fix RenderDoc Captures (v1.41)" in "Fixes/Graphics" by "Skyth" does "Fixes RenderDoc being unable to hook to the game for capturing the graphics device." 
+{
+    WriteProtected<long>(0x141210B40, Read<long>(0x1566CB168));
+    WriteProtected<long>(0x141210B50, Read<long>(0x1566CB188));
+}
