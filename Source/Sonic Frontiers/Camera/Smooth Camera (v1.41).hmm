@@ -1,4 +1,4 @@
-Patch "Smooth Camera (v1.40)" in "Camera" by "Ahremic" does "Replaces linear camera interpolation with a sigmoid solution, using Ken Perlin's ''Smoother Step'' second-order hermite polynomial." 
+Patch "Smooth Camera (v1.41)" in "Camera" by "Ahremic" does "Replaces linear camera interpolation with a sigmoid solution, using Ken Perlin's ''Smoother Step'' second-order hermite polynomial." 
 //
     static float value01 = 1.0f;
     static float value03 = 3.0f;
@@ -7,20 +7,20 @@ Patch "Smooth Camera (v1.40)" in "Camera" by "Ahremic" does "Replaces linear cam
 //
 {
     // Linear coordinate interpolator
-    WriteProtected<byte>(0x1468542C4, Assemble("mov edx, 0x60"));
-    WriteProtected<byte>(0x146854303, Assemble("mov edx, 0x60"));
+    WriteProtected<byte>(0x146488544, Assemble("mov edx, 0x60"));
+    WriteProtected<byte>(0x146488583, Assemble("mov edx, 0x60"));
 
     // Target Base interpolator
-    WriteProtected<byte>(0x1468543B8, Assemble("mov edx, 0x100"));
-    WriteProtected<byte>(0x146854394, Assemble("mov edx, 0x100"));
-    WriteProtected<byte>(0x14685434D, Assemble("mov edx, 0x100"));
+    WriteProtected<byte>(0x14648863B, Assemble("mov edx, 0x100"));
+    WriteProtected<byte>(0x146488617, Assemble("mov edx, 0x100"));
+    WriteProtected<byte>(0x1464885D0, Assemble("mov edx, 0x100"));
 
     // Base Ctor type A
     WriteAsmHook
     (
         "movss dword ptr [rdi + 0xF0], xmm6",
 
-        0x146803255,
+        0x1464517E5,
 
         HookBehavior.After
     );
@@ -30,7 +30,7 @@ Patch "Smooth Camera (v1.40)" in "Camera" by "Ahremic" does "Replaces linear cam
     (
         "movss dword ptr [rdi + 0xF0], xmm6",
 
-        0x1400C40EA,
+        0x1464517E5,
 
         HookBehavior.After
     );
@@ -40,7 +40,7 @@ Patch "Smooth Camera (v1.40)" in "Camera" by "Ahremic" does "Replaces linear cam
     (
         "movss dword ptr [rdi + 0x50], xmm6",
 
-        0x1400C3C90,
+        0x1400C3D20,
 
         HookBehavior.After
     );
@@ -52,7 +52,7 @@ Patch "Smooth Camera (v1.40)" in "Camera" by "Ahremic" does "Replaces linear cam
     (
         "mov [rdi + 0xF0], eax",
 
-        0x14680F45C,
+        0x1464638E6,
 
         HookBehavior.After
     );
@@ -70,10 +70,9 @@ Patch "Smooth Camera (v1.40)" in "Camera" by "Ahremic" does "Replaces linear cam
 
             ; Custom data
             mov  [rdi + 0x50], eax
-
         ",
 
-        0x1400C4030,
+        0x1400C40C0,
 
         HookBehavior.Replace
     );
@@ -129,7 +128,7 @@ Patch "Smooth Camera (v1.40)" in "Camera" by "Ahremic" does "Replaces linear cam
                 ret
             ",
 
-            0x1400C4860,
+            0x1400C48F0,
 
             HookBehavior.Replace
         );
@@ -178,7 +177,7 @@ Patch "Smooth Camera (v1.40)" in "Camera" by "Ahremic" does "Replaces linear cam
                 ret
             ",
 
-            0x1467FFD70,
+            0x14644DF30,
 
             HookBehavior.Replace
         );
