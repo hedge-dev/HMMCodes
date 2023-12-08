@@ -13,6 +13,7 @@ Notes;
     #lib "AmyParameters"
     #lib "KnucklesParameters"
     #lib "TailsParameters"
+    #lib "Memory"
     #lib "Sonic"
     #lib "Time"
     #lib "MathHelpers"
@@ -50,22 +51,30 @@ Notes;
     {
         fixed (float* pJumpDecelerationSetting = &jumpDecelerationSetting)
         {
+            // Writes to the Jump Deceleration setting value
             WriteAsmHook
             (
                 $@"
-                    mov dword ptr [rcx+3Ch], 0
-                    mov r9, {(long)pJumpDecelerationSetting}
+                    mov   dword ptr [rcx+3Ch], 0
+                    mov   r9, {(long)pJumpDecelerationSetting}
                     movss dword ptr [r9], xmm1
+                    ret
                 ",
                 
-                //Writes to the Jump Deceleration setting value
-                0x1408A98C0,
+                /* 0x14054D0A4 */
+                Memory.ReadCall
+                (
+                    /* 0x1408A98C0 */
+                    ScanSignature
+                    (
+                        "\xE8\xCC\xCC\xCC\xCC\xE9\xE9\x01\x00\x00\x48\x8B\x89\x48\x02\x00\x00",
+                        "x????xxxxxxxxxxxx"
+                    )
+                ),
                     
                 HookBehavior.Replace
             );
         }
-
-        WriteProtected<byte>(0x1408A98CE, 0xC3);
 
         isInitialised = true;
     }
