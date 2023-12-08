@@ -19,11 +19,11 @@ Library "Bridge.DisableJumpBoardPaths" by "Hyper"
         /* 0x140EC6CB0 */
         long sigSendMessage = Memory.ReadCall
         (
-            /* 0x14964DF22 */
+            /* v1.41: 0x14926F0E3 */
             ScanSignature
             (
-                "\xE8\xCC\xCC\xCC\xCC\x80\x7D\xE5\x00\x0F\x84\xE2\x00\x00\x00",
-                "x????xxxxxxxxxx"
+                "\xE8\xCC\xCC\xCC\xCC\x80\x7D\xE5\x00\x0F\x84\xDB\x00\x00\x00\xE8\xCC\xCC\xCC\xCC\x48\x89\xC2",
+                "x????xxxxxxxxxxx????xxx"
             )
         );
 

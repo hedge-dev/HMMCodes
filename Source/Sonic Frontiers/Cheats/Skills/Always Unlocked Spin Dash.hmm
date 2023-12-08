@@ -1,46 +1,32 @@
-Patch "Always Unlocked Spin Dash" in "Cheats/Skills" by "Hyper" 
+Code "Always Unlocked Spin Dash" in "Cheats/Skills" by "Hyper"
+//
+    #include "BlackboardStatus" noemit
+
+    static bool _isInitialised = false;
+//
 {
-    // Unlock various components of Spin Dash.
-    WriteAsmHook
-    (
-        $@"
-            mov al, 1
-            ret
-        ",
-
-        /* 0x140AFC580 */
-        ScanSignature
+    if (!_isInitialised)
+    {
+        // Unlock various components of Spin Dash.
+        WriteAsmHook
         (
-            "\x48\x8B\x41\x08\xF6\x40\x4C\x06",
-            "xxxxxxxx"
-        ),
+            $@"
+                mov al, 1
+                ret
+            ",
 
-        HookBehavior.Replace
-    );
+            /* v1.41: 0x140AFEF70 */
+            ScanSignature
+            (
+                "\x48\x8B\x41\x08\xF6\x40\x4C\x06",
+                "xxxxxxxx"
+            ),
 
-    // Force Spin Dash bitflag check to always pass.
-    WriteAsmHook
-    (
-        $@"
-            cmp   edx, 0x3E
-            jne   exit
-            mov   al, 1
-            ret
-        exit:
-            mov   eax, edx
-            and   eax, 0x3F
-            movzx r8d, al
-            mov   eax, edx
-            shr   rax, 6
-        ",
+            HookBehavior.Replace
+        );
 
-        /* 0x140884C10 */
-        ScanSignature
-        (
-            "\x8B\xC2\x83\xE0\x3F\x44\x0F\xB6\xC0\x8B\xC2\x48\xC1\xE8\x06\x48\x8B\x44\xC1\x28",
-            "xxxxxxxxxxxxxxxxxxxx"
-        ),
-
-        HookBehavior.Replace
-    );
+        _isInitialised = true;
+    }
+    
+    SET_COMBAT_FLAG(IsSpinDash, true);
 }

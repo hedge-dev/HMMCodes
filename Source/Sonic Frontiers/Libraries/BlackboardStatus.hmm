@@ -371,7 +371,12 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh, NM & Sora" does "Provides access 
         /// <summary>
         /// The player has Cross Slash unlocked.
         /// </summary>
-        IsCrossSlash = 0x34
+        IsCrossSlash = 0x34,
+
+        /// <summary>
+        /// The player has Spin Dash unlocked.
+        /// </summary>
+        IsSpinDash = 0x3F
     }
 
     /// <summary>

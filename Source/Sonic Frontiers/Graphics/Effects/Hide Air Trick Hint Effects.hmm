@@ -30,10 +30,10 @@ Patch "Hide Air Trick Hint Effects" in "Graphics/Effects" by "Hyper" does "Hides
     // Springs
     Memory.WriteForceJump
     (
-        /* 0x149A88447 */
+        /* v1.41: 0x149771AB7 */
         ScanSignature
         (
-            "\x0F\x85\xEE\x02\x00\x00\xE8",
+            "\x0F\x85\xE0\x02\x00\x00\xE8",
             "xxxxxxx"
         )
     );

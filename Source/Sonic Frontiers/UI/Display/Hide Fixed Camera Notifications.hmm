@@ -1,4 +1,7 @@
-Patch "Hide Fixed Camera Notifications" in "UI/Display" by "Hyper" does "Hides the fixed camera icon at the top-right of the screen, as well as the tutorial about it at the beginning of the game." 
+Patch "Hide Fixed Camera Notifications" in "UI/Display" by "Hyper" does "Hides the fixed camera icon at the top-right of the screen, as well as the tutorial about it at the beginning of the game."
+//
+    #lib "Memory"
+//
 {
     // Disable fixed camera UI element.
     WriteProtected<byte>
@@ -14,17 +17,13 @@ Patch "Hide Fixed Camera Notifications" in "UI/Display" by "Hyper" does "Hides t
     );
 
     // Disable guide regarding fixed camera.
-    WriteProtected<byte>
+    Memory.WriteForceJump
     (
-        /* 0x148BBC22A */
+        /* v1.41: 0x14036FFE1 */
         ScanSignature
         (
-            "\x0F\x84\x5D\x01\x00\x00\x4C\x89\xB4\x24\x88\x00\x00\x00",
+            "\x0F\x84\x57\x01\x00\x00\x4C\x89\xB4\x24\x88\x00\x00\x00",
             "xxxxxxxxxxxxxx"
-        ),
-
-        0xE9, 0x5E, 0x01, 0x00, 0x00
+        )
     );
 }
-
-

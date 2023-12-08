@@ -5,10 +5,10 @@ Patch "Disable Spin Slash on Drop Dash" in "Gameplay/Skills/Sonic" by "Hyper"
 {
     Memory.WriteForceJump
     (
-        /* 0x14BFF5046 */
+        /* v1.41: 0x14BD2B2DF */
         ScanSignature
         (
-            "\x74\x79\xBA\x30\x00\x00\x00",
+            "\x74\x79\xBA\x31\x00\x00\x00",
             "xxxxxxx"
         )
     );

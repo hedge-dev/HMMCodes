@@ -5,10 +5,10 @@ Patch "Disable Gliding Transition" in "Animation/Knuckles" by "Hyper"
 {
     Memory.WriteForceJump
     (
-        /* 0x14098B02A */
+        /* v1.41: 0x14098C72E */
         ScanSignature
         (
-            "\x0F\x85\x81\x00\x00\x00\xF3\x0F\x10\x75\xCF",
+            "\x0F\x85\x81\x00\x00\x00\xF3\x0F\x10\x75\xAF",
             "xxxxxxxxxxx"
         )
     );

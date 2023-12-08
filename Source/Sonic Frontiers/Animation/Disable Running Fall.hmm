@@ -2,11 +2,11 @@ Patch "Disable Running Fall" in "Animation" by "Hyper" does "Disables the animat
 {
     WriteNop
     (
-        /* 0x14BA48219 */
+        /* v1.41: 0x14B7E3E76 */
         ScanSignature
         (
-            "\xF3\x0F\x10\x40\x30\xF3\x0F\x59\x05\xCC\xCC\xCC\xCC\x0F\x2F\xF0\x0F\x28\x74\x24\x40\x73\x16",
-            "xxxxxxxxx????xxxxxxxxxx"
+            "\xF3\x0F\x10\x40\x30\xF3\x0F\x59\x05\xCC\xCC\xCC\xCC\x0F\x2F\xF0\x0F\x28\x74\x24\x40\x73\x0D\xBA\x01\x00\x00\x00\x48\x89\xF1",
+            "xxxxxxxxx????xxxxxxxxxxxxxxxxxx"
         ),
 
         5

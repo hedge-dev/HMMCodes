@@ -1,16 +1,17 @@
-Patch "Disable Drop Dash" in "Gameplay/Skills/Sonic" by "Hyper" 
+Patch "Disable Drop Dash" in "Gameplay/Skills/Sonic" by "Hyper"
+//
+    #lib "Memory"
+//
 {
     // Disable drop dash charge from StateDoubleJump.
-    WriteProtected<byte>
+    Memory.WriteForceJump
     (
-        /* 0x14B52AAA7 */
+        /* v1.41: 0x14B7B7FAF */
         ScanSignature
         (
-            "\x0F\x84\x94\x00\x00\x00\x48\x89\xF9",
+            "\x0F\x84\x9B\x00\x00\x00\x48\x89\xF9",
             "xxxxxxxxx"
-        ),
-
-        0xE9, 0x95, 0x00, 0x00, 0x00
+        )
     );
 
     // Disable drop dash from StateDoubleJump.
@@ -39,5 +40,3 @@ Patch "Disable Drop Dash" in "Gameplay/Skills/Sonic" by "Hyper"
         0xE9, 0xB8, 0x00, 0x00, 0x00
     );
 }
-
-

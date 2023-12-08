@@ -16,21 +16,21 @@ Notes;
     // Disable save/load deny.
     Memory.WriteForceJump
     (
-        /* 0x14D2D2E61 */
+        /* v1.41: 0x14D0848F1 */
         ScanSignature
         (
-            "\x74\x19\x8B\x0D\xCC\xCC\xCC\xCC\x81\xF1\x49\x83\xC4\xF8",
-            "xxxx????xxxxxx"
+            "\x74\x0E\x83\xFE\x01",
+            "xxxxx"
         )
     );
 
     // Disable "SetHUDEnabled" callback function.
     Memory.WriteForceJump
     (
-        /* 0x14C2FDBFC */
+        /* v1.41: 0x14BFC27A5 */
         ScanSignature
         (
-            "\x0F\x84\xDE\x00\x00\x00\x44\x0F\xBE\xC0",
+            "\x0F\x84\xD6\x00\x00\x00\x44\x0F\xBE\xC0",
             "xxxxxxxxxx"
         )
     );

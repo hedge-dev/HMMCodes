@@ -5,10 +5,10 @@ Patch "Always Respawn Enemies" in "Enemy" by "Hyper" does "Always respawns enemi
 {
     Memory.WriteForceJump
     (
-        /* 0x14922FB24 */
+        /* v1.41: 0x1492CA7F4 */
         ScanSignature
         (
-            "\x0F\x88\x76\x01\x00\x00",
+            "\x0F\x88\x78\x01\x00\x00",
             "xxxxxx"
         )
     );

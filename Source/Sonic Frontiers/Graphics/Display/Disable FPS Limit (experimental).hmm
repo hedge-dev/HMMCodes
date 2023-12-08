@@ -65,11 +65,11 @@ Known issues;
     /*
         This removes the framerate limiting code for cutscenes.
     */
-    /* 0x14014673C */
+    /* v1.41: 0x140146A1C */
     long instrAddr = ScanSignature
     (
-        "\x74\x23\x48\x8B\x05\x00\x00\x00\x00\xF3\x0F\x10\x0D\x00\x00\x00\x00\xC6\x40\x10\x01\x48\x8B\x0D\x00\x00\x00\x00\x48\x83\xC4\x28\xE9\x00\x00\x00\x00",
-        "xxxxx????xxxx????xxxxxxx????xxxxx????"
+        "\x74\x23\x48\x8B\x05\xCC\xCC\xCC\xCC\xF3\x0F\x10\x0D",
+        "xxxxx????xxxx"
     );
 
     if (instrAddr != 0)

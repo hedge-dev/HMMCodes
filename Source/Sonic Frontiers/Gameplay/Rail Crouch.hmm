@@ -135,11 +135,11 @@ Notes;
         // Jump over the grind boost code.
         Memory.WriteForceJump
         (
-            /* 0x14B30737A */
+            /* v1.41: 0x14B06DEAA */
             ScanSignature
             (
-                "\x74\x0F\xBA\x01\x00\x00\x00\x48\x83\xC4\x20\x5B\xE9\xB5\xFB\x5C\xF5",
-                "xxxxxxxxxxxxxxxxx"
+                "\x74\x0F\xBA\x01\x00\x00\x00\x48\x83\xC4\x20\x5B\xE9\xC5\xA3\x86\xF5",
+				"xxxxxxxxxxxxxxxxx"
             )
         );
 

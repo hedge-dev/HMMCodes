@@ -1,14 +1,15 @@
 Patch "Always Have Power Boost in Cyber Space" in "Cheats/Skills" by "Hyper"
+//
+    #lib "Memory"
+//
 {
-    WriteNop
+    Memory.WriteForceJump
     (
-        /* 0x140994D83 */
+        /* v1.41: 0x1409968E3 */
         ScanSignature
         (
-            "\x74\x04\xB0\x01\xEB\x02\x32\xC0\xF3\x0F\x10\x47\x60",
-            "xxxxxxxxxxxxx"
-        ),
-
-        2
+            "\x75\x12\x48\x8B\x4F\x20",
+            "xxxxxx"
+        )
     );
 }
