@@ -310,7 +310,12 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh, NM & Sora" does "Provides access 
         /// <summary>
         /// The player has used a spring.
         /// </summary>
-        IsSpringJump = 0x21
+        IsSpringJump = 0x21,
+
+        /// <summary>
+        /// The player is performing a Spin Dash.
+        /// </summary>
+        IsSpinDash = 0x22
     }
 
     /// <summary>
@@ -334,44 +339,74 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh, NM & Sora" does "Provides access 
         IsPerfectParry = 0x10,
 
         /// <summary>
+        /// The player has Air Trick unlocked.
+        /// </summary>
+        IsAirTrick = 0x1A,
+
+        /// <summary>
+        /// The player has Grand Slam unlocked.
+        /// </summary>
+        IsGrandSlam = 0x22,
+
+        /// <summary>
+        /// The player has Quick Cyloop unlocked.
+        /// </summary>
+        IsQuickCyloop = 0x28,
+
+        /// <summary>
+        /// The player has Phantom Rush unlocked.
+        /// </summary>
+        IsPhantomRush = 0x2A,
+
+        /// <summary>
         /// The player has Cyclone Kick unlocked.
         /// </summary>
-        IsCycloneKick = 0x2A,
+        IsCycloneKick = 0x2B,
+
+        /// <summary>
+        /// The player has Recovery Smash unlocked.
+        /// </summary>
+        IsRecoverySmash = 0x2C,
 
         /// <summary>
         /// The player has Sonic Boom unlocked.
         /// </summary>
-        IsSonicBoom = 0x2D,
+        IsSonicBoom = 0x2E,
 
         /// <summary>
         /// The player has Wild Rush unlocked.
         /// </summary>
-        IsWildRush = 0x2E,
+        IsWildRush = 0x2F,
 
         /// <summary>
         /// The player has Loop Kick unlocked.
         /// </summary>
-        IsLoopKick = 0x2F,
+        IsLoopKick = 0x30,
 
         /// <summary>
         /// The player has Spin Slash unlocked.
         /// </summary>
-        IsSpinSlash = 0x30,
+        IsSpinSlash = 0x31,
 
         /// <summary>
         /// The player has Stomp Attack unlocked.
         /// </summary>
-        IsStompAttack = 0x31,
+        IsStompAttack = 0x32,
 
         /// <summary>
         /// The player has Homing Shot unlocked.
         /// </summary>
-        IsHomingShot = 0x33,
+        IsHomingShot = 0x34,
 
         /// <summary>
         /// The player has Cross Slash unlocked.
         /// </summary>
-        IsCrossSlash = 0x34,
+        IsCrossSlash = 0x35,
+
+        /// <summary>
+        /// The player has Auto Combo unlocked.
+        /// </summary>
+        IsAutoCombo = 0x39,
 
         /// <summary>
         /// The player has Spin Dash unlocked.
