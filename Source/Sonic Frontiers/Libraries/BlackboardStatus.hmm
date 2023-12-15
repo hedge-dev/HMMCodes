@@ -162,7 +162,7 @@ Library "BlackboardStatus" by "Hyper, ĐeäTh, NM & Sora" does "Provides access 
         /// <summary>
         /// The player's chosen difficulty setting in the game's options.
         /// </summary>
-        [FieldOffset(0x170)] public DifficultySetting Difficulty;
+        [FieldOffset(0x180)] public DifficultySetting Difficulty;
     }
 
     /// <summary>
