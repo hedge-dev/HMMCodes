@@ -335,6 +335,33 @@ Library "Converse" by "Hyper & M&M"
     private ushort SetNameLength(int in_value) => (ushort)((((in_value + 1) * 2) << 4) & 0x0FF0);
 
     /// <summary>
+    /// Creates a "colour" tag.
+    /// </summary>
+    /// <param name="in_name">The name of this colour.</param>
+    /// <param name="in_argb">The value of this colour.</param>
+    /// <param name="in_text">The text to colour.</param>
+    public string Colour(string in_name, uint in_argb, string in_text)
+        => $"<colour name=\"{in_name}\" value=\"{in_argb.ToString("X8")}\">{in_text}</colour>";
+
+    // Alias for the Americans.
+    public string Color(string in_name, uint in_argb, string in_text)
+        => Colour(in_name, in_argb, in_text);
+
+    /// <summary>
+    /// Creates a "var" tag.
+    /// </summary>
+    /// <param name="in_name">The name of the internal variable to display.</param>
+    public string Variable(string in_name)
+        => $"<var name=\"{in_name}\" />";
+
+    /// <summary>
+    /// Creates an "image" tag.
+    /// </summary>
+    /// <param name="in_name">The name of the image to display.</param>
+    public string Image(string in_name)
+        => $"<image name=\"{in_name}\" />";
+    
+    /// <summary>
     /// Parses binary Converse attributes and replaces them with XML keys that are interoperable with Puyo Text Editor.
     /// </summary>
     /// <param name="in_text">The Unicode string containing binary Converse attributes.</param>
