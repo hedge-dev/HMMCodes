@@ -1,0 +1,59 @@
+Patch "Allow Juke Box in Another Story (experimental)" in "Audio/Music" by "angryzor & Hyper" does
+/*
+Allows using Juke Box whilst playing Another Story.
+
+Known issues;
+- Changing the Music Playback mode does not affect Another Story.
+*/
+//
+    #lib "Memory"
+//
+{
+    // Restore Juke Box UI.
+    WriteNop
+    (
+        /* v1.41: 0x1479E2B0D */
+        ScanSignature
+        (
+            "\x75\x73\xE8\xCC\xCC\xCC\xCC\x48\x89\xC2",
+            "xxx????xxx"
+        ),
+
+        2
+    );
+
+    // Restore Juke Box option select.
+    WriteProtected<byte>
+    (
+        /* v1.41: 0x140A789A0 */
+        ScanSignature
+        (
+            "\xE8\xCC\xCC\xCC\xCC\x88\x85\xF0\x10\x00\x00",
+            "x????xxxxxx"
+        ),
+
+        Assemble("xor al, al; nop; nop; nop")
+    );
+
+    // Restore Juke Box options' visibility.
+    WriteAsmHook
+    (
+        $@"
+            xor al, al
+            ret
+        ",
+
+        /* v1.41: 0x140A8D4C0 */
+        Memory.ReadCall
+        (
+            /* v1.41: 0x140A9190A */
+            ScanSignature
+            (
+                "\xE8\xCC\xCC\xCC\xCC\x84\xC0\x74\x0A\x33\xD2\x48\x8B\xCB\xE8\xCC\xCC\xCC\xCC\xB2\x04",
+                "x????xxxxxxxxxx????xx"
+            )
+        ),
+        
+        HookBehavior.Replace
+    );
+}
