@@ -1,5 +1,7 @@
 Library "Player" by "Hyper"
 {
+    #include "Helpers" noemit
+
     #lib "GameManager"
     #lib "GameObject"
 
@@ -9,6 +11,7 @@ Library "Player" by "Hyper"
     #import "Blackboards"
     #import "GOComponents"
     #import "PlayerTargets"
+    #import "Plugins"
     #import "Services"
 
     using System.Runtime.InteropServices;
@@ -97,6 +100,31 @@ Library "Player" by "Hyper"
             pGOCPlayerHsm->DestinationStateID = (int)(object)in_destination;
             pGOCPlayerHsm->StateFlags |= 0x10;
             pGOCPlayerHsm->StateFlags &= 0xDF;
+        }
+
+        public static StatePluginBase* GetStatePlugin(Data* in_pPlayer, string in_pluginName)
+        {
+            if (in_pPlayer == null)
+                return null;
+            
+            var pContext = in_pPlayer->GetContext();
+
+            if (pContext == null)
+                return null;
+            
+            var pStatePluginManager = pContext->pGOCPlayerHsm->pStatePluginManager;
+
+            if (pStatePluginManager == null)
+                return null;
+
+            return pStatePluginManager->GetStatePlugin(in_pluginName);
+        }
+
+        public static T* GetStatePlugin<T>(Data* in_pPlayer) where T : unmanaged
+        {
+            var name = Helpers.GetInternalName(typeof(T));
+            
+            return (T*)GetStatePlugin(in_pPlayer, string.IsNullOrEmpty(name) ? typeof(T).Name : name);
         }
     }
 

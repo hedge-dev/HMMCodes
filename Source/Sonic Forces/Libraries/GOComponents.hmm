@@ -8,6 +8,7 @@ Library "GOComponents" by "Hyper"
 
     #import "Collections"
     #import "Player"
+    #import "Plugins"
     #import "States"
 
     #load "System.Numerics.dll"
@@ -62,6 +63,8 @@ Library "GOComponents" by "Hyper"
         [FieldOffset(0x90)]  public PlayerContext* pPlayerContext;
 
         [FieldOffset(0xC8)]  public void* pPlayerStateParameter;
+
+        [FieldOffset(0xD0)]  public StatePluginManager* pStatePluginManager;
 
         [FieldOffset(0xEC)]  public int DestinationStateID;
 

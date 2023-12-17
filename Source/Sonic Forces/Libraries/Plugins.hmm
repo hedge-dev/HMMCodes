@@ -1,0 +1,79 @@
+Library "Plugins" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    #lib "Helpers"
+
+    #import "Collections"
+
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `app::player::StatePluginBase`.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Size = 0x28)]
+    public struct StatePluginBase
+    {
+        VFUNCTION_PTR(StatePluginBase, 1, Helpers.UnmanagedString, GetName)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::StatePlugin<T>`.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Size = 0x28)]
+    public struct StatePlugin
+    {
+        public StatePluginBase Base;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::PlayerStatePlugin`.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Size = 0x28)]
+    public struct PlayerStatePlugin
+    {
+        public StatePlugin Base;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::StatePluginManager`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x48)]
+    public struct StatePluginManager
+    {
+        /// <summary>
+        /// An array of pointers to `app::player::StatePluginBase` instances.
+        /// </summary>
+        [FieldOffset(0x20)] public ObjectMoveArray<Memory.Pointer<StatePluginBase>> Plugins;
+
+        /// <summary>
+        /// Gets an instance of `app::player::StatePluginBase` by name.
+        /// </summary>
+        /// <param name="in_pluginName">The name of the state plugin.</param>
+        /// <returns>An instance of `app::player::StatePluginBase` requested by name.</returns>
+        public StatePluginBase* GetStatePlugin(string in_pluginName)
+        {
+            foreach (var pPlugin in Plugins)
+            {
+                if (pPlugin.pData == null)
+                    continue;
+
+                if (pPlugin.pData->GetName()() == in_pluginName)
+                    return pPlugin.pData;
+            }
+
+            return null;
+        }
+
+        MAKE_GENERIC_API(GetStatePlugin)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::StatePluginAutoRun`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x38)]
+    public struct StatePluginAutoRun
+    {
+        [FieldOffset(0x30)] public float Speed;
+    }
+}
