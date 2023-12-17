@@ -63,7 +63,7 @@ Library "GOComponents" by "Hyper"
 
         [FieldOffset(0xC8)]  public void* pPlayerStateParameter;
 
-        [FieldOffset(0xEC)]  public long DestinationStateID;
+        [FieldOffset(0xEC)]  public int DestinationStateID;
 
         [FieldOffset(0xF4)]  public byte StateFlags;
 
