@@ -3,6 +3,9 @@ Library "Player" by "Hyper"
     #lib "GameManager"
     #lib "GameObject"
 
+    #lib "Sonic"
+    #lib "Buddy"
+
     #import "Blackboards"
     #import "GOComponents"
     #import "PlayerTargets"
@@ -52,6 +55,49 @@ Library "Player" by "Hyper"
     public Data* GetBuddyData()
     {
         return (Data*)GameManager.GetGameObject("Buddy");
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    public static class State
+    {
+        public static T GetCurrentStateID<T>(Data* in_pPlayer)
+        {
+            if (in_pPlayer == null)
+                return default;
+            
+            var pContext = in_pPlayer->GetContext();
+
+            if (pContext == null)
+                return default;
+
+            var pGOCPlayerHsm = pContext->pGOCPlayerHsm;
+
+            if (pGOCPlayerHsm == null)
+                return default;
+
+            return (T)(object)pGOCPlayerHsm->CurrentStateID;
+        }
+
+        public static void SetState<T>(Data* in_pPlayer, T in_destination)
+        {
+            if (in_pPlayer == null)
+                return;
+            
+            var pContext = in_pPlayer->GetContext();
+
+            if (pContext == null)
+                return;
+
+            var pGOCPlayerHsm = pContext->pGOCPlayerHsm;
+
+            if (pGOCPlayerHsm == null)
+                return;
+
+            pGOCPlayerHsm->DestinationStateID = (int)(object)in_destination;
+            pGOCPlayerHsm->StateFlags |= 0x10;
+            pGOCPlayerHsm->StateFlags &= 0xDF;
+        }
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////

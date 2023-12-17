@@ -4,9 +4,15 @@ Library "GOComponents" by "Hyper"
 
     #lib "GameObject"
     #lib "Helpers"
+    #lib "Memory"
 
+    #import "Collections"
     #import "Player"
+    #import "States"
+
+    #load "System.Numerics.dll"
     
+    using System.Numerics;
     using System.Runtime.InteropServices;
 
     /// <summary>
@@ -40,13 +46,33 @@ Library "GOComponents" by "Hyper"
         public override string ToString() => Name.ToString();
     }
 
+    [StructLayout(LayoutKind.Explicit, Size = 0x90)]
+    public struct GOCCamera
+    {
+        [FieldOffset(0)] public GOComponent Base;
+    }
+
     [StructLayout(LayoutKind.Explicit, Size = 0x140)]
     public struct GOCPlayerHsm
     {
-        [FieldOffset(0)]    public GOComponent Base;
+        [FieldOffset(0)]     public GOComponent Base;
 
-        [FieldOffset(0x90)] public PlayerContext* pPlayerContext;
+        [FieldOffset(0x78)]  public int CurrentStateID;
 
-        [FieldOffset(0xC8)] public void* pPlayerStateParameter;
+        [FieldOffset(0x90)]  public PlayerContext* pPlayerContext;
+
+        [FieldOffset(0xC8)]  public void* pPlayerStateParameter;
+
+        [FieldOffset(0xEC)]  public long DestinationStateID;
+
+        [FieldOffset(0xF4)]  public byte StateFlags;
+
+        [FieldOffset(0x120)] public MoveArray<StateDesc> States;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x240, Pack = 0x20)]
+    public struct GOCTransform
+    {
+        [FieldOffset(0xC0)] public Vector3 Position;
     }
 }
