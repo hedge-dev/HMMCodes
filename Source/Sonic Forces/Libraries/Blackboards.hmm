@@ -33,6 +33,8 @@ Library "Blackboards" by "Hyper"
     public struct BlackboardBoost
     {
         [FieldOffset(0x18)] public float BoostAmount;
+
+        [FieldOffset(0x24)] public float DoubleBoostAmount;
     }
 
     /// <summary>
