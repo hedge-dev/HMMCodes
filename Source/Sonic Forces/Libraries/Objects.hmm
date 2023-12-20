@@ -5,6 +5,20 @@ Library "Objects" by "Hyper"
 
     using System.Runtime.InteropServices;
 
+    [StructLayout(LayoutKind.Explicit, Size = 0x260)]
+    public struct ObjDashRing
+    {
+        [FieldOffset(0)]     public GameObject.Data Base;
+
+        [FieldOffset(0x1C0)] public DashRingType Type;
+
+        public enum DashRingType : int
+        {
+            DashRing,
+            RainbowRing
+        }
+    }
+
     [StructLayout(LayoutKind.Explicit, Size = 0x230)]
     public struct PlayerCoordinator
     {

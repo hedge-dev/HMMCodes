@@ -37,6 +37,11 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
         /// </summary>
         [FieldOffset(0xB0)] public Helpers.UnmanagedString Name;
 
+        /// <summary>
+        /// A pointer to an instance of `hh::game::WorldObjectStatus`.
+        /// </summary>
+        [FieldOffset(0x1A8)] public WorldObjectStatus* pWorldObjectStatus;
+
         public override string ToString() => Name.ToString();
 
         /// <summary>
@@ -46,6 +51,15 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
         {
             Flags |= 1;
         }
+    }
+
+    /// <summary>
+    /// A struct representation of `hh::game::WorldObjectStatus`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit)]
+    public struct WorldObjectStatus
+    {
+        [FieldOffset(0x14)] public int Status;
     }
 
     /// <summary>

@@ -50,6 +50,13 @@ Library "Blackboards" by "Hyper"
     [StructLayout(LayoutKind.Explicit, Size = 0x170)]
     public struct BlackboardStatus
     {
+        [FieldOffset(0x28)] public BitSet8 WorldFlags;
+
         [FieldOffset(0x30)] public bool IsSideView;
+    }
+
+    public enum WorldFlags
+    {
+        IsDead = 5
     }
 }
