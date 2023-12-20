@@ -2,6 +2,9 @@ Library "Cameras" by "Hyper"
 {
     #include "Helpers" noemit
 
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
     using System.Runtime.InteropServices;
 
     /// <summary>
