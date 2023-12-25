@@ -1,0 +1,15 @@
+Code "Enable Super Tails" in "Gameplay/Sonic 2" by "MegAmi"
+//
+    #lib "RSDK"
+//
+{
+    // Check if this is Sonic 2
+    if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0xC8) != 0xFF)
+    {
+        // Check if Super Tails (options.superTails) is disabled
+        if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x40) == 0)
+        {
+            WriteProtected<byte>(RSDK.GetRSDKv4DataPtr() + 0x40, 0x01);
+        }
+    }
+}

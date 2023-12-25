@@ -1,0 +1,24 @@
+Code "Enable Elemental Shields and Insta Shield" in "Gameplay/Sonic 1" by "MegAmi" does
+/*
+Enables the Elemental Shields and Sonic's Insta Shield move.
+
+Known issues;
+- The elemental shield monitors will not appear upon initial stage load when starting the game from the main menu. This is fixed upon loading the stage again or loading a different one.
+- Progress in save files will not be saved.
+*/
+//
+    #lib "RSDK"
+//
+{
+    // Check if this is Sonic 1
+    if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0xC8) == 0xFF)
+    {
+        // Check if elemental shields (second bit of options.shieldType) are disabled
+        if ((*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34) & 2) == 0)
+        {
+            byte itemVar = *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34);
+            itemVar |= 2;
+            WriteProtected<byte>(RSDK.GetRSDKv4DataPtr() + 0x34, itemVar);
+        }
+    }
+}

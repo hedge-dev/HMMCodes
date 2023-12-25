@@ -1,0 +1,21 @@
+Code "Enable 7th Chaos Emerald" in "Gameplay/Sonic 1" by "MegAmi" does
+/*
+Enables the 7th Chaos Emerald in normal gameplay, allowing the player to use Super forms once all seven are collected.
+
+Notes;
+- The game does not check the emeralds setting when checking if the player should transform, so collecting all seven emeralds in a save file will allow the player to transform regardless of whether or not this code is enabled.
+*/
+//
+    #lib "RSDK"
+//
+{
+    // Check if this is Sonic 1
+    if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0xC8) == 0xFF)
+    {
+        // Check if Super forms (options.superStates) are disabled
+        if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x38) == 0)
+        {
+            WriteProtected<byte>(RSDK.GetRSDKv4DataPtr() + 0x38, 0x01);
+        }
+    }
+}
