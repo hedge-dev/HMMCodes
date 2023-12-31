@@ -1,5 +1,0 @@
-Patch "Never Receive Boost From Enemies" in "Gameplay" by "Hyper" 
-WriteProtected<byte>(0x112435C, 0xE9, 0xAB, 0x00, 0x00, 0x00);
-WriteNop(0x11246D9, 5);
-
-

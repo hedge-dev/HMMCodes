@@ -1,0 +1,35 @@
+Library "Cameras" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of a wrapper for storing instances of `app_cmn::camera::CameraController` in arrays.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct CameraControllerWrapper
+    {
+        /// <summary>
+        /// A pointer to an instance of `app_cmn::camera::CameraController`.
+        /// </summary>
+        [FieldOffset(0)] public CameraController* pCameraController;
+    }
+
+    /// <summary>
+    /// A struct representation of `app_cmn::camera::CameraController`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x90)]
+    public struct CameraController
+    {
+        /// <summary>
+        /// The position of the camera.
+        /// </summary>
+        [FieldOffset(0x20)] public Vector3 Position;
+
+        VFUNCTION_PTR(CameraController, 1, long, GetName)
+    }
+}

@@ -1,0 +1,177 @@
+Code "Adjust Aspect Ratio to Resolution (experimental)" in "Graphics/Display" by "M&M & Hyper" does 
+/*
+Dynamically adjusts the aspect ratio to match the game resolution (recommended for non-16:9 resolutions).
+
+Notes;
+- The UI will be stretched automatically for square or portrait resolutions.
+
+Known issues;
+- Certain UI effects are rendered at the correct aspect ratio, but will misalign due to the main UI still being 16:9.
+- Certain UI elements are still rendered at 16:9 and will misalign or stretch.
+- Certain UI elements will be cut off incorrectly at wider aspect ratios. (ex. Jukebox)
+- Pre-rendered cutscenes will stretch to your aspect ratio.
+- The letterboxing during cutscenes will end up blocking the view at wider aspect ratios, it is highly recommended to use the Disable In-Game Letterboxing code to remove it.
+- The expected aspect ratio will only apply to a newly set resolution when you re-enter the resolution list and select the same resolution again.
+- Vignette (the circular shadowing effect on the screen) is still rendered at 16:9, it is highly recommended to use the Disable Vignette code to remove it.
+*/
+//
+    #load "System.Drawing.dll"
+
+    using System.Diagnostics;
+    using System.Drawing;
+    using System.Runtime.InteropServices;
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct RECT
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [DllImport("user32.dll")]
+    static extern bool GetClientRect(IntPtr hWnd, ref RECT lpRect);
+
+    static bool Initialised = false;
+
+    static float AspectRatio = 1920.0f / 1080.0f;
+    static float EventFieldOfView = 0.0f;
+
+    static long MainAspectRatioAddr = 0;
+    static long SurfRideAspectRatioAddr = 0;
+    static long SurfRideAspectRatioJumpAddr = 0;
+    static long DVSceneAspectRatioAddr = 0;
+//
+{
+    if (!Initialised)
+    {
+        long mainAspectRatioInstrAddr = ScanSignature
+        (
+            /* 0x14014BD46 */
+            "\xF3\x0F\x59\x0D\x00\x00\x00\x00\x44\x8B\x84\x24\x00\x00\x00\x00\xF3\x0F\x2C\xD1\xEB\x0C\x8B\x94\x24\x00\x00\x00\x00\xF3\x44\x0F\x2C\xC0\x3B\x54\x24\x34\x75\x07\x44\x3B\x44\x24\x00\x74\x0C\x48\x8B\x0D\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x48\x8B\xCF",
+            "xxxx????xxxx????xxxxxxxxx????xxxxxxxxxxxxxxx?xxxxx????x????xxx"
+        );
+
+        /* 0x14126A22C */
+        MainAspectRatioAddr = mainAspectRatioInstrAddr + Read<uint>(mainAspectRatioInstrAddr + 4) + 8;
+
+        /* 0x140A4166B */
+        SurfRideAspectRatioAddr = ScanSignature
+        (
+            "\x0F\x84\x98\x00\x00\x00\x48\x8B\x4E\x48",
+            "xxxxxxxxxx"
+        );
+
+        /* 0x140A41709 */
+        SurfRideAspectRatioJumpAddr = SurfRideAspectRatioAddr + Read<int>(SurfRideAspectRatioAddr + 2) + 6;
+
+        /* 0x140C33A2C */
+        DVSceneAspectRatioAddr = ScanSignature
+        (
+            "\xC7\x81\x00\x00\x00\x00\x00\x00\x00\x00\x0F\x28\x05\x00\x00\x00\x00\x0F\x29\x81\x00\x00\x00\x00\x0F\x28\x0D\x00\x00\x00\x00",
+            "xx????????xxx????xxx????xxx????"
+        );
+
+        fixed (float* pAspectRatio = &AspectRatio)
+        fixed (float* pEventFieldOfView = &EventFieldOfView)
+        {
+            WriteAsmHook
+            (
+                $@"
+                    push   r9
+
+                    ; check if current event aspect ratio has been modified
+                    mov    r9, {(long)pAspectRatio}
+                    movss  xmm0, dword ptr [r9]
+                    movss  xmm1, dword ptr [rbx + 0x58]
+                    comiss xmm0, xmm1
+                    je     exit
+
+                    ; multiply original aspect ratio by new aspect ratio
+                    movss  xmm0, dword ptr [rbx + 0x58]
+                    mov    r9, {(long)pAspectRatio}
+                    movss  xmm1, dword ptr [r9]
+                    divps  xmm0, xmm1
+                    movss  xmm1, xmm0
+
+                    ; compute new field of view from aspect ratio difference
+                    movss  xmm0, dword ptr [rbx + 0x54]
+                    mulps  xmm0, xmm1
+                    movss  dword ptr [rbx + 0x54], xmm0
+                    mov    r9, {(long)pEventFieldOfView}
+                    movss  dword ptr [r9], xmm0
+
+                    ; set new aspect ratio
+                    mov    r9, {(long)pAspectRatio}
+                    mov    r9d, dword ptr [r9]
+                    mov    dword ptr [rbx + 0x58], r9d
+                exit:
+                    pop    r9
+                    movups xmm0, xmmword ptr [rbx + 0x4C]
+                    movups xmmword ptr [r13], xmm0
+                    movups xmm1, xmmword ptr [rbx + 0x5C]
+                    movups xmmword ptr [r13 + 0x10], xmm1
+                ",
+
+                /* 0x140FB1CF0 */
+                ScanSignature
+                (
+                    "\x0F\x10\x43\x4C\x41\x0F\x11\x45\x00",
+                    "xxxxxxxxx"
+                ),
+
+                HookBehavior.Replace
+            );
+        }
+
+        // Disable letterboxing for square/portrait resolutions.
+        WriteNop
+        (
+            /* 0x14014BD44 */
+            ScanSignature
+            (
+                "\x76\x16\xF3\x0F\x59\x0D",
+                "xxxxxx"
+            ),
+
+            2
+        );
+
+        Initialised = true;
+    }
+
+    if (MainAspectRatioAddr == 0)
+        return;
+
+    RECT clientRect = new RECT();
+
+    if (!GetClientRect(Process.GetCurrentProcess().MainWindowHandle, ref clientRect))
+        return;
+
+    float width  = (float)(clientRect.Right - clientRect.Left);
+    float height = (float)(clientRect.Bottom - clientRect.Top);
+
+    AspectRatio = width / height;
+
+    // Set UI stretch mode based on current aspect ratio.
+    if (SurfRideAspectRatioAddr != 0 && SurfRideAspectRatioJumpAddr != 0)
+    {
+        if (AspectRatio < (16.0f / 9.0f))
+        {
+            WriteNop(SurfRideAspectRatioAddr, 6);
+        }
+        else
+        {
+            WriteProtected<byte>(SurfRideAspectRatioAddr, 0x0F, 0x84);
+            WriteProtected<int>(SurfRideAspectRatioAddr + 2, (int)(SurfRideAspectRatioJumpAddr - SurfRideAspectRatioAddr) - 6);
+        }
+    }
+
+    WriteProtected<float>(MainAspectRatioAddr, AspectRatio);
+
+    if (DVSceneAspectRatioAddr != 0)
+        WriteProtected<float>(DVSceneAspectRatioAddr + 6, AspectRatio);
+}
+
+

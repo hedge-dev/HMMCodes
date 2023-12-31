@@ -1,0 +1,11 @@
+Patch "75 FPS (experimental)" in "Graphics/FPS/Locked" by "Skyth and M&M" 
+static float FPS = 75.0f; 
+
+fixed (float* pFPS = &FPS)
+    WriteProtected<uint>(0xE7B460, (uint)pFPS);
+
+WriteNop(0xE7B5D7, 2);
+WriteProtected<float>(0x1704258, 1.0f / 75.0f)
+WriteProtected<float>(0x14AF8CC, 1.0f / 75.0f)
+
+

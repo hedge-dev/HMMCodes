@@ -1,0 +1,4 @@
+Patch "Disable Damage" in "Cheats/Player" by "SuperSonic16" 
+WriteProtected<byte>(0x14046E1E0, 0xC3)
+
+

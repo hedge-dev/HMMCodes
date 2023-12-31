@@ -1,4 +1,4 @@
-Patch "Disable Power Boost Audio" in "Audio" by "Hyper" 
+Patch "Disable Power Boost Audio" in "Audio" by "Hyper"
 {
     // Activation SFX
     WriteNop
@@ -6,7 +6,7 @@ Patch "Disable Power Boost Audio" in "Audio" by "Hyper"
         /* 0x1408D2B23 */
         ScanSignature
         (
-            "\xE8\xCC\xCC\xCC\xCC\xBA\x5F\x23\x00\x00\x48\x8D\x4C\x24\x68",
+            "\xE8\xCC\xCC\xCC\xCC\xBA\xA1\x23\x00\x00\x48\x8D\x4C\x24\x68",
             "x????xxxxxxxxxx"
         ),
 
@@ -26,5 +26,3 @@ Patch "Disable Power Boost Audio" in "Audio" by "Hyper"
         System.Text.Encoding.UTF8.GetBytes("sn_boost_run\0")
     );
 }
-
-

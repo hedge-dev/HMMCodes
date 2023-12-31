@@ -1,5 +1,0 @@
-Patch "Start Stages with CrouchingStartFront" in "Gameplay" by "Hyper" 
-WriteProtected<byte>(0xD944D3, 0xE9, 0x59, 0x01, 0x00, 0x00);
-WriteNop(0xD9465A, 2);
-
-

@@ -1,0 +1,4 @@
+Code "Disable Depth of Field" in "Graphics/Post-processing" by "Luig" 
+Write<byte>(0x01A4358D, 0)
+
+

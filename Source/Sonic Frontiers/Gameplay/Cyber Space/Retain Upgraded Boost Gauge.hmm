@@ -1,0 +1,19 @@
+Code "Retain Upgraded Boost Gauge" in "Gameplay/Cyber Space" by "Hyper" does "Retains the upgraded boost gauge from the last save file in Cyber Space."
+//
+    #include "BlackboardStatus" noemit
+
+    #lib "Player"
+
+    #import "Plugins"
+//
+{
+    if (!IS_WORLD_FLAG(IsCyberSpace))
+        return;
+    
+    var pStatePluginBoost = Player.State.GetStatePlugin<StatePluginBoost>();
+
+    if (pStatePluginBoost == null)
+        return;
+
+    pStatePluginBoost->BoostCapacity = pStatePluginBoost->GetBoostCapacityFromLevel();
+}

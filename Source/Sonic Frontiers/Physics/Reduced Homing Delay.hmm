@@ -1,32 +1,48 @@
-Patch "Reduced Homing Delay" in "Physics" by "Hyper" does "Reduces the delay after performing a homing attack, allowing you to perform chained homing attacks much quicker." 
+Code "Reduced Homing Delay" in "Physics" by "Hyper" does "Reduces the delay after performing a homing attack, allowing you to perform chained homing attacks much quicker."
 //
-    static float Delay = 0.2f;
+    #lib "BlackboardStatus"
+
+    static bool _isInitialised = false;
+    static bool _isSuper = false;
+
+    static float _delay = 0.2f;
 //
 {
-    fixed (float* pDelay = &Delay)
+    if (!_isInitialised)
     {
-        WriteAsmHook
-        (
-            $@"
-                push  rbx
-                mov   rbx, {(long)pDelay}
-                movss xmm2, dword ptr [rbx]
-                mov   edx, eax
-                mov   rcx, r13
-                mov   dword ptr [rbp + 0x57 + 0x28], eax
-                pop   rbx
-            ",
-
-            /* 0x14082379C */
-            ScanSignature
+        fixed (bool* p_isSuper = &_isSuper)
+        fixed (float* p_delay = &_delay)
+        {
+            WriteAsmHook
             (
-                "\xF3\x41\x0F\x10\x54\x3F\x18",
-                "xxxxxxx"
-            ),
+                $@"
+                    mov   rdx, {(long)p_isSuper}
+                    cmp   byte ptr [rdx], 0
+                    jnz   isSuper
+                    mov   rdx, {(long)p_delay}
+                    movss xmm2, dword ptr [rdx]
+                    jmp   exit
+                isSuper:
+                    movss xmm2, dword ptr [r15 + rdi + 0x18]
+                exit:
+                    mov   edx, eax
+                    mov   rcx, r13
+                    mov   dword ptr [rbp + 0x57 + 0x28], eax
+                ",
 
-            HookBehavior.Replace
-        );
+                /* 0x14082379C */
+                ScanSignature
+                (
+                    "\xF3\x41\x0F\x10\x54\x3F\x18",
+                    "xxxxxxx"
+                ),
+
+                HookBehavior.Replace
+            );
+        }
+
+        _isInitialised = true;
     }
+
+    _isSuper = BlackboardStatus.IsSuper();
 }
-
-

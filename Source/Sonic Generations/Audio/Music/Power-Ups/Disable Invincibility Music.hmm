@@ -1,0 +1,4 @@
+Patch "Disable Invincibility Music" in "Audio/Music/Power-Ups" by "Hyper" 
+WriteProtected<byte>(0x11DD879, 0xEB, 0x2F);
+
+

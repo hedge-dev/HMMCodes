@@ -1,8 +1,0 @@
-Code "120 FPS (experimental)" in "Graphics" by "M&M" 
-Write<float>(GetPointer(0x14240E818, 0x34), 1.0f / 120.0f); /* internal framerate */
-Write<float>(0x88D23BD8, 120.0f); /* external framerate */
-WriteNop(0x14061AE3B, 3); /* nop out framerate changer */
-WriteNop(0x14061D4FD, 5); /* nop out framerate changer */
-WriteNop(0x1406E5F96, 5); /* nop out framerate changer */
-
-

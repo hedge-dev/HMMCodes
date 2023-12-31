@@ -1,6 +1,0 @@
-Patch "No Out of Control Jump Springs" in "Gameplay" does "Prevents control being restricted after hitting a spring." 
-WriteProtected<uint>(0x11BEA91, 0x1CFE9)
-WriteProtected<ushort>(0x11BEA95, 0x8B00)
-WriteProtected<byte>(0x11BEA97, 0x83)
-
-

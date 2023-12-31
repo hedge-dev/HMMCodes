@@ -1,0 +1,4 @@
+Patch "Disable Super Sonic Floating Boost (Air Boost)" in "Gameplay/Skills/Modern Sonic" by "Skyth" 
+WriteProtected<byte>(0xDFE04C, 0xEB);
+
+

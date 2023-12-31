@@ -1,0 +1,21 @@
+Patch "Allow Party Details in Another Story" by "M&M" in "Graphics/Objects/Open Zone"
+//
+    #lib "Memory"
+//
+{
+    /* 0x140134040 */
+    long funcAddr = Memory.ReadCall
+    (
+        ScanSignature
+        (
+            "\xE8\x00\x00\x00\x00\x31\xDB\x48\x89\xEE",
+            "x????xxxxx"
+        )
+    );
+
+    /* 0x140134092 */
+    Memory.WriteForceJump(funcAddr + 0x52);
+
+    /* 0x1401340E6 */
+    Memory.WriteForceJump(funcAddr + 0xA6);
+}

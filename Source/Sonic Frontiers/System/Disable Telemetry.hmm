@@ -2,15 +2,17 @@ Patch "Disable Telemetry" in "System" by "M&M & Still" does
 /*
 Prevents the game from sending telemetry and crash data to SEGA.
 
-This data can include, but is not limited to;
-- motherboard information
-- HWID
-- OS product version
-- Steam user ID
-- CPU name
-- RAM
-- game open time
-- game close time
+Notes;
+- Crash dumps are moved to ''%LOCALAPPDATA%/CrashDumps''
+- The data that's sent can include, but is not limited to;
+  - motherboard information
+  - HWID
+  - OS product version
+  - Steam user ID
+  - CPU name
+  - RAM
+  - game open time
+  - game close time
 */
 {
     /* 0x14007A440 [SGAAS: Open] */

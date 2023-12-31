@@ -1,0 +1,35 @@
+Library "GOComponentManager" by "Hyper"
+{
+    #lib "Memory"
+    #lib "HandleManagerBase"
+
+    #import "GameTypes"
+    #import "GOComponents"
+
+    using System.Runtime.InteropServices;
+
+    /* 0x150274D5F */
+    private static long _sigGOComponentManagerHandleManagerSingleton = ScanSignature
+    (
+        "\x48\x89\x05\xCC\xCC\xCC\xCC\x8D\x55\x50",
+        "xxx????xxx"
+    );
+
+    public HandleManagerBase.Data* GetHandleManager()
+    {
+        if (_sigGOComponentManagerHandleManagerSingleton == 0)
+            return null;
+
+        return *(HandleManagerBase.Data**)Memory.ReadEffectiveAddress(_sigGOComponentManagerHandleManagerSingleton);
+    }
+
+    public GOComponent* GetGOCFromHandle(int in_handle)
+    {
+        var manager = GetHandleManager();
+        
+        if (manager == null)
+            return null;
+
+        return (GOComponent*)manager->GetObject(in_handle);
+    }
+}

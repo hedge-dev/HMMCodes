@@ -1,0 +1,15 @@
+Code "Always Have No Ring Level" in "Cheats/Upgrades/0%" by "Hyper" does
+/*
+Resets the level to 1/99 for ring capacity.
+
+WARNING: this will affect your save data!
+*/
+//
+    #include "SaveData" noemit
+//
+{
+    SAVE_SET_PARAM(character.ringLevel, 0);
+
+    for (int i = 0; i < 3; i++)
+        SAVE_SET_PARAM(extraCharacters.characters[i].ringLevel, 0);
+}

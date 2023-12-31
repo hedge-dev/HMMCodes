@@ -1,4 +1,4 @@
-Patch "Disable Menu Restrictions" in "UI" by "Hyper" does 
+Patch "Disable Menu Restrictions" in "UI" by "Hyper" does
 /*
 Removes restrictions from accessing certain menu screens and options.
 
@@ -9,37 +9,36 @@ Notes;
 - This will allow you to place map markers before having completed any challenges.
 - This will allow you to enter Photo Mode during inaccessible parts of the game where Photo Mode is usually accessible.
 */
+//
+    #lib "Memory"
+//
 {
     // Disable save/load deny.
-    WriteProtected<byte>
+    Memory.WriteForceJump
     (
-        /* 0x14D01D0E1 */
+        /* v1.41: 0x14D0848F1 */
         ScanSignature
         (
-            "\x74\x19\x8B\x0D\xCC\xCC\xCC\xCC\x81\xF1\x49\x8D\x64\x24",
-            "xxxx????xxxxxx"
-        ),
-
-        0xEB
+            "\x74\x0E\x83\xFE\x01",
+            "xxxxx"
+        )
     );
 
     // Disable "SetHUDEnabled" callback function.
-    WriteProtected<byte>
+    Memory.WriteForceJump
     (
-        /* 0x14BE36C85 */
+        /* v1.41: 0x14BFC27A5 */
         ScanSignature
         (
-            "\x0F\x84\xE0\x00\x00\x00\x44\x0F\xBE\xC0",
+            "\x0F\x84\xD6\x00\x00\x00\x44\x0F\xBE\xC0",
             "xxxxxxxxxx"
-        ),
-
-        0xE9, 0xE1, 0x00, 0x00, 0x00
+        )
     );
 
     // Disable map screen restriction during combat.
     WriteProtected<byte>
     (
-        /* 0x1408E735D */
+        /* 0x1409AE37D */
         ScanSignature
         (
             "\x0F\x94\x44\x24\x48\x89\x5C\x24\x44",
@@ -49,26 +48,13 @@ Notes;
         Assemble("mov byte ptr [rsp + 0x58 + 0xFFFFFFFFFFFFFFF0], 1")
     );
 
-    // Disable map marker lock.
-    WriteProtected<byte>
-    (
-        /* 0x1409CFB91 */
-        ScanSignature
-        (
-            "\xF6\x87\x1C\x04\x00\x00\x02\x74\x29",
-            "xxxxxxxxx"
-        ),
-
-        Assemble("mov byte ptr [rsi + 0x41C], 2; nop; nop")
-    );
-
     // Disable "Unlock Cyloop" tutorial to prevent softlock.
     WriteNop
     (
-        /* 0x14091E0B6 */
+        /* 0x1409F3376 */
         ScanSignature
         (
-            "\x0F\x44\xD9\xBA\x3D\x23\x00\x00",
+            "\x0F\x44\xD9\xBA\x7E\x23\x00\x00",
             "xxxxxxxx"
         ),
 
@@ -76,17 +62,13 @@ Notes;
     );
 
     // Disable Photo Mode check.
-    WriteProtected<byte>
+    Memory.WriteForceJump
     (
-        /* 0x1409BF7A2 */
+        /* 0x140AA17A2 */
         ScanSignature
         (
             "\x0F\x84\xED\x00\x00\x00\x48\x8B\x5F\x18\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD0\x48\x8B\xCB\xE8\xCC\xCC\xCC\xCC\x33\xD2",
             "xxxxxxxxxxx????xxxxxxx????xx"
-        ),
-
-        0xE9, 0xEE, 0x00, 0x00, 0x00
+        )
     );
 }
-
-

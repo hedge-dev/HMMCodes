@@ -1,36 +1,9 @@
-Library "HMM" by "Hyper" 
+Library "HMM" by "Hyper"
 {
     #lib "INI"
 
     using System.Collections.Generic;
     using System.IO;
-
-    public class Mod
-    {
-        public string Name { get; set; }
-
-        public string Version { get; set; }
-
-        public string Author { get; set; }
-
-        public string Path { get; set; }
-
-        public Dictionary<string, Dictionary<string, string>> Ini { get; set; } = new();
-
-        public Mod(string modIniPath)
-        {
-            var ini = INI.Read(modIniPath);
-
-            if (ini == null)
-                return;
-
-            Name = ini["Desc"]["Title"];
-            Version = ini["Desc"]["Version"];
-            Author = ini["Desc"]["Author"];
-            Path = System.IO.Path.GetDirectoryName(modIniPath);
-            Ini = ini;
-        }
-    }
 
     public Dictionary<string, Dictionary<string, string>> GetModsDatabase()
     {
@@ -74,19 +47,15 @@ Library "HMM" by "Hyper"
         return result;
     }
 
-    public List<string> GetCodes()
+    public Mod GetModByID(string in_id)
     {
-        List<string> result = new();
+        foreach (var mod in GetMods())
+        {
+            if (mod.ID == in_id)
+                return mod;
+        }
 
-        var modsDb = GetModsDatabase();
-
-        if (modsDb == null)
-            return result;
-
-        foreach (var value in modsDb["Codes"].Values)
-            result.Add(value);
-
-        return result;
+        return null;
     }
 
     public List<Mod> FindModsByName(string name)
@@ -103,6 +72,144 @@ Library "HMM" by "Hyper"
 
         return result;
     }
+
+    public List<string> GetCodes()
+    {
+        List<string> result = new();
+
+        var modsDb = GetModsDatabase();
+
+        if (modsDb == null)
+            return result;
+
+        foreach (var value in modsDb["Codes"].Values)
+            result.Add(value);
+
+        return result;
+    }
+
+    public class Mod
+    {
+        public string Name { get; set; } = string.Empty;
+
+        public string Version { get; set; } = string.Empty;
+
+        public string Author { get; set; } = string.Empty;
+
+        public string Description { get; set; } = string.Empty;
+
+        public string Date { get; set; } = string.Empty;
+
+        public string AuthorURL { get; set; } = string.Empty;
+
+        public string UpdateServer { get; set; } = string.Empty;
+
+        public string SaveFile { get; set; } = string.Empty;
+
+        public string ID { get; set; } = string.Empty;
+
+        public List<string> IncludeDirs { get; set; } = new();
+
+        public List<ModDependency> Dependencies { get; set; } = new();
+
+        public string DLLFile { get; set; } = string.Empty;
+
+        public string CodeFile { get; set; } = string.Empty;
+
+        public string ConfigSchemaFile { get; set; } = string.Empty;
+
+        public string Path { get; set; } = string.Empty;
+
+        public Dictionary<string, Dictionary<string, string>> Ini { get; set; } = new();
+
+        public Mod(string modIniPath)
+        {
+            var ini = INI.Read(modIniPath);
+
+            if (ini == null)
+                return;
+
+            Name             = INI.GetField<string>(ini, "Desc", "Title", Name);
+            Version          = INI.GetField<string>(ini, "Desc", "Version", Version);
+            Author           = INI.GetField<string>(ini, "Desc", "Author", Author);
+            Description      = INI.GetField<string>(ini, "Desc", "Description", Description);
+            Date             = INI.GetField<string>(ini, "Desc", "Date", Date);
+            AuthorURL        = INI.GetField<string>(ini, "Desc", "AuthorURL", AuthorURL);
+            UpdateServer     = INI.GetField<string>(ini, "Main", "UpdateServer", UpdateServer);
+            SaveFile         = INI.GetField<string>(ini, "Main", "SaveFile", SaveFile);
+            ID               = INI.GetField<string>(ini, "Main", "ID", ID);
+            DLLFile          = INI.GetField<string>(ini, "Main", "DLLFile", DLLFile);
+            CodeFile         = INI.GetField<string>(ini, "Main", "CodeFile", CodeFile);
+            ConfigSchemaFile = INI.GetField<string>(ini, "Main", "ConfigSchemaFile", ConfigSchemaFile);
+
+            Path             = System.IO.Path.GetDirectoryName(modIniPath);
+            Ini              = ini;
+
+            int includeDirCount = INI.GetField<int>(ini, "Main", "IncludeDirCount", 1);
+
+            for (int i = 0; i < includeDirCount; i++)
+                IncludeDirs.Add(INI.GetField<string>(ini, "Main", $"IncludeDir{i}", "."));
+
+            int dependencyCount = INI.GetField<int>(ini, "Main", "DependsCount", 0);
+
+            for (int i = 0; i < dependencyCount; i++)
+                Dependencies.Add(new ModDependency(INI.GetField<string>(ini, "Main", $"Depends{i}", "")));
+        }
+    }
+
+    public class ModDependency
+    {
+        public string ID { get; set; }
+
+        public string Name { get; set; }
+        
+        public string Link { get; set; }
+
+        public string Version { get; set; }
+
+        public ModDependency(string in_id, string in_name, string in_link, string in_version)
+        {
+            ID = in_id;
+            Name = in_name;
+            Link = in_link;
+            Version = in_version;
+        }
+
+        public ModDependency(string in_csv)
+        {
+            var fields = in_csv.Split('|');
+
+            for (int i = 0; i < fields.Length; i++)
+            {
+                switch (i)
+                {
+                    case 0:
+                        ID = fields[i];
+                        break;
+
+                    case 1:
+                        Name = fields[i];
+                        break;
+
+                    case 2:
+                    {
+                        if (fields.Length > 2)
+                        {
+                            Link = fields[i];
+                        }
+                        else
+                        {
+                            Version = fields[i];
+                        }
+
+                        break;
+                    }
+
+                    case 3:
+                        Version = fields[i];
+                        break;
+                }
+            }
+        }
+    }
 }
-
-

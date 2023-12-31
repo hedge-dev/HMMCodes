@@ -1,0 +1,22 @@
+Code "Recovery Jump into Flight" in "Gameplay/Skills/Tails" by "Hyper" does "Allows Tails to instantly start flying after jumping when flinging off terrain whilst holding the jump button."
+//
+    #lib "Player"
+    #lib "Time"
+
+    static float _recoveryJumpTimer = 0.0f;
+//
+{
+    if (Player.GetPlayerType() != Player.PlayerType.Tails)
+        return;
+    
+    if (Player.State.GetCurrentStateID<Tails.StateID>() == Tails.StateID.StateRecoveryJump)
+    {
+        if (_recoveryJumpTimer > 0.65f && Player.Input.IsDown(Player.InputActionType.PlayerJump))
+        {
+            Player.State.SetState<Tails.StateID>(Tails.StateID.StateTailsFly);
+            _recoveryJumpTimer = 0.0f;
+        }
+
+        _recoveryJumpTimer += Time.GetDeltaTime();
+    }
+}

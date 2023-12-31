@@ -1,0 +1,66 @@
+Patch "Retain Horizontal Velocity from Jump" in "Physics" by "Hyper" does
+/*
+Retains the player's horizontal velocity when jumping.
+
+Notes;
+- This will allow you to retain velocity when jumping out of a Drop Dash.
+- The "Jump Deceleration" and "Maintain boost during a jump" options can remain active without conflicting with this code.
+*/
+//
+    #lib "Memory"
+    #lib "Player"
+
+    static bool _isStateJump = false;
+//
+{
+    fixed (bool* p_isStateJump = &_isStateJump)
+    {
+        // Update posture to allow retaining ground velocity.
+        WriteAsmHook
+        (
+            $@"
+                mov   rdi, rcx
+                mov   rdx, {(long)p_isStateJump}
+                cmp   byte ptr [rdx], 0
+                je    default
+                mov   al, 1
+                jmp   exit
+            default:
+                xor   edx, edx
+                mov   rcx, [rcx + 0x28] ; RCX = BlackboardStatus
+                mov   eax, edx
+                and   eax, 0x3F
+                movzx r8d, al
+                mov   eax, edx
+                shr   rax, 6
+                mov   rax, [rcx + rax * 8 + 0x38]
+                bt    rax, r8
+                setb  al
+            exit:
+            ",
+
+            /* 0x1408B4846 */
+            Memory.ReadCall
+            (
+                /* 0x1408F1A2C */
+                ScanSignature
+                (
+                    "\xE8\xCC\xCC\xCC\xCC\x48\x8B\x43\x20\xBA\x20\x16\x1E\x71\x44\x0F\x28\xC0\x48\x8B\x88\x80\x00\x00\x00\xE8\xCC\xCC\xCC\xCC\x48\x8B\xC8\xE8\xCC\xCC\xCC\xCC\x48\x8B\xCB\x0F\x28\xF8\xE8\xCC\xCC\xCC\xCC\x48\x8B\xC8\xE8\xCC\xCC\xCC\xCC\x48\x8D\x55\xE7",
+                    "x????xxxxxxxxxxxxxxxxxxxxx????xxxx????xxxxxxx????xxxx????xxxx"
+                )
+            )
+            + 6,
+
+            HookBehavior.Replace
+        );
+    }
+
+    Sonic.StateID NotifyStateJump(Sonic.StateID in_stateId, Sonic.StateID[] in_stateStackTrace)
+    {
+        _isStateJump = in_stateId == Sonic.StateID.StateJump;
+
+        return in_stateId;
+    }
+
+    Player.State.AddStateNotifyAction<Sonic.StateID>(NotifyStateJump);
+}

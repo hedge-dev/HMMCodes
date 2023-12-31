@@ -1,4 +1,0 @@
-Patch "No Trick Rainbow Rings" in "Gameplay" by "Hyper" 
-WriteNop(0x115A6AF, 2);
-
-

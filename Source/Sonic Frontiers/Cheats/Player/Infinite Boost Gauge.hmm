@@ -1,0 +1,14 @@
+Code "Infinite Boost Gauge" in "Cheats/Player" by "Hyper" 
+//
+    #lib "Player"
+
+    #import "Plugins"
+//
+{
+    var pStatePluginBoost = Player.State.GetStatePlugin<StatePluginBoost>();
+
+    if (pStatePluginBoost == null)
+        return;
+        
+    pStatePluginBoost->BoostAmount = pStatePluginBoost->BoostCapacity;
+}

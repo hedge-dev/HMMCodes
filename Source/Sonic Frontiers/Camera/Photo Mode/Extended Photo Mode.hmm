@@ -1,0 +1,231 @@
+Code "Extended Photo Mode" in "Camera/Photo Mode" by "Hyper" does
+/*
+Allows for quick access to Photo Mode via a button combination with some extended features.
+
+Controller Layout;
+- RS (x2) - toggle Photo Mode
+- Start - toggle game execution (hold to resume, release to suspend)
+- Back - bring the player to the camera's position
+- B - exit Photo Mode
+
+Keyboard/Mouse Layout;
+- Tab - toggle Photo Mode
+- 9/X1 - toggle game execution (hold to resume, release to suspend)
+- 0/X2 - bring the player to the camera's position
+- ESC - exit Photo Mode
+
+Notes;
+- This allows you to access Photo Mode in other game modes, as the menu option isn't present outside of the islands.
+- When toggling Photo Mode in Cyber Space, the Red Ring display will be hidden permanently.
+- When teleporting the player to the camera, the reset position will change to the position of the camera at that moment.
+- For the keyboard/mouse layout, X buttons refer to the back/forward buttons on the mouse respectively.
+*/
+//
+    #include "BlackboardStatus" noemit
+
+    #lib "GameManager"
+    #lib "GameObject"
+    #lib "HMM"
+    #lib "MathHelpers"
+    #lib "PhotoMode"
+    #lib "Player"
+    #lib "Time"
+    #lib "XInput"
+
+    #import "Messages"
+
+    #load "System.Numerics.dll"
+
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Numerics;
+    using System.Runtime.InteropServices;
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
+
+    static bool _isInitialised = false;
+    static bool _isExitInputBuffered = false;
+    static bool _isToggleKeyBuffered = false;
+    static bool _isResumeInputReceivedOnce = false;
+    static bool _isResumeMessageSent = false;
+    static bool _isSuspendMessageSent = false;
+    static bool _isOrbitCamera = true;
+
+    static float _inputTimer = 0.0f;
+    static float _inputTimerThreshold = 0.5f;
+
+    static int _inputCount = 0;
+
+    static List<Sonic.StateID> _forceExitTeleportStates = new()
+    {
+        Sonic.StateID.StateCaught,
+        Sonic.StateID.StateGrind,
+        Sonic.StateID.StateJumpBoardLaunch,
+        Sonic.StateID.StateSpringJump
+    };
+
+    static bool IsKeyDown(Keys in_keys)
+    {
+        if ((GetAsyncKeyState(Keys.LMenu) & 0x8000) != 0)
+            return false;
+        
+        return (GetAsyncKeyState(in_keys) & 0x8000) != 0;
+    }
+//
+{
+    if (!_isInitialised)
+    {
+        foreach (var code in HMM.GetCodes())
+        {
+            if (code == "Camera/Photo Mode/Disable Orbit Camera (experimental)")
+            {
+                _isOrbitCamera = false;
+                break;
+            }
+        }
+
+        // Disable Photo Mode exit confirmation.
+        WriteNop
+        (
+            /* 0x1402073FD */
+            ScanSignature
+            (
+                "\xE8\xCC\xCC\xCC\xCC\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD0\x48\x8B\xCF\xE8\xCC\xCC\xCC\xCC\x48\x8B\x88\x90\x00\x00\x00\x48\x8B\x41\x78\x0F\xBE\x48\x47",
+                "x????x????xxxxxxx????xxxxxxxxxxxxxxx"
+            ),
+
+            5
+        );
+
+        _isInitialised = true;
+    }
+    
+    if (GetForegroundWindow() != Process.GetCurrentProcess().MainWindowHandle)
+        return;
+
+    if (IsKeyDown(Keys.Tab))
+    {
+        _inputCount = _isToggleKeyBuffered ? 0 : 2;
+        
+        _isToggleKeyBuffered = true;
+    }
+    else
+    {
+        _isToggleKeyBuffered = false;
+    }
+
+    if (_inputTimer <= _inputTimerThreshold)
+    {
+        if (Player.Input.IsPressed(Player.InputActionType.CameraGaze))
+            _inputCount++;
+    }
+    else
+    {
+        _inputTimer = 0.0f;
+        _inputCount = 0;
+    }
+
+    _inputTimer += Time.GetDeltaTime();
+
+    if (_inputCount >= 2)
+    {
+        PhotoMode.Toggle();
+
+        _inputTimer = 0.0f;
+        _inputCount = 0;
+    }
+
+    if (PhotoMode.IsEnabled())
+    {
+        bool isTeleportInputDown = XInput.IsButtonDown(XInput.Buttons.BACK) || (IsKeyDown(Keys.D0) || IsKeyDown(Keys.XButton2));
+
+        if ((XInput.IsButtonDown(XInput.Buttons.START) || (IsKeyDown(Keys.D9) || IsKeyDown(Keys.XButton1))) || isTeleportInputDown)
+        {
+            _isResumeInputReceivedOnce = true;
+
+            if (!_isResumeMessageSent)
+            {
+                Messages.EnqueueMessage(new MsgResumeWorld("PhotoMode"));
+                _isResumeMessageSent = true;
+            }
+
+            _isSuspendMessageSent = false;
+        }
+        else
+        {
+            /* Check if the Start button has been pressed at least once,
+               since suspending the game world after Photo Mode itself
+               does causes some problems. */
+            if (!_isSuspendMessageSent && _isResumeInputReceivedOnce)
+            {
+                Messages.EnqueueMessage(new MsgSuspendWorld("PhotoMode", 0x31F8000));
+                _isSuspendMessageSent = true;
+            }
+
+            _isResumeMessageSent = false;
+        }
+
+        if (isTeleportInputDown)
+        {
+            var kinematics = Player.Kinematics.Get();
+            var pPhotoModeCamera = PhotoMode.GetCamera();
+
+            // Force the player out of the current state when teleporting, if necessary.
+            if (_forceExitTeleportStates.Contains(Player.State.GetCurrentStateID<Sonic.StateID>()) || IS_STATE_FLAG(IsWallClimb))
+                Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateStand);
+
+            if (kinematics != null && pPhotoModeCamera != null)
+            {
+                var centre = pPhotoModeCamera->Centre;
+                var dist = pPhotoModeCamera->Distance;
+
+                // Update camera start centre to new camera centre.
+                pPhotoModeCamera->StartCentre = centre;
+
+                if (_isOrbitCamera)
+                {
+                    kinematics->Position = centre;
+                }
+                else
+                {
+                    float yawRad = MathHelpers.WrapToRadians(pPhotoModeCamera->Yaw);
+                    float pitchRad = MathHelpers.WrapToRadians(pPhotoModeCamera->Pitch);
+                    
+                    // Calculate the direction of the orbit camera.
+                    var direction = new Vector3
+                    (
+                        (float)(Math.Sin(yawRad) * Math.Cos(pitchRad)),
+                        (float)(Math.Sin(pitchRad)),
+                        (float)(Math.Cos(yawRad) * Math.Cos(pitchRad))
+                    );
+
+                    // Project the player to the opposite side of the sphere.
+                    kinematics->Position = (centre + -direction * (dist + 1.5f)) + new Vector3(0.0f, -0.5f, 0.0f);
+                }
+
+                // Kill velocity to prevent jitter.
+                kinematics->Velocity = Vector3.Zero;
+            }
+        }
+
+        if (!_isExitInputBuffered)
+        {
+            if (XInput.IsButtonDown(XInput.Buttons.B) || IsKeyDown(Keys.Escape) || IS_WORLD_FLAG(IsDead))
+                PhotoMode.SetEnabled(false);
+        }
+        else if (!XInput.IsButtonDown(XInput.Buttons.B))
+        {
+            _isExitInputBuffered = false;
+        }
+    }
+    else
+    {
+        /* Check B input before entering Photo Mode
+           in case the player is squatting. */
+        if (XInput.IsButtonDown(XInput.Buttons.B))
+            _isExitInputBuffered = true;
+        
+        _isResumeInputReceivedOnce = false;
+    }
+}

@@ -1,4 +1,0 @@
-Code "59.94 FPS Cap" in "Graphics" by "PTKickass" 
-Write<float>(0x19FD2C, 59.94f)
-
-

@@ -1,4 +1,4 @@
-Patch "Disable Bullet Time" in "Gameplay" by "Hyper" does 
+Patch "Disable Bullet Time" in "Gameplay" by "Hyper" does
 /*
 Disables the slow-mo sequences when performing certain actions.
 
@@ -23,27 +23,27 @@ Notes;
     // Disable bullet time audio for parry.
     WriteProtected<byte>
     (
-        /* 0x1408CF3BF */
+        /* 0x140990BE8 */
         ScanSignature
         (
-            "\x4C\x8D\x05\xCC\xCC\xCC\xCC\x48\x8B\xD7\x48\x8D\x4C\x24\x60\xE8\xCC\xCC\xCC\xCC\x48\x8D\x4E\x58",
-            "xxx????xxxxxxxxx????xxxx"
+            "\x75\x53\x41\x8B\x0E\x89\x4C\x24\x20",
+            "xxxxxxxxx"
         ),
 
-        0xEB, 0x40
+        0xE9, 0x1F, 0x01, 0x00, 0x00
     );
 
     // Disable bullet time for Giganto dash rings.
     WriteProtected<byte>
     (
-        /* 0x1402A1C4F */
+        /* 0x1402C918F */
         ScanSignature
         (
             "\x48\x8D\x4D\x97\x0F\x28\xF9",
             "xxxxxxx"
         ),
 
-        0xE9, 0xCC, 0x00, 0x00, 0x00
+        0xE9, 0xAC, 0x00, 0x00, 0x00
     );
 
     // Disable bullet time for Ninja.
@@ -59,5 +59,3 @@ Notes;
         0xEB, 0x77
     );
 }
-
-

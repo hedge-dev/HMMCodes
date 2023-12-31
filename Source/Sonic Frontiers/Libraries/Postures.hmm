@@ -1,0 +1,165 @@
+Library "Postures" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    #lib "BlackboardStatus"
+    #lib "Memory"
+    #lib "Player"
+    #lib "StringMapOperation"
+
+    #import "Collections"
+    #import "GOComponents"
+
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `app::game::PostureImpl`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct PostureImpl { }
+
+    /// <summary>
+    /// A struct representation of `app::player::PostureListener`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit)]
+    public struct PostureListener { }
+
+    /// <summary>
+    /// A struct representation of `app::player::PlayerPosture`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x58)]
+    public struct PlayerPosture
+    {
+        [FieldOffset(0)] public PostureImpl Base;
+
+        VFUNCTION_PTR(PlayerPosture, 1, uint, GetNameHash)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::PlayerPostureContext`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x50)]
+    public struct PlayerPostureContext
+    {
+        /// <summary>
+        /// A pointer to an instance of `app::player::Player`.
+        /// </summary>
+        [FieldOffset(0x10)] public Player.Data* pPlayer;
+
+        /// <summary>
+        /// A pointer to an instance of `app::player::GOCPlayerKinematicParams`.
+        /// </summary>
+        [FieldOffset(0x18)] public GOCPlayerKinematicParams* pGOCPlayerKinematicParams;
+
+        /// <summary>
+        /// A pointer to an instance of `app::player::GOCPlayerBlackboard`.
+        /// </summary>
+        [FieldOffset(0x20)] public GOCPlayerBlackboard* pGOCPlayerBlackboard;
+
+        /// <summary>
+        /// A pointer to an instance of `app::player::BlackboardStatus`.
+        /// </summary>
+        [FieldOffset(0x28)] public BlackboardStatus.Data* pBlackboardStatus;
+
+        /// <summary>
+        /// A pointer to an instance of `app::player::PlayerSpeedParam`.
+        /// </summary>
+        [FieldOffset(0x30)] public PlayerSpeedParam* pPlayerSpeedParam;
+
+        /// <summary>
+        /// A pointer to an instance of `app::player::PlayerExtraParam`.
+        /// </summary>
+        [FieldOffset(0x38)] public PlayerExtraParam* pPlayerExtraParam;
+
+        /// <summary>
+        /// A pointer to an instance of `app::player::PlayerGrindSpeedParam`.
+        /// </summary>
+        [FieldOffset(0x40)] public PlayerGrindSpeedParam* pPlayerGrindSpeedParam;
+
+        /// <summary>
+        /// A struct representation of `app::player::PlayerSpeedParam`.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit, Size = 0xE0)]
+        public struct PlayerSpeedParam { }
+
+        /// <summary>
+        /// A struct representation of `app::player::PlayerExtraParam`.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit, Size = 0x40)]
+        public struct PlayerExtraParam { }
+
+        /// <summary>
+        /// A struct representation of `app::player::PlayerGrindSpeedParam`.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit, Size = 0x50)]
+        public struct PlayerGrindSpeedParam { }
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::PostureMoveManager`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x58)]
+    public struct PostureMoveManager
+    {
+        /// <summary>
+        /// An array of pointers to `app::player::PostureListener` instances.
+        /// </summary>
+        [FieldOffset(0x10)] public ObjectMoveArray<Memory.Pointer<PostureListener>> PostureListeners;
+
+        /// <summary>
+        /// A pointer to an instance of `app::player::PlayerPosture`.
+        /// </summary>
+        [FieldOffset(0x50)] public PlayerPosture* pPlayerPosture;
+
+        /// <summary>
+        /// Gets an instance of `app::player::PlayerPosture` by name and type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="in_postureName"></param>
+        /// <returns></returns>
+        public PlayerPosture* GetPlayerPosture(string in_postureName)
+        {
+            if (pPlayerPosture->GetNameHash()() == StringMapOperation.ComputeHash(in_postureName))
+                return pPlayerPosture;
+
+            return null;
+        }
+
+        MAKE_GENERIC_API(GetPlayerPosture)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::PostureDamageBlowOffHeavy`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit)]
+    public struct PostureDamageBlowOffHeavy
+    {
+        /// <summary>
+        /// The current phase of this posture.
+        /// </summary>
+        [FieldOffset(0x12C)] public PhaseType Phase;
+
+        public enum PhaseType : byte
+        {
+            /// <summary>
+            /// The player has taken damage.
+            /// </summary>
+            Damage,
+
+            /// <summary>
+            /// The player has recovered from the damage.
+            /// </summary>
+            Recover,
+
+            /// <summary>
+            /// The player is waiting to return to the arena.
+            /// </summary>
+            Wait,
+
+            /// <summary>
+            /// The player is returning to the arena.
+            /// </summary>
+            Release
+        }
+    }
+}

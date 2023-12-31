@@ -1,4 +1,10 @@
-Code "Enable Lives in Anniversary Mode" in "Gameplay" by "ĐeäTh" does "Enabling this code will cause Anniversary Mode to use a different set of saves from normal, and your regular Anniversary Mode saves will be inaccessible." 
+Code "Enable Lives in Anniversary Mode" in "Gameplay" by "ĐeäTh" does
+/*
+Disables the flag for Coins when playing in Anniversary Mode.
+
+Notes;
+- This will cause Anniversary Mode to use a different set of saves from normal, and your regular Anniversary Mode saves will be inaccessible."
+*/
 //
     #lib "RSDK"
 //

@@ -1,0 +1,4 @@
+Patch "Always Play S Rank Results Music" in "Audio/Music/Results" by "M&M" 
+WriteProtected<byte>(0xCFD4E8, 0xF8, 0x38)
+
+

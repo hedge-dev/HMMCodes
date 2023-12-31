@@ -1,0 +1,56 @@
+Library "Services" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    #lib "Memory"
+
+    #import "Blackboards"
+    #import "Collections"
+    #import "PlayerTargets"
+
+    using System.Runtime.InteropServices;
+
+    [StructLayout(LayoutKind.Explicit, Size = 0xA0)]
+    public struct PlayerBlackboardService
+    {
+        [FieldOffset(0)]    public GameService.Data Base;
+
+        [FieldOffset(0x60)] public ObjectMoveArray<Memory.Pointer<BlackboardContent>> Blackboards;
+
+        [FieldOffset(0x80)] public Blackboard2* pBlackboard2;
+
+        public BlackboardContent* GetBlackboardContent(string in_blackboardName)
+        {
+            foreach (var pBlackboard in Blackboards)
+            {
+                if (pBlackboard.pData->GetName()() == in_blackboardName)
+                    return pBlackboard.pData;
+            }
+
+            return null;
+        }
+
+        MAKE_GENERIC_API(GetBlackboardContent)
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x88)]
+    public struct PlayerTargetService
+    {
+        [FieldOffset(0)]    public GameService.Data Base;
+
+        [FieldOffset(0x68)] public ObjectMoveArray<Memory.Pointer<PlayerTargetComponent>> PlayerTargetComponents;
+
+        public PlayerTargetComponent* GetTargetComponent(string in_componentName)
+        {
+            foreach (var pPlayerTargetComponent in PlayerTargetComponents)
+            {
+                if (pPlayerTargetComponent.pData->GetName()() == in_componentName)
+                    return pPlayerTargetComponent.pData;
+            }
+
+            return null;
+        }
+
+        MAKE_GENERIC_API(GetTargetComponent)
+    }
+}

@@ -1,0 +1,29 @@
+Patch "Always Sandstorm" in "Weather" by "Hyper" does 
+/*
+Forces the weather to Sandstorm on supported islands.
+
+Supported islands;
+- Ares
+*/
+//
+    #lib "Memory"
+//
+{
+    void NOP(long addr)
+        => WriteProtected<byte>(addr, 0xEB, 0x22);
+
+    /* 0x1401EE652 */
+    long callerFuncAddr = ScanSignature
+    (
+        "\xE8\xCC\xCC\xCC\xCC\x48\x8B\xCB\x8B\xF0\xE8\xCC\xCC\xCC\xCC\x8B\xF8",
+        "x????xxxxxx????xx"
+    );
+
+    /* 0x1401EE3ED */
+    NOP(Memory.ReadCall(callerFuncAddr) + 0x2D);
+
+    /* 0x1401EE4DD */
+    NOP(Memory.ReadCall(callerFuncAddr + 0x0A) + 0x2D);
+}
+
+

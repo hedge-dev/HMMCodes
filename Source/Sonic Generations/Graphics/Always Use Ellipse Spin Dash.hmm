@@ -1,4 +1,0 @@
-Patch "Always Use Ellipse Spin Dash" in "Graphics" by "Hyper" 
-WriteProtected<byte>(0x1289ADE, 0x14, 0xAE);
-
-

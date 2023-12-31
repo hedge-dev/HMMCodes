@@ -1,0 +1,17 @@
+Patch "Hide Titan Health Gauge" in "UI/Display" by "Hyper" 
+{
+    WriteProtected<byte>
+    (
+        /* v1.01: 0x14C76211A */
+        /* v1.10: 0x14C6036DB */
+        ScanSignature
+        (
+            "\x74\x18\x48\x8D\x54\x24\x70\x48\x89\xC1\xE8\xCC\xCC\xCC\xCC\x48\x89\xFA",
+            "xxxxxxxxxxx????xxx"
+        ),
+
+        0xEB
+    );
+}
+
+

@@ -1,4 +1,0 @@
-Patch "Stop Timer" in "Cheats" by "CodenameGamma" 
-WriteNop(0x14017EE5A, 5)
-
-

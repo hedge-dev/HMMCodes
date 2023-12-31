@@ -5,18 +5,25 @@ Enters Sonic into a somersault state when landing from a moderate height at a hi
 This state lasts a fraction of a second, but keep in mind that within that time, you will be unable to perform certain actions until the animation is complete.
 */
 //
-    #lib "Bitwise"
-    #lib "BlackboardStatus"
-    #lib "Sonic"
+    #include "BlackboardStatus" noemit
+    
+    #lib "HMM"
+    #lib "Player"
 
     #load "System.Numerics.dll"
 
+    #import "States"
+
     using System.Numerics;
     using System.Collections.Generic;
+    
+    static bool _isInitialised = false;
+    static bool _isRecoveryJumpCharging = false;
+    static bool _isSpinDashAutoRunAllowed = false;
 
-    static Vector3 LastGroundedPosition;
+    static Vector3 _lastGroundedPosition;
 
-    static List<Sonic.StateID> ExitStates = new()
+    static List<Sonic.StateID> _exitStates = new()
     {
         Sonic.StateID.StateJump,
         Sonic.StateID.StateRecoveryJump,
@@ -25,110 +32,103 @@ This state lasts a fraction of a second, but keep in mind that within that time,
         Sonic.StateID.StateRecovery
     };
 
-    static float HeightFallen = 0.0f;
-    
-    static bool IsInitialised = false;
-    static bool IsRecoveryJumpCharging = false;
+    static float _heightFallen = 0.0f;
 //
 {
-    if (!IsInitialised)
+    if (!_isInitialised)
     {
-        fixed (bool* pIsRecoveryJumpCharging = &IsRecoveryJumpCharging)
+        if (HMM.GetCodes().Contains("Gameplay/Skills/Allow Spin Dash During Auto Run"))
+            _isSpinDashAutoRunAllowed = true;
+            
+        Sonic.StateID NotifyStateSpringJumpHeadLandDamageCollision(Sonic.StateID in_stateId, Sonic.StateID[] in_stateStackTrace)
         {
-            WriteAsmHook
-            (
-                $@"
-                    movaps xmmword ptr [rsp + 0x38 + 0xFFFFFFFFFFFFFFE8], xmm6
-                    mov    rsi, rcx
-                    mov    rcx, {(long)pIsRecoveryJumpCharging}
-                    mov    dl, byte ptr [rsi + 0xC4]
-                    mov    byte ptr [rcx], dl
-                    mov    edx, 0x18
-                    mov    rcx, rdi
-                ",
-
-                /* 0x1408A0A1D */
-                ScanSignature
-                (
-                    "\x0F\x29\x74\x24\x20\x48\x8B\xF1\xBA\x18\x00\x00\x00",
-                    "xxxxxxxxxxxxx"
-                ),
-
-                HookBehavior.Replace
-            );
-        }
-
-        void NotifyStateSpringJumpHeadLandDamageCollision(Sonic.StateID stateId, Sonic.StateID[] stateStackTrace)
-        {
-            bool isStateSpringJumpHeadLand = stateId == Sonic.StateID.StateSpringJumpHeadLand;
+            bool isStateSpringJumpHeadLand = in_stateId == Sonic.StateID.StateSpringJumpHeadLand;
             
             if (isStateSpringJumpHeadLand)
             {
-                Sonic.Collision.ToggleEntityCollision(false);
+                Player.Collision.SetEntityCollision(false);
             }
-            else if (Sonic.State.GetPreviousStateID() == Sonic.StateID.StateSpringJumpHeadLand)
+            else if (Player.State.GetPreviousStateID<Sonic.StateID>() == Sonic.StateID.StateSpringJumpHeadLand)
             {
-                Sonic.Collision.ToggleEntityCollision(true);
+                Player.Collision.SetEntityCollision(true);
             }
+
+            return in_stateId;
         }
 
-        Sonic.State.AddStateNotifyAction(NotifyStateSpringJumpHeadLandDamageCollision);
+        Player.State.AddStateNotifyAction<Sonic.StateID>(NotifyStateSpringJumpHeadLandDamageCollision);
 
-        IsInitialised = true;
+        _isInitialised = true;
     }
 
-    var kinematics = Sonic.Kinematics.Get();
+    var kinematics = Player.Kinematics.Get();
 
     if (kinematics == null)
         return;
 
-    if (Sonic.State.GetCurrentStateID() == Sonic.StateID.StateSpringJumpHeadLand)
+    var pStateRecoveryJump = Player.State.GetState<StateRecoveryJump>();
+
+    if (pStateRecoveryJump != null)
+        _isRecoveryJumpCharging = pStateRecoveryJump->IsDropDashCharge;
+
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateSpringJumpHeadLand)
     {
-        if (Sonic.Input.IsPressed(Sonic.PlayerActionType.PlayerJump) ||
-            Sonic.Input.IsPressed(Sonic.PlayerActionType.PlayerAttack))
+        if (Player.Input.IsPressed(Player.InputActionType.PlayerJump) ||
+            Player.Input.IsPressed(Player.InputActionType.PlayerAttack))
         {
-            // Exit into StateRun.
-            Sonic.State.SetState(Sonic.StateID.StateRun);
+            Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateRun);
+        }
+
+        if (Player.Input.IsPressed(Player.InputActionType.PlayerSonicboom))
+        {
+            if (!_isSpinDashAutoRunAllowed && IS_WORLD_FLAG(IsAutoRun))
+                goto CheckGrounded;
+            
+            Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateSpinBoost);
         }
     }
 
-    if (Sonic.IsGrounded())
+CheckGrounded:
+    if (Player.Status.IsGrounded())
     {
-        LastGroundedPosition = *kinematics.Position;
+        _lastGroundedPosition = kinematics->Position;
 
-        if (!ExitStates.Contains(Sonic.State.GetPreviousStateID()))
+        if (!_exitStates.Contains(Player.State.GetPreviousStateID<Sonic.StateID>()))
             goto Reset;
 
-        if (Sonic.Kinematics.GetHorizontalMagnitude() > 15.0f && HeightFallen >= 5.0f)
+        if (Player.Kinematics.GetHorizontalMagnitude() > 15.0f && _heightFallen >= 5.0f)
         {
-            if (BlackboardStatus.Get() != null && Bitwise.Test(*BlackboardStatus.GetStateFlags(), (uint)BlackboardStatus.StateFlags.IsBoost))
+            if (IS_STATE_FLAG(IsBoost))
             {
                 // Allow StateJump to continue running if we're boosting.
-                if (Sonic.State.GetPreviousStateID() == Sonic.StateID.StateJump)
+                if (Player.State.GetPreviousStateID<Sonic.StateID>() == Sonic.StateID.StateJump)
                     goto Reset;
             }
 
-            // Allow StateRecoveryJump to enter StateDropDash.
-            if (Sonic.State.GetPreviousStateID() == Sonic.StateID.StateRecoveryJump && IsRecoveryJumpCharging)
+            // Prevent somersault landing on walls.
+            if (IS_STATE_FLAG(IsWallClimb))
                 goto Reset;
 
-            // Exit into StateSpringJumpHeadLand.
-            Sonic.State.SetState(Sonic.StateID.StateSpringJumpHeadLand);
+            // Allow StateRecoveryJump to enter StateDropDash.
+            if (Player.State.GetPreviousStateID<Sonic.StateID>() == Sonic.StateID.StateRecoveryJump && _isRecoveryJumpCharging)
+                goto Reset;
+            
+            Player.State.SetState(Sonic.StateID.StateSpringJumpHeadLand);
         }
         
     Reset:
-        HeightFallen = 0.0f;
+        _heightFallen = 0.0f;
     }
     else
     {
         /* Reset position if the player has reached
            apex height and has begun falling again. */
-        if ((LastGroundedPosition.Y - kinematics.Position->Y) < HeightFallen)
+        if ((_lastGroundedPosition.Y - kinematics->Position.Y) < _heightFallen)
         {
-            LastGroundedPosition = *kinematics.Position;
+            _lastGroundedPosition = kinematics->Position;
         }
 
-        HeightFallen = LastGroundedPosition.Y - kinematics.Position->Y;
+        _heightFallen = _lastGroundedPosition.Y - kinematics->Position.Y;
     }
 }
 

@@ -1,0 +1,452 @@
+Library "GameData"
+{
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+    using System.Runtime.InteropServices;
+
+    public enum Status : sbyte
+    {
+        STATUS_ZERO_FILL = 0,
+        STATUS_INITIALIZED = 1
+    }
+
+    public enum Sequence : sbyte
+    {
+        Island1 = 0,
+        Island2 = 1,
+        Island3 = 2,
+        Island4 = 3,
+        Island5 = 4,
+        FinalBossBefore = 5,
+        FinalBossAfter = 6
+    }
+
+    public enum SaveDataIcon : sbyte
+    {
+        IconNoData = 0,
+        IconIsland1 = 1,
+        IconIsland2 = 2,
+        IconIsland3 = 3,
+        IconIsland4 = 4,
+        IconIsland5 = 5,
+        IconLastBoss = 6,
+        IconExtra = 7
+    }
+
+    public enum AppVersion : byte
+    {
+        AppVersion_1_10 = 0,
+        AppVersion_1_20 = 1,
+        AppVersion_1_30 = 2,
+        AppVersion_1_40 = 3
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x28)]
+    public struct HeaderData
+    {
+        [FieldOffset(0x00)] public uint signature;
+        [FieldOffset(0x04)] public byte version;
+        [FieldOffset(0x05)] public Status status;
+        [FieldOffset(0x06)] public byte config;
+        [FieldOffset(0x07)] public Sequence sequence;
+        [FieldOffset(0x08)] public uint playTime;
+        [FieldOffset(0x0C)] public SaveDataIcon icon;
+        [FieldOffset(0x0D)] public AppVersion appVersion;
+        [FieldOffset(0x0E)] public byte config2;
+        [FieldOffset(0x0F)] public byte reserved1;
+        [FieldOffset(0x10)] public uint saveDate;
+        [FieldOffset(0x14)] public byte index;
+        [FieldOffset(0x18)] public unsafe fixed uint reserved[4];
+    }
+
+    public enum GamePlayData_Status : sbyte
+    {
+        STATUS_NEWGAME = 0,
+        STATUS_CONTINUE = 1
+    }
+
+    public enum SequenceDeprecated : sbyte
+    {
+        SequenceDeprecated_Island1 = 0,
+        SequenceDeprecated_Island2 = 1,
+        SequenceDeprecated_Island3 = 2,
+        SequenceDeprecated_Island4 = 3,
+        SequenceDeprecated_Island5 = 4,
+        SequenceDeprecated_FinalBossBefore = 5,
+        SequenceDeprecated_FinalBossAfter = 6
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x50)]
+    public struct GamePlayData
+    {
+        [FieldOffset(0x00)] public GamePlayData_Status status;
+        [FieldOffset(0x01)] public sbyte lastPlayedStageNo;
+        [FieldOffset(0x02)] public byte flags;
+        [FieldOffset(0x03)] public SequenceDeprecated sequence;
+        [FieldOffset(0x10)] public Vector3 position;
+        [FieldOffset(0x20)] public Quaternion rotation;
+        [FieldOffset(0x30)] public uint day;
+        [FieldOffset(0x34)] public uint hour;
+        [FieldOffset(0x38)] public uint minute;
+        [FieldOffset(0x3C)] public float second;
+        [FieldOffset(0x40)] public byte character;
+        [FieldOffset(0x41)] public byte reserved0;
+        [FieldOffset(0x42)] public ushort reserved1;
+        [FieldOffset(0x44)] public unsafe fixed uint reserved[3];
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x60)]
+    public struct CharacterData
+    {
+        [FieldOffset(0x00)] public ushort numRings;
+        [FieldOffset(0x02)] public byte ringLevel;
+        [FieldOffset(0x03)] public byte speedLevel;
+        [FieldOffset(0x04)] public byte obtainChaosEmeralds;
+        [FieldOffset(0x05)] public byte hasChaosEmeralds;
+        [FieldOffset(0x06)] public unsafe fixed byte skillLevel[30];
+        [FieldOffset(0x24)] public byte skillPointOld;
+        [FieldOffset(0x25)] public byte levelOld;
+        [FieldOffset(0x26)] public ushort padding0;
+        [FieldOffset(0x28)] public uint expPoint;
+        [FieldOffset(0x2C)] public byte powerLevel;
+        [FieldOffset(0x2D)] public byte guardLevel;
+        [FieldOffset(0x2E)] public ushort boostGaugeLevel;
+        [FieldOffset(0x30)] public uint numPowerSeeds;
+        [FieldOffset(0x34)] public uint numGuardSeeds;
+        [FieldOffset(0x38)] public ushort numFishCoins;
+        [FieldOffset(0x3A)] public ushort numFishTokens;
+        [FieldOffset(0x3C)] public ushort numGoldCards;
+        [FieldOffset(0x3E)] public ushort numSlotStars;
+        [FieldOffset(0x40)] public float quickCyloopGauge;
+        [FieldOffset(0x44)] public uint practiceMaxCleared;
+        [FieldOffset(0x48)] public uint practiceMaxCombos;
+        [FieldOffset(0x4C)] public uint flags;
+        [FieldOffset(0x50)] public short skillPoint;
+        [FieldOffset(0x52)] public short level;
+        [FieldOffset(0x54)] public uint dlcrsvExpPoint;
+        [FieldOffset(0x58)] public uint dlcrsvNumPowerSeeds;
+        [FieldOffset(0x5C)] public uint dlcrsvNumGuardSeeds;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x02)]
+    public struct IslandMapGridData
+    {
+        [FieldOffset(0x00)] public byte x;
+        [FieldOffset(0x01)] public byte y;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x112)]
+    public struct IslandMapData
+    {
+        [FieldOffset(0x00)] public unsafe fixed byte /* IslandMapGridData[136] */ _grid[272];
+
+        public unsafe IslandMapGridData* grid
+        {
+            get
+            {
+                fixed (byte* p_grid = _grid)
+                    return (IslandMapGridData*)p_grid;
+            }
+        }
+
+        [FieldOffset(0x110)] public ushort numReleaseGrids;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x140)]
+    public struct IslandStageData
+    {
+        [FieldOffset(0x00)] public Vector3 destination;
+        [FieldOffset(0x10)] public uint flags;
+        [FieldOffset(0x14)] public IslandMapData map;
+        [FieldOffset(0x128)] public unsafe fixed uint reserved[4];
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x640)]
+    public struct IslandStageContainerData
+    {
+        [FieldOffset(0x00)] public unsafe fixed byte /* IslandStageData[5] */ _islands[1600];
+
+        public unsafe IslandStageData* islands
+        {
+            get
+            {
+                fixed (byte* p_islands = _islands)
+                    return (IslandStageData*)p_islands;
+            }
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct CyberStageData
+    {
+        [FieldOffset(0x00)] public ushort flags;
+        [FieldOffset(0x04)] public uint bestTime;
+        [FieldOffset(0x08)] public uint flags2;
+        [FieldOffset(0x0C)] public unsafe fixed uint reserved[3];
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x300)]
+    public struct CyberStageContainerData
+    {
+        [FieldOffset(0x00)] public unsafe fixed byte /* CyberStageData[32] */ _actStages[768];
+
+        public unsafe CyberStageData* actStages
+        {
+            get
+            {
+                fixed (byte* p_actStages = _actStages)
+                    return (CyberStageData*)p_actStages;
+            }
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x120)]
+    public struct FlagContainerData
+    {
+        [FieldOffset(0x00)] public unsafe fixed uint bitFlags[24];
+        [FieldOffset(0x60)] public unsafe fixed sbyte byteFlags[128];
+        [FieldOffset(0xE0)] public unsafe fixed uint intDatas[16];
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x1C00)]
+    public struct WorldFlagData
+    {
+        [FieldOffset(0x00)] public unsafe fixed uint bitFlags[1024];
+        [FieldOffset(0x1000)] public unsafe fixed sbyte byteFlags[1024];
+        [FieldOffset(0x1400)] public unsafe fixed uint intDatas[512];
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0xA800)]
+    public struct WorldFlagContainerData
+    {
+        [FieldOffset(0x00)] public unsafe fixed byte /* WorldFlagData[5] */ _worldDatas[35840];
+
+        public unsafe WorldFlagData* worldDatas
+        {
+            get
+            {
+                fixed (byte* p_worldDatas = _worldDatas)
+                    return (WorldFlagData*)p_worldDatas;
+            }
+        }
+
+        [FieldOffset(0x8C00)] public WorldFlagData debugWorldData;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0xE00)]
+    public struct ExtraFlagData
+    {
+        [FieldOffset(0x00)] public unsafe fixed uint bitFlags[512];
+        [FieldOffset(0x800)] public unsafe fixed sbyte byteFlags[512];
+        [FieldOffset(0xA00)] public unsafe fixed uint intDatas[256];
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x2A00)]
+    public struct ExtraFlagContainerData
+    {
+        [FieldOffset(0x00)] public WorldFlagData worldData;
+        [FieldOffset(0x1C00)] public ExtraFlagData extraData;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x0C)]
+    public struct ScoreAndRnakData
+    {
+        [FieldOffset(0x00)] public uint hightScore;
+        [FieldOffset(0x04)] public ushort rank;
+        [FieldOffset(0x06)] public ushort padding0;
+        [FieldOffset(0x08)] public uint reserved0;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x960)]
+    public struct ActionChainStruct
+    {
+        [FieldOffset(0x00)] public unsafe fixed byte /* ScoreAndRnakData[200] */ _hightState[2400];
+
+        public unsafe ScoreAndRnakData* hightState
+        {
+            get
+            {
+                fixed (byte* p_hightState = _hightState)
+                    return (ScoreAndRnakData*)p_hightState;
+            }
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x50)]
+    public struct ExtraCharacterData
+    {
+        [FieldOffset(0x00)] public uint bossRushNumRings;
+        [FieldOffset(0x04)] public float bossRushQuickCyloopGauge;
+        [FieldOffset(0x08)] public uint bossRushFlags;
+        [FieldOffset(0x0C)] public uint reserved3;
+        [FieldOffset(0x10)] public uint reserved4;
+        [FieldOffset(0x14)] public uint reserved5;
+        [FieldOffset(0x18)] public uint reserved6;
+        [FieldOffset(0x1C)] public uint reserved7;
+        [FieldOffset(0x20)] public uint reserved8;
+        [FieldOffset(0x24)] public uint reserved9;
+        [FieldOffset(0x28)] public uint reserved10;
+        [FieldOffset(0x2C)] public uint reserved11;
+        [FieldOffset(0x30)] public uint reserved12;
+        [FieldOffset(0x34)] public uint reserved13;
+        [FieldOffset(0x38)] public uint reserved14;
+        [FieldOffset(0x3C)] public uint reserved15;
+        [FieldOffset(0x40)] public uint reserved16;
+        [FieldOffset(0x44)] public uint reserved17;
+        [FieldOffset(0x48)] public uint reserved18;
+        [FieldOffset(0x4C)] public uint reserved19;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x260)]
+    public struct ExtraCharacterContainerData
+    {
+        [FieldOffset(0x00)] public unsafe fixed byte /* CharacterData[3] */ _characters[288];
+
+        public unsafe CharacterData* characters
+        {
+            get
+            {
+                fixed (byte* p_characters = _characters)
+                    return (CharacterData*)p_characters;
+            }
+        }
+
+        [FieldOffset(0x120)] public unsafe fixed byte /* ExtraCharacterData[4] */ _extras[320];
+
+        public unsafe ExtraCharacterData* extras
+        {
+            get
+            {
+                fixed (byte* p_extras = _extras)
+                    return (ExtraCharacterData*)p_extras;
+            }
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x180)]
+    public struct ExtraCyberStageContainerData
+    {
+        [FieldOffset(0x00)] public unsafe fixed byte /* CyberStageData[16] */ _actStages[384];
+
+        public unsafe CyberStageData* actStages
+        {
+            get
+            {
+                fixed (byte* p_actStages = _actStages)
+                    return (CyberStageData*)p_actStages;
+            }
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x140)]
+    public struct ExtraIslandStageContainerData
+    {
+        [FieldOffset(0x00)] public IslandStageData islands;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x92DD0)]
+    public struct ReservedData
+    {
+        [FieldOffset(0x00)] public unsafe fixed byte reserved[601552];
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x08)]
+    public struct StatValue
+    {
+        [FieldOffset(0x00)] public int value;
+        [FieldOffset(0x04)] public bool assigned;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x6A08)]
+    public struct StatsContainerData
+    {
+        [FieldOffset(0x00)] public unsafe fixed byte /* StatValue[3393] */ _stats[27144];
+
+        public unsafe StatValue* stats
+        {
+            get
+            {
+                fixed (byte* p_stats = _stats)
+                    return (StatValue*)p_stats;
+            }
+        }
+    }
+
+    public enum Type : sbyte
+    {
+        Sunny = 0,
+        Cloudy = 1,
+        Rainy = 2,
+        SandStorm = 3,
+        MeteorShower = 4,
+        Num = 5
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x08)]
+    public struct WeatherTimerData
+    {
+        [FieldOffset(0x00)] public float duration;
+        [FieldOffset(0x04)] public float time;
+    }
+
+    public enum WeatherBlockData_Type : sbyte
+    {
+        WeatherBlockData_Type_Sunny = 0,
+        WeatherBlockData_Type_Cloudy = 1,
+        WeatherBlockData_Type_Rainy = 2,
+        WeatherBlockData_Type_SandStorm = 3,
+        WeatherBlockData_Type_MeteorShower = 4,
+        WeatherBlockData_Type_Num = 5
+    }
+
+    public enum WeatherBlockData_Status : sbyte
+    {
+        None = 0,
+        Wait = 1,
+        Active = 2,
+        External = 3
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x14)]
+    public struct WeatherBlockData
+    {
+        [FieldOffset(0x00)] public WeatherBlockData_Type weather;
+        [FieldOffset(0x04)] public uint hour;
+        [FieldOffset(0x08)] public uint minute;
+        [FieldOffset(0x0C)] public float second;
+        [FieldOffset(0x10)] public WeatherBlockData_Status status;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x34)]
+    public struct WeatherData
+    {
+        [FieldOffset(0x00)] public Type currentWeather;
+        [FieldOffset(0x01)] public Type prevWeather;
+        [FieldOffset(0x04)] public WeatherTimerData timer;
+        [FieldOffset(0x0C)] public WeatherBlockData block;
+        [FieldOffset(0x20)] public int stageNo;
+        [FieldOffset(0x24)] public unsafe fixed uint reserved[4];
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0xA83D0)]
+    public struct Root
+    {
+        [FieldOffset(0x00)] public HeaderData header;
+        [FieldOffset(0x30)] public GamePlayData gameplay;
+        [FieldOffset(0x80)] public CharacterData character;
+        [FieldOffset(0xE0)] public IslandStageContainerData islands;
+        [FieldOffset(0x720)] public CyberStageContainerData stages;
+        [FieldOffset(0xA20)] public FlagContainerData flags;
+        [FieldOffset(0xB40)] public WorldFlagContainerData worldFlags;
+        [FieldOffset(0xB340)] public ExtraFlagContainerData extraFlags;
+        [FieldOffset(0xDD40)] public ActionChainStruct actionChain;
+        [FieldOffset(0xE6A0)] public ExtraCharacterContainerData extraCharacters;
+        [FieldOffset(0xE900)] public ExtraCyberStageContainerData extraStages;
+        [FieldOffset(0xEA80)] public ExtraIslandStageContainerData extraIslands;
+        [FieldOffset(0xEBC0)] public ReservedData reserved;
+        [FieldOffset(0xA1990)] public StatsContainerData stats;
+        [FieldOffset(0xA8398)] public WeatherData weather;
+    }
+
+}

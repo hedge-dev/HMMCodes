@@ -1,4 +1,0 @@
-Patch "Opaque Trail Blending" in "Graphics" by "Muzzarino" 
-WriteProtected<byte>(0xE8D3B7, 0x1)
-
-

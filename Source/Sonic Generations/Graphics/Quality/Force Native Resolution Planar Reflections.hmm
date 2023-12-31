@@ -1,0 +1,4 @@
+Code "Force Native Resolution Planar Reflections" in "Graphics/Quality" by "Luig" 
+Write<float>(0x01B22e84, 1f)
+
+

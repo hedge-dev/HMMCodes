@@ -1,0 +1,115 @@
+Code "Enable Dodge and Parry" in "Gameplay/Cyber Space/Skills" by "Hyper" does "Enables dodging and parrying in Cyber Space for potentially recovering from a fall."
+//
+    #include "BlackboardStatus" noemit
+
+    #lib "HMM"
+    #lib "Player"
+    #lib "Time"
+
+    #import "States"
+
+    static bool _isInitialised = false;
+    static bool _isDodgeAlways = false;
+    static bool _isDodgeAnalog = false;
+    static bool _isInputBuffered = false;
+    static bool _isParried = false;
+
+    static float _dodgeTimer = 0.0f;
+    static float _dodgeTimerThreshold = 0.08f;
+
+    static void PerformBumperActions(bool in_isRight = false)
+    {
+        var state = Sonic.StateID.StateAvoid;
+
+        if (Player.Status.IsSpecialAction())
+        {
+            _dodgeTimer = 0.0f;
+            _isInputBuffered = false;
+            _isParried = false;
+            return;
+        }
+
+        if (Player.Status.IsGrounded())
+        {
+            if (!_isDodgeAlways)
+                return;
+            
+            // Prevent dodge spam on input hold.
+            if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateAvoid)
+                return;
+            
+            if (Player.Kinematics.GetHorizontalMagnitude() >= 15.0f)
+            {
+                state = in_isRight ? Sonic.StateID.StateRightStepRun : Sonic.StateID.StateLeftStepRun;
+
+                if (IS_STATE_FLAG(IsIdle))
+                    state = in_isRight ? Sonic.StateID.StateRightStep : Sonic.StateID.StateLeftStep;
+            }
+        }
+        
+        if (Player.Input.IsDown(Player.InputActionType.PlayerLeftStep) &&
+            Player.Input.IsDown(Player.InputActionType.PlayerRightStep))
+        {
+            if (!_isInputBuffered)
+            {
+                Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateParry);
+                _isInputBuffered = true;
+                _isParried = true;
+            }
+
+            return;
+        }
+        else if (Player.State.GetCurrentStateID<Sonic.StateID>() != Sonic.StateID.StateParry)
+        {
+            _isInputBuffered = false;
+        }
+
+        // Prevent air dodging immediately after air parrying.
+        if (_isParried && (Player.Input.IsDown(Player.InputActionType.PlayerLeftStep) ||
+            Player.Input.IsDown(Player.InputActionType.PlayerRightStep)))
+        {
+            return;
+        }
+        else
+        {
+            _isParried = false;
+        }
+
+        if (Player.Input.IsDown(in_isRight
+            ? Player.InputActionType.PlayerRightStep
+            : Player.InputActionType.PlayerLeftStep))
+        {
+            _dodgeTimer += Time.GetDeltaTime();
+
+            if (_dodgeTimer >= _dodgeTimerThreshold)
+            {
+                if (!_isDodgeAnalog)
+                {
+                    var dir = StateAvoidParameter.GetDirectionRelativeToCameraPlane(in_isRight);
+
+                    Player.State.AddStateParameter<StateAvoidParameter>(new StateAvoidParameter(dir));
+                }
+
+                Player.State.SetState<Sonic.StateID>(state);
+
+                _dodgeTimer = 0.0f;
+            }
+        }
+    }
+//
+{
+    if (!_isInitialised)
+    {
+        _isDodgeAlways = HMM.GetCodes().Contains("Gameplay/Skills/Always Dodge with Side Step");
+        _isDodgeAnalog = HMM.GetCodes().Contains("Gameplay/Skills/Always Dodge in Stick Direction");
+        _isInitialised = true;
+    }
+    
+    if (!IS_WORLD_FLAG(IsCyberSpace))
+        return;
+
+    SET_COMBAT_FLAG(IsParry, true);
+
+    PerformBumperActions();
+    PerformBumperActions(true);
+}

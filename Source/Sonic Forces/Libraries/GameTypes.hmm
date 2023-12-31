@@ -1,0 +1,32 @@
+Library "GameTypes" by "Sajid"
+{
+    #include "Helpers" noemit
+
+    public struct BaseObject
+    {
+        public nint VFTable;
+    }
+
+    public struct ReferencedObject
+    {
+        public BaseObject Base;
+        public void* Allocator;
+        public int Unk1;
+        public int RefCount;
+    }
+
+    public interface IRefByHandleObject
+    {
+        int Handle { get; set; }
+    }
+
+    public struct RefByHandleObject : IRefByHandleObject
+    {
+        public ReferencedObject Base;
+        public int Handle;
+
+        DEFINE_INTERFACE_PROPERTY(IRefByHandleObject, int, Handle)
+        DEFINE_BASE_PROPERTY(void*, Allocator)
+        DEFINE_BASE_PROPERTY(int, RefCount)
+    }
+}

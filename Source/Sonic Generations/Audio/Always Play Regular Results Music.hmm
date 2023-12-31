@@ -1,4 +1,0 @@
-Patch "Always Play Regular Results Music" in "Audio" by "M&M" 
-WriteProtected<byte>(0xCFD4CA, 0x00, 0x39)
-
-

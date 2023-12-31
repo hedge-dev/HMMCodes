@@ -1,7 +1,0 @@
-Code "Locked 120 FPS (experimental)" in "Graphics" by "Skyth and M&M" 
-Write<float>(0x19FD2C, 120.0f);
-WriteNop(0xE7B5D7, 2);
-WriteProtected<float>(0x1704258, 1.0f / 120.0f)
-WriteProtected<float>(0x14AF8CC, 1.0f / 120.0f)
-
-

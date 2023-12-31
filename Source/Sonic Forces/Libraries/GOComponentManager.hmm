@@ -1,0 +1,25 @@
+Library "GOComponentManager" by "Hyper"
+{
+    #lib "Memory"
+    #lib "HandleManagerBase"
+
+    #import "GameTypes"
+    #import "GOComponents"
+
+    using System.Runtime.InteropServices;
+
+    public HandleManagerBase.Data* GetHandleManagerSingleton()
+    {
+        return *(HandleManagerBase.Data**)0x14240E808;
+    }
+
+    public GOComponent* GetGOCFromHandle(int in_handle)
+    {
+        var manager = GetHandleManagerSingleton();
+        
+        if (manager == null)
+            return null;
+
+        return (GOComponent*)manager->GetObject(in_handle);
+    }
+}

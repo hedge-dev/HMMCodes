@@ -1,6 +1,0 @@
-Patch "Have All Chaos Emeralds" in "Cheats" by "Muzzarino" 
-WriteProtected<uint>(0x108BB11, 0x900300C6)
-WriteProtected<byte>(0x108BB15, 0x90)
-WriteProtected<ushort>(0x108BB1F, 0x34EB)
-
-

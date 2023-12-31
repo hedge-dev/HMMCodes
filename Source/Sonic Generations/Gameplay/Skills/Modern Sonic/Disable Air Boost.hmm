@@ -1,0 +1,5 @@
+Patch "Disable Air Boost" in "Gameplay/Skills/Modern Sonic" by "Sajid" 
+WriteProtected<byte>(0x00DFDFC4, 0xEB, 0x27)
+WriteProtected<byte>(0x00DFE046, 0xEB, 0x9E)
+
+

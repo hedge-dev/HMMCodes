@@ -1,0 +1,15 @@
+Code "Disable Boost Jump" in "Gameplay" by "Hyper" does "Disables jumping from a boost immediately starting air boost, retaining full jump height."
+//
+    #lib "Player"
+//
+{
+    var pSonic = Player.GetSonicData();
+
+    if (pSonic == null)
+        return;
+    
+    if (Player.State.GetCurrentStateID<Sonic.StateID>(pSonic) != Sonic.StateID.StateBoostJump)
+        return;
+    
+    Player.State.SetState<Sonic.StateID>(pSonic, Sonic.StateID.StateJump);
+}

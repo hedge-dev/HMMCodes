@@ -1,0 +1,28 @@
+Code "Always Trickable Jump Boards" in "Gameplay/Cyber Space/Objects" by "Hyper"
+//
+    #include "BlackboardStatus" noemit
+
+    #lib "Player"
+
+    #import "Services"
+//
+{
+    if (!IS_WORLD_FLAG(IsCyberSpace))
+        return;
+
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateJumpBoardLaunch)
+        SET_WORLD_FLAG(IsAirTrick, true);
+
+    // Workaround for Jump Boards in Cyber Space 4-5.
+    if (LevelInfo.GetCurrentStageID() == "w6d10")
+    {
+        // https://cdn.discordapp.com/attachments/1102872412648914947/1165261324515823666/927698306430304267.png
+        if ((Player.State.GetCurrentStateID<Sonic.StateID>()  == Sonic.StateID.StateSpringJump &&
+            Player.State.GetPreviousStateID<Sonic.StateID>()  == Sonic.StateID.StateJumpBoardLaunch) ||
+            (Player.State.GetPreviousStateID<Sonic.StateID>() == Sonic.StateID.StateSpringJump &&
+            Player.State.GetPreviousStateID<Sonic.StateID>(1) == Sonic.StateID.StateJumpBoardLaunch))
+        {
+            SET_WORLD_FLAG(IsAirTrick, true);
+        }
+    }
+}

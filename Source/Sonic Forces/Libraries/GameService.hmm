@@ -1,0 +1,46 @@
+Library "GameService" by "Hyper" 
+{
+    #include "Helpers" noemit
+
+    #lib "GameManager"
+
+    #import "Allocators"
+    
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `hh::game::GameService`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x60)]
+    public struct Data
+    {
+        /// <summary>
+        /// A pointer to a memory allocator.
+        /// </summary>
+        [FieldOffset(0x08)] public IAllocator* pAllocator;
+
+        /// <summary>
+        /// A pointer to an instance of `app::GameManager`.
+        /// </summary>
+        [FieldOffset(0x30)] public GameManager.Data* pGameManager;
+
+        /// <summary>
+        /// A pointer to an instance of `GameServiceStaticClass`.
+        /// </summary>
+        [FieldOffset(0x38)] public GameServiceStaticClass* pStaticClass;
+    }
+
+    /// <summary>
+    /// A struct representation of the static class for storing information about a game service.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct GameServiceStaticClass
+    {
+        /// <summary>
+        /// The name of this game service.
+        /// </summary>
+        [FieldOffset(0)] public Helpers.UnmanagedString Name;
+
+        public override string ToString() => Name.ToString();
+    }
+}

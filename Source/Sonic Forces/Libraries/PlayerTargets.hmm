@@ -1,0 +1,59 @@
+Library "PlayerTargets" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    #lib "GameObject"
+    #lib "GOComponentManager"
+
+    #import "Collections"
+
+    using System.Runtime.InteropServices;
+
+    [StructLayout(LayoutKind.Explicit, Size = 0xA0)]
+    public struct PlayerTargetComponent
+    {
+        VFUNCTION_PTR(PlayerTargetComponent, 1, Helpers.UnmanagedString, GetName)
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x990)]
+    public struct HomingTarget
+    {
+        [FieldOffset(0)]    public PlayerTargetComponent Base;
+
+        [FieldOffset(0x48)] public ObjectMoveArray<int> ColliderHandles;
+
+        /// <summary>
+        /// Gets the target based on its priority.
+        /// The highest priority (0) is the current homing target.
+        /// </summary>
+        /// <param name="in_isLow">Determines if this function retrieves the lowest priority homing target.</param>
+        /// <returns>The homing target at the requested priority.</returns>
+        public GameObject.Data* GetPriorityTarget(bool in_isLow = false)
+        {
+            if (ColliderHandles.Length == 0)
+                return null;
+
+            var pGOCCollider = GOComponentManager.GetGOCFromHandle(ColliderHandles[in_isLow ? ColliderHandles.Length - 1 : 0]);
+
+            if (pGOCCollider == null)
+                return null;
+
+            return pGOCCollider->pParent;
+        }
+
+        /// <summary>
+        /// Determines if the input target data belongs to an enemy.
+        /// </summary>
+        /// <returns>A boolean representation of whether the input target data belongs to an enemy.</returns>
+        public bool IsTargetEnemy()
+        {
+            var pTarget = GetPriorityTarget();
+                
+            if (pTarget == null)
+                return false;
+
+            // Enemies will always use GOCEnemyParameter.
+            return GameObject.GetGOC(pTarget, "GOCEnemyParameter") != null;
+        }
+    }
+}

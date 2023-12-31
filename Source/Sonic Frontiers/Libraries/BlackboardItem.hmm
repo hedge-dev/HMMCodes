@@ -1,48 +1,48 @@
-Library "BlackboardItem" by "Hyper"
+Library "BlackboardItem" by "Hyper" does "Provides access to `app::player::BlackboardItem` from Sonic Frontiers."
 {
-    #lib "Blackboard"
-    #lib "GameDocument"
-    #lib "GameObject"
+    #import "Blackboard"
 
-    public long Get(long blackboard = 0)
+    using System.Runtime.InteropServices;
+    
+    /// <summary>
+    /// A struct representation of `app::player::BlackboardBattle`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x50, Pack = 0x10)]
+    public struct Data
     {
-        if (blackboard == 0)
-        {
-            long sonic = GameDocument.GetGameObject("Sonic");
-            
-            if (sonic == 0)
-                return 0;
+        /// <summary>
+        /// An instance of `app::player::BlackboardContent`, the base class for `app::player::BlackboardItem`.
+        /// </summary>
+        [FieldOffset(0)]    public BlackboardContent BlackboardContent;
 
-            blackboard = Blackboard.GetBlackboardFromPlayer(sonic);
+        /// <summary>
+        /// The maximum amount of rings the player can hold.
+        /// </summary>
+        [FieldOffset(0x24)] public int RingCapacity;
 
-            if (blackboard == 0)
-                return 0;
-        }
-
-        return Blackboard.GetBlackboardContent(blackboard, "BlackboardItem");
+        /// <summary>
+        /// The current ring count for the player.
+        /// </summary>
+        [FieldOffset(0x28)] public int RingCount;
     }
 
-    public int GetMaxRingCount(long blackboardItem = 0)
+    /// <summary>
+    /// Gets an instance of `app::player::BlackboardItem`.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "BlackboardItem"
+    /// //
+    /// {
+    ///     var pBlackboardItem = BlackboardItem.Get();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <returns>A pointer to an instance of `app::player::BlackboardItem`.</returns>
+    public Data* Get()
     {
-        if (blackboardItem == 0 && (blackboardItem = Get()) == 0)
-            return 0;
-
-        return Read<int>(blackboardItem + 0x24);
-    }
-
-    public int GetRingCount(long blackboardItem = 0)
-    {
-        if (blackboardItem == 0 && (blackboardItem = Get()) == 0)
-            return 0;
-
-        return Read<int>(blackboardItem + 0x28);
-    }
-
-    public void SetRingCount(int count)
-    {
-        if (Get() == 0)
-            return;
-
-        WriteProtected<int>(Get() + 0x28, count);
+        return (Data*)Blackboard.GetPlayerBlackboardContent("BlackboardItem");
     }
 }

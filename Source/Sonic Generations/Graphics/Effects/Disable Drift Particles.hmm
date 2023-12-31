@@ -1,0 +1,5 @@
+Patch "Disable Drift Particles" in "Graphics/Effects" by "Hyper" 
+WriteProtected<byte>(0x15E92B4, 0x00);
+WriteProtected<byte>(0x15E92CC, 0x00);
+
+

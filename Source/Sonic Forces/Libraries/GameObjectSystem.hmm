@@ -1,0 +1,29 @@
+Library "GameObjectSystem" by "Hyper"
+{
+    #lib "GameObject"
+
+    #import "Allocators"
+
+    using System.Runtime.InteropServices;
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x1E0)]
+    public struct Data
+    {
+        [FieldOffset(0x20)] public IAllocator* pPooledAllocator;
+    }
+
+    public HandleManagerBase.Data* GetHandleManagerSingleton()
+    {
+        return *(HandleManagerBase.Data**)0x1420707B8;
+    }
+
+    public GameObject.Data* GetGameObjectFromHandle(int in_handle)
+    {
+        var manager = GetHandleManagerSingleton();
+        
+        if (manager == null)
+            return null;
+
+        return (GameObject.Data*)manager->GetObject(in_handle);
+    }
+}

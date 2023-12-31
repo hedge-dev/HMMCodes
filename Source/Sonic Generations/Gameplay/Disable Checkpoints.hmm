@@ -1,4 +1,0 @@
-Patch "Disable Checkpoints" in "Gameplay" by "Hyper" 
-WriteNop(0x1033338, 2);
-
-
