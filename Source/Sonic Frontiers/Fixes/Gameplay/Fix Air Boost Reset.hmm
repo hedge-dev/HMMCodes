@@ -23,7 +23,7 @@ Code "Fix Air Boost Reset" in "Fixes/Gameplay" by "Hyper & Weezley" does "Allows
         Sonic.StateID.StateAirBoost,
         Sonic.StateID.StateAuraTrain,
         Sonic.StateID.StateGrindStep,
-        Sonic.StateID.StateJumpBoardLaunch
+        Sonic.StateID.StateJumpBoardLaunch,
         Sonic.StateID.StateCaught,
         Sonic.StateID.StateSpinBoost
     }
