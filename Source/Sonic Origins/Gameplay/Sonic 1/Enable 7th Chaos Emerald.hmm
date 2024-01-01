@@ -13,9 +13,9 @@ Notes;
     if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0xC8) == 0xFF)
     {
         // Check if Super forms (options.superStates) are disabled
-        if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x38) == 0)
+        if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x38) != 0x01)
         {
-            WriteProtected<byte>(RSDK.GetRSDKv4DataPtr() + 0x38, 0x01);
+            *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x38) = 0x01;
         }
     }
 }

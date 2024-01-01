@@ -16,9 +16,7 @@ Known issues;
         // Check if elemental shields (first bit of options.shieldType) are disabled
         if ((*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x30) & 1) == 0)
         {
-            byte itemVar = *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x30);
-            itemVar |= 1;
-            WriteProtected<byte>(RSDK.GetRSDKv4DataPtr() + 0x30, itemVar);
+            *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x30) |= 1;
         }
     }
 }

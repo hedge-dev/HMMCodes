@@ -16,9 +16,7 @@ Known issues;
         // Check if S2 items (first bit of options.shieldType) are disabled
         if ((*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34) & 1) == 0)
         {
-            byte itemVar = *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34);
-            itemVar |= 1;
-            WriteProtected<byte>(RSDK.GetRSDKv4DataPtr() + 0x34, itemVar);
+            *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34) |= 1;
         }
     }
 }
