@@ -3,7 +3,7 @@ Code "Enable Lives in Anniversary Mode" in "Gameplay" by "ĐeäTh" does
 Disables the flag for Coins when playing in Anniversary Mode.
 
 Notes;
-- This will cause Anniversary Mode to use a different set of saves from normal, and your regular Anniversary Mode saves will be inaccessible."
+- This will cause Anniversary Mode to use a different set of saves from normal, and your regular Anniversary Mode saves will be inaccessible.
 */
 //
     #lib "RSDK"
@@ -14,21 +14,21 @@ Notes;
     if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x1FC) == 1)
     {
         // Sonic 1 Coin Mode
-        WriteProtected<byte>(RSDK.GetRSDKv4DataPtr() + 0x1FC, 0x00);
+        *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x1FC) = 0;
     }
 
     // Check if Sonic 2 game.playMode is set to BOOT_PLAYMODE_ANNIVERSARY
     if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x23C) == 1)
     {
         // Sonic 2 Coin Mode
-        WriteProtected<byte>(RSDK.GetRSDKv4DataPtr() + 0x288, 0x00);
+        *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x288) = 0;
     }
 
     // Check if RSDKv3 game.playMode is set to BOOT_PLAYMODE_ANNIVERSARY
     if (*(byte*)(RSDK.GetRSDKv3DataPtr() + 0x1DC) == 1)
     {
         // Sonic CD Coin Mode
-        WriteProtected<byte>(RSDK.GetRSDKv3DataPtr() + 0x220, 0x00);
+        *(byte*)(RSDK.GetRSDKv3DataPtr() + 0x220) = 0;
     }
 
     // Sonic 3&K Coin Mode and HUD Update
@@ -43,15 +43,13 @@ Notes;
             // HUD Update
             // Version 1.0.0: RSDKGlobalsPtr + 0x447D20
             // Version 1.0.4: RSDKGlobalsPtr + 0x4C34D4 (Thanks to RDC)
-            WriteProtected<byte>(RSDK.GetRSDKGlobalsAbsPtr() + 0xD0, 0x00);
+            *(byte*)(RSDK.GetRSDKGlobalsAbsPtr() + 0xD0) = 0;
 
             // Coin Mode
             // Version 1.0.0: RSDKGlobalsPtr + 0x447CD4
             // Version 1.0.4: RSDKGlobalsPtr + 0x4C3520 (Thanks to RDC)
             // Version 2.0.0: RSDKGlobalsPtr + RSDKGlobalsOffset + 0x124
-            WriteProtected<byte>(RSDK.GetRSDKGlobalsAbsPtr() + 0x124, 0x00);
+            *(byte*)(RSDK.GetRSDKGlobalsAbsPtr() + 0x124) = 0;
         }
     }
 }
-
-
