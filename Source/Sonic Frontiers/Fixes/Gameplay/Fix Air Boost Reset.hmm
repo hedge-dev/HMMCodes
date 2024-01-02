@@ -130,6 +130,10 @@ Code "Fix Air Boost Reset" in "Fixes/Gameplay" by "Hyper & Weezley" does "Allows
             {
                 Player.State.SetState<Knuckles.StateID>(Knuckles.StateID.KnucklesStateDrillBoostAir)
             }
+            else
+            {
+                Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateAirBoost);
+            }
         }
         else
         {
