@@ -1,0 +1,32 @@
+Code "Use Swim Animation When Flying Underwater" in "Animation/Tails" by "Weezley"
+//
+    #lib "Player"
+
+    #import "States"
+//
+{
+    if (Player.GetPlayerType() != Player.PlayerType.Tails)
+        return;
+
+    var pTailsFly = Player.State.GetState<StateTailsFly>();
+
+    if (pTailsFly == null)
+        return;
+
+    if (pTailsFly->Phase == StateTailsFly.PhaseType.Tired)
+    {
+        Player.Animation.SetAnimation("FLY_DESCEND_LOOP");
+    }
+    else if (pTailsFly->Phase == StateTailsFly.PhaseType.Intro)
+    {
+        Player.Animation.SetAnimation(Player.Status.IsUnderwater() ? "TAILS_BOOST_SWIM" : "FLY_START");
+    }
+    else if (pTailsFly->Phase == StateTailsFly.PhaseType.Rise)
+    {
+        Player.Animation.SetAnimation(Player.Status.IsUnderwater() ? "TAILS_BOOST_SWIM" : "FLY_RISE_LOOP");
+    }
+    else
+    {
+        Player.Animation.SetAnimation(Player.Status.IsUnderwater() ? "TAILS_BOOST_SWIM" : "FLY_CRUISE_LOOP");
+    }
+}

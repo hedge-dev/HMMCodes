@@ -1,0 +1,36 @@
+Code "Retain Velocity When Jumping Up Slopes" in "Physics" by "Weezley" does "Retains the current ground velocity when jumping from a steep slope."
+//
+    #include "Reflection" noemit
+
+    #lib "AmyParameters"
+    #lib "KnucklesParameters"
+    #lib "Reflection"
+    #lib "SonicParameters"
+    #lib "TailsParameters"
+//
+{
+    var AmyParametersInfo = Reflection.GetDataInfo<AmyParameters.Root>("amy_common");
+    var KnucklesParametersInfo = Reflection.GetDataInfo<KnucklesParameters.Root>("knuckles_common");
+    var SonicParametersInfo = Reflection.GetDataInfo<SonicParameters.Root>("player_common");
+    var TailsParametersInfo = Reflection.GetDataInfo<TailsParameters.Root>("tails_common");
+
+    if (AmyParametersInfo.pData != null)
+    {
+        RFL_SET_PARAM(AmyParametersInfo, forwardView.modePackage.jumpSpeed.limitUpSpeed, 40.0f);
+    }
+
+    if (KnucklesParametersInfo.pData != null)
+    {
+        RFL_SET_PARAM(KnucklesParametersInfo, forwardView.modePackage.jumpSpeed.limitUpSpeed, 40.0f);
+    }
+
+    if (SonicParametersInfo.pData != null)
+    {
+        RFL_SET_PARAM(SonicParametersInfo, forwardView.modePackage.jumpSpeed.limitUpSpeed, 40.0f);
+    }
+
+    if (TailsParametersInfo.pData != null)
+    {
+        RFL_SET_PARAM(TailsParametersInfo, forwardView.modePackage.jumpSpeed.limitUpSpeed, 40.0f);
+    }
+}
