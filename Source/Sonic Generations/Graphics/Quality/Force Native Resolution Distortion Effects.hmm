@@ -1,4 +1,0 @@
-Code "Force Native Resolution Distortion Effects" in "Graphics/Quality" by "Luig" 
-Write<float>(0x01B22E6C, 1f)
-
-
