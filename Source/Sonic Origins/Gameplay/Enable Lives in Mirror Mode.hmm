@@ -9,19 +9,26 @@ Notes;
     #lib "RSDK"
 //
 {
-    // Check if Sonic 1 game.playMode is set to BOOT_PLAYMODE_MIRRORING
-    // Version 1.0.0 and 1.0.4: RSDKv4DataPtr + 0x1A4
-    if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x1FC) == 3)
+    // Check if this is Sonic 1
+    if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0xC8) == 0xFF)
     {
-        // Sonic 1 Coin Mode
-        *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x1FC) = 0;
+        // Check if Sonic 1 game.playMode is set to BOOT_PLAYMODE_MIRRORING
+        // Version 1.0.0 and 1.0.4: RSDKv4DataPtr + 0x1A4
+        // Version 2.0.0 to 2.0.2: RSDKv4DataPtr + 0x1AC
+        if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x1AC) == 3)
+        {
+            // Sonic 1 Coin Mode
+            *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x1FC) = 0;
+        }
     }
-
-    // Check if Sonic 2 game.playMode is set to BOOT_PLAYMODE_MIRRORING
-    if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x23C) == 3)
+    else // This is Sonic 2
     {
-        // Sonic 2 Coin Mode
-        *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x288) = 0;
+        // Check if Sonic 2 game.playMode is set to BOOT_PLAYMODE_MIRRORING
+        if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x23C) == 3)
+        {
+            // Sonic 2 Coin Mode
+            *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x288) = 0;
+        }
     }
 
     // Check if RSDKv3 game.playMode is set to BOOT_PLAYMODE_MIRRORING
@@ -34,7 +41,7 @@ Notes;
     // Sonic 3&K Coin Mode and HUD Update
     if (RSDK.GetRSDKGlobalsAbsPtr() != 0)
     {
-        // Check if game.playMode is set to BOOT_PLAYMODE_ANNIVERSARY
+        // Check if game.playMode is set to BOOT_PLAYMODE_MIRRORING
         // Version 1.0.0: RSDKGlobalsPtr + 0x447D08
         // Version 1.0.4: RSDKGlobalsPtr + 0x4C3508 (Thanks to RDC)
         // Version 2.0.0: RSDKGlobalsPtr + RSDKGlobalsOffset + 0x104
