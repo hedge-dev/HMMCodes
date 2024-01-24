@@ -10,8 +10,7 @@ Known issues;
     #lib "RSDK"
 //
 {
-    // Check if this is Sonic 1
-    if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0xC8) == 0xFF)
+    if (RSDK.GetCurrentGame() == RSDK.Game.Sonic1)
     {
         // Check if elemental shields (second bit of options.shieldType) are disabled
         if ((*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34) & 2) == 0)

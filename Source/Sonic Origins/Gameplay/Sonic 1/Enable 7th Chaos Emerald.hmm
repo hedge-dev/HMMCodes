@@ -9,8 +9,7 @@ Notes;
     #lib "RSDK"
 //
 {
-    // Check if this is Sonic 1
-    if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0xC8) == 0xFF)
+    if (RSDK.GetCurrentGame() == RSDK.Game.Sonic1)
     {
         // Check if Super forms (options.superStates) are disabled
         if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x38) != 0x01)

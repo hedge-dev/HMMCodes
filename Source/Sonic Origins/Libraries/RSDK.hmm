@@ -1,10 +1,13 @@
-Library "RSDK" by "Hyper & ĐeäTh" 
+Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
 {
+    #lib "Memory"
+
     private static bool _isInitialised = false;
 
     private static long _pRSDKv3Data = 0;
     private static long _pRSDKv4Data = 0;
     private static long _pRSDKGlobals = 0;
+    private static long _pRSDKEngineVer = 0;
 
     private static int _pRSDKGlobalsOffset = 0;
 
@@ -39,6 +42,14 @@ Library "RSDK" by "Hyper & ĐeäTh"
         _pRSDKGlobals = (long)sig + *((int*)IntPtr.Add(new IntPtr(sig), 3)) + 7;
 
         _pRSDKGlobalsOffset = *((int*)IntPtr.Add(new IntPtr(sig), 9));
+
+        sig = ScanSignature
+        (
+            "\x48\x8D\x0D\x00\x00\x00\x00\xC6\x05\x00\x00\x00\x00\x01\xC6\x05\x00\x00\x00\x00\x00",
+            "xxx????xx????xxx????x"
+        );
+
+        _pRSDKEngineVer = (long)Memory.ReadEffectiveAddress((long)sig) - 0x08;
 
         _isInitialised = true;
     }
@@ -80,6 +91,33 @@ Library "RSDK" by "Hyper & ĐeäTh"
 
         return *(long*)_pRSDKGlobals + _pRSDKGlobalsOffset;
     }
+
+    public Game GetCurrentGame()
+    {
+        Init();
+
+        if (*(byte*)(_pRSDKEngineVer) == 0x03) // RSDKv3
+            return Game.SonicCD;
+        else if (*(byte*)(_pRSDKEngineVer) == 0x04) // RSDKv4
+        {
+            // Check the v4 global variables to see if a specific value is set
+            if (*(byte*)(GetRSDKv4DataPtr() + 0xC8) == 0xFF)
+                return Game.Sonic1;
+            else
+                return Game.Sonic2;
+        }
+        else if (*(byte*)(_pRSDKEngineVer) == 0x05) // RSDKv5
+            return Game.Sonic3k;
+
+        return Game.Unknown;
+    }
+
+    public enum Game
+    {
+        Unknown = -1,
+        Sonic1,
+        SonicCD,
+        Sonic2,
+        Sonic3k
+    }
 }
-
-
