@@ -92,13 +92,20 @@ Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
         return *(long*)_pRSDKGlobals + _pRSDKGlobalsOffset;
     }
 
+    public byte GetEngineVersion()
+    {
+        Init();
+
+        return *(byte*)(_pRSDKEngineVer);
+    }
+
     public Game GetCurrentGame()
     {
         Init();
 
-        if (*(byte*)(_pRSDKEngineVer) == 0x03) // RSDKv3
+        if (GetEngineVersion() == 3) // RSDKv3
             return Game.SonicCD;
-        else if (*(byte*)(_pRSDKEngineVer) == 0x04) // RSDKv4
+        else if (GetEngineVersion() == 4) // RSDKv4
         {
             // Check the v4 global variables to see if a specific value is set
             if (*(byte*)(GetRSDKv4DataPtr() + 0xC8) == 0xFF)
@@ -106,7 +113,7 @@ Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
             else
                 return Game.Sonic2;
         }
-        else if (*(byte*)(_pRSDKEngineVer) == 0x05) // RSDKv5
+        else if (GetEngineVersion() == 5) // RSDKv5
             return Game.Sonic3k;
 
         return Game.Unknown;
