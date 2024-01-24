@@ -11,7 +11,8 @@ Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
 
     private static int _pRSDKGlobalsOffset = 0;
 
-    private void Init()
+    [LibraryInitializer]
+    public void Init()
     {
         if (_isInitialised)
             return;
@@ -56,36 +57,26 @@ Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
 
     public long GetRSDKv3DataPtr()
     {
-        Init();
-
         return _pRSDKv3Data;
     }
 
     public long GetRSDKv4DataPtr()
     {
-        Init();
-
         return _pRSDKv4Data;
     }
 
     public long GetRSDKGlobalsPtr()
     {
-        Init();
-
         return _pRSDKGlobals;
     }
 
     public long GetRSDKGlobalsOffset()
     {
-        Init();
-
         return _pRSDKGlobalsOffset;
     }
 
     public long GetRSDKGlobalsAbsPtr()
     {
-        Init();
-
         if (_pRSDKGlobals == 0)
             return 0;
 
@@ -94,15 +85,11 @@ Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
 
     public byte GetEngineVersion()
     {
-        Init();
-
         return *(byte*)(_pRSDKEngineVer);
     }
 
     public Game GetCurrentGame()
     {
-        Init();
-
         if (GetEngineVersion() == 3) // RSDKv3
             return Game.SonicCD;
         else if (GetEngineVersion() == 4) // RSDKv4
