@@ -1,13 +1,14 @@
 Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
 {
     #lib "Memory"
+    #lib "Helpers"
 
     private static bool _isInitialised = false;
 
     private static long _pRSDKv3Data = 0;
     private static long _pRSDKv4Data = 0;
     private static long _pRSDKGlobals = 0;
-    private static long _pRSDKEngineVer = 0;
+    private static nint _pRSDKDataPath = 0;
 
     private static int _pRSDKGlobalsOffset = 0;
 
@@ -50,7 +51,7 @@ Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
             "xxx????xx????xxx????x"
         );
 
-        _pRSDKEngineVer = (long)Memory.ReadEffectiveAddress((long)sig) - 0x08;
+        _pRSDKDataPath = (nint)(Memory.ReadEffectiveAddress((long)sig));
 
         _isInitialised = true;
     }
@@ -85,22 +86,18 @@ Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
 
     public byte GetEngineVersion()
     {
-        return *(byte*)(_pRSDKEngineVer);
+        return *(byte*)(_pRSDKDataPath - 0x08);
     }
 
     public Game GetCurrentGame()
     {
-        if (GetEngineVersion() == 3) // RSDKv3
+        if (Helpers.PtrToStringUTF8(_pRSDKDataPath) == "retro/Sonic1u.rsdk")
+            return Game.Sonic1;
+        else if (Helpers.PtrToStringUTF8(_pRSDKDataPath) == "retro/SonicCDu.rsdk")
             return Game.SonicCD;
-        else if (GetEngineVersion() == 4) // RSDKv4
-        {
-            // Check the v4 global variables to see if a specific value is set
-            if (*(byte*)(GetRSDKv4DataPtr() + 0xC8) == 0xFF)
-                return Game.Sonic1;
-            else
-                return Game.Sonic2;
-        }
-        else if (GetEngineVersion() == 5) // RSDKv5
+        else if (Helpers.PtrToStringUTF8(_pRSDKDataPath) == "retro/Sonic2u.rsdk")
+            return Game.Sonic2;
+        else if (Helpers.PtrToStringUTF8(_pRSDKDataPath) == "retro/Sonic3ku.rsdk")
             return Game.Sonic3k;
 
         return Game.Unknown;
