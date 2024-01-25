@@ -1,7 +1,9 @@
 Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
 {
-    #lib "Memory"
+    #include "Helpers" noemit
+
     #lib "Helpers"
+    #lib "Memory"
 
     private static bool _isInitialised = false;
 
