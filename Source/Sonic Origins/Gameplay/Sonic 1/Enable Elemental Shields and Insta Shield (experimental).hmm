@@ -3,19 +3,11 @@ Code "Enable Elemental Shields and Insta Shield (experimental)" in "Gameplay/Son
 Enables the Elemental Shields and Sonic's Insta Shield move.
 
 Known issues;
-- The elemental shield monitors will not appear upon initial stage load when starting the game from the main menu. This is fixed upon loading the stage again or loading a different one.
 - Progress in save files will not be saved.
 */
 //
-    #lib "RSDK"
+    #lib "Bridge.SetGlobalVariables"
 //
 {
-    if (RSDK.GetCurrentGame() == RSDK.Game.Sonic1)
-    {
-        // Check if elemental shields (second bit of options.shieldType) are disabled
-        if ((*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34) & 2) == 0)
-        {
-            *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34) |= 2;
-        }
-    }
+    Bridge.SetGlobalVariables.IsEnabledElementalS1 = true;
 }

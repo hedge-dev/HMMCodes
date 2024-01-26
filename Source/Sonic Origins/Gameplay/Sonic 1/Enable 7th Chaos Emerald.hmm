@@ -6,15 +6,8 @@ Notes;
 - The game does not check the emeralds setting when checking if the player should transform, so collecting all seven emeralds in a save file will allow the player to transform regardless of whether or not this code is enabled.
 */
 //
-    #lib "RSDK"
+    #lib "Bridge.SetGlobalVariables"
 //
 {
-    if (RSDK.GetCurrentGame() == RSDK.Game.Sonic1)
-    {
-        // Check if Super forms (options.superStates) are disabled
-        if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x38) != 0x01)
-        {
-            *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x38) = 0x01;
-        }
-    }
+    Bridge.SetGlobalVariables.IsEnabledSuperFormsS1 = true;
 }

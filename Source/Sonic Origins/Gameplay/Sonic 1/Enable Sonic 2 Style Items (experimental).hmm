@@ -3,19 +3,11 @@ Code "Enable Sonic 2 Style Items (experimental)" in "Gameplay/Sonic 1" by "MegAm
 Enables the Sonic 2 style Blue Shield and invincibility stars.
 
 Known issues;
-- The Sonic 1 style items will still appear upon initial stage load when starting the game from the main menu. This is fixed upon loading the stage again or loading a different one.
 - Progress in save files will not be saved.
 */
 //
-    #lib "RSDK"
+    #lib "Bridge.SetGlobalVariables"
 //
 {
-    if (RSDK.GetCurrentGame() == RSDK.Game.Sonic1)
-    {
-        // Check if S2 items (first bit of options.shieldType) are disabled
-        if ((*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34) & 1) == 0)
-        {
-            *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34) |= 1;
-        }
-    }
+    Bridge.SetGlobalVariables.IsEnabledS2ItemsS1 = true;
 }

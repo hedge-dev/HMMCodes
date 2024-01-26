@@ -6,15 +6,8 @@ Notes;
 - Due to using the same palette colors as Tails, the Coins icon will flash along with Tails when in his Super form.
 */
 //
-    #lib "RSDK"
+    #lib "Bridge.SetGlobalVariables"
 //
 {
-    if (RSDK.GetCurrentGame() == RSDK.Game.Sonic2)
-    {
-        // Check if Super Tails (options.superTails) is disabled
-        if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x40) != 0x01)
-        {
-            *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x40) = 0x01;
-        }
-    }
+    Bridge.SetGlobalVariables.IsEnabledSuperTailsS2 = true;
 }
