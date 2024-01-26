@@ -93,13 +93,17 @@ Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
 
     public Game GetCurrentGame()
     {
-        if (Helpers.PtrToStringUTF8(_pRSDKDataPath) == "retro/Sonic1u.rsdk")
-            return Game.Sonic1;
-        else if (Helpers.PtrToStringUTF8(_pRSDKDataPath) == "retro/SonicCDu.rsdk")
+        if (GetEngineVersion() == 3) // RSDKv3
             return Game.SonicCD;
-        else if (Helpers.PtrToStringUTF8(_pRSDKDataPath) == "retro/Sonic2u.rsdk")
-            return Game.Sonic2;
-        else if (Helpers.PtrToStringUTF8(_pRSDKDataPath) == "retro/Sonic3ku.rsdk")
+        else if (GetEngineVersion() == 4) // RSDKv4
+        {
+            // Check datafile name to see if this is Sonic 1 or 2
+            if (Helpers.PtrToStringUTF8(_pRSDKDataPath) == "retro/Sonic1u.rsdk")
+                return Game.Sonic1;
+            else
+                return Game.Sonic2;
+        }
+        else if (GetEngineVersion() == 5) // RSDKv5
             return Game.Sonic3k;
 
         return Game.Unknown;

@@ -21,56 +21,20 @@ Library "Bridge.SetGlobalVariables" by "MegAmi"
         if (RSDK.GetCurrentGame() == RSDK.Game.Sonic1)
         {
             if (IsEnabledElementalS1)
-            {
-                // Check if elemental shields (second bit of options.shieldType) are disabled
-                if ((*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34) & 2) == 0)
-                {
-                    *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34) |= 2;
-                }
-            }
+                *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34) |= 2;
             if (IsEnabledS2ItemsS1)
-            {
-                // Check if S2 items (first bit of options.shieldType) are disabled
-                if ((*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34) & 1) == 0)
-                {
-                    *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34) |= 1;
-                }
-            }
+                *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34) |= 1;
             if (IsEnabledSuperFormsS1)
-            {
-                // Check if Super forms (options.superStates) are disabled
-                if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x38) != 0x01)
-                {
-                    *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x38) = 0x01;
-                }
-            }
+                *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x38) = 1;
         }
-        else if (RSDK.GetCurrentGame() == RSDK.Game.Sonic2)
+        else
         {
             if (IsEnabledElementalS2)
-            {
-                // Check if elemental shields (first bit of options.shieldType) are disabled
-                if ((*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x30) & 1) == 0)
-                {
-                    *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x30) |= 1;
-                }
-            }
+                *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x30) |= 1;
             if (IsEnabledRandomS2)
-            {
-                // Check if random monitors (second bit of options.shieldType) are disabled
-                if ((*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x30) & 2) == 0)
-                {
-                    *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x30) |= 2;
-                }
-            }
+                *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x30) |= 2;
             if (IsEnabledSuperTailsS2)
-            {
-                // Check if Super Tails (options.superTails) is disabled
-                if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x40) != 0x01)
-                {
-                    *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x40) = 0x01;
-                }
-            }
+                *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x40) = 1;
         }
 
         return;
