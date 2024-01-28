@@ -41,24 +41,24 @@ Notes;
     else if (RSDK.GetCurrentGame() == RSDK.Game.Sonic3k)
     {
         // Sonic 3&K Coin Mode and HUD Update
-        if (RSDK.GetRSDKGlobalsAbsPtr() != 0)
+        if (RSDK.GetRSDKGlobalsPtr() != 0)
         {
             // Check if game.playMode is set to BOOT_PLAYMODE_MIRRORING
             // Version 1.0.0: RSDKGlobalsPtr + 0x447D08
             // Version 1.0.4: RSDKGlobalsPtr + 0x4C3508 (Thanks to RDC)
-            // Version 2.0.0: RSDKGlobalsPtr + RSDKGlobalsOffset + 0x104
-            if (*(byte*)(RSDK.GetRSDKGlobalsAbsPtr() + 0x10C) == 3)
+            // Version 2.0.0: RSDKGlobalsPtr + 0x4C3510
+            if (*(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3510) == 3)
             {
                 // HUD Update
                 // Version 1.0.0: RSDKGlobalsPtr + 0x447D20
                 // Version 1.0.4: RSDKGlobalsPtr + 0x4C34D4 (Thanks to RDC)
-                *(byte*)(RSDK.GetRSDKGlobalsAbsPtr() + 0xD0) = 0;
-	    
+                *(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x4C34D4) = 0;
+
                 // Coin Mode
                 // Version 1.0.0: RSDKGlobalsPtr + 0x447CD4
                 // Version 1.0.4: RSDKGlobalsPtr + 0x4C3520 (Thanks to RDC)
-                // Version 2.0.0: RSDKGlobalsPtr + RSDKGlobalsOffset + 0x124
-                *(byte*)(RSDK.GetRSDKGlobalsAbsPtr() + 0x124) = 0;
+                // Version 2.0.0: RSDKGlobalsPtr + 0x4C3528
+                *(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3528) = 0;
             }
         }
     }

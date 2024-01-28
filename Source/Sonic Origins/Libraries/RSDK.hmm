@@ -12,8 +12,6 @@ Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
     private static long _pRSDKGlobals = 0;
     private static nint _pRSDKDataPath = 0;
 
-    private static int _pRSDKGlobalsOffset = 0;
-
     [LibraryInitializer]
     public void Init()
     {
@@ -45,8 +43,6 @@ Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
 
         _pRSDKGlobals = (long)sig + *((int*)IntPtr.Add(new IntPtr(sig), 3)) + 7;
 
-        _pRSDKGlobalsOffset = *((int*)IntPtr.Add(new IntPtr(sig), 9));
-
         sig = ScanSignature
         (
             "\x48\x8D\x0D\x00\x00\x00\x00\xC6\x05\x00\x00\x00\x00\x01\xC6\x05\x00\x00\x00\x00\x00",
@@ -70,20 +66,7 @@ Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
 
     public long GetRSDKGlobalsPtr()
     {
-        return _pRSDKGlobals;
-    }
-
-    public long GetRSDKGlobalsOffset()
-    {
-        return _pRSDKGlobalsOffset;
-    }
-
-    public long GetRSDKGlobalsAbsPtr()
-    {
-        if (_pRSDKGlobals == 0)
-            return 0;
-
-        return *(long*)_pRSDKGlobals + _pRSDKGlobalsOffset;
+        return *(long*)_pRSDKGlobals;
     }
 
     public byte GetEngineVersion()
