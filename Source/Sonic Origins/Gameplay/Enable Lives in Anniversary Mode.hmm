@@ -14,7 +14,7 @@ Notes;
         // Check if Sonic 1 game.playMode is set to BOOT_PLAYMODE_ANNIVERSARY
         // Version 1.0.0 and 1.0.4: RSDKv4DataPtr + 0x1A4
         // Version 2.0.0 to 2.0.2: RSDKv4DataPtr + 0x1AC
-        if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x1AC) == RSDK.PlayMode.Anniversary)
+        if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x1AC) == (byte)RSDK.PlayMode.Anniversary)
         {
             // Sonic 1 Coin Mode
             *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x1FC) = 0;
@@ -23,7 +23,7 @@ Notes;
     else if (RSDK.GetCurrentGame() == RSDK.Game.Sonic2)
     {
         // Check if Sonic 2 game.playMode is set to BOOT_PLAYMODE_ANNIVERSARY
-        if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x23C) == RSDK.PlayMode.Anniversary)
+        if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x23C) == (byte)RSDK.PlayMode.Anniversary)
         {
             // Sonic 2 Coin Mode
             *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x288) = 0;
@@ -32,7 +32,7 @@ Notes;
     else if (RSDK.GetCurrentGame() == RSDK.Game.SonicCD)
     {
         // Check if RSDKv3 game.playMode is set to BOOT_PLAYMODE_ANNIVERSARY
-        if (*(byte*)(RSDK.GetRSDKv3DataPtr() + 0x1DC) == RSDK.PlayMode.Anniversary)
+        if (*(byte*)(RSDK.GetRSDKv3DataPtr() + 0x1DC) == (byte)RSDK.PlayMode.Anniversary)
         {
             // Sonic CD Coin Mode
             *(byte*)(RSDK.GetRSDKv3DataPtr() + 0x220) = 0;
@@ -47,7 +47,7 @@ Notes;
             // Version 1.0.0: RSDKGlobalsPtr + 0x447D08
             // Version 1.0.4: RSDKGlobalsPtr + 0x4C3508 (Thanks to RDC)
             // Version 2.0.0: RSDKGlobalsPtr + 0x4C3510
-            if (*(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3510) == RSDK.PlayMode.Anniversary)
+            if (*(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3510) == (byte)RSDK.PlayMode.Anniversary)
             {
                 // HUD Update
                 // Version 1.0.0: RSDKGlobalsPtr + 0x447D20
