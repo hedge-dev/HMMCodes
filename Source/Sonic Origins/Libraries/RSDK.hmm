@@ -100,4 +100,44 @@ Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
         Sonic2,
         Sonic3k
     }
+
+    public enum PlayMode : byte
+    {
+        Classic = 0,
+        Anniversary = 1,
+        BossRush = 2,
+        Mirror = 3,
+        Mission = 4,
+        Story = 5,
+        BlueSpheres = 6,
+        NewBlueSpheres = 7
+    }
+
+    public enum S3KMedalMods : int
+    {
+        DebugMode = (1 << 0),
+        AndKnuckles = (1 << 1),
+        SuperPeelOut = (1 << 2),
+        InstaShield = (1 << 3),
+        NoDropDash = (1 << 4),
+        NoTimeOver = (1 << 5),
+        NoLives = (1 << 6)
+    }
+
+    public enum S3KSecrets : int
+    {
+        RickyMode = (1 << 0),
+        SuperDash = (1 << 1),
+        BarrelHotline = (1 << 2),
+        NormalPhysics2P = (1 << 3),
+        RegionSwap = (1 << 4),
+        CameraTracking = (1 << 5),
+        PenPenMode = (1 << 6),
+        RandomItems = (1 << 7),
+        BlueShield = (1 << 8),
+        Unknown = (1 << 9),
+        BananaMode = (1 << 10),
+        NoItems = (1 << 11),
+        HiddenCredits = (1 << 12)
+    }
 }

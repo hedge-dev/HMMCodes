@@ -14,4 +14,3 @@ Notes;
 
     *(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33FC) = 0;
 }
-
