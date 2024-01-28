@@ -20,21 +20,31 @@ Library "Bridge.SetGlobalVariables" by "MegAmi"
     {
         if (RSDK.GetCurrentGame() == RSDK.Game.Sonic1)
         {
+            var S1Globals = RSDK.GetSonic1Globals();
+
+            if (S1Globals == null)
+                return;
+
             if (IsEnabledElementalS1)
-                *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34) |= 2;
+                S1Globals->optionsShieldType |= 2;
             if (IsEnabledS2ItemsS1)
-                *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x34) |= 1;
+                S1Globals->optionsShieldType |= 1;
             if (IsEnabledSuperFormsS1)
-                *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x38) = 1;
+                S1Globals->optionsSuperStates = 1;
         }
         else
         {
+            var S2Globals = RSDK.GetSonic2Globals();
+
+            if (S2Globals == null)
+                return;
+
             if (IsEnabledElementalS2)
-                *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x30) |= 1;
+                S2Globals->optionsShieldType |= 1;
             if (IsEnabledRandomS2)
-                *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x30) |= 2;
+                S2Globals->optionsShieldType |= 2;
             if (IsEnabledSuperTailsS2)
-                *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x40) = 1;
+                S2Globals->optionsSuperTails = 1;
         }
 
         return;

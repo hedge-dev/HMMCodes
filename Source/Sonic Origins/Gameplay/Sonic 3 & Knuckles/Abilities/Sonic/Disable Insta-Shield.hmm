@@ -6,5 +6,5 @@ Code "Disable Insta-Shield" in "Gameplay/Sonic 3 & Knuckles/Abilities/Sonic" by 
     if (RSDK.GetRSDKGlobalsPtr() == 0)
         return;
 
-    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0xC2CB4) &= ~(int)RSDK.S3KMedalMods.InstaShield;
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0xC2CB4) &= ~(int)RSDK.S3KMedalMod.InstaShield;
 }

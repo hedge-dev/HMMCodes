@@ -6,5 +6,5 @@ Code "Disable Drop Dash" in "Gameplay/Sonic 3 & Knuckles/Abilities/Sonic" by "Me
     if (RSDK.GetRSDKGlobalsPtr() == 0)
         return;
 
-    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0xC2CB4) |= (int)RSDK.S3KMedalMods.NoDropDash;
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0xC2CB4) |= (int)RSDK.S3KMedalMod.NoDropDash;
 }

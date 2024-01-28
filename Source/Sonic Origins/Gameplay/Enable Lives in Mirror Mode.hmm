@@ -1,4 +1,4 @@
-Code "Enable Lives in Mirror Mode" in "Gameplay" by "ĐeäTh" does
+Code "Enable Lives in Mirror Mode" in "Gameplay" by "ĐeäTh & MegAmi" does
 /*
 Disables the flag for Coins when playing in Mirror Mode.
 
@@ -13,14 +13,35 @@ Notes;
         return;
 
     if (RSDK.GetCurrentGame() == RSDK.Game.Sonic1)
-        *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x1FC) = 0; // Sonic 1 Coin Mode
-    else if (RSDK.GetCurrentGame() == RSDK.Game.Sonic2)
-        *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x288) = 0; // Sonic 2 Coin Mode
+    {
+        var S1Globals = RSDK.GetSonic1Globals();
+
+        if (S1Globals == null)
+            return;
+
+        S1Globals->gameCoinMode = 0;
+    }
     else if (RSDK.GetCurrentGame() == RSDK.Game.SonicCD)
-        *(byte*)(RSDK.GetRSDKv3DataPtr() + 0x220) = 0; // Sonic CD Coin Mode
+    {
+        var SCDGlobals = RSDK.GetSonicCDGlobals();
+
+        if (SCDGlobals == null)
+            return;
+
+        SCDGlobals->gameCoinMode = 0;
+    }
+    else if (RSDK.GetCurrentGame() == RSDK.Game.Sonic2)
+    {
+        var S2Globals = RSDK.GetSonic2Globals();
+
+        if (S2Globals == null)
+            return;
+
+        S2Globals->gameCoinMode = 0;
+    }
     else if (RSDK.GetCurrentGame() == RSDK.Game.Sonic3k)
     {
-        if (RSDK.GetRSDKGlobalsPtr() != 0)
+        if (RSDK.GetRSDKGlobalsPtr() == 0)
             return;
 
         // HUD Update

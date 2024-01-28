@@ -6,5 +6,5 @@ Code "Enable Random Monitors" in "Gameplay/Sonic 3 & Knuckles/Items" by "MegAmi"
     if (RSDK.GetRSDKGlobalsPtr() == 0)
         return;
 
-    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33F0) |= (int)RSDK.S3KSecrets.RandomItems;
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33F0) |= (int)RSDK.S3KSecret.RandomItems;
 }

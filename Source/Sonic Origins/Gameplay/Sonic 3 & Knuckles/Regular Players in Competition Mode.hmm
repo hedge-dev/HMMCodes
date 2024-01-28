@@ -6,5 +6,5 @@ Code "Regular Players in Competition Mode" in "Gameplay/Sonic 3 & Knuckles" by "
     if (RSDK.GetRSDKGlobalsPtr() == 0)
         return;
 
-    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33F0) |= (int)RSDK.S3KSecrets.NormalPhysics2P;
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33F0) |= (int)RSDK.S3KSecret.NormalPhysics2P;
 }

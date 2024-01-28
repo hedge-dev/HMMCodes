@@ -6,5 +6,5 @@ Code "Enable Super Dash" in "Gameplay/Sonic 3 & Knuckles/Abilities" by "MegAmi" 
     if (RSDK.GetRSDKGlobalsPtr() == 0)
         return;
 
-    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33F0) |= (int)RSDK.S3KSecrets.SuperDash;
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33F0) |= (int)RSDK.S3KSecret.SuperDash;
 }

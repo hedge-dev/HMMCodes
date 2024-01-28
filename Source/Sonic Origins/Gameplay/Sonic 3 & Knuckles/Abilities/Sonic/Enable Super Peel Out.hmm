@@ -12,5 +12,5 @@ Notes;
     if (RSDK.GetRSDKGlobalsPtr() == 0)
         return;
 
-    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0xC2CB4) |= (int)RSDK.S3KMedalMods.SuperPeelOut;
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0xC2CB4) |= (int)RSDK.S3KMedalMod.SuperPeelOut;
 }
