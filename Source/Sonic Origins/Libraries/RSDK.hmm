@@ -92,6 +92,25 @@ Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
         return Game.Unknown;
     }
 
+    public PlayMode GetPlayMode()
+    {
+        if (GetCurrentGame() == Game.Sonic1)
+            // Version 1.0.0 and 1.0.4: RSDKv4DataPtr + 0x1A4
+            // Version 2.0.0 to 2.0.2: RSDKv4DataPtr + 0x1AC
+            return (PlayMode)(*(byte*)(GetRSDKv4DataPtr() + 0x1AC));
+        else if (GetCurrentGame() == Game.SonicCD)
+            return (PlayMode)(*(byte*)(GetRSDKv3DataPtr() + 0x1DC));
+        else if (GetCurrentGame() == Game.Sonic2)
+            return (PlayMode)(*(byte*)(GetRSDKv4DataPtr() + 0x23C));
+        else if (GetCurrentGame() == Game.Sonic3k && GetRSDKGlobalsPtr() != 0)
+            // Version 1.0.0: RSDKGlobalsPtr + 0x447D08
+            // Version 1.0.4: RSDKGlobalsPtr + 0x4C3508 (Thanks to RDC)
+            // Version 2.0.0: RSDKGlobalsPtr + 0x4C3510
+            return (PlayMode)(*(byte*)(GetRSDKGlobalsPtr() + 0x4C3510));
+
+        return PlayMode.Unknown;
+    }
+
     public enum Game
     {
         Unknown = -1,
@@ -101,16 +120,17 @@ Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
         Sonic3k
     }
 
-    public enum PlayMode : byte
+    public enum PlayMode : sbyte
     {
-        Classic = 0,
-        Anniversary = 1,
-        BossRush = 2,
-        Mirror = 3,
-        Mission = 4,
-        Story = 5,
-        BlueSpheres = 6,
-        NewBlueSpheres = 7
+        Unknown = -1,
+        Classic,
+        Anniversary,
+        BossRush,
+        Mirror,
+        Mission,
+        Story,
+        BlueSpheres,
+        NewBlueSpheres
     }
 
     public enum S3KMedalMods : int

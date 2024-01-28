@@ -9,57 +9,29 @@ Notes;
     #lib "RSDK"
 //
 {
+    if (RSDK.GetPlayMode() != RSDK.PlayMode.Anniversary || RSDK.GetPlayMode() == RSDK.PlayMode.Unknown)
+        return;
+
     if (RSDK.GetCurrentGame() == RSDK.Game.Sonic1)
-    {
-        // Check if Sonic 1 game.playMode is set to BOOT_PLAYMODE_ANNIVERSARY
-        // Version 1.0.0 and 1.0.4: RSDKv4DataPtr + 0x1A4
-        // Version 2.0.0 to 2.0.2: RSDKv4DataPtr + 0x1AC
-        if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x1AC) == (byte)RSDK.PlayMode.Anniversary)
-        {
-            // Sonic 1 Coin Mode
-            *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x1FC) = 0;
-        }
-    }
+        *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x1FC) = 0; // Sonic 1 Coin Mode
     else if (RSDK.GetCurrentGame() == RSDK.Game.Sonic2)
-    {
-        // Check if Sonic 2 game.playMode is set to BOOT_PLAYMODE_ANNIVERSARY
-        if (*(byte*)(RSDK.GetRSDKv4DataPtr() + 0x23C) == (byte)RSDK.PlayMode.Anniversary)
-        {
-            // Sonic 2 Coin Mode
-            *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x288) = 0;
-        }
-    }
+        *(byte*)(RSDK.GetRSDKv4DataPtr() + 0x288) = 0; // Sonic 2 Coin Mode
     else if (RSDK.GetCurrentGame() == RSDK.Game.SonicCD)
-    {
-        // Check if RSDKv3 game.playMode is set to BOOT_PLAYMODE_ANNIVERSARY
-        if (*(byte*)(RSDK.GetRSDKv3DataPtr() + 0x1DC) == (byte)RSDK.PlayMode.Anniversary)
-        {
-            // Sonic CD Coin Mode
-            *(byte*)(RSDK.GetRSDKv3DataPtr() + 0x220) = 0;
-        }
-    }
+        *(byte*)(RSDK.GetRSDKv3DataPtr() + 0x220) = 0; // Sonic CD Coin Mode
     else if (RSDK.GetCurrentGame() == RSDK.Game.Sonic3k)
     {
-        // Sonic 3&K Coin Mode and HUD Update
         if (RSDK.GetRSDKGlobalsPtr() != 0)
-        {
-            // Check if game.playMode is set to BOOT_PLAYMODE_ANNIVERSARY
-            // Version 1.0.0: RSDKGlobalsPtr + 0x447D08
-            // Version 1.0.4: RSDKGlobalsPtr + 0x4C3508 (Thanks to RDC)
-            // Version 2.0.0: RSDKGlobalsPtr + 0x4C3510
-            if (*(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3510) == (byte)RSDK.PlayMode.Anniversary)
-            {
-                // HUD Update
-                // Version 1.0.0: RSDKGlobalsPtr + 0x447D20
-                // Version 1.0.4: RSDKGlobalsPtr + 0x4C34D4 (Thanks to RDC)
-                *(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x4C34D4) = 0;
+            return;
 
-                // Coin Mode
-                // Version 1.0.0: RSDKGlobalsPtr + 0x447CD4
-                // Version 1.0.4: RSDKGlobalsPtr + 0x4C3520 (Thanks to RDC)
-                // Version 2.0.0: RSDKGlobalsPtr + 0x4C3528
-                *(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3528) = 0;
-            }
-        }
+        // HUD Update
+        // Version 1.0.0: RSDKGlobalsPtr + 0x447D20
+        // Version 1.0.4: RSDKGlobalsPtr + 0x4C34D4 (Thanks to RDC)
+        *(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x4C34D4) = 0;
+
+        // Coin Mode
+        // Version 1.0.0: RSDKGlobalsPtr + 0x447CD4
+        // Version 1.0.4: RSDKGlobalsPtr + 0x4C3520 (Thanks to RDC)
+        // Version 2.0.0: RSDKGlobalsPtr + 0x4C3528
+        *(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3528) = 0;
     }
 }
