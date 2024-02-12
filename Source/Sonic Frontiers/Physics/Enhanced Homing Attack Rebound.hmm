@@ -1,11 +1,11 @@
 Code "Enhanced Homing Attack Rebound" in "Physics" by "Weezley" does
 /*
-Increases overall player control during a Homing Attack rebound and reduces Homing Attack hit stop
+Increases overall player control during a Homing Attack rebound and reduces Homing Attack hit stop.
 
 Notes;
-- It is recommended that you use this with Tighter Jump Rotation
-- Sonic's combat skills immediately after a Homing Attack will use their unmodded bindings so keep that in mind when combined with combat mods
-- Reduces homing delay
+- It is recommended that you use this with Tighter Jump Rotation.
+- Sonic's combat skills immediately after a Homing Attack will use their default bindings, so keep that in mind when combined with combat mods.
+- Reduces homing delay.
 */
 //
     #include "BlackboardStatus" noemit
