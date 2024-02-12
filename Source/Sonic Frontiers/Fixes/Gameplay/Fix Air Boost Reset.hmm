@@ -5,6 +5,7 @@ Code "Fix Air Boost Reset" in "Fixes/Gameplay" by "Hyper & Weezley" does "Allows
     #lib "Bitwise"
     #lib "BlackboardStatus"
     #lib "Player"
+    #lib "HMM"
 
     using System.Collections.Generic;
 

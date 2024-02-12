@@ -2,14 +2,16 @@ Library "HMM" by "Hyper"
 {
     #lib "INI"
 
+    using Microsoft.Win32;
     using System.Collections.Generic;
     using System.IO;
+    using System.Reflection;
+    using System.Threading;
 
     public Dictionary<string, Dictionary<string, string>> GetModsDatabase()
     {
-        string workingDir = Directory.GetCurrentDirectory();
-        string cpkredirCfgPath = Path.Combine(workingDir, "cpkredir.ini");
-
+        string cpkredirCfgPath = Path.Combine(RegistryConfig.LastGameDirectory, "cpkredir.ini");
+        
         if (!File.Exists(cpkredirCfgPath))
             return new();
 
@@ -28,9 +30,9 @@ Library "HMM" by "Hyper"
 
         var modsDb = GetModsDatabase();
 
-        if (modsDb == null)
+        if (modsDb.Count <= 0)
             return result;
-
+        
         int activeModCount = INI.Parse<int>(modsDb["Main"]["ActiveModCount"], 0);
 
         foreach (var entry in modsDb["Mods"].Keys)
@@ -90,36 +92,22 @@ Library "HMM" by "Hyper"
 
     public class Mod
     {
-        public string Name { get; set; } = string.Empty;
-
-        public string Version { get; set; } = string.Empty;
-
-        public string Author { get; set; } = string.Empty;
-
-        public string Description { get; set; } = string.Empty;
-
-        public string Date { get; set; } = string.Empty;
-
-        public string AuthorURL { get; set; } = string.Empty;
-
-        public string UpdateServer { get; set; } = string.Empty;
-
-        public string SaveFile { get; set; } = string.Empty;
-
-        public string ID { get; set; } = string.Empty;
-
+        public string Name { get; set; }
+        public string Version { get; set; }
+        public string Author { get; set; }
+        public string Description { get; set; }
+        public string Date { get; set; }
+        public string AuthorURL { get; set; }
+        public string UpdateServer { get; set; }
+        public string SaveFile { get; set; }
+        public string ID { get; set; }
         public List<string> IncludeDirs { get; set; } = new();
-
         public List<ModDependency> Dependencies { get; set; } = new();
+        public string DLLFile { get; set; }
+        public string CodeFile { get; set; }
+        public string ConfigSchemaFile { get; set; }
 
-        public string DLLFile { get; set; } = string.Empty;
-
-        public string CodeFile { get; set; } = string.Empty;
-
-        public string ConfigSchemaFile { get; set; } = string.Empty;
-
-        public string Path { get; set; } = string.Empty;
-
+        public string Path { get; set; }
         public Dictionary<string, Dictionary<string, string>> Ini { get; set; } = new();
 
         public Mod(string modIniPath)
@@ -210,6 +198,81 @@ Library "HMM" by "Hyper"
                         break;
                 }
             }
+        }
+    }
+
+    public static class RegistryConfig
+    {
+        public static string ConfigPath { get; } = @"SOFTWARE\HEDGEMM";
+
+        public static bool CheckLoaderUpdates { get; set; } = true;
+        public static bool CheckManagerUpdates { get; set; } = true;
+        public static bool CheckModUpdates { get; set; } = true;
+        public static int CodesSortingColumnIndex { get; set; } = 1;
+        public static bool CodesUseTreeView { get; set; } = true;
+        public static string ExecutablePath { get; set; }
+        public static string ExtraGameDirectories { get; set; }
+        public static bool KeepOpen { get; set; } = true;
+        public static string LastGameDirectory { get; set; }
+        public static string UILanguage { get; set; }
+        public static string UITheme { get; set; }
+        public static bool UpdateCodesOnLaunch { get; set; } = true;
+
+        static RegistryConfig()
+        {
+            Load();
+        }
+
+        public static void Load()
+        {
+            var personalizeKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+
+            bool isLightTheme = false;
+            if (personalizeKey != null)
+            {
+                var useLightThemeStr = personalizeKey.GetValue("AppsUseLightTheme", 0)?.ToString();
+
+                if (int.TryParse(useLightThemeStr, out int out_isLightTheme))
+                    isLightTheme = out_isLightTheme != 0;
+
+                personalizeKey.Close();
+            }
+
+            var key = Registry.CurrentUser.CreateSubKey(ConfigPath);
+
+            LastGameDirectory       = (string)key.GetValue("LastGame", string.Empty);
+            ExtraGameDirectories    = (string)key.GetValue(nameof(ExtraGameDirectories), string.Empty);
+            UILanguage              = (string)key.GetValue(nameof(UILanguage), Thread.CurrentThread.CurrentCulture.Name);
+            UITheme                 = (string)key.GetValue(nameof(UITheme), isLightTheme ? "LightTheme" : "DarkerTheme");
+            CodesSortingColumnIndex = (int)key.GetValue(nameof(CodesSortingColumnIndex), 1);
+            CodesUseTreeView        = (int)key.GetValue(nameof(CodesUseTreeView), 1) != 0;
+            UpdateCodesOnLaunch     = (int)key.GetValue(nameof(UpdateCodesOnLaunch), 1) != 0;
+            CheckManagerUpdates     = (int)key.GetValue(nameof(CheckManagerUpdates), 1) != 0;
+            CheckLoaderUpdates      = (int)key.GetValue(nameof(CheckLoaderUpdates), 1) != 0;
+            CheckModUpdates         = (int)key.GetValue(nameof(CheckModUpdates), 1) != 0;
+            KeepOpen                = (int)key.GetValue(nameof(KeepOpen), 1) != 0;
+
+            key.Close();
+        }
+
+        public static void Save()
+        {
+            var key = Registry.CurrentUser.CreateSubKey(ConfigPath);
+
+            key.SetValue("ExecutablePath", Assembly.GetExecutingAssembly().Location);
+            key.SetValue("LastGame", LastGameDirectory);
+            key.SetValue(nameof(ExtraGameDirectories), ExtraGameDirectories);
+            key.SetValue(nameof(UILanguage), UILanguage);
+            key.SetValue(nameof(UITheme), UITheme);
+            key.SetValue(nameof(CodesSortingColumnIndex), CodesSortingColumnIndex);
+            key.SetValue(nameof(CodesUseTreeView), CodesUseTreeView ? 1 : 0);
+            key.SetValue(nameof(UpdateCodesOnLaunch), UpdateCodesOnLaunch ? 1 : 0);
+            key.SetValue(nameof(CheckManagerUpdates), CheckManagerUpdates ? 1 : 0);
+            key.SetValue(nameof(CheckLoaderUpdates), CheckLoaderUpdates ? 1 : 0);
+            key.SetValue(nameof(CheckModUpdates), CheckModUpdates ? 1 : 0);
+            key.SetValue(nameof(KeepOpen), KeepOpen ? 1 : 0);
+
+            key.Close();
         }
     }
 }
