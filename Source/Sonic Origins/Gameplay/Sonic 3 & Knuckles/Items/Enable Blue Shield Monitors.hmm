@@ -1,0 +1,10 @@
+Code "Enable Blue Shield Monitors" in "Gameplay/Sonic 3 & Knuckles/Items" by "MegAmi" does "Replaces all Elemental Shield monitors with Blue Shield monitors."
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33F0) |= (int)RSDK.S3KSecret.BlueShield;
+}

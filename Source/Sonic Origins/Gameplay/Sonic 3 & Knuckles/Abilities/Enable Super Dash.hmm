@@ -1,0 +1,10 @@
+Code "Enable Super Dash" in "Gameplay/Sonic 3 & Knuckles/Abilities" by "MegAmi" does "Allows the player to fly and dash in any cardinal direction when in Super/Hyper form, similar to Sonic Mania's Egg Reverie Zone."
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33F0) |= (int)RSDK.S3KSecret.SuperDash;
+}

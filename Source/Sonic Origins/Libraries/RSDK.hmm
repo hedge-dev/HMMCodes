@@ -1,14 +1,19 @@
-Library "RSDK" by "Hyper & ĐeäTh" 
+Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
 {
+    #include "Helpers" noemit
+
+    #lib "Helpers"
+    #lib "Memory"
+
     private static bool _isInitialised = false;
 
     private static long _pRSDKv3Data = 0;
     private static long _pRSDKv4Data = 0;
     private static long _pRSDKGlobals = 0;
+    private static nint _pRSDKDataPath = 0;
 
-    private static int _pRSDKGlobalsOffset = 0;
-
-    private void Init()
+    [LibraryInitializer]
+    public void Init()
     {
         if (_isInitialised)
             return;
@@ -38,48 +43,855 @@ Library "RSDK" by "Hyper & ĐeäTh"
 
         _pRSDKGlobals = (long)sig + *((int*)IntPtr.Add(new IntPtr(sig), 3)) + 7;
 
-        _pRSDKGlobalsOffset = *((int*)IntPtr.Add(new IntPtr(sig), 9));
+        sig = ScanSignature
+        (
+            "\x48\x8D\x0D\x00\x00\x00\x00\xC6\x05\x00\x00\x00\x00\x01\xC6\x05\x00\x00\x00\x00\x00",
+            "xxx????xx????xxx????x"
+        );
+
+        _pRSDKDataPath = (nint)(Memory.ReadEffectiveAddress((long)sig));
 
         _isInitialised = true;
     }
 
     public long GetRSDKv3DataPtr()
     {
-        Init();
-
         return _pRSDKv3Data;
     }
 
     public long GetRSDKv4DataPtr()
     {
-        Init();
-
         return _pRSDKv4Data;
     }
 
     public long GetRSDKGlobalsPtr()
     {
-        Init();
-
-        return _pRSDKGlobals;
+        return *(long*)_pRSDKGlobals;
     }
 
-    public long GetRSDKGlobalsOffset()
+    public S1GlobalVariables* GetSonic1Globals()
     {
-        Init();
-
-        return _pRSDKGlobalsOffset;
+        return (S1GlobalVariables*)GetRSDKv4DataPtr();
     }
 
-    public long GetRSDKGlobalsAbsPtr()
+    public SCDGlobalVariables* GetSonicCDGlobals()
     {
-        Init();
+        return (SCDGlobalVariables*)GetRSDKv3DataPtr();
+    }
 
-        if (_pRSDKGlobals == 0)
-            return 0;
+    public S2GlobalVariables* GetSonic2Globals()
+    {
+        return (S2GlobalVariables*)GetRSDKv4DataPtr();
+    }
 
-        return *(long*)_pRSDKGlobals + _pRSDKGlobalsOffset;
+    public byte GetEngineVersion()
+    {
+        return *(byte*)(_pRSDKDataPath - 0x08);
+    }
+
+    public Game GetCurrentGame()
+    {
+        if (GetEngineVersion() == 3) // RSDKv3
+            return Game.SonicCD;
+        else if (GetEngineVersion() == 4) // RSDKv4
+        {
+            // Check datafile name to see if this is Sonic 1 or 2
+            if (Helpers.PtrToStringUTF8(_pRSDKDataPath) == "retro/Sonic1u.rsdk")
+                return Game.Sonic1;
+            else
+                return Game.Sonic2;
+        }
+        else if (GetEngineVersion() == 5) // RSDKv5
+            return Game.Sonic3k;
+
+        return Game.Unknown;
+    }
+
+    public PlayMode GetPlayMode()
+    {
+        if (GetCurrentGame() == Game.Sonic1)
+        {
+            var S1Globals = GetSonic1Globals();
+
+            if (S1Globals == null)
+                return PlayMode.Unknown;
+
+            return (PlayMode)S1Globals->gamePlayMode;
+        }
+        else if (GetCurrentGame() == Game.SonicCD)
+        {
+            var SCDGlobals = GetSonicCDGlobals();
+
+            if (SCDGlobals == null)
+                return PlayMode.Unknown;
+
+            return (PlayMode)SCDGlobals->gamePlayMode;
+        }
+        else if (GetCurrentGame() == Game.Sonic2)
+        {
+            var S2Globals = GetSonic2Globals();
+
+            if (S2Globals == null)
+                return PlayMode.Unknown;
+
+            return (PlayMode)S2Globals->gamePlayMode;
+        }
+        else if (GetCurrentGame() == Game.Sonic3k && GetRSDKGlobalsPtr() != 0)
+            // Version 1.0.0: RSDKGlobalsPtr + 0x447D08
+            // Version 1.0.4: RSDKGlobalsPtr + 0x4C3508 (Thanks to RDC)
+            // Version 2.0.0: RSDKGlobalsPtr + 0x4C3510
+            return (PlayMode)(*(byte*)(GetRSDKGlobalsPtr() + 0x4C3510));
+
+        return PlayMode.Unknown;
+    }
+
+    public enum Game
+    {
+        Unknown = -1,
+        Sonic1,
+        SonicCD,
+        Sonic2,
+        Sonic3k
+    }
+
+    public enum PlayMode
+    {
+        Unknown = -1,
+        Classic,
+        Anniversary,
+        BossRush,
+        Mirror,
+        Mission,
+        Story,
+        BlueSpheres,
+        NewBlueSpheres
+    }
+
+    public struct S1GlobalVariables
+    {
+        public int optionsGameMode;
+        public int optionsSpeedCap;
+        public int optionsSaveSlot;
+        public int optionsStageSelectFlag;
+        public int optionsSoundTestFlag;
+        public int optionsAttractMode;
+        public int optionsDemoNumber;
+        public int optionsTouchControls;
+        public int optionsPhysicalControls;
+        public int optionsAirSpeedCap;
+        public int optionsRegion;
+        public int optionsSpindash;
+        public int optionsSpikeBehavior;
+        public int optionsShieldType;
+        public int optionsSuperStates;
+        public int optionsCompetition;
+        public int oscillation;
+        public int ringTimer;
+        public int ringFrame;
+        public int ringPan;
+        public int ringExtraLife;
+        public int playerScore;
+        public int playerScoreBonus;
+        public int playerLives;
+        public int playerContinues;
+        public int playerAirTimer;
+        public int playerRCollisionFlag;
+        public int playerWaterStream;
+        public int recMilliSeconds;
+        public int recSeconds;
+        public int recMinutes;
+        public int recWaterState;
+        public int recWaterLevel;
+        public int recStage;
+        public int recStageList;
+        public int lampPostID;
+        public int fadeColor;
+        public int animalType1;
+        public int animalType2;
+        public int invincibilityType;
+        public int blueShieldType;
+        public int goggleType;
+        public int specialStageListPos;
+        public int specialStageEmeralds;
+        public int specialStageNextZone;
+        public int stageWaterState;
+        public int stageNewWaterLevel;
+        public int stageDeathBoundary;
+        public int stagePlayer2Enabled;
+        public int stageMusicFlag;
+        public int timeAttackZone;
+        public int timeAttackAct;
+        public int timeAttackResult;
+        public int timeAttackMenuSection;
+        public int ANI_STOPPED;
+        public int ANI_WAITING;
+        public int ANI_BORED;
+        public int ANI_LOOKINGUP;
+        public int ANI_LOOKINGDOWN;
+        public int ANI_WALKING;
+        public int ANI_RUNNING;
+        public int ANI_SKIDDING;
+        public int ANI_PEELOUT;
+        public int ANI_SPINDASH;
+        public int ANI_JUMPING;
+        public int ANI_BOUNCING;
+        public int ANI_HURT;
+        public int ANI_DYING;
+        public int ANI_DROWNING;
+        public int ANI_FANROTATE;
+        public int ANI_BREATHING;
+        public int ANI_PUSHING;
+        public int ANI_FLAILING1;
+        public int ANI_FLAILING2;
+        public int ANI_HANGING;
+        public int ANI_DROPPING;
+        public int ANI_CLINGING;
+        public int ANI_FLYING;
+        public int ANI_FLYINGTIRED;
+        public int ANI_SWIMMING;
+        public int ANI_SWIMMINGTIRED;
+        public int ANI_GLIDING;
+        public int ANI_GLIDING_DROP;
+        public int ANI_GLIDING_STOP;
+        public int ANI_CLIMBING;
+        public int ANI_LEDGEPULLUP;
+        public int ANI_WATERSLIDE;
+        public int ANI_CONTINUE;
+        public int ANI_CONTINUE_UP;
+        public int ANI_SUPER_TRANSFORM;
+        public int ANI_FLY_LIFT_DOWN;
+        public int ANI_FLY_LIFT_UP;
+        public int ANI_FLY_LIFT_TIRED;
+        public int ANI_SWIM_LIFT;
+        public int ANI_HAMMER_JUMP;
+        public int ANI_HAMMER_DASH;
+        public int SpeedUpMusic;
+        public int SlowDownMusic;
+        public int recAnimation;
+        public int touchJump;
+        public int touchDebug;
+        public int SetAchievement;
+        public int SetLeaderboard;
+        public int ShowPromoPopup;
+        public int creditsScreen;
+        public int attractStage;
+        public int achieveRingCount;
+        public int gamePlayMode;
+        public int NotifyCallback;
+        public int NOTIFY_DEATH_EVENT;
+        public int NOTIFY_TOUCH_SIGNPOST;
+        public int NOTIFY_HUD_ENABLE;
+        public int NOTIFY_ADD_COIN;
+        public int NOTIFY_KILL_ENEMY;
+        public int BOOT_PLAYMODE_CLASSIC;
+        public int BOOT_PLAYMODE_ANNIVERSARY;
+        public int BOOT_PLAYMODE_BOSSRUSH;
+        public int BOOT_PLAYMODE_MIRRORING;
+        public int BOOT_PLAYMODE_MISSION;
+        public int gameCallbackParam0;
+        public int gameCallbackParam1;
+        public int gameCallbackParam2;
+        public int gameCallbackParam3;
+        public int gameHudEnable;
+        public int gameForceKillPlayer;
+        public int HUDENABLE_OFF;
+        public int HUDENABLE_ON;
+        public int gameCoinMode;
+        public int gameMissionCondition;
+        public int MISSION_CONDITION_CLEAR;
+        public int MISSION_CONDITION_FAIL;
+        public int gameMissionFunctionNo;
+        public int gameMissionValue;
+        public int gameMissionEnd;
+        public int gameContinueFlag;
+        public int NOTIFY_SAVESLOT_SELECT;
+        public int NOTIFY_FUTURE_PAST;
+        public int NOTIFY_GOTO_FUTURE_PAST;
+        public int NOTIFY_BOSS_END;
+        public int NOTIFY_SPECIAL_END;
+        public int BOOT_PLAYMODE_STORY;
+        public int gameTitleCardDisable;
+        public int gameBossOneLife;
+        public int KILL_ENEMY_ATTR_ANIMALPRISON;
+        public int KILL_ENEMY_ATTR_SPINDASH;
+        public int KILL_ENEMY_ATTR_GLIDING;
+        public int NOTIFY_DEBUGPRINT;
+        public int NOTIFY_KILL_BOSS;
+        public int NOTIFY_TOUCH_EMERALD;
+        public int NOTIFY_STATS_ENEMY;
+        public int NOTIFY_STATS_CHARA_ACTION;
+        public int NOTIFY_STATS_RING;
+        public int NOTIFY_STATS_MOVIE;
+        public int NOTIFY_STATS_PARAM_1;
+        public int NOTIFY_STATS_PARAM_2;
+        public int StatsUsabilityParam1;
+        public int StatsUsabilityParam2;
+        public int StatsUsabilityParam3;
+        public int StatsUsabilityParam4;
+        public int StatsUsabilityParam5;
+        public int StageStatsUsabilityParam1;
+        public int StageStatsUsabilityParam2;
+        public int StageStatsUsabilityParam3;
+        public int StageStatsUsabilityParam4;
+        public int StageStatsUsabilityParam5;
+        public int NOTIFY_CHARACTER_SELECT;
+        public int gameCallbackResult;
+        public int NOTIFY_SPECIAL_RETRY;
+        public int NOTIFY_TOUCH_CHECKPOINT;
+        public int NOTIFY_ACT_FINISH;
+        public int NOTIFY_1P_VS_SELECT;
+        public int gameTitleMode;
+        public int gameOneStageFlag;
+        public int NOTIFY_STAGE_RETRY;
+        public int recRing;
+        public int recScore;
+        public int NOTIFY_SOUND_TRACK;
+        public int NOTIFY_GOOD_ENDING;
+        public int NOTIFY_BACK_TO_MAINMENU;
+        public int NOTIFY_LEVEL_SELECT_MENU;
+        public int NOTIFY_PLAYER_SET;
+        public int NOTIFY_EXTRAS_MODE;
+        public int gameCoinCount;
+        public int inputPressButton;
+        public int playerDeadResetRings;
+        public int gameTimeOver;
+        public int NOTIFY_TIME_OVER;
+        public int playerDropdashCount0;
+        public int playerDropdashCount1;
+        public int playerDropdashCount2;
+        public int playerDropdashCount3;
+        public int PLAYER_SONIC;
+        public int PLAYER_TAILS;
+        public int PLAYER_KNUCKLES;
+        public int PLAYER_SONIC_TAILS;
+        public int PLAYER_AMY;
+        public int PLAYER_AMY_TAILS;
+        private int gameHasPlusDLC;
+        public int NOTIFY_STATS_CHARA_ACTION2;
+    }
+
+    public struct SCDGlobalVariables
+    {
+        public int OptionsGameMode;
+        public int OptionsOriginalControls;
+        public int OptionsTailsUnlocked;
+        public int OptionsSaveSlot;
+        public int OptionsDAGardenFlag;
+        public int OptionsVisualModeFlag;
+        public int OptionsStageSelectFlag;
+        public int OptionsSoundTestFlag;
+        public int Oscillation;
+        public int PlayerScore;
+        public int PlayerScoreBonus;
+        public int PlayerLives;
+        public int PlayerAirTimer;
+        public int PlayerRoofBarrier;
+        public int PlayerHeavyMetalFlag;
+        public int PlayerRCollisionFlag;
+        public int RingAniCount;
+        public int RingFrame;
+        public int RingExtraLife;
+        public int RingPan;
+        public int Rec_Milliseconds;
+        public int Rec_Seconds;
+        public int Rec_Minutes;
+        public int LampPostCheck;
+        public int LampPostSide;
+        public int WarpDestination;
+        public int WarpTimer;
+        public int WarpFrame;
+        public int WarpPlayerFrame;
+        public int WarpCount;
+        public int WarpXPos;
+        public int WarpYPos;
+        public int WarpXVelocity;
+        public int WarpYVelocity;
+        public int WarpRings;
+        public int WarpCollisionMode;
+        public int WarpGravity;
+        public int WarpState;
+        public int WarpAnimation;
+        public int WarpAngle;
+        public int WarpSpeed;
+        public int WarpMinRollSpeed;
+        public int WarpSpeedCompare;
+        public int Transporter_Destroyed;
+        public int MetalSonic_Destroyed;
+        public int MetalSonic_EntityNo;
+        public int MetalSonic_List;
+        public int Good_Future;
+        public int Good_Future_List;
+        public int Good_Future_Count;
+        public int Fade_Colour;
+        public int Flower_TypeNo;
+        public int SpecialStageListPos;
+        public int SpecialStageTimeStones;
+        public int SpecialStageNextZone;
+        public int StageNewWaterLevel;
+        public int StageDeathBoundary;
+        public int ConveyorBelt_Flag;
+        public int ConveyorBelt_Frame;
+        public int ConveyorBelt_Speed;
+        public int PathSwap_Flag;
+        public int PathSwap_Frame;
+        public int Mini_PlayerFlag;
+        public int RotatingDrum_Timer;
+        public int ANI_STOPPED;
+        public int ANI_WAITING;
+        public int ANI_BORED;
+        public int ANI_LOOKINGUP;
+        public int ANI_LOOKINGDOWN;
+        public int ANI_WALKING;
+        public int ANI_RUNNING;
+        public int ANI_SKIDDING;
+        public int ANI_PEELOUT;
+        public int ANI_SPINDASH;
+        public int ANI_JUMPING;
+        public int ANI_BOUNCING;
+        public int ANI_HURT;
+        public int ANI_DYING;
+        public int ANI_DROWNING;
+        public int ANI_FANROTATE;
+        public int ANI_BREATHING;
+        public int ANI_PUSHING;
+        public int ANI_FLAILINGLEFT;
+        public int ANI_FLAILINGRIGHT;
+        public int ANI_HANGING;
+        public int ANI_DROPPING;
+        public int ANI_FLYING;
+        public int ANI_FLYINGTIRED;
+        public int ANI_SWIMMING;
+        public int ANI_SWIMMINGTIRED;
+        public int ANI_LAUNCHER;
+        public int ANI_SPINNING_TOP;
+        public int ANI_RAMP_RUNNING1;
+        public int ANI_RAMP_RUNNING2;
+        public int ANI_RAMP_RUNNING3;
+        public int ANI_RAMP_RUNNING4;
+        public int ANI_RAMP_RUNNING5;
+        public int ANI_RAMP_RUNNING6;
+        public int ANI_ROLL3D;
+        public int ANI_SIZE_CHANGE;
+        public int TimeAttackRound;
+        public int TimeAttackZone;
+        public int TimeAttackResult;
+        public int TimeAttackMenuSection;
+        public int ANI_CLINGING;
+        public int PlayerWaterStream;
+        public int OptionsDevMenuFlag;
+        public int OptionsAttractMode;
+        public int OptionsDemoNumber;
+        public int OptionsSoundtrack;
+        public int OptionsTouchControls;
+        public int OptionsPhysicalControls;
+        public int OptionsDPadX;
+        public int OptionsHapticsMenu;
+        public int LeaderboardID;
+        public int LeaderboardOffset;
+        public int SegaIDLoggedIn;
+        public int EngineDeviceType;
+        public int MenuExitFlag;
+        public int gamePlayMode;
+        public int NOTIFY_DEATH_EVENT;
+        public int NOTIFY_TOUCH_SIGNPOST;
+        public int BOOT_PLAYMODE_CLASSIC;
+        public int BOOT_PLAYMODE_ANNIVERSARY;
+        public int BOOT_PLAYMODE_BOSSRUSH;
+        public int BOOT_PLAYMODE_MIRRORING;
+        public int BOOT_PLAYMODE_MISSION;
+        public int gameCallbackParam0;
+        public int gameCallbackParam1;
+        public int gameCallbackParam2;
+        public int gameCallbackParam3;
+        public int NOTIFY_HUD_ENABLE;
+        public int NOTIFY_ADD_COIN;
+        public int gameHudEnable;
+        public int HUDENABLE_OFF;
+        public int HUDENABLE_ON;
+        public int gameCoinMode;
+        public int gameForceKillPlayer;
+        public int NOTIFY_KILL_ENEMY;
+        public int gameMissionCondition;
+        public int MISSION_CONDITION_CLEAR;
+        public int MISSION_CONDITION_FAIL;
+        public int gameMissionFunctionNo;
+        public int gameMissionValue;
+        public int gameContinueFlag;
+        public int NOTIFY_SAVESLOT_SELECT;
+        public int gameMissionEnd;
+        public int NOTIFY_FUTURE_PAST;
+        public int NOTIFY_GOTO_FUTURE_PAST;
+        public int NOTIFY_BOSS_END;
+        public int NOTIFY_SPECIAL_END;
+        public int BOOT_PLAYMODE_STORY;
+        public int gameTitleCardDisable;
+        public int gameBossOneLife;
+        public int NOTIFY_DEBUGPRINT;
+        public int NOTIFY_KILL_BOSS;
+        public int NOTIFY_TOUCH_EMERALD;
+        public int NOTIFY_STATS_ENEMY;
+        public int KILL_ENEMY_ATTR_ANIMALPRISON;
+        public int KILL_ENEMY_ATTR_SPINDASH;
+        public int KILL_ENEMY_ATTR_GLIDING;
+        public int NOTIFY_STATS_CHARA_ACTION;
+        public int NOTIFY_STATS_RING;
+        public int NOTIFY_STATS_MOVIE;
+        public int NOTIFY_STATS_PARAM_1;
+        public int NOTIFY_STATS_PARAM_2;
+        public int StatsUsabilityParam1;
+        public int StatsUsabilityParam2;
+        public int StatsUsabilityParam3;
+        public int StatsUsabilityParam4;
+        public int StatsUsabilityParam5;
+        public int StageStatsUsabilityParam1;
+        public int StageStatsUsabilityParam2;
+        public int StageStatsUsabilityParam3;
+        public int StageStatsUsabilityParam4;
+        public int StageStatsUsabilityParam5;
+        public int gameMainMenuMode;
+        public int MAINMENUMODE_VISUALMODE;
+        public int MAINMENUMODE_SOUNDTRACK;
+        public int MAINMENUMODE_CHARASELECT;
+        public int NOTIFY_CHARACTER_SELECT;
+        public int gameCallbackResult;
+        public int NOTIFY_SPECIAL_RETRY;
+        public int NOTIFY_TOUCH_CHECKPOINT;
+        public int NOTIFY_ACT_FINISH;
+        public int MAINMENUMODE_HELPOPTION;
+        public int MAINMENUMODE_EXTRAS;
+        public int NOTIFY_1P_VS_SELECT;
+        public int gameTitleMode;
+        public int gameOneStageFlag;
+        public int NOTIFY_STAGE_RETRY;
+        public int recRing;
+        public int recScore;
+        public int MAINMENUMODE_SETTINGS;
+        public int NOTIFY_SOUND_TRACK;
+        public int NOTIFY_GOOD_ENDING;
+        public int NOTIFY_BACK_TO_MAINMENU;
+        public int NOTIFY_LEVEL_SELECT_MENU;
+        public int NOTIFY_PLAYER_SET;
+        public int NOTIFY_EXTRAS_MODE;
+        public int gameCoinCount;
+        public int recStage;
+        public int NOTIFY_SPIN_DASH_TYPE;
+        public int inputPressButton;
+        public int PlayerDeadResetRings;
+        public int gameTimeOver;
+        public int NOTIFY_TIME_OVER;
+        public int BackupSpecialStageListPos;
+        public int BackupTimeStones;
+        public int TimeAttackUnlockCount;
+        public int NOTIFY_TIMEATTACK_MODE;
+        public int PLAYER_SONIC;
+        public int PLAYER_TAILS;
+        public int PLAYER_KNUCKLES;
+        public int PLAYER_AMY;
+        public int ANI_HAMMER_JUMP;
+        public int ANI_HAMMER_DASH;
+        public int C_ENEMY;
+        public int NOTIFY_STATS_BREAK_OBJECT;
+        public int NOTIFY_STATS_SAVE_FUTURE;
+        public int ANI_GLIDING;
+        public int ANI_GLIDING_DROP;
+        public int ANI_GLIDING_STOP;
+        public int ANI_CLIMBING;
+        public int ANI_LEDGEPULLUP;
+        public int NOTIFY_STATS_CHARA_ACTION2;
+    }
+
+    public struct S2GlobalVariables
+    {
+        public int optionsGameMode;
+        public int optionsSpeedCap;
+        public int optionsSaveSlot;
+        public int optionsStageSelectFlag;
+        public int optionsSoundTestFlag;
+        public int optionsAttractMode;
+        public int optionsDemoNumber;
+        public int optionsTouchControls;
+        public int optionsPhysicalControls;
+        public int optionsAirSpeedCap;
+        public int optionsRegion;
+        public int optionsSpikeBehavior;
+        public int optionsShieldType;
+        public int optionsVsMode;
+        public int optionsHiddenPalace;
+        public int optionsTailsFlight;
+        public int optionsSuperTails;
+        public int oscillation;
+        public int ringTimer;
+        public int ringFrame;
+        public int ringPan;
+        public int ringExtraLife;
+        public int playerScore;
+        public int playerScore2;
+        public int playerScoreBonus;
+        public int playerLives;
+        public int playerLives2;
+        public int playerContinues;
+        public int playerAirTimer;
+        public int playerRCollisionFlag;
+        public int playerWaterStream;
+        public int recMilliSeconds;
+        public int recSeconds;
+        public int recMinutes;
+        public int recWaterState;
+        public int recWaterLevel;
+        public int recStage;
+        public int recStageList;
+        public int starPostID;
+        public int fadeColor;
+        public int animalType1;
+        public int animalType2;
+        public int invincibilityType;
+        public int blueShieldType;
+        public int specialStageListPos;
+        public int specialStageEmeralds;
+        public int specialStageNextZone;
+        public int stageWaterState;
+        public int stageNewWaterLevel;
+        public int stageDeathBoundary;
+        public int stagePlayer2Enabled;
+        public int stageMusicFlag;
+        public int stageTimeOver;
+        public int timeAttackZone;
+        public int timeAttackAct;
+        public int timeAttackResult;
+        public int timeAttackMenuSection;
+        public int ANI_STOPPED;
+        public int ANI_WAITING;
+        public int ANI_BORED;
+        public int ANI_LOOKINGUP;
+        public int ANI_LOOKINGDOWN;
+        public int ANI_WALKING;
+        public int ANI_RUNNING;
+        public int ANI_SKIDDING;
+        public int ANI_PEELOUT;
+        public int ANI_SPINDASH;
+        public int ANI_JUMPING;
+        public int ANI_BOUNCING;
+        public int ANI_HURT;
+        public int ANI_DYING;
+        public int ANI_DROWNING;
+        public int ANI_FANROTATE;
+        public int ANI_BREATHING;
+        public int ANI_PUSHING;
+        public int ANI_FLAILING1;
+        public int ANI_FLAILING2;
+        public int ANI_FLAILING3;
+        public int ANI_HANGING;
+        public int ANI_GRABBED;
+        public int ANI_CLINGING;
+        public int ANI_FLYING;
+        public int ANI_FLYINGTIRED;
+        public int ANI_SWIMMING;
+        public int ANI_SWIMMINGTIRED;
+        public int ANI_GLIDING;
+        public int ANI_GLIDING_DROP;
+        public int ANI_GLIDING_STOP;
+        public int ANI_CLIMBING;
+        public int ANI_LEDGEPULLUP;
+        public int ANI_TWIRL;
+        public int ANI_WATERSLIDE;
+        public int ANI_CONTINUE;
+        public int ANI_CONTINUE_UP;
+        public int ANI_SUPER_TRANSFORM;
+        public int ANI_FLY_LIFT_DOWN;
+        public int ANI_FLY_LIFT_UP;
+        public int ANI_FLY_LIFT_TIRED;
+        public int ANI_SWIM_LIFT;
+        public int SpeedUpMusic;
+        public int SlowDownMusic;
+        public int recAnimation;
+        public int touchJump;
+        public int touchDebug;
+        public int SetAchievement;
+        public int SetLeaderboard;
+        public int creditsScreen;
+        public int attractStage;
+        public int vsPlayerID;
+        public int vsPlayer2Type;
+        public int vsGameLength;
+        public int vsItemMode;
+        public int vsActiveList;
+        public int vsListPos;
+        public int vsMatch;
+        public int vsStageMask;
+        public int vsTieBreaker;
+        public int vsTime1P;
+        public int vsRings1P;
+        public int vsTotalRings1P;
+        public int vsItems1P;
+        public int vsCheckpoint1P;
+        public int vsTime2P;
+        public int vsRings2P;
+        public int vsItems2P;
+        public int vsTotalRings2P;
+        public int vsCheckpoint2P;
+        public int vsRestartX1;
+        public int vsRestartY1;
+        public int vsRestartX2;
+        public int vsRestartY2;
+        public int vsDataSent;
+        public int vsRandomValue;
+        public int vsBossAttack;
+        public int vsSpeed;
+        public int Connect2PVS;
+        public int Disconnect2PVS;
+        public int SendEntity;
+        public int SendValue;
+        public int ReceiveEntity;
+        public int ReceiveValue;
+        public int TransmitGlobal;
+        public int ShowPromoPopup;
+        public int gamePlayMode;
+        public int NotifyCallback;
+        public int NOTIFY_DEATH_EVENT;
+        public int NOTIFY_TOUCH_SIGNPOST;
+        public int NOTIFY_HUD_ENABLE;
+        public int NOTIFY_ADD_COIN;
+        public int NOTIFY_KILL_ENEMY;
+        public int BOOT_PLAYMODE_CLASSIC;
+        public int BOOT_PLAYMODE_ANNIVERSARY;
+        public int BOOT_PLAYMODE_BOSSRUSH;
+        public int BOOT_PLAYMODE_MIRRORING;
+        public int BOOT_PLAYMODE_MISSION;
+        public int gameCallbackParam0;
+        public int gameCallbackParam1;
+        public int gameCallbackParam2;
+        public int gameCallbackParam3;
+        public int gameHudEnable;
+        public int HUDENABLE_OFF;
+        public int HUDENABLE_ON;
+        public int gameCoinMode;
+        public int gameForceKillPlayer;
+        public int gameMissionCondition;
+        public int MISSION_CONDITION_CLEAR;
+        public int MISSION_CONDITION_FAIL;
+        public int gameMissionFunctionNo;
+        public int gameMissionValue;
+        public int gameMissionEnd;
+        public int gameContinueFlag;
+        public int NOTIFY_SAVESLOT_SELECT;
+        public int NOTIFY_FUTURE_PAST;
+        public int NOTIFY_GOTO_FUTURE_PAST;
+        public int NOTIFY_BOSS_END;
+        public int NOTIFY_SPECIAL_END;
+        public int BOOT_PLAYMODE_STORY;
+        public int gameTitleCardDisable;
+        public int gameBossOneLife;
+        public int KILL_ENEMY_ATTR_ANIMALPRISON;
+        public int KILL_ENEMY_ATTR_SPINDASH;
+        public int KILL_ENEMY_ATTR_GLIDING;
+        public int NOTIFY_DEBUGPRINT;
+        public int NOTIFY_KILL_BOSS;
+        public int NOTIFY_TOUCH_EMERALD;
+        public int NOTIFY_STATS_ENEMY;
+        public int NOTIFY_STATS_CHARA_ACTION;
+        public int NOTIFY_STATS_RING;
+        public int NOTIFY_STATS_MOVIE;
+        public int NOTIFY_STATS_PARAM_1;
+        public int NOTIFY_STATS_PARAM_2;
+        public int StatsUsabilityParam1;
+        public int StatsUsabilityParam2;
+        public int StatsUsabilityParam3;
+        public int StatsUsabilityParam4;
+        public int StatsUsabilityParam5;
+        public int StageStatsUsabilityParam1;
+        public int StageStatsUsabilityParam2;
+        public int StageStatsUsabilityParam3;
+        public int StageStatsUsabilityParam4;
+        public int StageStatsUsabilityParam5;
+        public int NOTIFY_CHARACTER_SELECT;
+        public int gameCallbackResult;
+        public int NOTIFY_SPECIAL_RETRY;
+        public int NOTIFY_TOUCH_CHECKPOINT;
+        public int NOTIFY_ACT_FINISH;
+        public int NOTIFY_1P_VS_SELECT;
+        public int gameTitleMode;
+        public int NOTIFY_CONTROLLER_SUPPORT;
+        public int gameOneStageFlag;
+        public int NOTIFY_STAGE_RETRY;
+        public int recRing;
+        public int recScore;
+        public int NOTIFY_SOUND_TRACK;
+        public int NOTIFY_GOOD_ENDING;
+        public int NOTIFY_BACK_TO_MAINMENU;
+        public int NOTIFY_LEVEL_SELECT_MENU;
+        public int NOTIFY_PLAYER_SET;
+        public int NOTIFY_EXTRAS_MODE;
+        public int gameCheatEmeralds;
+        public int gameCoinCount;
+        public int gameStageskipped;
+        public int inputPressButton;
+        public int playerDeadResetRings;
+        public int gameTimeOver;
+        public int NOTIFY_TIME_OVER;
+        public int playerDropdashCount0;
+        public int playerDropdashCount1;
+        public int playerDropdashCount2;
+        public int playerDropdashCount3;
+        public int PLAYER_SONIC;
+        public int PLAYER_TAILS;
+        public int PLAYER_KNUCKLES;
+        public int PLAYER_SONIC_TAILS;
+        public int PLAYER_KNUCKLES_TAILS;
+        public int PLAYER_AMY;
+        public int PLAYER_AMY_TAILS;
+        public int ANI_HAMMER_JUMP;
+        public int ANI_HAMMER_DASH;
+        private int gameHasPlusDLC;
+        public int NOTIFY_STATS_CHARA_ACTION2;
+    }
+
+    public enum LegacyPlayer
+    {
+        Sonic,
+        Tails,
+        Knuckles,
+        SonicTails,
+        KnucklesTails,
+        Amy,
+        AmyTails
+    }
+
+    public enum S3KPlayer
+    {
+        None = (0 << 0),
+        Sonic = (1 << 0),
+        Tails = (1 << 1),
+        Knuckles = (1 << 2),
+        Amy = (1 << 3),
+        Mighty = (1 << 4), // Unused
+        Ray = (1 << 5) // Unused
+    }
+
+    public enum S3KMedalMod
+    {
+        DebugMode = (1 << 0),
+        AndKnuckles = (1 << 1),
+        SuperPeelOut = (1 << 2),
+        InstaShield = (1 << 3),
+        NoDropDash = (1 << 4),
+        NoTimeOver = (1 << 5),
+        NoLives = (1 << 6)
+    }
+
+    public enum S3KSecret
+    {
+        RickyMode = (1 << 0),
+        SuperDash = (1 << 1),
+        BarrelHotline = (1 << 2), // Unused
+        NormalPhysics2P = (1 << 3),
+        RegionSwap = (1 << 4),
+        CameraTracking = (1 << 5),
+        PenPenMode = (1 << 6),
+        RandomItems = (1 << 7),
+        BlueShield = (1 << 8),
+        Unknown = (1 << 9), // Unused
+        BananaMode = (1 << 10),
+        NoItems = (1 << 11),
+        HiddenCredits = (1 << 12)
     }
 }
-
-

@@ -1,0 +1,86 @@
+Library "Bridge.SetGlobalVariables" by "MegAmi"
+{
+    #include "Helpers" noemit
+
+    #lib "RSDK"
+
+    using System.Collections.Generic;
+
+    private static bool _isInitialised = false;
+
+    public static bool IsEnabledElementalS1 = false;
+    public static bool IsEnabledS2ItemsS1 = false;
+    public static bool IsEnabledSuperFormsS1 = false;
+
+    public static bool IsEnabledElementalS2 = false;
+    public static bool IsEnabledRandomS2 = false;
+    public static bool IsEnabledSuperTailsS2 = false;
+
+    UNMANAGED_FUNCTION(void, SetV4GlobalVariables)
+    {
+        if (RSDK.GetCurrentGame() == RSDK.Game.Sonic1)
+        {
+            var S1Globals = RSDK.GetSonic1Globals();
+
+            if (S1Globals == null)
+                return;
+
+            if (IsEnabledElementalS1)
+                S1Globals->optionsShieldType |= 2;
+            if (IsEnabledS2ItemsS1)
+                S1Globals->optionsShieldType |= 1;
+            if (IsEnabledSuperFormsS1)
+                S1Globals->optionsSuperStates = 1;
+        }
+        else
+        {
+            var S2Globals = RSDK.GetSonic2Globals();
+
+            if (S2Globals == null)
+                return;
+
+            if (IsEnabledElementalS2)
+                S2Globals->optionsShieldType |= 1;
+            if (IsEnabledRandomS2)
+                S2Globals->optionsShieldType |= 2;
+            if (IsEnabledSuperTailsS2)
+                S2Globals->optionsSuperTails = 1;
+        }
+
+        return;
+    }
+
+    [LibraryInitializer]
+    public void Init()
+    {
+        if (_isInitialised)
+            return;
+
+        WriteAsmHook
+        (
+            $@"
+                ; Original code, part 1
+                sub rsp, 0x20
+
+                ; Call the custom function
+                mov  rsi, {GET_UNMANAGED_FUNCTION_PTR(SetV4GlobalVariables)}
+                call rsi
+
+                ; Original code, part 2
+                xor ebx, ebx
+                mov rsi, rcx
+            ",
+
+            /* v2.0.2: 0x1400C7824 */
+            ScanSignature
+            (
+                "\x48\x83\xEC\x20\x33\xDB\x48\x8B\xF1",
+                "xxxxxxxxx"
+            ),
+
+            HookBehavior.Replace
+        );
+
+        _isInitialised = true;
+    }
+}

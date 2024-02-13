@@ -1,0 +1,16 @@
+Code "Enable Super Peel Out" in "Gameplay/Sonic 3 & Knuckles/Abilities/Sonic" by "MegAmi" does
+/*
+Enables Sonic's Super Peel Out move from Sonic CD.
+
+Notes;
+- Super/Hyper Sonic doesn't have an animation for the Super Peel Out, instead defaulting to his rolling animation.
+*/
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0xC2CB4) |= (int)RSDK.S3KMedalMod.SuperPeelOut;
+}

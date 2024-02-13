@@ -1,0 +1,42 @@
+Patch "Enable Blue Spheres Options in Title Screen" in "UI/Sonic 3 & Knuckles" by "MegAmi" does "Enables options to access Blue Spheres and New Blue Spheres from S3&K's title screen."
+{
+    // Set max option count when pressing down with Sound Test disabled
+    // 2.0.2: 0x1402F89BF
+    WriteProtected<byte>(
+        ScanSignature
+        (
+            "\xEB\x12\x41\x80\x79\x5B\x00\xB9\x01\x00\x00\x00\xB8\x03\x00\x00\x00",
+            "xxxxxxxxxxxxxxxxx"
+        ) + 0x08,
+        0x03);
+
+    // Set option to wrap to when pressing up from 1 Player with Sound Test disabled
+    // 2.0.2: 0x1402F8A50
+    WriteProtected<byte>(
+        ScanSignature
+        (
+            "\xEB\x8F\x41\x80\x79\x5B\x00\xB9\x01\x00\x00\x00\xB8\x03\x00\x00\x00",
+            "xxxxxxxxxxxxxxxxx"
+        ) + 0x08,
+        0x03);
+
+    // Disable checks when pressing down with Sound Test enabled
+    // 2.0.2: 0x1402F8990
+    WriteNop(
+        ScanSignature
+        (
+            "\x41\x80\x79\x5B\x00\x75\x13\x41\x80\x79\x5A\x02",
+            "xxxxxxxxxxxx"
+        ),
+        26);
+
+    // Disable checks when pressing up with Sound Test enabled
+    // 2.0.2: 0x1402F8A16
+    WriteNop(
+        ScanSignature
+        (
+            "\x41\x80\x79\x5B\x00\x75\x13\x41\x80\x79\x5A\x03",
+            "xxxxxxxxxxxx"
+        ),
+        26);
+}
