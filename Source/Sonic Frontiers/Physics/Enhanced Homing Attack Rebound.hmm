@@ -61,16 +61,16 @@ Notes;
 
     var lockonTarget = Player.Status.GetLockOnTarget();
 
-    if (lockonTarget == null)
-        return;
-
-    if (GameObject.GetGOC(lockonTarget, "GOCHealth") != null)
+    if (lockonTarget != null)
     {
-        isEnemy = true;
-    }
-    else
-    {
-        isEnemy = false;
+        if (GameObject.GetGOC(lockonTarget, "GOCHealth") != null)
+        {
+            isEnemy = true;
+        }
+        else
+        {
+            isEnemy = false;
+        }
     }
 
     if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateHomingFinished && Player.State.GetPreviousStateID<Sonic.StateID>() != Sonic.StateID.StateHomingAttackInStorm && !isDive)
