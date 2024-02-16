@@ -138,6 +138,18 @@ Notes;
 
     if (SonicParametersInfo.pData != null)
     {
+        //Restoring the ability to use combo skills out of Homing Attack only if the target is an enemy
+        RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[0], (isHomingAttack && isEnemy ? SonicParameters.Action.AcceleCombo1 : SonicParameters.Action.HomingAttack));
+        RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[1], (isHomingAttack && isEnemy ? SonicParameters.Action.ChargeAttack : SonicParameters.Action.Root));
+        RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[2], (isHomingAttack && isEnemy ? SonicParameters.Action.QuickCyloop : SonicParameters.Action.Root));
+        RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[3], (isHomingAttack && isEnemy ? SonicParameters.Action.SpinSlash : SonicParameters.Action.Root));
+        RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[4], (isHomingAttack && isEnemy ? SonicParameters.Action.Stomping : SonicParameters.Action.Root));
+        RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[5], (isHomingAttack && isEnemy ? SonicParameters.Action.SonicBoom : SonicParameters.Action.Root));
+        RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[0], (isHomingAttack && isEnemy ? SonicParameters.Action.AerialAcceleCombo1 : SonicParameters.Action.AerialHomingAttack));
+        RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[1], (isHomingAttack && isEnemy ? SonicParameters.Action.ChargeAttack : SonicParameters.Action.Root));
+        RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[2], (isHomingAttack && isEnemy ? SonicParameters.Action.AerialQuickCyloop : SonicParameters.Action.Root));
+        RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[4], (isHomingAttack && isEnemy ? SonicParameters.Action.Stomping : SonicParameters.Action.Root));
+        RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[5], (isHomingAttack && isEnemy ? SonicParameters.Action.SonicBoom : SonicParameters.Action.Root));
         RFL_SET_PARAM(SonicParametersInfo, common.commonPackage.attack.homingAttack.hitStopNameDead.pValue, 0);
         RFL_SET_PARAM(SonicParametersInfo, common.commonPackage.attack.homingAttackAir.hitStopNameDead.pValue, 0);
         RFL_SET_PARAM(SonicParametersInfo, forwardView.modePackage.homingAttack.sonicBounce.bounceHorzSpeed, 2.5f);
@@ -146,40 +158,12 @@ Notes;
         RFL_SET_CONTEXTUAL_PLAYER_PARAM(SonicParametersInfo, modePackage.homingAttack.sonicBounce.bounceVertSpeed, 17.0f);
         RFL_SET_CONTEXTUAL_PLAYER_PARAM(SonicParametersInfo, modePackage.homingAttack.sonicBounceWeak.bounceVertSpeed, 12.0f);
         RFL_SET_CONTEXTUAL_PLAYER_PARAM(SonicParametersInfo, modePackage.homingAttack.sonicBounceWeak.bounceHorzSpeed, 10.0f);
-
-        if (isEnemy)
-        {
-            //Restoring the ability to use combo skills out of Homing Attack only if the target is an enemy
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[0], (isHomingAttack ? SonicParameters.Action.AcceleCombo1 : SonicParameters.Action.HomingAttack));
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[1], (isHomingAttack ? SonicParameters.Action.ChargeAttack : SonicParameters.Action.Root));
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[2], (isHomingAttack ? SonicParameters.Action.QuickCyloop : SonicParameters.Action.Root));
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[3], (isHomingAttack ? SonicParameters.Action.SpinSlash : SonicParameters.Action.Root));
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[4], (isHomingAttack ? SonicParameters.Action.Stomping : SonicParameters.Action.Root));
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[5], (isHomingAttack ? SonicParameters.Action.SonicBoom : SonicParameters.Action.Root));
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[0], (isHomingAttack ? SonicParameters.Action.AerialAcceleCombo1 : SonicParameters.Action.AerialHomingAttack));
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[1], (isHomingAttack ? SonicParameters.Action.ChargeAttack : SonicParameters.Action.Root));
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[2], (isHomingAttack ? SonicParameters.Action.AerialQuickCyloop : SonicParameters.Action.Root));
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[4], (isHomingAttack ? SonicParameters.Action.Stomping : SonicParameters.Action.Root));
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[5], (isHomingAttack ? SonicParameters.Action.SonicBoom : SonicParameters.Action.Root));
-        }
-        else
-        {
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[0], SonicParameters.Action.HomingAttack);
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[1], SonicParameters.Action.Root);
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[2], SonicParameters.Action.Root);
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[3], SonicParameters.Action.Root);
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[4], SonicParameters.Action.Root);
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[5], SonicParameters.Action.Root);
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[0], SonicParameters.Action.AerialHomingAttack);
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[1], SonicParameters.Action.Root);
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[2], SonicParameters.Action.Root);
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[4], SonicParameters.Action.Root);
-            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[5], SonicParameters.Action.Root);
-        }
     }
 
     if (AmyParametersInfo.pData != null)
     {
+        RFL_SET_PARAM(AmyParametersInfo, common.combo.comboTable.root.transitExistTarget[0], (isHomingAttack && isEnemy ? AmyParameters.Action.AmyTarotAttack : AmyParameters.Action.HomingAttack));
+        RFL_SET_PARAM(AmyParametersInfo, common.combo.comboTable.root.transitInAir[0], (isHomingAttack && isEnemy ? AmyParameters.Action.AmyTarotAttack : AmyParameters.Action.HomingAttack));
         RFL_SET_PARAM(AmyParametersInfo, common.commonPackage.attack.homingAttack.hitStopNameDead.pValue, 0);
         RFL_SET_PARAM(AmyParametersInfo, common.commonPackage.attack.homingAttackAir.hitStopNameDead.pValue, 0);
         RFL_SET_PARAM(AmyParametersInfo, forwardView.modePackage.homingAttack.sonicBounce.bounceVertSpeed, 17.0f);
@@ -190,21 +174,14 @@ Notes;
         RFL_SET_PARAM(AmyParametersInfo, cyberspaceSV.modePackage.homingAttack.sonicBounce.bounceHorzSpeed, -2.5f);
         RFL_SET_PARAM(AmyParametersInfo, cyberspaceSV.modePackage.homingAttack.sonicBounceWeak.bounceVertSpeed, 12.0f);
         RFL_SET_PARAM(AmyParametersInfo, cyberspaceSV.modePackage.homingAttack.sonicBounceWeak.bounceHorzSpeed, 10.0f);
-
-        if (isEnemy)
-        {
-            RFL_SET_PARAM(AmyParametersInfo, common.combo.comboTable.root.transitExistTarget[0], (isHomingAttack ? AmyParameters.Action.AmyTarotAttack : AmyParameters.Action.HomingAttack));
-            RFL_SET_PARAM(AmyParametersInfo, common.combo.comboTable.root.transitInAir[0], (isHomingAttack ? AmyParameters.Action.AmyTarotAttack : AmyParameters.Action.HomingAttack));
-        }
-        else
-        {
-            RFL_SET_PARAM(AmyParametersInfo, common.combo.comboTable.root.transitExistTarget[0], AmyParameters.Action.HomingAttack);
-            RFL_SET_PARAM(AmyParametersInfo, common.combo.comboTable.root.transitInAir[0], AmyParameters.Action.HomingAttack);
-        }
     }
 
     if (KnucklesParametersInfo.pData != null)
     {
+        RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitExistTarget[0], (isHomingAttack && isEnemy ? KnucklesParameters.Action.KnucklesPunch1 : KnucklesParameters.Action.HomingAttack));
+        RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitExistTarget[4], (isHomingAttack && isEnemy ? KnucklesParameters.Action.Stomping : KnucklesParameters.Action.Root));
+        RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitInAir[0], (isHomingAttack && isEnemy ? KnucklesParameters.Action.KnucklesPunch1 : KnucklesParameters.Action.HomingAttack));
+        RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitInAir[4], (isHomingAttack && isEnemy ? KnucklesParameters.Action.Stomping : KnucklesParameters.Action.Root));
         RFL_SET_PARAM(KnucklesParametersInfo, common.commonPackage.attack.homingAttack.hitStopNameDead.pValue, 0);
         RFL_SET_PARAM(KnucklesParametersInfo, common.commonPackage.attack.homingAttackAir.hitStopNameDead.pValue, 0);
         RFL_SET_PARAM(KnucklesParametersInfo, forwardView.modePackage.homingAttack.sonicBounce.bounceVertSpeed, 17.0f);
@@ -215,20 +192,5 @@ Notes;
         RFL_SET_PARAM(KnucklesParametersInfo, cyberspaceSV.modePackage.homingAttack.sonicBounce.bounceHorzSpeed, -2.5f);
         RFL_SET_PARAM(KnucklesParametersInfo, cyberspaceSV.modePackage.homingAttack.sonicBounceWeak.bounceVertSpeed, 12.0f);
         RFL_SET_PARAM(KnucklesParametersInfo, cyberspaceSV.modePackage.homingAttack.sonicBounceWeak.bounceHorzSpeed, 10.0f);
-
-        if (isEnemy)
-        {
-            RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitExistTarget[0], (isHomingAttack ? KnucklesParameters.Action.KnucklesPunch1 : KnucklesParameters.Action.HomingAttack));
-            RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitExistTarget[4], (isHomingAttack ? KnucklesParameters.Action.Stomping : KnucklesParameters.Action.Root));
-            RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitInAir[0], (isHomingAttack ? KnucklesParameters.Action.KnucklesPunch1 : KnucklesParameters.Action.HomingAttack));
-            RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitInAir[4], (isHomingAttack ? KnucklesParameters.Action.Stomping : KnucklesParameters.Action.Root));
-        }
-        else
-        {
-            RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitExistTarget[0], (KnucklesParameters.Action.HomingAttack));
-            RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitExistTarget[4], (KnucklesParameters.Action.Root));
-            RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitInAir[0], (KnucklesParameters.Action.HomingAttack));
-            RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitInAir[4], (KnucklesParameters.Action.Root));
-        }
     }
 }
