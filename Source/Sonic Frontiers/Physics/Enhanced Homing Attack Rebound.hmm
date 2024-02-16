@@ -162,6 +162,20 @@ Notes;
             RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[4], (isHomingAttack ? SonicParameters.Action.Stomping : SonicParameters.Action.Root));
             RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[5], (isHomingAttack ? SonicParameters.Action.SonicBoom : SonicParameters.Action.Root));
         }
+        else
+        {
+            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[0], SonicParameters.Action.HomingAttack);
+            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[1], SonicParameters.Action.Root);
+            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[2], SonicParameters.Action.Root);
+            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[3], SonicParameters.Action.Root);
+            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[4], SonicParameters.Action.Root);
+            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitExistTarget[5], SonicParameters.Action.Root);
+            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[0], SonicParameters.Action.AerialHomingAttack);
+            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[1], SonicParameters.Action.Root);
+            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[2], SonicParameters.Action.Root);
+            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[4], SonicParameters.Action.Root);
+            RFL_SET_PARAM(SonicParametersInfo, common.combo.comboTable.root.transitInAir[5], SonicParameters.Action.Root);
+        }
     }
 
     if (AmyParametersInfo.pData != null)
@@ -181,6 +195,11 @@ Notes;
         {
             RFL_SET_PARAM(AmyParametersInfo, common.combo.comboTable.root.transitExistTarget[0], (isHomingAttack ? AmyParameters.Action.AmyTarotAttack : AmyParameters.Action.HomingAttack));
             RFL_SET_PARAM(AmyParametersInfo, common.combo.comboTable.root.transitInAir[0], (isHomingAttack ? AmyParameters.Action.AmyTarotAttack : AmyParameters.Action.HomingAttack));
+        }
+        else
+        {
+            RFL_SET_PARAM(AmyParametersInfo, common.combo.comboTable.root.transitExistTarget[0], AmyParameters.Action.HomingAttack);
+            RFL_SET_PARAM(AmyParametersInfo, common.combo.comboTable.root.transitInAir[0], AmyParameters.Action.HomingAttack);
         }
     }
 
@@ -203,6 +222,13 @@ Notes;
             RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitExistTarget[4], (isHomingAttack ? KnucklesParameters.Action.Stomping : KnucklesParameters.Action.Root));
             RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitInAir[0], (isHomingAttack ? KnucklesParameters.Action.KnucklesPunch1 : KnucklesParameters.Action.HomingAttack));
             RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitInAir[4], (isHomingAttack ? KnucklesParameters.Action.Stomping : KnucklesParameters.Action.Root));
+        }
+        else
+        {
+            RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitExistTarget[0], (KnucklesParameters.Action.HomingAttack));
+            RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitExistTarget[4], (KnucklesParameters.Action.Root));
+            RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitInAir[0], (KnucklesParameters.Action.HomingAttack));
+            RFL_SET_PARAM(KnucklesParametersInfo, common.combo.comboTable.root.transitInAir[4], (KnucklesParameters.Action.Root));
         }
     }
 }
