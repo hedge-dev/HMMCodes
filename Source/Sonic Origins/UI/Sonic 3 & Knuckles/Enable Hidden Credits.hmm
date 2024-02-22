@@ -1,0 +1,22 @@
+Patch "Enable Hidden Credits" in "UI/Sonic 3 & Knuckles" by "MegAmi" does "Enables hidden credits for the S3&K remaster before the SEGA logo."
+{
+    // Load the sprite
+    // 2.0.2: 0x1402F7110
+    WriteNop(
+        ScanSignature
+        (
+            "\xF7\x80\xF0\x33\x4C\x00\x00\x10\x00\x00\x74\x39",
+            "xxxxxxxxxxxx"
+        ) + 0x0A,
+        2);
+
+    // Show the credits
+    // 2.0.2: 0x1402F825F
+    WriteProtected<byte>(
+        ScanSignature
+        (
+            "\xF7\x80\xF0\x33\x4C\x00\x00\x10\x00\x00\x75\x18",
+            "xxxxxxxxxxxx"
+        ) + 0x0A,
+        0xEB);
+}
