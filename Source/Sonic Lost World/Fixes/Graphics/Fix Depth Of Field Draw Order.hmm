@@ -1,4 +1,4 @@
-Patch "Fix Depth of Field Draw Order" in "Fixes/Graphics" by "Sajid" does "Changes the pseudo-dof implementation of the game into the proper one seen on Wii U." 
+Patch "Fix Depth of Field Draw Order" in "Fixes/Graphics" by "Sajid & ĐeäTh" does "Changes the pseudo-dof implementation of the game into the proper one seen on Wii U." 
 static int p_DofRes = (int)ASLR(0x00FEFC7C);
 static int p_GrassRes = (int)ASLR(0x00FB6D1C);
 static int p_ShadowRes = (int)ASLR(0x00FB6D1D);
@@ -6,8 +6,9 @@ static int p_RetAddress = (int)ASLR(0x00904E94);
 
 WriteAsmHook
 (
-    $@"mov BYTE PTR [edi+28Ch], 0
-    movzx eax,byte ptr [{p_DofRes}]
+    $@"mov al, byte ptr [edi+28Ch]
+    mov dl, [{p_DofRes}]
+    and al, dl
     mov [edi+28Ch], al
     cmp byte ptr [{p_GrassRes}], 0
     sete cl
