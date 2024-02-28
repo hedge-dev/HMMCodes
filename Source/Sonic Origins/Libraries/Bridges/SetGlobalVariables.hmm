@@ -20,31 +20,21 @@ Library "Bridge.SetGlobalVariables" by "MegAmi"
     {
         if (RSDK.GetCurrentGame() == RSDK.Game.Sonic1)
         {
-            var S1Globals = RSDK.GetSonic1Globals();
-
-            if (S1Globals == null)
-                return;
-
             if (IsEnabledElementalS1)
-                S1Globals->optionsShieldType |= 2;
+                RSDK.SetLegacyGlobalByName("options.shieldType", RSDK.GetLegacyGlobalByName("options.shieldType") | 2);
             if (IsEnabledS2ItemsS1)
-                S1Globals->optionsShieldType |= 1;
+                RSDK.SetLegacyGlobalByName("options.shieldType", RSDK.GetLegacyGlobalByName("options.shieldType") | 1);
             if (IsEnabledSuperFormsS1)
-                S1Globals->optionsSuperStates = 1;
+                RSDK.SetLegacyGlobalByName("options.superStates", 1);
         }
         else
         {
-            var S2Globals = RSDK.GetSonic2Globals();
-
-            if (S2Globals == null)
-                return;
-
             if (IsEnabledElementalS2)
-                S2Globals->optionsShieldType |= 1;
+                RSDK.SetLegacyGlobalByName("options.shieldType", RSDK.GetLegacyGlobalByName("options.shieldType") | 1);
             if (IsEnabledRandomS2)
-                S2Globals->optionsShieldType |= 2;
+                RSDK.SetLegacyGlobalByName("options.shieldType", RSDK.GetLegacyGlobalByName("options.shieldType") | 2);
             if (IsEnabledSuperTailsS2)
-                S2Globals->optionsSuperTails = 1;
+                RSDK.SetLegacyGlobalByName("options.superTails", 1);
         }
 
         return;
