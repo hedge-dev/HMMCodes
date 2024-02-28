@@ -147,7 +147,9 @@ Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
 
     public void SetLegacyGlobalByName(string name, int value)
     {
-        if (GetEngineVersion() == 3)
+        if (name.Equals("game.hasPlusDLC", StringComparison.OrdinalIgnoreCase)) // Prevent setting the DLC flag
+            return;
+        else if (GetEngineVersion() == 3)
             *(int*)(GetRSDKv3DataPtr() + (GetLegacyGlobalID(name) * 4)) = value;
         else if (GetEngineVersion() == 4)
             *(int*)(GetRSDKv4DataPtr() + (GetLegacyGlobalID(name) * 4)) = value;
