@@ -1,0 +1,65 @@
+Patch "Force Open Zone Forward View Physics" in "Physics/Cyber Space" by "NM" does
+/*
+Forces the game to use the Open Zone's Forward View (3D) physics over the Cyber Space-specific 3D physics.
+
+Known Issues:
+- Entering a Rocket Boost will cause the player to lose gravity.
+- Certain auto-run sections (i.e loops) may cause the player to fling off of terrain.
+*/
+//
+    #include "Helpers" noemit
+
+    #import "GOComponents"
+//
+{
+    /* 0x1408B2E14 `app::player::GOCPlayerParameter::GetPlayerParameter` */
+    long address = ScanSignature("\x48\x63\x83\xB8\x00\x00\x00", "xxxxxxx");
+
+    // TODO: Switch to direct RflClass comparison once code library implementation is made
+    string instructions = @$"
+        movsxd rax, dword ptr [rbx + 0xB8]
+        lea r8, [rbp - 40h]
+        mov r9, rsi
+
+        cmp rax, {(int)(GOCPlayerParameter.ModePackageType.CyberSpace)}
+        jnz End
+    CyberSpaceModePackage:
+        push rbx
+        push rcx
+        push rdx
+        push rsi
+        mov  rbx, 0
+
+        ; RDX points to an `app::rfl::RflClass`
+        ; The beginning offset of this class is a pointer to the class name; we'll want to compare that against PlayerParamCyberMode
+        ; If both strings match, we'll want to prefer the Cyber Space ForwardView; the open zone ForwardView doesn't have the parameters
+        ; set correctly
+        mov rdx, [rdx]
+    NameComparison:
+        movsx rcx, byte ptr [rbx + rdx]
+        movsx rsi, byte ptr [rbx + {TO_STRING_PTR("PlayerParamCyberMode")}]
+        cmp   rcx, rsi
+        jnz   MatchFailed
+
+        inc rbx
+
+        ; 14h = End of PlayerParamCyberMode
+        cmp rbx, 14h
+        jnz NameComparison
+
+        jmp MatchSuccess
+    MatchFailed:
+        ; Since we're not dealing with Cyber Space-specific parameters, force the ForwardView ModePackage
+        mov rax, {(int)(GOCPlayerParameter.ModePackageType.ForwardView)}
+    MatchSuccess:
+        ; Keep the ModePackageType (rax) the same, effectively making it pull from the Cyber Space parameters
+    Cleanup:
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rbx
+    End:
+    ";
+
+    WriteAsmHook(instructions, address, HookBehavior.Replace);
+}
