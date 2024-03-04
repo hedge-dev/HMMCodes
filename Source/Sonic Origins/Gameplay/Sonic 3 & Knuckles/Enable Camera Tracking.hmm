@@ -1,0 +1,10 @@
+Code "Enable Camera Tracking" in "Gameplay/Sonic 3 & Knuckles" by "HarperMeows" does "Enables the cheat that increases the camera's top speed. The player is unable to outrun the camera, similar to how it behaves in the original Sonic 3 & Knuckles."
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33F0) |= (int)RSDK.S3KSecret.CameraTracking;
+}
