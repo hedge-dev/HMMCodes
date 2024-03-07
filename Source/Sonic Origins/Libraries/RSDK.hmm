@@ -99,7 +99,7 @@ Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
         else if (GetEngineVersion() == 4) // RSDKv4
         {
             // Check datafile name to see if this is Sonic 1 or 2
-            if (*(char*)(_pRSDKDataPath + 0x0B) == '1')
+            if (Helpers.PtrToStringUTF8(_pRSDKDataPath) == "retro/Sonic1u.rsdk")
                 return Game.Sonic1;
             else
                 return Game.Sonic2;
