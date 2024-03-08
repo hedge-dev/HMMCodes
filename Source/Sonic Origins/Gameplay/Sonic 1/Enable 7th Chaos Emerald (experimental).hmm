@@ -9,8 +9,8 @@ Known issues;
 - Obtained Chaos Emeralds in save files will not be saved.
 */
 //
-    #lib "Bridge.SetGlobalVariables"
+    #lib "GameStartup"
 //
 {
-    Bridge.SetGlobalVariables.IsEnabledSuperFormsS1 = true;
+    GameStartup.SetStartupVariable(RSDK.Game.Sonic1, "options.superStates", 1);
 }

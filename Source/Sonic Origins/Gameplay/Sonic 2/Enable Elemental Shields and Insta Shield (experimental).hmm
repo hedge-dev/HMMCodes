@@ -6,8 +6,8 @@ Known issues;
 - Progress in save files will not be saved.
 */
 //
-    #lib "Bridge.SetGlobalVariables"
+    #lib "GameStartup"
 //
 {
-    Bridge.SetGlobalVariables.IsEnabledElementalS2 = true;
+    GameStartup.SetStartupVariable(RSDK.Game.Sonic2, "options.shieldType", 1, true);
 }
