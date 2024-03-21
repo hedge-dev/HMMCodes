@@ -1,6 +1,7 @@
 Patch "Higher Resolution Steam Profile Picture" in "Graphics" by "Skyth" does "Changes the Steam Profile Picture from the Medium (64px) size one to the Large (184px) one on the Main Menu."
 WriteProtected<byte>(ASLR(0x52528E), 0x90);
 
+WriteNop(ASLR(0x525376), 0x6);
 WriteAsmHook(@"
 mov esi, [ebp - 0x10]
 imul esi, [ebp - 0x1C]
@@ -8,4 +9,6 @@ mov ebx, ecx
 shl ebx, 2
 add esi, ebx
 add esi, [ebp - 0x18]
-", ASLR(0x525376), HookBehavior.After);
+mov bl, [eax + 3]
+movzx ebx, bl
+", ASLR(0x525376), HookBehavior.Replace);
