@@ -1,0 +1,3974 @@
+Library "XInput" by "Hyper" 
+{
+    #lib "MathHelpers"
+
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+    using System.Runtime.InteropServices;
+
+    [DllImport("xinput1_4.dll", EntryPoint = "XInputGetState")]
+    public extern int XInputGetState(int in_dwUserIndex, ref State in_pState);
+    
+    [DllImport("xinput1_4.dll", EntryPoint = "XInputSetState")]
+    public extern int XInputSetState(int in_dwUserIndex, ref Vibration in_pVibration);
+
+    public const short XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE = 7849;
+    public const short XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE = 8689;
+
+    private static float _leftMotorSpeed = 0.0f;
+    private static float _rightMotorSpeed = 0.0f;
+
+    [Flags]
+    public enum Buttons : ushort
+    {
+        DPAD_UP        = 0x0001,
+        DPAD_DOWN      = 0x0002,
+        DPAD_LEFT      = 0x0004,
+        DPAD_RIGHT     = 0x0008,
+        START          = 0x0010,
+        BACK           = 0x0020,
+        LEFT_THUMB     = 0x0040,
+        RIGHT_THUMB    = 0x0080,
+        LEFT_SHOULDER  = 0x0100,
+        RIGHT_SHOULDER = 0x0200,
+        A              = 0x1000,
+        B              = 0x2000,
+        X              = 0x4000,
+        Y              = 0x8000
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct State
+    {
+        public int dwPacketNumber;
+        public Gamepad Gamepad;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Gamepad
+    {
+        public Buttons wButtons;
+        public byte bLeftTrigger;
+        public byte bRightTrigger;
+        public short sThumbLX;
+        public short sThumbLY;
+        public short sThumbRX;
+        public short sThumbRY;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Vibration
+    {
+        public ushort wLeftMotorSpeed;
+        public ushort wRightMotorSpeed;
+
+        public Vibration(ushort in_leftMotorSpeed, ushort in_rightMotorSpeed)
+        {
+            wLeftMotorSpeed = in_leftMotorSpeed;
+            wRightMotorSpeed = in_rightMotorSpeed;
+
+            _leftMotorSpeed = in_leftMotorSpeed / 65535.0f;
+            _rightMotorSpeed = in_rightMotorSpeed / 65535.0f;
+        }
+
+        public Vibration(float in_leftMotorSpeed, float in_rightMotorSpeed)
+        {
+            wLeftMotorSpeed = MathHelpers.FloatPercentToRange<ushort>(in_leftMotorSpeed);
+            wRightMotorSpeed = MathHelpers.FloatPercentToRange<ushort>(in_rightMotorSpeed);
+
+            _leftMotorSpeed = in_leftMotorSpeed;
+            _rightMotorSpeed = in_rightMotorSpeed;
+        }
+
+        public Vibration(ushort in_motorSpeed)
+        {
+            wLeftMotorSpeed = wRightMotorSpeed = in_motorSpeed;
+            _leftMotorSpeed = _rightMotorSpeed = in_motorSpeed / 65535.0f;
+        }
+
+        public Vibration(float in_motorSpeed)
+        {
+            wLeftMotorSpeed = wRightMotorSpeed = MathHelpers.FloatPercentToRange<ushort>(in_motorSpeed);
+            _leftMotorSpeed = _rightMotorSpeed = in_motorSpeed;
+        }
+    }
+
+    public State? GetState()
+    {
+        var pState = new State();
+
+        if (XInputGetState(0, ref pState) != 0)
+            return null;
+
+        return pState;
+    }
+
+    public void SetState(Vibration in_vibration)
+    {
+        XInputSetState(0, ref in_vibration);
+    }
+
+    public Vector2 GetAnalog(int in_analogIndex, bool in_isTestDeadzone = true)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return Vector2.Zero;
+
+        Vector2 v = Vector2.Zero;
+
+        switch (in_analogIndex)
+        {
+            case 0:
+                v = new Vector2(pState.Value.Gamepad.sThumbLX / 32767.0f, pState.Value.Gamepad.sThumbLY / 32767.0f);
+                break;
+
+            case 1:
+                v = new Vector2(pState.Value.Gamepad.sThumbRX / 32767.0f, pState.Value.Gamepad.sThumbRY / 32767.0f);
+                break;
+        }
+
+        if (in_isTestDeadzone)
+        {
+            v = IsAnalogNeutral(in_analogIndex)
+                ? Vector2.Zero
+                : v;
+        }
+
+        return v;
+    }
+
+    // Use Player.Input for keyboard parity!
+    public bool IsButtonDown(Buttons in_buttons)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return false;
+
+        return (pState.Value.Gamepad.wButtons & in_buttons) != 0;
+    }
+
+    public float GetTrigger(int in_triggerIndex)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return 0;
+
+        switch (in_triggerIndex)
+        {
+            case 0:
+                return pState.Value.Gamepad.bLeftTrigger / 255.0f;
+
+            case 1:
+                return pState.Value.Gamepad.bRightTrigger / 255.0f;
+        }
+
+        return 0;
+    }
+
+    public bool IsAnalogNeutral(int in_analogIndex)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return true;
+
+        switch (in_analogIndex)
+        {
+            case 0:
+            {
+                short x = pState.Value.Gamepad.sThumbLX;
+                short y = pState.Value.Gamepad.sThumbLY;
+
+                return x < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+                    x > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+                    y < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+                    y > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE;
+            }
+
+            case 1:
+            {
+                short x = pState.Value.Gamepad.sThumbRX;
+                short y = pState.Value.Gamepad.sThumbRY;
+
+                return x < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+                    x > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+                    y < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+                    y > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;
+            }
+        }
+
+        return true;
+    }
+
+    public Vibration GetVibration()
+    {
+        return new Vibration(_leftMotorSpeed, _rightMotorSpeed);
+    }
+
+    public void SetVibration(float in_value)
+    {
+        SetState(new Vibration(in_value));
+    }
+
+    public void SetVibration(int in_motorIndex, float in_value)
+    {
+        switch (in_motorIndex)
+        {
+            case 0:
+            {
+                SetState(new Vibration(in_value, _rightMotorSpeed));
+                break;
+            }
+
+            case 1:
+            {
+                SetState(new Vibration(_leftMotorSpeed, in_value));
+                break;
+            }
+        }
+    }
+}
+
+
+
+Library "VectorHelpers" by "Hyper" 
+{
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+
+    public static Vector3 ClampMagnitude(Vector3 in_vector, float in_maxMagnitude)
+    {
+        if (in_vector.Length() > in_maxMagnitude * in_maxMagnitude)
+            return Vector3.Normalize(in_vector) * in_maxMagnitude;
+
+        return in_vector;
+    }
+
+    public static Vector3 GetForward(Quaternion in_rotation)
+    {
+        return Vector3.Transform(Vector3.UnitZ, Quaternion.Normalize(in_rotation));
+    }
+
+    public static float GetMagnitude(Vector3 in_velocity)
+    {
+        return in_velocity.Length();
+    }
+
+    public static float GetHorizontalMagnitude(Vector3 in_velocity)
+    {
+        return (float)Math.Sqrt(in_velocity.X * in_velocity.X + in_velocity.Z * in_velocity.Z);
+    }
+
+    public static float GetVerticalMagnitude(Vector3 in_velocity)
+    {
+        return in_velocity.Y;
+    }
+
+    public static Quaternion LookRotation(Vector3 in_forward, Vector3 in_upward)
+    {
+        in_forward = Vector3.Normalize(in_forward);
+        in_upward = Vector3.Normalize(in_upward);
+
+        var right = Vector3.Cross(in_upward, in_forward);
+        in_upward = Vector3.Cross(in_forward, right);
+
+        var m = new Matrix4x4
+        (
+            right.X,      right.Y,      right.Z,      0.0f,
+            in_upward.X,  in_upward.Y,  in_upward.Z,  0.0f,
+            in_forward.X, in_forward.Y, in_forward.Z, 0.0f,
+            0.0f,         0.0f,         0.0f,         1.0f
+        );
+
+        return Quaternion.CreateFromRotationMatrix(m);
+    }
+
+    public static Quaternion LookRotation(Vector3 in_forward)
+    {
+        return LookRotation(in_forward, Vector3.UnitY);
+    }
+}
+Library "HMM" by "Hyper"
+{
+    #lib "INI"
+
+    using Microsoft.Win32;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Reflection;
+    using System.Threading;
+
+    public string GetGameDirectory()
+    {
+        return Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+    }
+
+    public Dictionary<string, Dictionary<string, string>> GetModsDatabase()
+    {
+        string cpkredirCfgPath = Path.Combine(GetGameDirectory(), "cpkredir.ini");
+        
+        if (!File.Exists(cpkredirCfgPath))
+            return new();
+
+        var cpkredirCfg = INI.Read(cpkredirCfgPath);
+        string modsDbPath = cpkredirCfg["CPKREDIR"]["ModsDbIni"];
+
+        if (!File.Exists(modsDbPath))
+            return new();
+
+        return INI.Read(modsDbPath);
+    }
+
+    public List<Mod> GetMods()
+    {
+        List<Mod> result = new();
+
+        var modsDb = GetModsDatabase();
+
+        if (modsDb.Count <= 0)
+            return result;
+        
+        int activeModCount = INI.Parse<int>(modsDb["Main"]["ActiveModCount"], 0);
+
+        foreach (var entry in modsDb["Mods"].Keys)
+        {
+            for (int i = 0; i < activeModCount; i++)
+            {
+                if (modsDb["Main"][$"ActiveMod{i}"].Contains(entry))
+                {
+                    result.Add(new Mod(modsDb["Mods"][entry]));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public Mod GetModByID(string in_id)
+    {
+        foreach (var mod in GetMods())
+        {
+            if (mod.ID == in_id)
+                return mod;
+        }
+
+        return null;
+    }
+
+    public List<Mod> FindModsByName(string name)
+    {
+        List<Mod> result = new();
+
+        foreach (var mod in GetMods())
+        {
+            if (mod.Name.Contains(name))
+            {
+                result.Add(mod);
+            }
+        }
+
+        return result;
+    }
+
+    public List<string> GetCodes()
+    {
+        List<string> result = new();
+
+        var modsDb = GetModsDatabase();
+
+        if (modsDb == null)
+            return result;
+
+        foreach (var value in modsDb["Codes"].Values)
+            result.Add(value);
+
+        return result;
+    }
+
+    public class Mod
+    {
+        public string Name { get; set; }
+        public string Version { get; set; }
+        public string Author { get; set; }
+        public string Description { get; set; }
+        public string Date { get; set; }
+        public string AuthorURL { get; set; }
+        public string UpdateServer { get; set; }
+        public string SaveFile { get; set; }
+        public string ID { get; set; }
+        public List<string> IncludeDirs { get; set; } = new();
+        public List<ModDependency> Dependencies { get; set; } = new();
+        public string DLLFile { get; set; }
+        public string CodeFile { get; set; }
+        public string ConfigSchemaFile { get; set; }
+
+        public string Path { get; set; }
+        public Dictionary<string, Dictionary<string, string>> Ini { get; set; } = new();
+
+        public Mod(string modIniPath)
+        {
+            var ini = INI.Read(modIniPath);
+
+            if (ini == null)
+                return;
+
+            Name             = INI.GetField<string>(ini, "Desc", "Title", Name);
+            Version          = INI.GetField<string>(ini, "Desc", "Version", Version);
+            Author           = INI.GetField<string>(ini, "Desc", "Author", Author);
+            Description      = INI.GetField<string>(ini, "Desc", "Description", Description);
+            Date             = INI.GetField<string>(ini, "Desc", "Date", Date);
+            AuthorURL        = INI.GetField<string>(ini, "Desc", "AuthorURL", AuthorURL);
+            UpdateServer     = INI.GetField<string>(ini, "Main", "UpdateServer", UpdateServer);
+            SaveFile         = INI.GetField<string>(ini, "Main", "SaveFile", SaveFile);
+            ID               = INI.GetField<string>(ini, "Main", "ID", ID);
+            DLLFile          = INI.GetField<string>(ini, "Main", "DLLFile", DLLFile);
+            CodeFile         = INI.GetField<string>(ini, "Main", "CodeFile", CodeFile);
+            ConfigSchemaFile = INI.GetField<string>(ini, "Main", "ConfigSchemaFile", ConfigSchemaFile);
+
+            Path             = System.IO.Path.GetDirectoryName(modIniPath);
+            Ini              = ini;
+
+            int includeDirCount = INI.GetField<int>(ini, "Main", "IncludeDirCount", 1);
+
+            for (int i = 0; i < includeDirCount; i++)
+                IncludeDirs.Add(INI.GetField<string>(ini, "Main", $"IncludeDir{i}", "."));
+
+            int dependencyCount = INI.GetField<int>(ini, "Main", "DependsCount", 0);
+
+            for (int i = 0; i < dependencyCount; i++)
+                Dependencies.Add(new ModDependency(INI.GetField<string>(ini, "Main", $"Depends{i}", "")));
+        }
+    }
+
+    public class ModDependency
+    {
+        public string ID { get; set; }
+
+        public string Name { get; set; }
+        
+        public string Link { get; set; }
+
+        public string Version { get; set; }
+
+        public ModDependency(string in_id, string in_name, string in_link, string in_version)
+        {
+            ID = in_id;
+            Name = in_name;
+            Link = in_link;
+            Version = in_version;
+        }
+
+        public ModDependency(string in_csv)
+        {
+            var fields = in_csv.Split('|');
+
+            for (int i = 0; i < fields.Length; i++)
+            {
+                switch (i)
+                {
+                    case 0:
+                        ID = fields[i];
+                        break;
+
+                    case 1:
+                        Name = fields[i];
+                        break;
+
+                    case 2:
+                    {
+                        if (fields.Length > 2)
+                        {
+                            Link = fields[i];
+                        }
+                        else
+                        {
+                            Version = fields[i];
+                        }
+
+                        break;
+                    }
+
+                    case 3:
+                        Version = fields[i];
+                        break;
+                }
+            }
+        }
+    }
+
+    public static class RegistryConfig
+    {
+        public static string ConfigPath { get; } = @"SOFTWARE\HEDGEMM";
+
+        public static bool CheckLoaderUpdates { get; set; } = true;
+        public static bool CheckManagerUpdates { get; set; } = true;
+        public static bool CheckModUpdates { get; set; } = true;
+        public static int CodesSortingColumnIndex { get; set; } = 1;
+        public static bool CodesUseTreeView { get; set; } = true;
+        public static string ExecutablePath { get; set; }
+        public static string ExtraGameDirectories { get; set; }
+        public static bool KeepOpen { get; set; } = true;
+        public static string LastGameDirectory { get; set; }
+        public static string UILanguage { get; set; }
+        public static string UITheme { get; set; }
+        public static bool UpdateCodesOnLaunch { get; set; } = true;
+
+        static RegistryConfig()
+        {
+            Load();
+        }
+
+        public static void Load()
+        {
+            var personalizeKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+
+            bool isLightTheme = false;
+            if (personalizeKey != null)
+            {
+                var useLightThemeStr = personalizeKey.GetValue("AppsUseLightTheme", 0)?.ToString();
+
+                if (int.TryParse(useLightThemeStr, out int out_isLightTheme))
+                    isLightTheme = out_isLightTheme != 0;
+
+                personalizeKey.Close();
+            }
+
+            var key = Registry.CurrentUser.CreateSubKey(ConfigPath);
+
+            LastGameDirectory       = (string)key.GetValue("LastGame", string.Empty);
+            ExtraGameDirectories    = (string)key.GetValue(nameof(ExtraGameDirectories), string.Empty);
+            UILanguage              = (string)key.GetValue(nameof(UILanguage), Thread.CurrentThread.CurrentCulture.Name);
+            UITheme                 = (string)key.GetValue(nameof(UITheme), isLightTheme ? "LightTheme" : "DarkerTheme");
+            CodesSortingColumnIndex = (int)key.GetValue(nameof(CodesSortingColumnIndex), 1);
+            CodesUseTreeView        = (int)key.GetValue(nameof(CodesUseTreeView), 1) != 0;
+            UpdateCodesOnLaunch     = (int)key.GetValue(nameof(UpdateCodesOnLaunch), 1) != 0;
+            CheckManagerUpdates     = (int)key.GetValue(nameof(CheckManagerUpdates), 1) != 0;
+            CheckLoaderUpdates      = (int)key.GetValue(nameof(CheckLoaderUpdates), 1) != 0;
+            CheckModUpdates         = (int)key.GetValue(nameof(CheckModUpdates), 1) != 0;
+            KeepOpen                = (int)key.GetValue(nameof(KeepOpen), 1) != 0;
+
+            key.Close();
+        }
+
+        public static void Save()
+        {
+            var key = Registry.CurrentUser.CreateSubKey(ConfigPath);
+
+            key.SetValue("ExecutablePath", Assembly.GetExecutingAssembly().Location);
+            key.SetValue("LastGame", LastGameDirectory);
+            key.SetValue(nameof(ExtraGameDirectories), ExtraGameDirectories);
+            key.SetValue(nameof(UILanguage), UILanguage);
+            key.SetValue(nameof(UITheme), UITheme);
+            key.SetValue(nameof(CodesSortingColumnIndex), CodesSortingColumnIndex);
+            key.SetValue(nameof(CodesUseTreeView), CodesUseTreeView ? 1 : 0);
+            key.SetValue(nameof(UpdateCodesOnLaunch), UpdateCodesOnLaunch ? 1 : 0);
+            key.SetValue(nameof(CheckManagerUpdates), CheckManagerUpdates ? 1 : 0);
+            key.SetValue(nameof(CheckLoaderUpdates), CheckLoaderUpdates ? 1 : 0);
+            key.SetValue(nameof(CheckModUpdates), CheckModUpdates ? 1 : 0);
+            key.SetValue(nameof(KeepOpen), KeepOpen ? 1 : 0);
+
+            key.Close();
+        }
+    }
+}
+Library "Logger" by "Hyper"
+{
+    #define PRINT_OBJECT(obj, format, caller) Logger.Utility(#obj + " = " + obj.ToString(format), caller);
+    #define PRINT_OBJECT(obj, format) Logger.Utility(#obj + " = " + obj.ToString(format));
+
+    public enum LogLevel
+    {
+        None,
+        Utility,
+        Warning,
+        Error
+    }
+
+    public void Log(object message, LogLevel level = LogLevel.None, string caller = "")
+    {
+        var oldColour = Console.ForegroundColor;
+
+        switch (level)
+        {
+            case LogLevel.Warning:
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                break;
+
+            case LogLevel.Error:
+                Console.ForegroundColor = ConsoleColor.Red;
+                break;
+
+            case LogLevel.Utility:
+                Console.ForegroundColor = ConsoleColor.Green;
+                break;
+        }
+
+        Console.WriteLine(string.IsNullOrEmpty(caller) ? message.ToString() : $"[{caller}] {message}");
+
+        Console.ForegroundColor = oldColour;
+    }
+
+    public void Utility(object message, string caller = "")
+    {
+        Log(message, LogLevel.Utility, caller);
+    }
+
+    public void Warning(object message, string caller = "")
+    {
+        Log(message, LogLevel.Warning, caller);
+    }
+
+    public void Error(object message, string caller = "")
+    {
+        Log(message, LogLevel.Error, caller);
+    }
+}
+Library "StringMapOperation" by "ĐeäTh" 
+{
+    /// <summary>
+    /// Computes a hash based on the input string.
+    /// </summary>
+    /// <param name="in_key">The string to hash.</param>
+    /// <returns>A string hash.</returns>
+    public uint ComputeHash(string in_key)
+    {
+        uint hash = in_key[0];
+
+        for (int i = 1; i < in_key.Length; i++)
+            hash = in_key[i] + 31 * hash;
+
+        return hash & 0x7FFFFFFF;
+    }
+}
+Library "MathHelpers" by "Hyper" 
+{
+    using System.Collections.Generic;
+
+    public T Clamp<T>(T in_value, T in_minValue, T in_maxValue) where T : IComparable<T>
+    {
+        if (in_value.CompareTo(in_minValue) < 0)
+        {
+            return in_minValue;
+        }
+        else if (in_value.CompareTo(in_maxValue) > 0)
+        {
+            return in_maxValue;
+        }
+        else
+        {
+            return in_value;
+        }
+    }
+
+    public T Clamp01<T>(T value) where T : IComparable<T>
+    {
+        if (value.CompareTo(default(T)) < 0)
+        {
+            return default(T);
+        }
+        else if (value.CompareTo((T)Convert.ChangeType(1, typeof(T))) > 0)
+        {
+            return (T)Convert.ChangeType(1, typeof(T));
+        }
+        else
+        {
+            return value;
+        }
+    }
+
+    public T FloatPercentToRange<T>(float in_value)
+    {
+        if (typeof(T) == typeof(sbyte))
+        {
+            return (T)(object)(byte)(in_value * (sbyte.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(byte))
+        {
+            return (T)(object)(byte)(in_value * (byte.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(short))
+        {
+            return (T)(object)(short)(in_value * (short.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(ushort))
+        {
+            return (T)(object)(ushort)(in_value * (ushort.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(int))
+        {
+            return (T)(object)(int)(in_value * (int.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(uint))
+        {
+            return (T)(object)(uint)(in_value * (uint.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(long))
+        {
+            return (T)(object)(long)(in_value * (long.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(ulong))
+        {
+            return (T)(object)(ulong)(in_value * (ulong.MaxValue * 1.0f));
+        }
+        
+        return default;
+    }
+    
+    public float Lerp(float in_start, float in_end, float in_time)
+    {
+        return in_start + (in_end - in_start) * in_time;
+    }
+
+    public static float InverseLerp(float a, float b, float value)
+    {
+        if (a == b)
+            return 0.0f;
+
+        return Clamp01<float>((value - a) / (b - a));
+    }
+
+    public static float ToDegrees(float in_radians)
+    {
+        return in_radians * (180.0f / (float)Math.PI);
+    }
+
+    public static float ToRadians(float in_degrees)
+    {
+        return in_degrees * ((float)Math.PI / 180.0f);
+    }
+
+    public static float WrapToRadians(float in_value)
+    {
+        float sign = in_value > 0.0f ? 1.0f : -1.0f;
+        float mod = (float)Math.Abs(in_value) % 6.28319f;
+
+        return mod * sign;
+    }
+}
+Library "Bitwise" by "Hyper" 
+{
+    public long Set(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
+    {
+        return in_base | (in_isOffsetBitIndex ? (1L << in_offset) : in_offset);
+    }
+
+    public long Reset(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
+    {
+        return in_base & (in_isOffsetBitIndex ? ~(1L << in_offset) : in_offset);
+    }
+
+    public bool Test(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
+    {
+        return (in_base & (in_isOffsetBitIndex ? (1L << in_offset) : in_offset)) != 0;
+    }
+}
+Library "INI" by "Hyper"
+{
+    using System.Collections.Generic;
+    using System.IO;
+    
+    public Dictionary<string, Dictionary<string, string>> Read(string path)
+    {
+        Dictionary<string, Dictionary<string, string>> result = new();
+
+        if (!File.Exists(path))
+            return result;
+
+        using (StreamReader reader = new StreamReader(path))
+        {
+            string section = string.Empty;
+            string line = string.Empty;
+
+            // Add root section.
+            result.Add(section, new Dictionary<string, string>());
+
+            while ((line = reader.ReadLine()) != null)
+            {
+                if (line.StartsWith("[") && line.EndsWith("]"))
+                {
+                    section = line.Substring(1, line.Length - 2);
+                    result.Add(section, new Dictionary<string, string>());
+                    continue;
+                }
+
+                if (line.StartsWith(";") || line.StartsWith("#"))
+                    continue;
+
+                int delimiterIndex = line.IndexOf('=');
+
+                if (delimiterIndex == -1)
+                    continue;
+
+                string key = line.Substring(0, delimiterIndex);
+                string value = line.Substring(delimiterIndex + 1);
+
+                if (value.StartsWith("\"") && value.EndsWith("\"") && value.Length > 1)
+                    value = value.Substring(1, value.Length - 2);
+                
+                result[section].Add(key, value);
+            }
+        }
+
+        return result;
+    }
+
+    public T Parse<T>(string in_value, T in_defaultValue)
+    {
+        T result = in_defaultValue;
+
+        if (typeof(T) == typeof(string))
+        {
+            result = (T)(object)in_value;
+        }
+        else if (typeof(T) == typeof(int))
+        {
+            if (int.TryParse(in_value, out int intValue))
+            {
+                result = (T)(object)intValue;
+            }
+        }
+        else if (typeof(T) == typeof(double))
+        {
+            if (double.TryParse(in_value, out double doubleValue))
+            {
+                result = (T)(object)doubleValue;
+            }
+        }
+        else if (typeof(T) == typeof(float))
+        {
+            if (float.TryParse(in_value, out float floatValue))
+            {
+                result = (T)(object)floatValue;
+            }
+        }
+
+        return result;
+    }
+
+    public T GetField<T>(Dictionary<string, Dictionary<string, string>> in_ini, string in_section, string in_key, T in_defaultValue)
+    {
+        if (!in_ini.ContainsKey(in_section))
+            return in_defaultValue;
+
+        if (!in_ini[in_section].ContainsKey(in_key))
+            return in_defaultValue;
+
+        return Parse<T>(in_ini[in_section][in_key], in_defaultValue);
+    }
+}
+Library "Helpers" by "Hyper & Sajid"
+{
+    #lib "StringMapOperation"
+
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
+    /// <summary>
+    /// Creates an `__stdcall` delegate with an unmanaged function pointer based on the provided function signature.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Library
+    /// {
+    ///     #include "Helpers" noemit
+    ///     
+    ///     UNMANAGED_FUNCTION(void, MyUnmanagedFunction, string in_str)
+    ///     {
+    ///         Console.WriteLine("Hello from native code!");
+    ///     }
+    ///     
+    ///     public void Init()
+    ///     {
+    ///         // This can be used for mid-asm hooks to call your own functions from the game code.
+    ///         var ptrToMyUnmanagedFunction = GET_UNMANAGED_FUNCTION_PTR(MyUnmanagedFunction);
+    ///     }
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define UNMANAGED_FUNCTION(in_returnType, in_functionName, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public static T##in_functionName _del##in_functionName = new T##in_functionName(in_functionName); \
+        public static long _fp##in_functionName = (long)System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate(_del##in_functionName); \
+        public static in_returnType in_functionName(__VA_ARGS__)
+
+    /// <summary>
+    /// Creates an `__stdcall` delegate based on the provided function signature.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #include "Helpers" noemit
+    ///     
+    ///     UNMANAGED_FUNCTION_DELEGATE(void, GetNameHash)
+    /// //
+    /// {
+    ///     // Calls the function at 0xDEADBEEF using this function signature.
+    ///     CREATE_UNMANAGED_FUNCTION_PTR(GetNameHash, 0xDEADBEEF)();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define UNMANAGED_FUNCTION_DELEGATE(in_returnType, in_functionName, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType in_functionName(__VA_ARGS__);
+
+    /// <summary>
+    /// Gets a pointer created by `UNMANAGED_FUNCTION` by name.
+    /// </summary>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <returns>A pointer to the unmanaged function.</returns>
+    #define GET_UNMANAGED_FUNCTION_PTR(in_functionName) _fp##in_functionName
+
+    /// <summary>
+    /// Creates a delegate using the signature created by `UNMANAGED_FUNCTION_DELEGATE`.
+    /// </summary>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="in_location">The location of the function.</param>
+    /// <returns>A delegate for the unmanaged function.</returns>
+    #define CREATE_UNMANAGED_FUNCTION_PTR(in_functionName, in_location) System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<in_functionName>((IntPtr)(in_location))
+
+    /// <summary>
+    /// Creates a function pointer to native code at the specified location.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #include "Helpers" noemit
+    ///     
+    ///     FUNCTION_PTR(void, GetNameHash, 0xDEADBEEF)
+    /// //
+    /// {
+    ///     GET_FUNCTION_PTR(GetNameHash)();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="in_location">The location of the function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define FUNCTION_PTR(in_returnType, in_functionName, in_location, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public static long _addr##in_functionName = in_location;
+    
+    /// <summary>
+    /// Creates a function pointer to a virtual function at an instance of a struct.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #include "Helpers" noemit
+    ///
+    ///     public struct MyStruct
+    ///     {
+    ///         VFUNCTION_PTR(MyStruct, 1, void, GetNameHash)
+    ///     }
+    /// //
+    /// {
+    ///     myInstanceOfMyStruct->GetNameHash()();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_thisType">The struct type this is nested inside.</param>
+    /// <param name="in_functionIndex">The index of this function in the virtual function table.</param>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="in_location">The location of the function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define VFUNCTION_PTR(in_thisType, in_functionIndex, in_returnType, in_functionName, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public T##in_functionName in_functionName() \
+        { \
+            fixed (in_thisType* pThis = &this) \
+                return System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<T##in_functionName>((IntPtr)(*(long*)((*(long*)pThis) + (1 * sizeof(nint)) * in_functionIndex))); \
+        }
+
+    /// <summary>
+    /// Gets a pointer created by `FUNCTION_PTR` by name.
+    /// </summary>
+    /// <param name="in_functionName">The name of the function pointer.</param>
+    /// <returns>A delegate to the native function.</returns>
+    #define GET_FUNCTION_PTR(in_functionName) System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<T##in_functionName>((IntPtr)_addr##in_functionName)
+
+    /// <summary>
+    /// Creates a fixed byte array with a special accessor for the real type.
+    /// </summary>
+    /// <param name="in_type">The real type of this array.</param>
+    /// <param name="in_name">The name of this array.</param>
+    /// <param name="in_size">The size of this array.</param>
+    #define UNMANAGED_FIXED_ARRAY(in_type, in_name, in_size) \
+        public fixed byte _##in_name[in_size]; \
+        public in_type* in_name \
+        { \
+            get \
+            { \
+                fixed (byte* p_##in_name = _##in_name) \
+                    return (in_type*)p_##in_name; \
+            } \
+        }
+
+    #define MAKE_GENERIC_API(in_functionName) \
+        public T* in_functionName<T>() where T : unmanaged \
+        { \
+            var name = Helpers.GetInternalName(typeof(T)); \
+\
+            return (T*)in_functionName(string.IsNullOrEmpty(name) ? typeof(T).Name : name); \
+        } \
+
+    #define MAKE_STATIC_GENERIC_API(in_functionName) \
+        public static T* in_functionName<T>() where T : unmanaged \
+        { \
+            var name = Helpers.GetInternalName(typeof(T)); \
+\
+            return (T*)in_functionName(string.IsNullOrEmpty(name) ? typeof(T).Name : name); \
+        } \
+
+    /// <summary>
+    /// Gets a pointer to an ANSI string.
+    /// </summary>
+    /// <param name="in_str">The ANSI string to get a pointer to.</param>
+    /// <returns>A pointer to the input ANSI string.</returns>
+    #define TO_STRING_PTR(in_str) (long)System.Runtime.InteropServices.Marshal.StringToHGlobalAnsi((##in_str##))
+
+    /// <summary>
+    /// Gets a pointer to a Unicode string.
+    /// </summary>
+    /// <param name="in_str">The Unicode string to get a pointer to.</param>
+    /// <returns>A pointer to the input Unicode string.</returns>
+    #define TO_WSTRING_PTR(in_str) (long)System.Runtime.InteropServices.Marshal.StringToHGlobalUni((##in_str##))
+
+    /// <summary>
+    /// Gets a pointer to a UTF-8 string.
+    /// </summary>
+    /// <param name="in_str">The UTF-8 string to get a pointer to.</param>
+    /// <returns>A pointer to the input UTF-8 string.</returns>
+    #define TO_U8STRING_PTR(in_str) (long)Helpers.StringToCoTaskMemUTF8((##in_str##))
+
+    /// <summary>
+    /// Gets an ANSI string from a pointer.
+    /// </summary>
+    /// <param name="in_ptr">The pointer to read an ANSI string from.</param>
+    /// <returns>An ANSI string.</returns>
+    #define FROM_STRING_PTR(in_ptr) System.Runtime.InteropServices.Marshal.PtrToStringAnsi((nint)(in_ptr))
+
+    /// <summary>
+    /// Gets a Unicode string from a pointer.
+    /// </summary>
+    /// <param name="in_ptr">The pointer to read a Unicode string from.</param>
+    /// <returns>A Unicode string.</returns>
+    #define FROM_WSTRING_PTR(in_ptr) System.Runtime.InteropServices.Marshal.PtrToStringUni((nint)(in_ptr))
+
+    /// <summary>
+    /// Gets a UTF-8 string from a pointer.
+    /// </summary>
+    /// <param name="in_ptr">The pointer to read a UTF-8 string from.</param>
+    /// <returns>A UTF-8 string.</returns>
+    #define FROM_U8STRING_PTR(in_ptr) Helpers.PtrToStringUTF8((nint)(in_ptr))
+
+
+    /// <summary>
+    /// Exposes a base field on the super class as a property
+    /// </summary>
+    /// <param name="TYPE">The field type.</param>
+    /// <param name="NAME">The field name.</param>
+    #define DEFINE_BASE_PROPERTY(TYPE, NAME) public TYPE NAME { get => Base.NAME; set => Base.NAME = value; }
+
+    #define DEFINE_INTERFACE_PROPERTY(INTERFACE, TYPE, NAME) TYPE INTERFACE.NAME { get => NAME; set => NAME = value; }
+
+    /// <summary>
+    /// A struct representation of a `const char*`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 8)]
+    public struct UnmanagedString
+    {
+        [FieldOffset(0)] public long pValue;
+        
+        public string Value
+        {
+            get
+            {
+                if (pValue == 0)
+                    return string.Empty;
+
+                return FROM_STRING_PTR(pValue);
+            }
+
+            set => pValue = TO_STRING_PTR(value);
+        }
+
+        public UnmanagedString(string in_value)
+        {
+            Value = in_value;
+        }
+
+        public static implicit operator UnmanagedString(string in_value)
+        {
+            return new UnmanagedString(in_value);
+        }
+
+        public static bool operator ==(UnmanagedString in_left, string in_right)
+        {
+            return in_left.Value == in_right;
+        }
+
+        public static bool operator !=(UnmanagedString in_left, string in_right)
+        {
+            return !(in_left == in_right);
+        }
+
+        public override bool Equals(object in_obj)
+        {
+            if (in_obj is string str)
+                return Value == str;
+            
+            return base.Equals(in_obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (int)StringMapOperation.ComputeHash(Value);
+        }
+
+        public override string ToString()
+        {
+            return Value;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
+    public sealed class InternalNameAttribute : Attribute
+    {
+        public string InternalName { get; }
+
+        public InternalNameAttribute(string in_internalName)
+        {
+            InternalName = in_internalName;
+        }
+    }
+
+    /// <summary>
+    /// Gets a list of indices where the input substring is found in a given string.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "Helpers"
+    /// //
+    /// {
+    ///     string myString = "lots of uses of the word of";
+    ///     
+    ///     var substrs = Helpers.GetSubstringIndices(myString, "of");
+    ///     
+    ///     // This list should contain three entries.
+    ///     // 0 - 5
+    ///     // 1 - 13
+    ///     // 2 - 25
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_str">The string to find substrings in.</param>
+    /// <param name="in_substr">The substring to search for.</param>
+    /// <returns>A list of indices where a substring appears in the given string.</returns>
+    public List<int> GetSubstringIndices(string in_str, string in_substr)
+    {
+        var indices = new List<int>();
+
+        int i = 0;
+        while ((i = in_str.IndexOf(in_substr, i)) != -1)
+        {
+            indices.Add(i);
+            i += in_substr.Length;
+        }
+
+        return indices;
+    }
+
+    /// <summary>
+    /// Gets a name from a InternalNameAttribute attached to a type.
+    /// </summary>
+    /// <param name="in_type">The type to get the attribute from.</param>
+    /// <returns>A string representing the internal name of the input type.</returns>
+    public static string GetInternalName(Type in_type)
+    {
+        var attr = (InternalNameAttribute)Attribute.GetCustomAttribute(in_type, typeof(InternalNameAttribute));
+
+        return attr == null ? string.Empty : attr.InternalName;
+    }
+
+    // https://github.com/scripthookvdotnet/scripthookvdotnet/blob/main/source/core/StringMarshal.cs
+    /*
+        Copyright (C) 2015 crosire, kagikn
+
+        This software is  provided 'as-is', without any express  or implied  warranty. In no event will the
+        authors be held liable for any damages arising from the use of this software.
+        Permission  is granted  to anyone  to use  this software  for  any  purpose,  including  commercial
+        applications, and to alter it and redistribute it freely, subject to the following restrictions:
+
+        1. The origin of this software must not be misrepresented; you must not claim that you  wrote the
+            original  software. If you use this  software  in a product, an  acknowledgment in the product
+            documentation would be appreciated but is not required.
+        2. Altered source versions must  be plainly  marked as such, and  must not be  misrepresented  as
+            being the original software.
+        3. This notice may not be removed or altered from any source distribution.
+
+        Changes;
+            - 29/08/2023
+                - (Hyper) renamed buffer
+                - (Hyper) renamed functions to use uppercase "UTF8"
+                - (Hyper) removed braces to compact code
+                - (Hyper) removed unsafe clauses (HMM always uses unsafe code)
+                - (Hyper) removed static modifiers
+
+            - 20/09/2023
+                - (Hyper) changed argument naming conventions
+                - (Hyper) changed IntPtr to nint
+                - (Hyper) changed string null check in StringToCoTaskMemUTF8 to use string.IsNullOrEmpty
+    */
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private static byte[] _bufferStringToCoTaskMemUTF8 = new byte[100];
+
+    /// <summary>
+    /// Gets a UTF-8 string from a memory location.
+    /// </summary>
+    /// <param name="in_ptr">The memory location where the UTF-8 string is.</param>
+    /// <returns>A UTF-8 string.</returns>
+    public string PtrToStringUTF8(nint in_ptr)
+    {
+        if (in_ptr == 0)
+            return string.Empty;
+
+        byte* data = (byte*)in_ptr;
+
+        int len = 0;
+        while (data[len] != 0)
+            ++len;
+
+        return PtrToStringUTF8(in_ptr, len);
+    }
+
+    /// <summary>
+    /// Gets a fixed-length UTF-8 string from a memory location.
+    /// </summary>
+    /// <param name="in_ptr">The memory location where the UTF-8 string is.</param>
+    /// <param name="in_length">The length of the UTF-8 string in memory.</param>
+    /// <returns>A UTF-8 string.</returns>
+    public string PtrToStringUTF8(nint in_ptr, int in_length)
+    {
+        if (in_length < 0)
+            throw new ArgumentException(null, nameof(in_length));
+
+        if (in_ptr == 0)
+            return null;
+
+        if (in_length == 0)
+            return string.Empty;
+
+        return Encoding.UTF8.GetString((byte*)in_ptr, in_length);
+    }
+
+    /// <summary>
+    /// Creates a pointer to a UTF-8 string.
+    /// </summary>
+    /// <param name="in_str">The UTF-8 string to get a pointer for.</param>
+    /// <returns>A pointer to the input UTF-8 string.</returns>
+    public nint StringToCoTaskMemUTF8(string in_str)
+    {
+        if (string.IsNullOrEmpty(in_str))
+            return 0;
+
+        int byteCountUtf8 = Encoding.UTF8.GetByteCount(in_str);
+        if (byteCountUtf8 > _bufferStringToCoTaskMemUTF8.Length)
+            _bufferStringToCoTaskMemUTF8 = new byte[byteCountUtf8 * 2];
+
+        Encoding.UTF8.GetBytes(in_str, 0, in_str.Length, _bufferStringToCoTaskMemUTF8, 0);
+
+        nint dest = Marshal.AllocCoTaskMem(byteCountUtf8 + 1);
+        if (dest == 0)
+            throw new OutOfMemoryException();
+
+        Marshal.Copy(_bufferStringToCoTaskMemUTF8, 0, dest, byteCountUtf8);
+        
+        ((byte*)dest)[byteCountUtf8] = 0;
+
+        return dest;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+}
+Library "RTTI" by "Hyper"
+{
+    #lib "Memory"
+
+    #define RESOLVE_RELATIVE_PTR(in_offset) (IntPtr.Size == 4 ? in_offset : (0x140000000 + in_offset))
+
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
+    [DllImport("imagehlp.dll", CallingConvention = CallingConvention.StdCall)]
+    private static extern uint UnDecorateSymbolName([MarshalAs(UnmanagedType.LPStr)] string name, byte[] outputString, uint maxStringLength, uint flags);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CompleteObjectLocator
+    {
+        public int Signature;
+        public int VftableOffset;
+        public int CtorDisplacementOffset;
+        public int pTypeDescriptor;
+        public int pClassHierarchyDescriptor;
+        public int pObjectBase;
+
+        public TypeDescriptor* GetTypeDescriptor()
+        {
+            return (TypeDescriptor*)RESOLVE_RELATIVE_PTR(pTypeDescriptor);
+        }
+
+        public ClassHierarchyDescriptor* GetClassHierarchyDescriptor()
+        {
+            return (ClassHierarchyDescriptor*)RESOLVE_RELATIVE_PTR(pClassHierarchyDescriptor);
+        }
+
+        public override string ToString()
+            => $"const {GetTypeDescriptor()->GetName()}::`RTTI Complete Object Locator'";
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct TypeDescriptor
+    {
+        public void* pTypeInfo;
+        public void* pRuntimeRef;
+        
+        public string GetName(bool in_isDemangled = true, IEnumerable<DemanglerFlags> in_demanglerFlags = null)
+        {
+            fixed (TypeDescriptor* pThis = &this)
+            {
+                var result = Marshal.PtrToStringAnsi((nint)((long)pThis + (IntPtr.Size == 4 ? 0x08 : 0x10)));
+
+                if (string.IsNullOrEmpty(result))
+                    return string.Empty;
+
+                result = result.TrimStart('.');
+                
+                if (in_isDemangled)
+                {
+                    if (in_demanglerFlags == null)
+                        in_demanglerFlags = new[] { RTTI.DemanglerFlags.NAME_ONLY };
+                    
+                    return Demangle(result, in_demanglerFlags);
+                }
+                else
+                {
+                    return result;
+                }
+            }
+        }
+
+        public string[] GetNamespaces()
+        {
+            return GetName().Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        public override string ToString()
+            => $"class {GetName()} `RTTI Type Descriptor'";
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ClassHierarchyDescriptor
+    {
+        public int Signature;
+        public int Attributes;
+        public int BaseClassCount;
+        public int pBaseClasses;
+
+        public BaseClassDescriptor* GetBaseClass(int in_index)
+        {
+            if (in_index > BaseClassCount)
+                return null;
+                
+            var ptr = *(int*)(RESOLVE_RELATIVE_PTR(pBaseClasses) + (in_index * 4));
+            
+            return (BaseClassDescriptor*)(RESOLVE_RELATIVE_PTR(ptr));
+        }
+
+        public override string ToString()
+            => $"{GetBaseClass(0)->GetTypeDescriptor()->GetName()}::`RTTI Class Hierarchy Descriptor'";
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct BaseClassDescriptor
+    {
+        public int pTypeDescriptor;
+        public int SubElementCount;
+        public int MemberDisplacement;
+        public int VftableDisplacement;
+        public int DisplacementWithinVftable;
+        public int BaseClassAttributes;
+        public int pClassHierarchyDescriptor;
+
+        public TypeDescriptor* GetTypeDescriptor()
+        {
+            return (TypeDescriptor*)RESOLVE_RELATIVE_PTR(pTypeDescriptor);
+        }
+
+        public ClassHierarchyDescriptor* GetClassHierarchyDescriptor()
+        {
+            return (ClassHierarchyDescriptor*)RESOLVE_RELATIVE_PTR(pClassHierarchyDescriptor);
+        }
+
+        public override string ToString()
+            => $"{GetTypeDescriptor()->GetName()}::`RTTI Base Class Descriptor at ({MemberDisplacement}, {VftableDisplacement}, {DisplacementWithinVftable}, {BaseClassAttributes})'";
+    }
+
+    public CompleteObjectLocator* GetRuntimeInfoFromVftable(void* in_pVftable)
+    {
+        if (in_pVftable == null)
+            return null;
+
+        var runtimeInfoOffset = *(long*)((long)in_pVftable - IntPtr.Size);
+
+        if (!Memory.IsAccessible((nint)runtimeInfoOffset))
+            return null;
+        
+        return (CompleteObjectLocator*)runtimeInfoOffset;
+    }
+
+    public CompleteObjectLocator* GetRuntimeInfo(void* in_pClass)
+    {
+        return GetRuntimeInfoFromVftable((void*)*(long*)in_pClass);
+    }
+
+    public string GetClassName(void* in_pClass, bool in_isDemangled = true, IEnumerable<DemanglerFlags> in_demanglerFlags = null)
+    {
+        var pRuntimeInfo = RTTI.GetRuntimeInfo(in_pClass);
+
+        if (pRuntimeInfo == null)
+            return string.Empty;
+
+        var pTypeDescriptor = pRuntimeInfo->GetTypeDescriptor();
+
+        if (pTypeDescriptor == null)
+            return string.Empty;
+            
+        return pTypeDescriptor->GetName(in_isDemangled, in_demanglerFlags);
+    }
+
+    public string[] GetClassNamespaces(void* in_pClass)
+    {
+        return GetClassName(in_pClass).Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    public string Demangle(string in_mangledName, IEnumerable<DemanglerFlags> in_flags)
+    {
+        var result = string.Empty;
+        var flags = 0U;
+        var demangledBytes = new byte[1024];
+
+        foreach (var flag in in_flags)
+            flags |= (uint)flag;
+
+        while (true)
+        {
+            var resultLength = UnDecorateSymbolName
+            (
+                in_mangledName,
+                demangledBytes,
+                (uint)demangledBytes.Length,
+                (uint)flags
+            );
+
+            if (resultLength == (demangledBytes.Length - 2))
+            {
+                demangledBytes = new byte[demangledBytes.Length * 2];
+                continue;
+            }
+            else
+            {
+                int count = Array.IndexOf<byte>(demangledBytes, 0, 0);
+
+                if (count < 0)
+                    count = demangledBytes.Length;
+
+                result = Encoding.ASCII.GetString(demangledBytes, 0, count);
+
+                break;
+            }
+        }
+
+        if (string.IsNullOrEmpty(result))
+            return result;
+        
+        var namespaces = result.Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (namespaces.Length > 0)
+        {
+            var last = namespaces[namespaces.Length - 1];
+            
+            if (last.StartsWith("AV"))
+                namespaces[namespaces.Length - 1] = last.Remove(0, 2);
+
+            result = string.Join("::", namespaces);
+        }
+
+        return result;
+    }
+
+    public enum DemanglerFlags
+    {
+        /// <summary>
+        /// Enable full undecoration.
+        /// </summary>
+        COMPLETE = 0x0000,
+
+        /// <summary>
+        /// Remove leading underscores from Microsoft keywords.
+        /// </summary>
+        NO_LEADING_UNDERSCORES = 0x0001,
+
+        /// <summary>
+        /// Disable expansion of Microsoft keywords.
+        /// </summary>
+        NO_MS_KEYWORDS = 0x0002,
+
+        /// <summary>
+        /// Disable expansion of return types for primary declarations.
+        /// </summary>
+        NO_FUNCTION_RETURNS = 0x0004,
+
+        /// <summary>
+        /// Disable expansion of the declaration model.
+        /// </summary>
+        NO_ALLOCATION_MODEL = 0x0008,
+
+        /// <summary>
+        /// Disable expansion of the declaration language specifier.
+        /// </summary>
+        NO_ALLOCATION_LANGUAGE = 0x0010,
+
+        /// <summary>
+        /// Disable expansion of Microsoft keywords on the this type for primary declaration.
+        /// </summary>
+        NO_MS_THISTYPE = 0x0020,
+
+        /// <summary>
+        /// Disable expansion of CodeView modifiers on the this type for primary declaration.
+        /// </summary>
+        NO_CV_THISTYPE = 0x0040,
+
+        /// <summary>
+        /// Disable all modifiers on the "this" type.
+        /// </summary>
+        NO_THISTYPE = 0x0060,
+
+        /// <summary>
+        /// Disable expansion of access specifiers for members.
+        /// </summary>
+        NO_ACCESS_SPECIFIERS = 0x0080,
+
+        /// <summary>
+        /// Disable expansion of throw-signatures for functions and pointers to functions.
+        /// </summary>
+        NO_THROW_SIGNATURES = 0x0100,
+
+        /// <summary>
+        /// Disable expansion of the static or virtual attribute of members.
+        /// </summary>
+        NO_MEMBER_TYPE = 0x0200,
+
+        /// <summary>
+        /// Disable expansion of the Microsoft model for user-defined type returns.
+        /// </summary>
+        NO_RETURN_UDT_MODEL = 0x0400,
+
+        /// <summary>
+        /// Undecorate 32-bit decorated names.
+        /// </summary>
+        P32_BIT_DECODE = 0x0800,
+
+        /// <summary>
+        /// Undecorate only the name for primary declaration. Returns [scope::]name. Does expand template parameters.
+        /// </summary>
+        NAME_ONLY = 0x1000,
+
+        /// <summary>
+        /// Do not undecorate function arguments.
+        /// </summary>
+        NO_ARGUMENTS = 0x2000,
+
+        /// <summary>
+        /// Do not undecorate special names, such as vtable, vcall, vector, metatype, and so on.
+        /// </summary>
+        NO_SPECIAL_SYMS = 0x4000
+    }
+}
+Library "Memory" by "Hyper & Sajid" 
+{
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Runtime.CompilerServices;
+    using System.Text;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr VirtualQuery(IntPtr lpAddress, ref MEMORY_BASIC_INFORMATION lpBuffer, UIntPtr dwLength);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MEMORY_BASIC_INFORMATION
+    {
+        public IntPtr BaseAddress;
+        public IntPtr AllocationBase;
+        public uint AllocationProtect;
+        public IntPtr RegionSize;
+        public uint State;
+        public uint Protect;
+        public uint Type;
+    }
+
+    private static Dictionary<nint, List<byte>> _preservedMemory = new();
+
+    public void Preserve(nint in_location, nint in_length, bool in_isPreservedOnce = true)
+    {
+        if (in_location == 0)
+            return;
+
+        if (in_isPreservedOnce)
+        {
+            if (_preservedMemory.ContainsKey(in_location))
+                return;
+        }
+        else
+        {
+            if (_preservedMemory.ContainsKey(in_location))
+                _preservedMemory.Remove(in_location);
+        }
+        
+        List<byte> buffer = new();
+        for (nint i = 0; i < in_length; i++)
+            buffer.Add(Read<byte>(in_location + i));
+
+        _preservedMemory.Add(in_location, buffer);
+    }
+
+    public void Preserve(long in_location, long in_length, bool in_isPreservedOnce = true)
+    {
+        Preserve((nint)in_location, (nint)in_length, in_isPreservedOnce);
+    }
+
+    public void Restore(nint in_location)
+    {
+        if (in_location == 0)
+            return;
+
+        if (!_preservedMemory.ContainsKey(in_location))
+            return;
+
+        nint i = 0;
+        foreach (byte b in _preservedMemory[in_location])
+        {
+            WriteProtected<byte>(in_location + i, b);
+            i++;
+        }
+    }
+
+    public void Restore(long in_location)
+    {
+        Restore((nint)in_location);
+    }
+
+    public uint GetPageProtectFlags(nint in_location)
+    {
+        var memInfo = new MEMORY_BASIC_INFORMATION();
+
+        if (VirtualQuery(in_location, ref memInfo, (UIntPtr)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION))) == IntPtr.Zero)
+            return 1;
+
+        return memInfo.Protect;
+    }
+
+    public bool IsAccessible(nint in_location)
+    {
+        // PAGE_NOACCESS
+        if ((GetPageProtectFlags(in_location) & 1) != 0)
+            return false;
+
+        return true;
+    }
+
+    public nint ReadCall(nint in_location)
+    {
+        if (in_location == 0)
+            return 0;
+
+        return in_location + Read<int>(in_location + 0x01) + 0x05;
+    }
+
+    public long ReadCall(long in_location)
+    {
+        return (long)ReadCall((nint)in_location);
+    }
+
+    public nint ReadEffectiveAddress(nint in_location)
+    {
+        if (in_location == 0)
+            return 0;
+
+        return in_location + Read<int>(in_location + 0x03) + 0x07;
+    }
+
+    public long ReadEffectiveAddress(long in_location)
+    {
+        return (long)ReadEffectiveAddress((nint)in_location);
+    }
+
+    public enum JumpType : sbyte
+    {
+        Unknown = -1,
+        ShortCond,
+        NearJmp,
+        NearCond,
+        LongJmp
+    }
+
+    public JumpType ReadJumpOpcode(nint in_location)
+    {
+        JumpType result = JumpType.Unknown;
+
+        if (in_location == 0)
+            return result;
+
+        byte opcode = Read<byte>(in_location);
+
+        if ((opcode & 0xF0) == 0x70)
+        {
+            result = JumpType.ShortCond;
+        }
+        else
+        {
+            switch (opcode)
+            {
+                case 0xE3:
+                case 0xEB:
+                    result = JumpType.ShortCond;
+                    break;
+
+                case 0xE9:
+                    result = JumpType.NearJmp;
+                    break;
+
+                case 0x0F:
+                    result = JumpType.NearCond;
+                    break;
+
+                case 0xFF:
+                    result = JumpType.LongJmp;
+                    break;
+            }
+        }
+
+        return result;
+    }
+
+    public JumpType ReadJumpOpcode(long in_location)
+    {
+        return ReadJumpOpcode((nint)in_location);
+    }
+
+    public nint ReadJump(nint in_location)
+    {
+        if (in_location == 0)
+            return 0;
+
+        switch (ReadJumpOpcode(in_location))
+        {
+            case JumpType.ShortCond:
+                return in_location + Read<byte>(in_location + 0x01) + 0x02;
+
+            case JumpType.NearJmp:
+                return in_location + Read<int>(in_location + 0x01) + 0x05;
+
+            case JumpType.NearCond:
+                return in_location + Read<int>(in_location + 0x02) + 0x06;
+
+            case JumpType.LongJmp:
+                return (nint)Read<long>(in_location + 0x06);
+        }
+
+        return 0;
+    }
+
+    public long ReadJump(long in_location)
+    {
+        return (long)ReadJump((nint)in_location);
+    }
+
+    public void WriteForceJump(nint in_location)
+    {
+        if (in_location == 0)
+            return;
+        
+        switch (ReadJumpOpcode(in_location))
+        {
+            case JumpType.ShortCond:
+                WriteProtected<byte>(in_location, 0xEB);
+                break;
+
+            case JumpType.NearCond:
+                WriteProtected<byte>(in_location, 0xE9);
+                WriteProtected<int>(in_location + 0x01, Read<int>(in_location + 0x02) + 0x01);
+                break;
+        }
+    }
+
+    public void WriteForceJump(long in_location)
+    {
+        WriteForceJump((nint)in_location);
+    }
+
+    public nint ReadThunk(nint in_location, nint in_offset = 0)
+    {
+        return ReadJump(ReadCall(in_location) + in_offset);
+    }
+
+    public long ReadThunk(long in_location, long in_offset = 0)
+    {
+        return (long)ReadThunk((nint)in_location, (nint)in_offset);
+    }
+
+    public void WriteString(long in_location, string in_str, Encoding in_encoding)
+    {
+        WriteProtected<byte>(in_location, in_encoding.GetBytes(in_str));
+    }
+
+    public void WriteString(long in_location, string in_str)
+    {
+        WriteString(in_location, in_str, Encoding.ASCII);
+    }
+
+    public void PrintMemory<T>(IntPtr in_address, int in_rowCount) where T : unmanaged
+    {
+        for (int i = 0; i < in_rowCount * 16; i += 16)
+        {
+            Console.Write($"{(in_address + i).ToInt64():X16}: ");
+
+            if (typeof(T) == typeof(byte) || typeof(T) == typeof(sbyte))
+            {
+                for (int j = 0; j < 16; j++)
+                    Console.Write($"{Read<T>(in_address + i + j):X2} ");
+            }
+            else if (typeof(T) == typeof(short) || typeof(T) == typeof(ushort))
+            {
+                for (int j = 0; j < 16; j += 2)
+                    Console.Write($"{Read<T>(in_address + i + j):X4} ");
+            }
+            else if (typeof(T) == typeof(int) || typeof(T) == typeof(uint))
+            {
+                for (int j = 0; j < 16; j += 4)
+                    Console.Write($"{Read<T>(in_address + i + j):X8} ");
+            }
+            else if (typeof(T) == typeof(long) || typeof(T) == typeof(ulong))
+            {
+                for (int j = 0; j < 16; j += 8)
+                    Console.Write($"{Read<T>(in_address + i + j):X16} ");
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                for (int j = 0; j < 16; j += 4)
+                    Console.Write($"{Read<float>(in_address + i + j)} ");
+            }
+            else if (typeof(T) == typeof(double))
+            {
+                for (int j = 0; j < 16; j += 8)
+                    Console.Write($"{Read<double>(in_address + i + j)} ");
+            }
+
+            Console.WriteLine();
+        }
+    }
+
+    public void PrintMemory(IntPtr in_address, int in_rowCount)
+    {
+        PrintMemory<byte>(in_address, in_rowCount);
+    }
+    
+    public struct Pointer<T> where T : unmanaged
+    {
+        public T* pData;
+
+        public Pointer(ref T data)
+        {
+            fixed(T* dataPtr = &data)
+            {
+                pData = dataPtr;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Pointer(T* in_pData)
+        {
+            pData = in_pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool IsValid()
+        {
+            return pData != null;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref T Ref()
+        {
+            return ref *pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T* Get()
+        {
+            return pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator bool(Pointer<T> self) => self.IsValid();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator Pointer<T>(T* data) => new(data);
+
+        public override string ToString() => $"0x{((long)pData):X}";
+    }
+}
+Library "RSDK" by "Hyper, ĐeäTh & MegAmi"
+{
+    #include "Helpers" noemit
+
+    #lib "Helpers"
+    #lib "Memory"
+
+    private static bool _isInitialised = false;
+
+    private static long _pRSDKv3Data = 0;
+    private static long _pRSDKv4Data = 0;
+    private static long _pRSDKGlobals = 0;
+    private static nint _pRSDKDataPath = 0;
+
+    [LibraryInitializer]
+    public void Init()
+    {
+        if (_isInitialised)
+            return;
+
+        long sig = ScanSignature
+        (
+            "\x48\x63\xFB\x48\x8B\xCE\x48\x8B\xD7\x48\xC1\xE2\x05\x49\x03\xD6\xE8\x00\x00\x00\x00\x3C\x01\x74\x2D\x0F\xB6\x05\x00\x00\x00\x00\xFF\xC3\x3B\xD8\x7C\xDA\xB8\x00\x00\x00\x00\x48\x8B\x5C\x24\x00\x48\x8B\x6C\x24\x00\x48\x8B\x74\x24\x00\x48\x8B\x7C\x24\x00\x48\x83\xC4\x20\x41\x5E\xC3\x48\x8D\x05\x00\x00\x00\x00\x89\x2C\xB8\x8B\xC3\xEB\xD7",
+            "xxxxxxxxxxxxxxxxx????xxxxxxx????xxxxxxx????xxxx?xxxx?xxxx?xxxx?xxxxxxxxxx????xxxxxxx"
+        )
+        + 0x46;
+
+        _pRSDKv3Data = (long)sig + *((int*)IntPtr.Add(new IntPtr(sig), 3)) + 7;
+
+        sig = ScanSignature
+        (
+            "\x4C\x8D\x35\x00\x00\x00\x00\x4C\x89\x7C\x24\x00\x4C\x8D\x3D\x00\x00\x00\x00\x66\x66\x0F\x1F\x84\x00\x00\x00\x00\x00\x48\x63\xD3\x48\x8B\xCD\x48\xC1\xE2\x05\x49\x03\xD7\xE8\x00\x00\x00\x00\x3C\x01\x75\x0B\xBB\x00\x00\x00\x00\x41\x89\x34\xBE\x8B\xFB\x0F\xB6\x05\x00\x00\x00\x00\xFF\xC3\x48\xFF\xC7\x3B\xD8\x7C\xCF\x4C\x8B\x7C\x24\x00\x4C\x8B\x74\x24\x00\x48\x8B\x7C\x24\x00\x48\x83\xC4\x20\x5E\x5D\x5B\xC3",
+            "xxx????xxxx?xxx????xxxxxx????xxxxxxxxxxxxxx????xxxxx????xxxxxxxxx????xxxxxxxxxxxxx?xxxx?xxxx?xxxxxxxx"
+        );
+
+        _pRSDKv4Data = (long)sig + *((int*)IntPtr.Add(new IntPtr(sig), 3)) + 7;
+
+        sig = ScanSignature
+        (
+            "\x48\x8B\x05\x00\x00\x00\x00\x8B\x80\x00\x00\x00\x00\x85\xC0\x78\x2D\x83\xF8\x01\x7E\x1F\x83\xF8\x02\x74\x11\x83\xC0\xFC\x83\xF8\x02\x77\x1B\x48\x8D\x0D\x00\x00\x00\x00\xEB\x19\x48\x8D\x0D\x00\x00\x00\x00\xEB\x10\x48\x8D\x0D\x00\x00\x00\x00\xEB\x07\x48\x8D\x0D\x00\x00\x00\x00\x48\x8B\x05\x00\x00\x00\x00\xB2\x02\x4C\x8B\x80\x00\x00\x00\x00\x41\xFF\xD0\x48\x8B\x0D\x00\x00\x00\x00\x66\x89\x41\x04",
+            "xxx????xx????xxxxxxxxxxxxxxxxxxxxxxxxx????xxxxx????xxxxx????xxxxx????xxx????xxxxx????xxxxxx????xxxx"
+        );
+
+        _pRSDKGlobals = (long)sig + *((int*)IntPtr.Add(new IntPtr(sig), 3)) + 7;
+
+        sig = ScanSignature
+        (
+            "\x48\x8D\x0D\x00\x00\x00\x00\xC6\x05\x00\x00\x00\x00\x01\xC6\x05\x00\x00\x00\x00\x00",
+            "xxx????xx????xxx????x"
+        );
+
+        _pRSDKDataPath = (nint)(Memory.ReadEffectiveAddress((long)sig));
+
+        _isInitialised = true;
+    }
+
+    public long GetRSDKv3DataPtr()
+    {
+        return _pRSDKv3Data;
+    }
+
+    public long GetRSDKv4DataPtr()
+    {
+        return _pRSDKv4Data;
+    }
+
+    public long GetRSDKGlobalsPtr()
+    {
+        return *(long*)_pRSDKGlobals;
+    }
+
+    public S1GlobalVariables* GetSonic1Globals()
+    {
+        return (S1GlobalVariables*)GetRSDKv4DataPtr();
+    }
+
+    public SCDGlobalVariables* GetSonicCDGlobals()
+    {
+        return (SCDGlobalVariables*)GetRSDKv3DataPtr();
+    }
+
+    public S2GlobalVariables* GetSonic2Globals()
+    {
+        return (S2GlobalVariables*)GetRSDKv4DataPtr();
+    }
+
+    public byte GetEngineVersion()
+    {
+        return *(byte*)(_pRSDKDataPath - 0x08);
+    }
+
+    public Game GetCurrentGame()
+    {
+        if (GetEngineVersion() == 3) // RSDKv3
+            return Game.SonicCD;
+        else if (GetEngineVersion() == 4) // RSDKv4
+        {
+            // Check datafile name to see if this is Sonic 1 or 2
+            if (Helpers.PtrToStringUTF8(_pRSDKDataPath) == "retro/Sonic1u.rsdk")
+                return Game.Sonic1;
+            else
+                return Game.Sonic2;
+        }
+        else if (GetEngineVersion() == 5) // RSDKv5
+            return Game.Sonic3k;
+
+        return Game.Unknown;
+    }
+
+    public PlayMode GetPlayMode()
+    {
+        if (GetCurrentGame() == Game.Sonic1)
+        {
+            var S1Globals = GetSonic1Globals();
+
+            if (S1Globals == null)
+                return PlayMode.Unknown;
+
+            return (PlayMode)S1Globals->gamePlayMode;
+        }
+        else if (GetCurrentGame() == Game.SonicCD)
+        {
+            var SCDGlobals = GetSonicCDGlobals();
+
+            if (SCDGlobals == null)
+                return PlayMode.Unknown;
+
+            return (PlayMode)SCDGlobals->gamePlayMode;
+        }
+        else if (GetCurrentGame() == Game.Sonic2)
+        {
+            var S2Globals = GetSonic2Globals();
+
+            if (S2Globals == null)
+                return PlayMode.Unknown;
+
+            return (PlayMode)S2Globals->gamePlayMode;
+        }
+        else if (GetCurrentGame() == Game.Sonic3k && GetRSDKGlobalsPtr() != 0)
+            // Version 1.0.0: RSDKGlobalsPtr + 0x447D08
+            // Version 1.0.4: RSDKGlobalsPtr + 0x4C3508 (Thanks to RDC)
+            // Version 2.0.0: RSDKGlobalsPtr + 0x4C3510
+            return (PlayMode)(*(byte*)(GetRSDKGlobalsPtr() + 0x4C3510));
+
+        return PlayMode.Unknown;
+    }
+
+    public enum Game
+    {
+        Unknown = -1,
+        Sonic1,
+        SonicCD,
+        Sonic2,
+        Sonic3k
+    }
+
+    public enum PlayMode
+    {
+        Unknown = -1,
+        Classic,
+        Anniversary,
+        BossRush,
+        Mirror,
+        Mission,
+        Story,
+        BlueSpheres,
+        NewBlueSpheres
+    }
+
+    public struct S1GlobalVariables
+    {
+        public int optionsGameMode;
+        public int optionsSpeedCap;
+        public int optionsSaveSlot;
+        public int optionsStageSelectFlag;
+        public int optionsSoundTestFlag;
+        public int optionsAttractMode;
+        public int optionsDemoNumber;
+        public int optionsTouchControls;
+        public int optionsPhysicalControls;
+        public int optionsAirSpeedCap;
+        public int optionsRegion;
+        public int optionsSpindash;
+        public int optionsSpikeBehavior;
+        public int optionsShieldType;
+        public int optionsSuperStates;
+        public int optionsCompetition;
+        public int oscillation;
+        public int ringTimer;
+        public int ringFrame;
+        public int ringPan;
+        public int ringExtraLife;
+        public int playerScore;
+        public int playerScoreBonus;
+        public int playerLives;
+        public int playerContinues;
+        public int playerAirTimer;
+        public int playerRCollisionFlag;
+        public int playerWaterStream;
+        public int recMilliSeconds;
+        public int recSeconds;
+        public int recMinutes;
+        public int recWaterState;
+        public int recWaterLevel;
+        public int recStage;
+        public int recStageList;
+        public int lampPostID;
+        public int fadeColor;
+        public int animalType1;
+        public int animalType2;
+        public int invincibilityType;
+        public int blueShieldType;
+        public int goggleType;
+        public int specialStageListPos;
+        public int specialStageEmeralds;
+        public int specialStageNextZone;
+        public int stageWaterState;
+        public int stageNewWaterLevel;
+        public int stageDeathBoundary;
+        public int stagePlayer2Enabled;
+        public int stageMusicFlag;
+        public int timeAttackZone;
+        public int timeAttackAct;
+        public int timeAttackResult;
+        public int timeAttackMenuSection;
+        public int ANI_STOPPED;
+        public int ANI_WAITING;
+        public int ANI_BORED;
+        public int ANI_LOOKINGUP;
+        public int ANI_LOOKINGDOWN;
+        public int ANI_WALKING;
+        public int ANI_RUNNING;
+        public int ANI_SKIDDING;
+        public int ANI_PEELOUT;
+        public int ANI_SPINDASH;
+        public int ANI_JUMPING;
+        public int ANI_BOUNCING;
+        public int ANI_HURT;
+        public int ANI_DYING;
+        public int ANI_DROWNING;
+        public int ANI_FANROTATE;
+        public int ANI_BREATHING;
+        public int ANI_PUSHING;
+        public int ANI_FLAILING1;
+        public int ANI_FLAILING2;
+        public int ANI_HANGING;
+        public int ANI_DROPPING;
+        public int ANI_CLINGING;
+        public int ANI_FLYING;
+        public int ANI_FLYINGTIRED;
+        public int ANI_SWIMMING;
+        public int ANI_SWIMMINGTIRED;
+        public int ANI_GLIDING;
+        public int ANI_GLIDING_DROP;
+        public int ANI_GLIDING_STOP;
+        public int ANI_CLIMBING;
+        public int ANI_LEDGEPULLUP;
+        public int ANI_WATERSLIDE;
+        public int ANI_CONTINUE;
+        public int ANI_CONTINUE_UP;
+        public int ANI_SUPER_TRANSFORM;
+        public int ANI_FLY_LIFT_DOWN;
+        public int ANI_FLY_LIFT_UP;
+        public int ANI_FLY_LIFT_TIRED;
+        public int ANI_SWIM_LIFT;
+        public int ANI_HAMMER_JUMP;
+        public int ANI_HAMMER_DASH;
+        public int SpeedUpMusic;
+        public int SlowDownMusic;
+        public int recAnimation;
+        public int touchJump;
+        public int touchDebug;
+        public int SetAchievement;
+        public int SetLeaderboard;
+        public int ShowPromoPopup;
+        public int creditsScreen;
+        public int attractStage;
+        public int achieveRingCount;
+        public int gamePlayMode;
+        public int NotifyCallback;
+        public int NOTIFY_DEATH_EVENT;
+        public int NOTIFY_TOUCH_SIGNPOST;
+        public int NOTIFY_HUD_ENABLE;
+        public int NOTIFY_ADD_COIN;
+        public int NOTIFY_KILL_ENEMY;
+        public int BOOT_PLAYMODE_CLASSIC;
+        public int BOOT_PLAYMODE_ANNIVERSARY;
+        public int BOOT_PLAYMODE_BOSSRUSH;
+        public int BOOT_PLAYMODE_MIRRORING;
+        public int BOOT_PLAYMODE_MISSION;
+        public int gameCallbackParam0;
+        public int gameCallbackParam1;
+        public int gameCallbackParam2;
+        public int gameCallbackParam3;
+        public int gameHudEnable;
+        public int gameForceKillPlayer;
+        public int HUDENABLE_OFF;
+        public int HUDENABLE_ON;
+        public int gameCoinMode;
+        public int gameMissionCondition;
+        public int MISSION_CONDITION_CLEAR;
+        public int MISSION_CONDITION_FAIL;
+        public int gameMissionFunctionNo;
+        public int gameMissionValue;
+        public int gameMissionEnd;
+        public int gameContinueFlag;
+        public int NOTIFY_SAVESLOT_SELECT;
+        public int NOTIFY_FUTURE_PAST;
+        public int NOTIFY_GOTO_FUTURE_PAST;
+        public int NOTIFY_BOSS_END;
+        public int NOTIFY_SPECIAL_END;
+        public int BOOT_PLAYMODE_STORY;
+        public int gameTitleCardDisable;
+        public int gameBossOneLife;
+        public int KILL_ENEMY_ATTR_ANIMALPRISON;
+        public int KILL_ENEMY_ATTR_SPINDASH;
+        public int KILL_ENEMY_ATTR_GLIDING;
+        public int NOTIFY_DEBUGPRINT;
+        public int NOTIFY_KILL_BOSS;
+        public int NOTIFY_TOUCH_EMERALD;
+        public int NOTIFY_STATS_ENEMY;
+        public int NOTIFY_STATS_CHARA_ACTION;
+        public int NOTIFY_STATS_RING;
+        public int NOTIFY_STATS_MOVIE;
+        public int NOTIFY_STATS_PARAM_1;
+        public int NOTIFY_STATS_PARAM_2;
+        public int StatsUsabilityParam1;
+        public int StatsUsabilityParam2;
+        public int StatsUsabilityParam3;
+        public int StatsUsabilityParam4;
+        public int StatsUsabilityParam5;
+        public int StageStatsUsabilityParam1;
+        public int StageStatsUsabilityParam2;
+        public int StageStatsUsabilityParam3;
+        public int StageStatsUsabilityParam4;
+        public int StageStatsUsabilityParam5;
+        public int NOTIFY_CHARACTER_SELECT;
+        public int gameCallbackResult;
+        public int NOTIFY_SPECIAL_RETRY;
+        public int NOTIFY_TOUCH_CHECKPOINT;
+        public int NOTIFY_ACT_FINISH;
+        public int NOTIFY_1P_VS_SELECT;
+        public int gameTitleMode;
+        public int gameOneStageFlag;
+        public int NOTIFY_STAGE_RETRY;
+        public int recRing;
+        public int recScore;
+        public int NOTIFY_SOUND_TRACK;
+        public int NOTIFY_GOOD_ENDING;
+        public int NOTIFY_BACK_TO_MAINMENU;
+        public int NOTIFY_LEVEL_SELECT_MENU;
+        public int NOTIFY_PLAYER_SET;
+        public int NOTIFY_EXTRAS_MODE;
+        public int gameCoinCount;
+        public int inputPressButton;
+        public int playerDeadResetRings;
+        public int gameTimeOver;
+        public int NOTIFY_TIME_OVER;
+        public int playerDropdashCount0;
+        public int playerDropdashCount1;
+        public int playerDropdashCount2;
+        public int playerDropdashCount3;
+        public int PLAYER_SONIC;
+        public int PLAYER_TAILS;
+        public int PLAYER_KNUCKLES;
+        public int PLAYER_SONIC_TAILS;
+        public int PLAYER_AMY;
+        public int PLAYER_AMY_TAILS;
+        private int gameHasPlusDLC;
+        public int NOTIFY_STATS_CHARA_ACTION2;
+    }
+
+    public struct SCDGlobalVariables
+    {
+        public int OptionsGameMode;
+        public int OptionsOriginalControls;
+        public int OptionsTailsUnlocked;
+        public int OptionsSaveSlot;
+        public int OptionsDAGardenFlag;
+        public int OptionsVisualModeFlag;
+        public int OptionsStageSelectFlag;
+        public int OptionsSoundTestFlag;
+        public int Oscillation;
+        public int PlayerScore;
+        public int PlayerScoreBonus;
+        public int PlayerLives;
+        public int PlayerAirTimer;
+        public int PlayerRoofBarrier;
+        public int PlayerHeavyMetalFlag;
+        public int PlayerRCollisionFlag;
+        public int RingAniCount;
+        public int RingFrame;
+        public int RingExtraLife;
+        public int RingPan;
+        public int Rec_Milliseconds;
+        public int Rec_Seconds;
+        public int Rec_Minutes;
+        public int LampPostCheck;
+        public int LampPostSide;
+        public int WarpDestination;
+        public int WarpTimer;
+        public int WarpFrame;
+        public int WarpPlayerFrame;
+        public int WarpCount;
+        public int WarpXPos;
+        public int WarpYPos;
+        public int WarpXVelocity;
+        public int WarpYVelocity;
+        public int WarpRings;
+        public int WarpCollisionMode;
+        public int WarpGravity;
+        public int WarpState;
+        public int WarpAnimation;
+        public int WarpAngle;
+        public int WarpSpeed;
+        public int WarpMinRollSpeed;
+        public int WarpSpeedCompare;
+        public int Transporter_Destroyed;
+        public int MetalSonic_Destroyed;
+        public int MetalSonic_EntityNo;
+        public int MetalSonic_List;
+        public int Good_Future;
+        public int Good_Future_List;
+        public int Good_Future_Count;
+        public int Fade_Colour;
+        public int Flower_TypeNo;
+        public int SpecialStageListPos;
+        public int SpecialStageTimeStones;
+        public int SpecialStageNextZone;
+        public int StageNewWaterLevel;
+        public int StageDeathBoundary;
+        public int ConveyorBelt_Flag;
+        public int ConveyorBelt_Frame;
+        public int ConveyorBelt_Speed;
+        public int PathSwap_Flag;
+        public int PathSwap_Frame;
+        public int Mini_PlayerFlag;
+        public int RotatingDrum_Timer;
+        public int ANI_STOPPED;
+        public int ANI_WAITING;
+        public int ANI_BORED;
+        public int ANI_LOOKINGUP;
+        public int ANI_LOOKINGDOWN;
+        public int ANI_WALKING;
+        public int ANI_RUNNING;
+        public int ANI_SKIDDING;
+        public int ANI_PEELOUT;
+        public int ANI_SPINDASH;
+        public int ANI_JUMPING;
+        public int ANI_BOUNCING;
+        public int ANI_HURT;
+        public int ANI_DYING;
+        public int ANI_DROWNING;
+        public int ANI_FANROTATE;
+        public int ANI_BREATHING;
+        public int ANI_PUSHING;
+        public int ANI_FLAILINGLEFT;
+        public int ANI_FLAILINGRIGHT;
+        public int ANI_HANGING;
+        public int ANI_DROPPING;
+        public int ANI_FLYING;
+        public int ANI_FLYINGTIRED;
+        public int ANI_SWIMMING;
+        public int ANI_SWIMMINGTIRED;
+        public int ANI_LAUNCHER;
+        public int ANI_SPINNING_TOP;
+        public int ANI_RAMP_RUNNING1;
+        public int ANI_RAMP_RUNNING2;
+        public int ANI_RAMP_RUNNING3;
+        public int ANI_RAMP_RUNNING4;
+        public int ANI_RAMP_RUNNING5;
+        public int ANI_RAMP_RUNNING6;
+        public int ANI_ROLL3D;
+        public int ANI_SIZE_CHANGE;
+        public int TimeAttackRound;
+        public int TimeAttackZone;
+        public int TimeAttackResult;
+        public int TimeAttackMenuSection;
+        public int ANI_CLINGING;
+        public int PlayerWaterStream;
+        public int OptionsDevMenuFlag;
+        public int OptionsAttractMode;
+        public int OptionsDemoNumber;
+        public int OptionsSoundtrack;
+        public int OptionsTouchControls;
+        public int OptionsPhysicalControls;
+        public int OptionsDPadX;
+        public int OptionsHapticsMenu;
+        public int LeaderboardID;
+        public int LeaderboardOffset;
+        public int SegaIDLoggedIn;
+        public int EngineDeviceType;
+        public int MenuExitFlag;
+        public int gamePlayMode;
+        public int NOTIFY_DEATH_EVENT;
+        public int NOTIFY_TOUCH_SIGNPOST;
+        public int BOOT_PLAYMODE_CLASSIC;
+        public int BOOT_PLAYMODE_ANNIVERSARY;
+        public int BOOT_PLAYMODE_BOSSRUSH;
+        public int BOOT_PLAYMODE_MIRRORING;
+        public int BOOT_PLAYMODE_MISSION;
+        public int gameCallbackParam0;
+        public int gameCallbackParam1;
+        public int gameCallbackParam2;
+        public int gameCallbackParam3;
+        public int NOTIFY_HUD_ENABLE;
+        public int NOTIFY_ADD_COIN;
+        public int gameHudEnable;
+        public int HUDENABLE_OFF;
+        public int HUDENABLE_ON;
+        public int gameCoinMode;
+        public int gameForceKillPlayer;
+        public int NOTIFY_KILL_ENEMY;
+        public int gameMissionCondition;
+        public int MISSION_CONDITION_CLEAR;
+        public int MISSION_CONDITION_FAIL;
+        public int gameMissionFunctionNo;
+        public int gameMissionValue;
+        public int gameContinueFlag;
+        public int NOTIFY_SAVESLOT_SELECT;
+        public int gameMissionEnd;
+        public int NOTIFY_FUTURE_PAST;
+        public int NOTIFY_GOTO_FUTURE_PAST;
+        public int NOTIFY_BOSS_END;
+        public int NOTIFY_SPECIAL_END;
+        public int BOOT_PLAYMODE_STORY;
+        public int gameTitleCardDisable;
+        public int gameBossOneLife;
+        public int NOTIFY_DEBUGPRINT;
+        public int NOTIFY_KILL_BOSS;
+        public int NOTIFY_TOUCH_EMERALD;
+        public int NOTIFY_STATS_ENEMY;
+        public int KILL_ENEMY_ATTR_ANIMALPRISON;
+        public int KILL_ENEMY_ATTR_SPINDASH;
+        public int KILL_ENEMY_ATTR_GLIDING;
+        public int NOTIFY_STATS_CHARA_ACTION;
+        public int NOTIFY_STATS_RING;
+        public int NOTIFY_STATS_MOVIE;
+        public int NOTIFY_STATS_PARAM_1;
+        public int NOTIFY_STATS_PARAM_2;
+        public int StatsUsabilityParam1;
+        public int StatsUsabilityParam2;
+        public int StatsUsabilityParam3;
+        public int StatsUsabilityParam4;
+        public int StatsUsabilityParam5;
+        public int StageStatsUsabilityParam1;
+        public int StageStatsUsabilityParam2;
+        public int StageStatsUsabilityParam3;
+        public int StageStatsUsabilityParam4;
+        public int StageStatsUsabilityParam5;
+        public int gameMainMenuMode;
+        public int MAINMENUMODE_VISUALMODE;
+        public int MAINMENUMODE_SOUNDTRACK;
+        public int MAINMENUMODE_CHARASELECT;
+        public int NOTIFY_CHARACTER_SELECT;
+        public int gameCallbackResult;
+        public int NOTIFY_SPECIAL_RETRY;
+        public int NOTIFY_TOUCH_CHECKPOINT;
+        public int NOTIFY_ACT_FINISH;
+        public int MAINMENUMODE_HELPOPTION;
+        public int MAINMENUMODE_EXTRAS;
+        public int NOTIFY_1P_VS_SELECT;
+        public int gameTitleMode;
+        public int gameOneStageFlag;
+        public int NOTIFY_STAGE_RETRY;
+        public int recRing;
+        public int recScore;
+        public int MAINMENUMODE_SETTINGS;
+        public int NOTIFY_SOUND_TRACK;
+        public int NOTIFY_GOOD_ENDING;
+        public int NOTIFY_BACK_TO_MAINMENU;
+        public int NOTIFY_LEVEL_SELECT_MENU;
+        public int NOTIFY_PLAYER_SET;
+        public int NOTIFY_EXTRAS_MODE;
+        public int gameCoinCount;
+        public int recStage;
+        public int NOTIFY_SPIN_DASH_TYPE;
+        public int inputPressButton;
+        public int PlayerDeadResetRings;
+        public int gameTimeOver;
+        public int NOTIFY_TIME_OVER;
+        public int BackupSpecialStageListPos;
+        public int BackupTimeStones;
+        public int TimeAttackUnlockCount;
+        public int NOTIFY_TIMEATTACK_MODE;
+        public int PLAYER_SONIC;
+        public int PLAYER_TAILS;
+        public int PLAYER_KNUCKLES;
+        public int PLAYER_AMY;
+        public int ANI_HAMMER_JUMP;
+        public int ANI_HAMMER_DASH;
+        public int C_ENEMY;
+        public int NOTIFY_STATS_BREAK_OBJECT;
+        public int NOTIFY_STATS_SAVE_FUTURE;
+        public int ANI_GLIDING;
+        public int ANI_GLIDING_DROP;
+        public int ANI_GLIDING_STOP;
+        public int ANI_CLIMBING;
+        public int ANI_LEDGEPULLUP;
+        public int NOTIFY_STATS_CHARA_ACTION2;
+    }
+
+    public struct S2GlobalVariables
+    {
+        public int optionsGameMode;
+        public int optionsSpeedCap;
+        public int optionsSaveSlot;
+        public int optionsStageSelectFlag;
+        public int optionsSoundTestFlag;
+        public int optionsAttractMode;
+        public int optionsDemoNumber;
+        public int optionsTouchControls;
+        public int optionsPhysicalControls;
+        public int optionsAirSpeedCap;
+        public int optionsRegion;
+        public int optionsSpikeBehavior;
+        public int optionsShieldType;
+        public int optionsVsMode;
+        public int optionsHiddenPalace;
+        public int optionsTailsFlight;
+        public int optionsSuperTails;
+        public int oscillation;
+        public int ringTimer;
+        public int ringFrame;
+        public int ringPan;
+        public int ringExtraLife;
+        public int playerScore;
+        public int playerScore2;
+        public int playerScoreBonus;
+        public int playerLives;
+        public int playerLives2;
+        public int playerContinues;
+        public int playerAirTimer;
+        public int playerRCollisionFlag;
+        public int playerWaterStream;
+        public int recMilliSeconds;
+        public int recSeconds;
+        public int recMinutes;
+        public int recWaterState;
+        public int recWaterLevel;
+        public int recStage;
+        public int recStageList;
+        public int starPostID;
+        public int fadeColor;
+        public int animalType1;
+        public int animalType2;
+        public int invincibilityType;
+        public int blueShieldType;
+        public int specialStageListPos;
+        public int specialStageEmeralds;
+        public int specialStageNextZone;
+        public int stageWaterState;
+        public int stageNewWaterLevel;
+        public int stageDeathBoundary;
+        public int stagePlayer2Enabled;
+        public int stageMusicFlag;
+        public int stageTimeOver;
+        public int timeAttackZone;
+        public int timeAttackAct;
+        public int timeAttackResult;
+        public int timeAttackMenuSection;
+        public int ANI_STOPPED;
+        public int ANI_WAITING;
+        public int ANI_BORED;
+        public int ANI_LOOKINGUP;
+        public int ANI_LOOKINGDOWN;
+        public int ANI_WALKING;
+        public int ANI_RUNNING;
+        public int ANI_SKIDDING;
+        public int ANI_PEELOUT;
+        public int ANI_SPINDASH;
+        public int ANI_JUMPING;
+        public int ANI_BOUNCING;
+        public int ANI_HURT;
+        public int ANI_DYING;
+        public int ANI_DROWNING;
+        public int ANI_FANROTATE;
+        public int ANI_BREATHING;
+        public int ANI_PUSHING;
+        public int ANI_FLAILING1;
+        public int ANI_FLAILING2;
+        public int ANI_FLAILING3;
+        public int ANI_HANGING;
+        public int ANI_GRABBED;
+        public int ANI_CLINGING;
+        public int ANI_FLYING;
+        public int ANI_FLYINGTIRED;
+        public int ANI_SWIMMING;
+        public int ANI_SWIMMINGTIRED;
+        public int ANI_GLIDING;
+        public int ANI_GLIDING_DROP;
+        public int ANI_GLIDING_STOP;
+        public int ANI_CLIMBING;
+        public int ANI_LEDGEPULLUP;
+        public int ANI_TWIRL;
+        public int ANI_WATERSLIDE;
+        public int ANI_CONTINUE;
+        public int ANI_CONTINUE_UP;
+        public int ANI_SUPER_TRANSFORM;
+        public int ANI_FLY_LIFT_DOWN;
+        public int ANI_FLY_LIFT_UP;
+        public int ANI_FLY_LIFT_TIRED;
+        public int ANI_SWIM_LIFT;
+        public int SpeedUpMusic;
+        public int SlowDownMusic;
+        public int recAnimation;
+        public int touchJump;
+        public int touchDebug;
+        public int SetAchievement;
+        public int SetLeaderboard;
+        public int creditsScreen;
+        public int attractStage;
+        public int vsPlayerID;
+        public int vsPlayer2Type;
+        public int vsGameLength;
+        public int vsItemMode;
+        public int vsActiveList;
+        public int vsListPos;
+        public int vsMatch;
+        public int vsStageMask;
+        public int vsTieBreaker;
+        public int vsTime1P;
+        public int vsRings1P;
+        public int vsTotalRings1P;
+        public int vsItems1P;
+        public int vsCheckpoint1P;
+        public int vsTime2P;
+        public int vsRings2P;
+        public int vsItems2P;
+        public int vsTotalRings2P;
+        public int vsCheckpoint2P;
+        public int vsRestartX1;
+        public int vsRestartY1;
+        public int vsRestartX2;
+        public int vsRestartY2;
+        public int vsDataSent;
+        public int vsRandomValue;
+        public int vsBossAttack;
+        public int vsSpeed;
+        public int Connect2PVS;
+        public int Disconnect2PVS;
+        public int SendEntity;
+        public int SendValue;
+        public int ReceiveEntity;
+        public int ReceiveValue;
+        public int TransmitGlobal;
+        public int ShowPromoPopup;
+        public int gamePlayMode;
+        public int NotifyCallback;
+        public int NOTIFY_DEATH_EVENT;
+        public int NOTIFY_TOUCH_SIGNPOST;
+        public int NOTIFY_HUD_ENABLE;
+        public int NOTIFY_ADD_COIN;
+        public int NOTIFY_KILL_ENEMY;
+        public int BOOT_PLAYMODE_CLASSIC;
+        public int BOOT_PLAYMODE_ANNIVERSARY;
+        public int BOOT_PLAYMODE_BOSSRUSH;
+        public int BOOT_PLAYMODE_MIRRORING;
+        public int BOOT_PLAYMODE_MISSION;
+        public int gameCallbackParam0;
+        public int gameCallbackParam1;
+        public int gameCallbackParam2;
+        public int gameCallbackParam3;
+        public int gameHudEnable;
+        public int HUDENABLE_OFF;
+        public int HUDENABLE_ON;
+        public int gameCoinMode;
+        public int gameForceKillPlayer;
+        public int gameMissionCondition;
+        public int MISSION_CONDITION_CLEAR;
+        public int MISSION_CONDITION_FAIL;
+        public int gameMissionFunctionNo;
+        public int gameMissionValue;
+        public int gameMissionEnd;
+        public int gameContinueFlag;
+        public int NOTIFY_SAVESLOT_SELECT;
+        public int NOTIFY_FUTURE_PAST;
+        public int NOTIFY_GOTO_FUTURE_PAST;
+        public int NOTIFY_BOSS_END;
+        public int NOTIFY_SPECIAL_END;
+        public int BOOT_PLAYMODE_STORY;
+        public int gameTitleCardDisable;
+        public int gameBossOneLife;
+        public int KILL_ENEMY_ATTR_ANIMALPRISON;
+        public int KILL_ENEMY_ATTR_SPINDASH;
+        public int KILL_ENEMY_ATTR_GLIDING;
+        public int NOTIFY_DEBUGPRINT;
+        public int NOTIFY_KILL_BOSS;
+        public int NOTIFY_TOUCH_EMERALD;
+        public int NOTIFY_STATS_ENEMY;
+        public int NOTIFY_STATS_CHARA_ACTION;
+        public int NOTIFY_STATS_RING;
+        public int NOTIFY_STATS_MOVIE;
+        public int NOTIFY_STATS_PARAM_1;
+        public int NOTIFY_STATS_PARAM_2;
+        public int StatsUsabilityParam1;
+        public int StatsUsabilityParam2;
+        public int StatsUsabilityParam3;
+        public int StatsUsabilityParam4;
+        public int StatsUsabilityParam5;
+        public int StageStatsUsabilityParam1;
+        public int StageStatsUsabilityParam2;
+        public int StageStatsUsabilityParam3;
+        public int StageStatsUsabilityParam4;
+        public int StageStatsUsabilityParam5;
+        public int NOTIFY_CHARACTER_SELECT;
+        public int gameCallbackResult;
+        public int NOTIFY_SPECIAL_RETRY;
+        public int NOTIFY_TOUCH_CHECKPOINT;
+        public int NOTIFY_ACT_FINISH;
+        public int NOTIFY_1P_VS_SELECT;
+        public int gameTitleMode;
+        public int NOTIFY_CONTROLLER_SUPPORT;
+        public int gameOneStageFlag;
+        public int NOTIFY_STAGE_RETRY;
+        public int recRing;
+        public int recScore;
+        public int NOTIFY_SOUND_TRACK;
+        public int NOTIFY_GOOD_ENDING;
+        public int NOTIFY_BACK_TO_MAINMENU;
+        public int NOTIFY_LEVEL_SELECT_MENU;
+        public int NOTIFY_PLAYER_SET;
+        public int NOTIFY_EXTRAS_MODE;
+        public int gameCheatEmeralds;
+        public int gameCoinCount;
+        public int gameStageskipped;
+        public int inputPressButton;
+        public int playerDeadResetRings;
+        public int gameTimeOver;
+        public int NOTIFY_TIME_OVER;
+        public int playerDropdashCount0;
+        public int playerDropdashCount1;
+        public int playerDropdashCount2;
+        public int playerDropdashCount3;
+        public int PLAYER_SONIC;
+        public int PLAYER_TAILS;
+        public int PLAYER_KNUCKLES;
+        public int PLAYER_SONIC_TAILS;
+        public int PLAYER_KNUCKLES_TAILS;
+        public int PLAYER_AMY;
+        public int PLAYER_AMY_TAILS;
+        public int ANI_HAMMER_JUMP;
+        public int ANI_HAMMER_DASH;
+        private int gameHasPlusDLC;
+        public int NOTIFY_STATS_CHARA_ACTION2;
+    }
+
+    public enum LegacyPlayer
+    {
+        Sonic,
+        Tails,
+        Knuckles,
+        SonicTails,
+        KnucklesTails,
+        Amy,
+        AmyTails
+    }
+
+    public enum S3KPlayer
+    {
+        None = (0 << 0),
+        Sonic = (1 << 0),
+        Tails = (1 << 1),
+        Knuckles = (1 << 2),
+        Amy = (1 << 3),
+        Mighty = (1 << 4), // Unused
+        Ray = (1 << 5) // Unused
+    }
+
+    public enum S3KMedalMod
+    {
+        DebugMode = (1 << 0),
+        AndKnuckles = (1 << 1),
+        SuperPeelOut = (1 << 2),
+        InstaShield = (1 << 3),
+        NoDropDash = (1 << 4),
+        NoTimeOver = (1 << 5),
+        NoLives = (1 << 6)
+    }
+
+    public enum S3KSecret
+    {
+        RickyMode = (1 << 0),
+        SuperDash = (1 << 1),
+        BarrelHotline = (1 << 2), // Unused
+        NormalPhysics2P = (1 << 3),
+        RegionSwap = (1 << 4),
+        CameraTracking = (1 << 5),
+        PenPenMode = (1 << 6),
+        RandomItems = (1 << 7),
+        BlueShield = (1 << 8),
+        Unknown = (1 << 9), // Unused
+        BananaMode = (1 << 10),
+        NoItems = (1 << 11),
+        HiddenCredits = (1 << 12)
+    }
+}
+
+Library "ReflectionHelpers" by "Hyper" 
+{
+    #lib "Bitwise"
+    #lib "Reflection"
+    
+    #define RFL_GET_PARAM(info, hierarchy) info.pData->hierarchy
+
+    #define RFL_SET_PARAM(info, hierarchy, value) info.pData->hierarchy = value
+
+    #define RFL_RESET_PARAM(info, type, hierarchy) info.pData->hierarchy = Reflection.GetOriginalData<type>(info.Name).hierarchy
+}
+
+
+
+Library "Reflection" by "Hyper" 
+{
+    #lib "Resources"
+
+    using System.Collections.Generic;
+
+    private static bool _isInitialised = false;
+    private static List<string> _rflPointersQueue = new();
+    private static Dictionary<string, object> _rflBackups = new();
+    private static Dictionary<string, long> _rflPointers = new();
+
+    public class ReflectionInfo<T> where T : unmanaged
+    {
+        public string Name;
+        public Type Type;
+        public T* pData;
+
+        public ReflectionInfo(string name, T* pData)
+        {
+            this.Name = name;
+            this.Type = typeof(T);
+            this.pData = pData;
+        }
+
+        public override string ToString()
+        {
+            return $"{Name} : 0x{((IntPtr)pData).ToString("X16")}";
+        }
+    }
+
+    private void Init()
+    {
+    	if (_isInitialised)
+    		return;
+    	
+    	long GetReflectionPtr(string resourceName, string resourceType, long pResourceData)
+    	{
+    		if (resourceType != "ResReflection")
+    			return pResourceData;
+
+    		if (_rflPointersQueue.Contains(resourceName))
+    		{
+    			long ptr = *(long*)(pResourceData + 0x60);
+
+    			if (_rflPointers.ContainsKey(resourceName))
+    			{
+    				_rflPointers[resourceName] = ptr;
+    			}
+    			else
+    			{
+    				_rflPointers.Add(resourceName, ptr);
+    			}
+    		}
+
+    		return pResourceData;
+    	}
+
+    	Resources.AddResourceDataAction(GetReflectionPtr);
+
+    	_isInitialised = true;
+    }
+
+    public T* GetDataPtr<T>(string rflName) where T : unmanaged
+    {
+    	Init();
+
+    	if (!_rflPointersQueue.Contains(rflName))
+    		_rflPointersQueue.Add(rflName);
+
+    	if (!_rflPointers.ContainsKey(rflName))
+    		return null;
+
+        long ptr = _rflPointers[rflName];
+
+        if (ptr == 0)
+            return null;
+
+        // Check for BINA signature.
+        if (*(int*)(ptr - 0x40) != 0x414E4942)
+            return null;
+
+        var result = (T*)ptr;
+
+    	if (result != null && !_rflBackups.ContainsKey(rflName))
+            _rflBackups.Add(rflName, *result);
+
+    	return result;
+    }
+
+    public ReflectionInfo<T> GetDataInfo<T>(string rflName) where T : unmanaged
+    {
+        return new ReflectionInfo<T>(rflName, GetDataPtr<T>(rflName));
+    }
+
+    public object GetOriginalData(string rflName)
+    {
+        if (!_rflBackups.ContainsKey(rflName))
+            return null;
+
+        return _rflBackups[rflName];
+    }
+
+    public T GetOriginalData<T>(string rflName) where T : unmanaged
+    {
+        return (T)GetOriginalData(rflName);
+    }
+}
+
+
+
+Library "Resources" by "Hyper" 
+{
+    #include "Helpers" noemit
+    
+    #lib "Memory"
+    
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    
+    private static bool _isInitialised = false;
+    
+    private static string _currentResourceName = string.Empty;
+    private static string _currentResourceType = string.Empty;
+    
+    public delegate string TResourceNotifyAction(string resourceName, string resourceType);
+    private static List<TResourceNotifyAction> _resourceNotifyActions = new();
+    
+    public delegate long TResourceDataAction(string resourceName, string resourceType, long pResourceData);
+    private static List<TResourceDataAction> _resourceDataActions = new();
+    
+    UNMANAGED_FUNCTION(long, GetResourceInfo, long pResourceName, long pResourceTypeName)
+    {
+        _currentResourceName = Marshal.PtrToStringAnsi((IntPtr)pResourceName);
+        _currentResourceType = Marshal.PtrToStringAnsi((IntPtr)pResourceTypeName);
+    
+    	foreach (TResourceNotifyAction action in _resourceNotifyActions)
+    		pResourceName = (long)Marshal.StringToHGlobalAnsi(action.Invoke(_currentResourceName, _currentResourceType));
+    	
+        return pResourceName;
+    }
+    
+    UNMANAGED_FUNCTION(long, GetResourceData, long pResourceData)
+    {
+    	foreach (TResourceDataAction action in _resourceDataActions)
+    		pResourceData = action.Invoke(_currentResourceName, _currentResourceType, pResourceData);
+    
+        return pResourceData;
+    }
+    
+    private void Init()
+    {
+    	if (_isInitialised)
+    		return;
+    
+        /* 0x1405E8313 */
+        long sigLoadResourceCaller = ScanSignature
+        (
+            "\xE8\xCC\xCC\xCC\xCC\x48\x85\xC0\x74\x22\x80\x78\x10\x00",
+            "x????xxxxxxxxx"
+        );
+    
+        if (sigLoadResourceCaller == 0)
+            return;
+    
+        WriteAsmHook
+        (
+            $@"
+                sub  rsp, 0xD0
+                mov  rdi, r8
+                mov  rbx, rdx
+                mov  rsi, rcx
+                mov  rcx, rdx
+                mov  rdx, [rdi]
+                mov  rax, {GET_UNMANAGED_FUNCTION_PTR(GetResourceInfo)}
+                call rax
+                mov  rdx, [rcx]
+                mov  rbx, rdx
+            ",
+    
+            /* 0x140790E9B */
+            ScanSignature
+            (
+                "\x48\x81\xEC\xD0\x00\x00\x00\x49\x8B\xF8\x48\x8B\xDA",
+                "xxxxxxxxxxxxx"
+            ),
+    
+            HookBehavior.Replace
+        );
+    
+        WriteAsmHook
+        (
+            $@"
+                mov  rcx, rax
+                mov  rax, {GET_UNMANAGED_FUNCTION_PTR(GetResourceData)}
+                call rax
+                lea  r11, qword ptr [rsp + 0xD8 + 0xFFFFFFFFFFFFFFF8]
+                mov  rbx, qword ptr [r11 + 0x10]
+                mov  rsi, qword ptr [r11 + 0x18]
+    			mov  rsp, r11
+            ",
+            
+            /* 0x140790F76 */
+            Memory.ReadCall(sigLoadResourceCaller) + 0xE6,
+    
+            HookBehavior.Replace
+        );
+    
+    	_isInitialised = true;
+    }
+    
+    /*
+    	Use notify actions for redirecting resources.
+    	Redirected resources must already have their data present in memory loaded from their respective Packfiles.
+        
+    	Example;
+    
+    	string NotifyRedirectDashPanelResource(string resourceName, string resourceType)
+    	{
+    		if (resourceName == "cmn_obj_dashpanel")
+    			return "cmnisl_obj_dashpanel";
+    
+    		return resourceName;
+    	}
+    
+    	Resources.AddResourceNotifyAction(NotifyRedirectDashPanelResource);
+    */
+    public void AddResourceNotifyAction(TResourceNotifyAction action)
+    {
+    	Init();
+    
+    	if (_resourceNotifyActions.Contains(action))
+    		return;
+    
+    	_resourceNotifyActions.Add(action);
+    }
+    
+    public void RemoveResourceNotifyAction(TResourceNotifyAction action)
+    {
+    	Init();
+    
+    	if (!_resourceNotifyActions.Contains(action))
+    		return;
+    
+    	_resourceNotifyActions.Remove(action);
+    }
+        
+    /*
+    	Use data actions for reading resource data.
+        
+    	Example;
+    
+    	SonicParameters.Root* pSonicParameters;
+    
+    	long GetSonicParametersPointer(string resourceName, string resourceType, long pResourceData)
+    	{
+    		if (resourceName == "player_common" && resourceType == "ResReflection")
+    			pSonicParameters = (SonicParameters.Root*)(*(long*)(pResourceData + 0x60));
+    
+    		return pResourceData;
+    	}
+    
+    	Resources.AddResourceDataAction(GetSonicParametersPointer);
+    */
+    public void AddResourceDataAction(TResourceDataAction action)
+    {
+    	Init();
+    
+    	if (_resourceDataActions.Contains(action))
+    		return;
+    
+    	_resourceDataActions.Add(action);
+    }
+    
+    public void RemoveResourceDataAction(TResourceDataAction action)
+    {
+    	Init();
+    
+    	if (!_resourceDataActions.Contains(action))
+    		return;
+    
+    	_resourceDataActions.Remove(action);
+    }
+}
+
+
+
+Library "UIRflParam"
+{
+    using System.Numerics;
+    using System.Runtime.InteropServices;
+
+    [StructLayout(LayoutKind.Explicit, Size = 4)]
+    public struct InputHelpRflParam
+    {
+        [FieldOffset(0)] public float itemMargin;
+    }
+
+    public enum MainMenuMode : sbyte
+    {
+        MAINMENU_MODE_SONIC1 = 0,
+        MAINMENU_MODE_SONICCD = 1,
+        MAINMENU_MODE_SONIC2 = 2,
+        MAINMENU_MODE_SONIC3K = 3,
+        MAINMENU_MODE_MISSION = 4,
+        MAINMENU_MODE_DATA = 5,
+        MAINMENU_MODE_NUM = 6
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 2)]
+    public struct AllMapMenuItemParam
+    {
+        [FieldOffset(0)] public MainMenuMode menuMode;
+        [FieldOffset(1)] public bool isRepeate;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 8)]
+    public struct AllMapMenuRflParam
+    {
+        [FieldOffset(0)] public AllMapMenuItemParam itemUp;
+        [FieldOffset(2)] public AllMapMenuItemParam itemDown;
+        [FieldOffset(4)] public AllMapMenuItemParam itemLeft;
+        [FieldOffset(6)] public AllMapMenuItemParam itemRight;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 60)]
+    public struct MainMenuRflParam
+    {
+        [FieldOffset(0)]  public float textScrollSpeed;
+        [FieldOffset(4)]  public bool textScrollLoop;
+        [FieldOffset(5)]  public unsafe fixed byte /* AllMapMenuRflParam[6] */ _allMapMenu[48];
+
+        public unsafe AllMapMenuRflParam* allMapMenu
+        {
+            get
+            {
+                fixed (byte* p_allMapMenu = _allMapMenu)
+                    return (AllMapMenuRflParam*)p_allMapMenu;
+            }
+        }
+
+        [FieldOffset(56)] public float backTitleInputTime;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 2)]
+    public struct MenuFPSRflParam
+    {
+        [FieldOffset(0)] public bool fixedFrame;
+        [FieldOffset(1)] public bool isFPS30;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 88)]
+    public struct MenuRflParam
+    {
+        [FieldOffset(0)]  public InputHelpRflParam inputHelpParam;
+        [FieldOffset(4)]  public MainMenuRflParam mainMenuParam;
+        [FieldOffset(64)] public MenuFPSRflParam fpsParam;
+        [FieldOffset(66)] public MenuFPSRflParam fpsParamNX;
+        [FieldOffset(68)] public MenuFPSRflParam fpsParamORBIS;
+        [FieldOffset(70)] public MenuFPSRflParam fpsParamDURANGO;
+        [FieldOffset(72)] public float missionOutWaitTimer;
+        [FieldOffset(76)] public float mydataOutWaitTimer;
+        [FieldOffset(80)] public float museumOutWaitTimer;
+        [FieldOffset(84)] public float optionOutWaitTimer;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 80)]
+    public struct AdvertiseRflParam
+    {
+        [FieldOffset(0)]  public float CESA_autoTimer;
+        [FieldOffset(4)]  public float CESA_skipTimer;
+        [FieldOffset(8)]  public float CESA_startTimer;
+        [FieldOffset(12)] public float CESA_endTimer;
+        [FieldOffset(16)] public float CAUTION_LIGHT_autoTimer;
+        [FieldOffset(20)] public float CAUTION_LIGHT_skipTimer;
+        [FieldOffset(24)] public float CAUTION_LIGHT_startTimer;
+        [FieldOffset(28)] public float CAUTION_LIGHT_endTimer;
+        [FieldOffset(32)] public float SEGA_LOGO_autoTimer;
+        [FieldOffset(36)] public float SEGA_LOGO_skipTimer;
+        [FieldOffset(40)] public float SEGA_LOGO_startTimer;
+        [FieldOffset(44)] public float SEGA_LOGO_endTimer;
+        [FieldOffset(48)] public float SONICTEAM_LOGO_autoTimer;
+        [FieldOffset(52)] public float SONICTEAM_LOGO_skipTimer;
+        [FieldOffset(56)] public float SONICTEAM_LOGO_startTimer;
+        [FieldOffset(60)] public float SONICTEAM_LOGO_endTimer;
+        [FieldOffset(64)] public float RSDK_CRI_LOGO_autoTimer;
+        [FieldOffset(68)] public float RSDK_CRI_LOGO_skipTimer;
+        [FieldOffset(72)] public float RSDK_CRI_LOGO_startTimer;
+        [FieldOffset(76)] public float RSDK_CRI_LOGO_endTimer;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 12)]
+    public struct TitleRflParam
+    {
+        [FieldOffset(0)] public float toMovieTimer;
+        [FieldOffset(4)] public float movieVolume;
+        [FieldOffset(8)] public float cancelInputTime;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 12)]
+    public struct OptionLanguageEditRflParam
+    {
+        [FieldOffset(0)] public unsafe fixed bool enableEdit[12];
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 120)]
+    public struct OptionLetterBoxEditRflParam
+    {
+        [FieldOffset(0)]  public unsafe fixed int enableDLC1LetterBoxKinds[10];
+        [FieldOffset(40)] public unsafe fixed int enableDLC2LetterBoxKinds[20];
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 16)]
+    public struct CString
+    {
+        [FieldOffset(0)] public long pValue;
+
+        public string Value
+        {
+        	get => Marshal.PtrToStringAnsi((IntPtr)pValue);
+        	set => pValue = (long)Marshal.StringToHGlobalAnsi(value);
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 72)]
+    public struct OptionLicensePFParam
+    {
+        [FieldOffset(0)]  public CString addText;
+        [FieldOffset(16)] public int addTextSize;
+        [FieldOffset(24)] public CString addCommonTagJP;
+        [FieldOffset(40)] public CString addCommonTagUS;
+        [FieldOffset(56)] public CString addCommonTagEU;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 368)]
+    public struct OptionLicenseRflParam
+    {
+        [FieldOffset(0)]   public int commonTextSize;
+        [FieldOffset(8)]   public OptionLicensePFParam licensePS;
+        [FieldOffset(80)]  public OptionLicensePFParam licenseXBOX;
+        [FieldOffset(152)] public OptionLicensePFParam licenseSWITCH;
+        [FieldOffset(224)] public OptionLicensePFParam licenseSTEAM;
+        [FieldOffset(296)] public OptionLicensePFParam licenseEPIC;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 520)]
+    public struct OptionRflParam
+    {
+        [FieldOffset(0)]   public OptionLanguageEditRflParam languageEdit;
+        [FieldOffset(12)]  public OptionLetterBoxEditRflParam letterBoxEdit;
+        [FieldOffset(136)] public OptionLicenseRflParam licenseParam;
+        [FieldOffset(504)] public int ui_seekbarActionMove;
+        [FieldOffset(508)] public float ui_seekbarWheelRatio;
+        [FieldOffset(512)] public int applyTimer;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 4)]
+    public struct SaveIconRflParam
+    {
+        [FieldOffset(0)] public float minimumDisplayTime;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 712)]
+    public struct Root
+    {
+        [FieldOffset(0)]   public MenuRflParam menuParam;
+        [FieldOffset(88)]  public AdvertiseRflParam advertiseParam;
+        [FieldOffset(168)] public TitleRflParam titleParam;
+        [FieldOffset(184)] public OptionRflParam optionParam;
+        [FieldOffset(704)] public SaveIconRflParam saveIconParam;
+    }
+
+}
+Code "Enable Lives in Mirror Mode" in "Gameplay" by "ĐeäTh & MegAmi" does
+/*
+Disables the flag for Coins when playing in Mirror Mode.
+
+Notes;
+- This will cause Mirror Mode to use a different set of saves from normal, and your regular Mirror Mode saves will be inaccessible.
+*/
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetPlayMode() != RSDK.PlayMode.Mirror || RSDK.GetPlayMode() == RSDK.PlayMode.Unknown)
+        return;
+
+    if (RSDK.GetCurrentGame() == RSDK.Game.Sonic1)
+    {
+        var S1Globals = RSDK.GetSonic1Globals();
+
+        if (S1Globals == null)
+            return;
+
+        S1Globals->gameCoinMode = 0;
+    }
+    else if (RSDK.GetCurrentGame() == RSDK.Game.SonicCD)
+    {
+        var SCDGlobals = RSDK.GetSonicCDGlobals();
+
+        if (SCDGlobals == null)
+            return;
+
+        SCDGlobals->gameCoinMode = 0;
+    }
+    else if (RSDK.GetCurrentGame() == RSDK.Game.Sonic2)
+    {
+        var S2Globals = RSDK.GetSonic2Globals();
+
+        if (S2Globals == null)
+            return;
+
+        S2Globals->gameCoinMode = 0;
+    }
+    else if (RSDK.GetCurrentGame() == RSDK.Game.Sonic3k)
+    {
+        if (RSDK.GetRSDKGlobalsPtr() == 0)
+            return;
+
+        // HUD Update
+        // Version 1.0.0: RSDKGlobalsPtr + 0x447D20
+        // Version 1.0.4: RSDKGlobalsPtr + 0x4C34D4 (Thanks to RDC)
+        *(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x4C34D4) = 0;
+
+        // Coin Mode
+        // Version 1.0.0: RSDKGlobalsPtr + 0x447CD4
+        // Version 1.0.4: RSDKGlobalsPtr + 0x4C3520 (Thanks to RDC)
+        // Version 2.0.0: RSDKGlobalsPtr + 0x4C3528
+        *(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3528) = 0;
+    }
+}
+
+Code "Enable Lives in Anniversary Mode" in "Gameplay" by "ĐeäTh & MegAmi" does
+/*
+Disables the flag for Coins when playing in Anniversary Mode.
+
+Notes;
+- This will cause Anniversary Mode to use a different set of saves from normal, and your regular Anniversary Mode saves will be inaccessible.
+*/
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetPlayMode() != RSDK.PlayMode.Anniversary || RSDK.GetPlayMode() == RSDK.PlayMode.Unknown)
+        return;
+
+    if (RSDK.GetCurrentGame() == RSDK.Game.Sonic1)
+    {
+        var S1Globals = RSDK.GetSonic1Globals();
+
+        if (S1Globals == null)
+            return;
+
+        S1Globals->gameCoinMode = 0;
+    }
+    else if (RSDK.GetCurrentGame() == RSDK.Game.SonicCD)
+    {
+        var SCDGlobals = RSDK.GetSonicCDGlobals();
+
+        if (SCDGlobals == null)
+            return;
+
+        SCDGlobals->gameCoinMode = 0;
+    }
+    else if (RSDK.GetCurrentGame() == RSDK.Game.Sonic2)
+    {
+        var S2Globals = RSDK.GetSonic2Globals();
+
+        if (S2Globals == null)
+            return;
+
+        S2Globals->gameCoinMode = 0;
+    }
+    else if (RSDK.GetCurrentGame() == RSDK.Game.Sonic3k)
+    {
+        if (RSDK.GetRSDKGlobalsPtr() == 0)
+            return;
+
+        // HUD Update
+        // Version 1.0.0: RSDKGlobalsPtr + 0x447D20
+        // Version 1.0.4: RSDKGlobalsPtr + 0x4C34D4 (Thanks to RDC)
+        *(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x4C34D4) = 0;
+
+        // Coin Mode
+        // Version 1.0.0: RSDKGlobalsPtr + 0x447CD4
+        // Version 1.0.4: RSDKGlobalsPtr + 0x4C3520 (Thanks to RDC)
+        // Version 2.0.0: RSDKGlobalsPtr + 0x4C3528
+        *(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3528) = 0;
+    }
+}
+
+Patch "Disable Auto Save Icon" in "UI" by "Hyper" 
+{
+    WriteProtected<byte>
+    (
+        // v1.0.0: 0x140403FAC
+        ScanSignature
+        (
+            "\x48\x89\x5C\x24\x00\x48\x89\x74\x24\x00\x48\x89\x7C\x24\x00\x55\x48\x8D\x6C\x24\x00\x48\x81\xEC\x00\x00\x00\x00\x48\x8B\xDA\x48\x8B\xF9\xE8\x00\x00\x00\x00\x48\x8B\xD0\x48\x8B\xCB\xE8\x00\x00\x00\x00\x33\xF6\x48\x85\xC0\x74\x16\x48\x85\xFF\x48\x8D\x97\x00\x00\x00\x00\x48\x8B\xC8\x48\x0F\x44\xD6\xE8\x00\x00\x00\x00\x0F\x57\xC0\xC7\x45\x00\x00\x00\x00\x00\x48\x8D\x8F\x00\x00\x00\x00\xC6\x45\xBB\x80\xF3\x0F\x7F\x45\x00\x48\xC7\x45\x00\x00\x00\x00\x00\x48\xC7\x45\x00\x00\x00\x00\x00\x89\x75\xCF\xE8\x00\x00\x00\x00\x48\x8B\x15\x00\x00\x00\x00\x48\x8D\x4D\xA7\x48\x89\x45\xAF\xC7\x45\x00\x00\x00\x00\x00\xC6\x45\xBB\x15\xE8\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x48\x8B\xD0\x48\x8B\xCF\xE8\x00\x00\x00\x00\x48\x8B\xD8",
+            "xxxx?xxxx?xxxx?xxxxx?xxx????xxxxxxx????xxxxxxx????xxxxxxxxxxxxx????xxxxxxxx????xxxxx?????xxx????xxxxxxxx?xxx?????xxx?????xxxx????xxx????xxxxxxxxxx?????xxxxx????x????xxxxxxx????xxx"
+        )
+        + 0x1C,
+
+        0xE9, 0x94, 0x01, 0x00, 0x00
+    );
+}
+
+
+
+Patch "Enable Debug Mode" in "Debug" by "SuperSonic16 & MegAmi" does "Forces Debug Mode to be enabled in all games."
+{
+    // Force RSDKv4 to return true when checking the Debug Mode flag in ByteCode
+    // 2.0.2: 0x1400CC1E6
+    // mov eax,00000001
+    WriteProtected<byte>(
+        ScanSignature
+        (
+            "\x0F\xB6\x05\xFA\x7A\xD7\x02",
+            "xxxxxxx"
+        ),
+        0xB8, 0x01, 0x00, 0x00, 0x00, 0x90, 0x90);
+
+    // Force RSDKv3 to return true when checking the Debug Mode flag in ByteCode
+    // 2.0.2: 0x1400B5A7F
+    // mov eax,00000001
+    WriteProtected<byte>(
+        ScanSignature
+        (
+            "\x0F\xB6\x05\x61\xE2\xD8\x02",
+            "xxxxxxx"
+        ),
+        0xB8, 0x01, 0x00, 0x00, 0x00, 0x90, 0x90);
+
+    // Set the S3&K Debug Mode flag to be enabled upon stage load
+    // 2.0.1: 0x1401E5BE2
+    // mov ecx,00000001
+    WriteProtected<byte>(
+        ScanSignature
+        (
+            "\x8B\x88\x00\x00\x00\x00\x41\xBE\x00\x00\x00\x00\x48\x8B\x05\x00\x00\x00\x00\x83\xE1\x01\x45\x33\xC9\x44\x89\x74\x24\x00",
+            "xx????xx????xxx????xxxxxxxxxx?"
+        ),
+        0xB9, 0x01, 0x00, 0x00, 0x00, 0x90);
+}
+
+Code "30 FPS Frontend" in "Graphics/FPS" by "MegAmi" does
+/*
+Limits the main menu to running at 30 FPS.
+
+This works similarly to how the Switch version's FPS cap works, meaning the actual games are unaffected.
+*/
+//
+	#include "ReflectionHelpers" noemit
+
+	#lib "UIRflParam"
+//
+{
+	var UIRflParamInfo = Reflection.GetDataInfo<UIRflParam.Root>("ui_rfl_param");
+
+	if (UIRflParamInfo.pData == null)
+		return;
+
+	RFL_SET_PARAM(UIRflParamInfo, menuParam.fpsParam.isFPS30, true);
+}
+Library "Bridge.SetGlobalVariables" by "MegAmi"
+{
+    #include "Helpers" noemit
+
+    #lib "RSDK"
+
+    using System.Collections.Generic;
+
+    private static bool _isInitialised = false;
+
+    public static bool IsEnabledElementalS1 = false;
+    public static bool IsEnabledS2ItemsS1 = false;
+    public static bool IsEnabledSuperFormsS1 = false;
+
+    public static bool IsEnabledElementalS2 = false;
+    public static bool IsEnabledRandomS2 = false;
+    public static bool IsEnabledSuperTailsS2 = false;
+
+    UNMANAGED_FUNCTION(void, SetV4GlobalVariables)
+    {
+        if (RSDK.GetCurrentGame() == RSDK.Game.Sonic1)
+        {
+            var S1Globals = RSDK.GetSonic1Globals();
+
+            if (S1Globals == null)
+                return;
+
+            if (IsEnabledElementalS1)
+                S1Globals->optionsShieldType |= 2;
+            if (IsEnabledS2ItemsS1)
+                S1Globals->optionsShieldType |= 1;
+            if (IsEnabledSuperFormsS1)
+                S1Globals->optionsSuperStates = 1;
+        }
+        else
+        {
+            var S2Globals = RSDK.GetSonic2Globals();
+
+            if (S2Globals == null)
+                return;
+
+            if (IsEnabledElementalS2)
+                S2Globals->optionsShieldType |= 1;
+            if (IsEnabledRandomS2)
+                S2Globals->optionsShieldType |= 2;
+            if (IsEnabledSuperTailsS2)
+                S2Globals->optionsSuperTails = 1;
+        }
+
+        return;
+    }
+
+    [LibraryInitializer]
+    public void Init()
+    {
+        if (_isInitialised)
+            return;
+
+        WriteAsmHook
+        (
+            $@"
+                ; Original code, part 1
+                sub rsp, 0x20
+
+                ; Call the custom function
+                mov  rsi, {GET_UNMANAGED_FUNCTION_PTR(SetV4GlobalVariables)}
+                call rsi
+
+                ; Original code, part 2
+                xor ebx, ebx
+                mov rsi, rcx
+            ",
+
+            /* v2.0.2: 0x1400C7824 */
+            ScanSignature
+            (
+                "\x48\x83\xEC\x20\x33\xDB\x48\x8B\xF1",
+                "xxxxxxxxx"
+            ),
+
+            HookBehavior.Replace
+        );
+
+        _isInitialised = true;
+    }
+}
+
+Code "Disable Super Music" in "Audio/Sonic 3 & Knuckles" by "MegAmi" does
+/*
+Forces the flag for the Super music in Sonic 3 & Knuckles to be disabled.
+
+Notes;
+- Due to how the Super music is coded, it may still play in some instances, such as after the AIZ Act 1 bombing cutscene.
+*/
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    *(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33FC) = 0;
+}
+
+Code "Enable 7th Chaos Emerald" in "Gameplay/Sonic 1" by "MegAmi" does
+/*
+Enables the 7th Chaos Emerald in normal gameplay, allowing the player to use Super forms once all seven are collected.
+
+Notes;
+- The game does not check the emeralds setting when checking if the player should transform, so collecting all seven emeralds in a save file will allow the player to transform regardless of whether or not this code is enabled.
+*/
+//
+    #lib "Bridge.SetGlobalVariables"
+//
+{
+    Bridge.SetGlobalVariables.IsEnabledSuperFormsS1 = true;
+}
+
+Code "Enable Sonic 2 Style Items (experimental)" in "Gameplay/Sonic 1" by "MegAmi" does
+/*
+Enables the Sonic 2 style Blue Shield and invincibility stars.
+
+Known issues;
+- Progress in save files will not be saved.
+*/
+//
+    #lib "Bridge.SetGlobalVariables"
+//
+{
+    Bridge.SetGlobalVariables.IsEnabledS2ItemsS1 = true;
+}
+
+Code "Enable Elemental Shields and Insta Shield (experimental)" in "Gameplay/Sonic 1" by "MegAmi" does
+/*
+Enables the Elemental Shields and Sonic's Insta Shield move.
+
+Known issues;
+- Progress in save files will not be saved.
+*/
+//
+    #lib "Bridge.SetGlobalVariables"
+//
+{
+    Bridge.SetGlobalVariables.IsEnabledElementalS1 = true;
+}
+
+Code "Enable Super Tails" in "Gameplay/Sonic 2" by "MegAmi" does
+/*
+Allows Tails to transform into Super Tails, like the other characters.
+
+Notes;
+- Due to using the same palette colors as Tails, the Coins icon will flash along with Tails when in his Super form.
+*/
+//
+    #lib "Bridge.SetGlobalVariables"
+//
+{
+    Bridge.SetGlobalVariables.IsEnabledSuperTailsS2 = true;
+}
+
+Code "Enable Random Monitors (experimental)" in "Gameplay/Sonic 2" by "MegAmi" does
+/*
+Replaces all monitors in the stages with random monitors.
+
+Known issues;
+- Progress in save files will not be saved.
+*/
+//
+    #lib "Bridge.SetGlobalVariables"
+//
+{
+    Bridge.SetGlobalVariables.IsEnabledRandomS2 = true;
+}
+
+Code "Enable Elemental Shields and Insta Shield (experimental)" in "Gameplay/Sonic 2" by "MegAmi" does
+/*
+Enables the Elemental Shields and Sonic's Insta Shield move.
+
+Known issues;
+- Progress in save files will not be saved.
+*/
+//
+    #lib "Bridge.SetGlobalVariables"
+//
+{
+    Bridge.SetGlobalVariables.IsEnabledElementalS2 = true;
+}
+
+Code "Regular Players in Competition Mode" in "Gameplay/Sonic 3 & Knuckles" by "MegAmi" does "Enables regular physics and character abilities in Competition Mode."
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33F0) |= (int)RSDK.S3KSecret.NormalPhysics2P;
+}
+
+Patch "Disable Path Tracer" in "Gameplay/Sonic 3 & Knuckles" by "MegAmi" does
+/*
+Disables the Headcannon Path Tracer technology used for Sonic 3 & Knuckles' player collision, using regular Retro Engine collision instead.
+
+Notes;
+- The player's life/coins icon will be replaced with a shoe icon to signify that Path Tracer is off.
+- The lack of Path Tracer will produce many collision bugs; this code was made for fun and is not meant for serious use.
+*/
+{
+    // 2.0.2: 0x14285AB3C
+    WriteProtected<byte>(
+        ScanSignature
+        (
+            "\x01\x00\x00\x00\x00\x02\x01\x01\x02\x01\x03\x03\x02\x01\x02\x00\x01\x03\x02\x02\x02\x01\x01\x03\x01\x01\x02\x02\x02\x03\x03\x03",
+            "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        ),
+        0x00);
+}
+
+Patch "Enable Extended Timer" in "UI/Sonic 3 & Knuckles" by "SuperSonic16" does "Enables the extended timer similar to what is used in Sonic Mania, Sonic CD and time attack."
+{
+    // 0x1401CE6DE + 0x15
+    long HUD_Create_3E3 = ScanSignature(
+        "\xFF\x90\x00\x00\x00\x00\x48\x8B\xCB\xE8\x00\x00\x00\x00\x48\x8B\x05\x00\x00\x00\x00\x48\x8D\x53\x5D\x45\x33\xC9\xC7\x44\x24\x00\x00\x00\x00\x00\x45\x33\xC0\x48\x8D\x0D\x00\x00\x00\x00\xFF\x90\x00\x00\x00\x00\x48\x8B\x7C\x24\x00\x48\x8B\x74\x24\x00\x48\x83\xC4\x30\x5B\xC3",
+        "xx????xxxx????xxx????xxxxxxxxxx?????xxxxxx????xx????xxxx?xxxx?xxxxxx") + 0x15;
+
+    WriteAsmHook
+    (
+        "mov byte ptr [rbx+0x338], 1",
+        HUD_Create_3E3,
+        HookBehavior.Before
+    );
+}
+
+Patch "Enable Blue Spheres Options in Title Screen" in "UI/Sonic 3 & Knuckles" by "MegAmi" does "Enables options to access Blue Spheres and New Blue Spheres from S3&K's title screen."
+{
+    // Set max option count when pressing down with Sound Test disabled
+    // 2.0.2: 0x1402F89BF
+    WriteProtected<byte>(
+        ScanSignature
+        (
+            "\xEB\x12\x41\x80\x79\x5B\x00\xB9\x01\x00\x00\x00\xB8\x03\x00\x00\x00",
+            "xxxxxxxxxxxxxxxxx"
+        ) + 0x08,
+        0x03);
+
+    // Set option to wrap to when pressing up from 1 Player with Sound Test disabled
+    // 2.0.2: 0x1402F8A50
+    WriteProtected<byte>(
+        ScanSignature
+        (
+            "\xEB\x8F\x41\x80\x79\x5B\x00\xB9\x01\x00\x00\x00\xB8\x03\x00\x00\x00",
+            "xxxxxxxxxxxxxxxxx"
+        ) + 0x08,
+        0x03);
+
+    // Disable checks when pressing down with Sound Test enabled
+    // 2.0.2: 0x1402F8990
+    WriteNop(
+        ScanSignature
+        (
+            "\x41\x80\x79\x5B\x00\x75\x13\x41\x80\x79\x5A\x02",
+            "xxxxxxxxxxxx"
+        ),
+        26);
+
+    // Disable checks when pressing up with Sound Test enabled
+    // 2.0.2: 0x1402F8A16
+    WriteNop(
+        ScanSignature
+        (
+            "\x41\x80\x79\x5B\x00\x75\x13\x41\x80\x79\x5A\x03",
+            "xxxxxxxxxxxx"
+        ),
+        26);
+}
+
+Patch "Enable Hidden Credits" in "UI/Sonic 3 & Knuckles" by "MegAmi" does "Enables hidden credits for the S3&K remaster before the SEGA logo."
+{
+    // Load the sprite
+    // 2.0.2: 0x1402F7110
+    WriteNop(
+        ScanSignature
+        (
+            "\xF7\x80\xF0\x33\x4C\x00\x00\x10\x00\x00\x74\x39",
+            "xxxxxxxxxxxx"
+        ) + 0x0A,
+        2);
+
+    // Show the credits
+    // 2.0.2: 0x1402F825F
+    WriteProtected<byte>(
+        ScanSignature
+        (
+            "\xF7\x80\xF0\x33\x4C\x00\x00\x10\x00\x00\x75\x18",
+            "xxxxxxxxxxxx"
+        ) + 0x0A,
+        0xEB);
+}
+
+Patch "Restore Print Function" in "Debug/RSDKv4" by "SuperSonic16" does "Reimplements the Print function back into the RSDKv4 scripting system."
+{
+    #include "Helpers" noemit
+    #lib "Memory"
+    using System.Runtime.InteropServices;
+
+    // 2.0.2: 0x1400CF79B
+    long ProcessScriptv4_FUNC_PRINT = ScanSignature(
+        "\x45\x33\xD2\x45\x8B\xEA\x4C\x8D\x15\x00\x00\x00\x00\xE9\x00\x00\x00\x00\x44\x8B\x05\x00\x00\x00\x00\x48\x8D\x0D\x00\x00\x00\x00\x44\x8B\x0D\x00\x00\x00\x00\x33\xC0\x41\x83\xF8\x01\x8B\xD7",
+        "xxxxxxxxx????x????xxx????xxx????xxx????xxxxxxxx");
+
+    long scriptEng_addr = (long)Memory.ReadEffectiveAddress(ProcessScriptv4_FUNC_PRINT + 0x12) - 0x08;
+    long scriptText_addr = (long)Memory.ReadEffectiveAddress(ProcessScriptv4_FUNC_PRINT + 0x19);
+
+    class ConsoleHelper
+    {
+        
+        UNMANAGED_FUNCTION(void, Print, string scriptText, int* param, int opcode)
+        {
+            if (opcode != 0x8A)
+                return;
+
+            int val = param[0];
+            bool isInt = param[1] != 0;
+            bool isNewLine = param[2] != 0;
+
+            string suffix = isNewLine ? "\n" : "";
+            if (isInt)
+                Console.Write($"[RSDKv4] {val}{suffix}");
+            else
+                Console.Write($"[RSDKv4] {scriptText}{suffix}");
+        }
+    }
+
+    WriteAsmHook
+        (
+            $@"
+                sub rsp, 32
+                mov r8, rax
+                mov rdx, {scriptEng_addr}
+                mov rcx, {scriptText_addr}
+                mov rax, {ConsoleHelper._fpPrint}
+                call rax
+                add rsp, 32
+                mov  rax, {ProcessScriptv4_FUNC_PRINT - 0x0139}
+                jmp rax
+            ",
+            ProcessScriptv4_FUNC_PRINT,
+            HookBehavior.Replace
+        );
+}
+
+Code "Enable Blue Shield Monitors" in "Gameplay/Sonic 3 & Knuckles/Items" by "MegAmi" does "Replaces all Elemental Shield monitors with Blue Shield monitors."
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33F0) |= (int)RSDK.S3KSecret.BlueShield;
+}
+
+Code "Remove All Items" in "Gameplay/Sonic 3 & Knuckles/Items" by "MegAmi" does "Removes all rings, monitors, starposts, and special rings from all stages."
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33F0) |= (int)RSDK.S3KSecret.NoItems;
+}
+
+Code "Enable Banana Mode" in "Gameplay/Sonic 3 & Knuckles/Items" by "MegAmi" does "Replaces all monitors in the stages with Banana monitors."
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33F0) |= (int)RSDK.S3KSecret.BananaMode;
+}
+
+Code "Enable Random Monitors" in "Gameplay/Sonic 3 & Knuckles/Items" by "MegAmi" does "Replaces all monitors in the stages with random monitors."
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33F0) |= (int)RSDK.S3KSecret.RandomItems;
+}
+
+Code "Enable Super Dash" in "Gameplay/Sonic 3 & Knuckles/Abilities" by "MegAmi" does "Allows the player to fly and dash in any cardinal direction when in Super/Hyper form, similar to Sonic Mania's Egg Reverie Zone."
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C33F0) |= (int)RSDK.S3KSecret.SuperDash;
+}
+
+Code "Disable Insta-Shield" in "Gameplay/Sonic 3 & Knuckles/Abilities/Sonic" by "MegAmi"
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0xC2CB4) &= ~(int)RSDK.S3KMedalMod.InstaShield;
+}
+
+Code "Enable Super Peel Out" in "Gameplay/Sonic 3 & Knuckles/Abilities/Sonic" by "MegAmi" does
+/*
+Enables Sonic's Super Peel Out move from Sonic CD.
+
+Notes;
+- Super/Hyper Sonic doesn't have an animation for the Super Peel Out, instead defaulting to his rolling animation.
+*/
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0xC2CB4) |= (int)RSDK.S3KMedalMod.SuperPeelOut;
+}
+
+Code "Disable Drop Dash" in "Gameplay/Sonic 3 & Knuckles/Abilities/Sonic" by "MegAmi"
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0xC2CB4) |= (int)RSDK.S3KMedalMod.NoDropDash;
+}
+

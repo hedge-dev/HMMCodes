@@ -1,0 +1,3531 @@
+Library "XInput" by "Hyper" 
+{
+    #lib "MathHelpers"
+
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+    using System.Runtime.InteropServices;
+
+    [DllImport("xinput1_4.dll", EntryPoint = "XInputGetState")]
+    public extern int XInputGetState(int in_dwUserIndex, ref State in_pState);
+    
+    [DllImport("xinput1_4.dll", EntryPoint = "XInputSetState")]
+    public extern int XInputSetState(int in_dwUserIndex, ref Vibration in_pVibration);
+
+    public const short XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE = 7849;
+    public const short XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE = 8689;
+
+    private static float _leftMotorSpeed = 0.0f;
+    private static float _rightMotorSpeed = 0.0f;
+
+    [Flags]
+    public enum Buttons : ushort
+    {
+        DPAD_UP        = 0x0001,
+        DPAD_DOWN      = 0x0002,
+        DPAD_LEFT      = 0x0004,
+        DPAD_RIGHT     = 0x0008,
+        START          = 0x0010,
+        BACK           = 0x0020,
+        LEFT_THUMB     = 0x0040,
+        RIGHT_THUMB    = 0x0080,
+        LEFT_SHOULDER  = 0x0100,
+        RIGHT_SHOULDER = 0x0200,
+        A              = 0x1000,
+        B              = 0x2000,
+        X              = 0x4000,
+        Y              = 0x8000
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct State
+    {
+        public int dwPacketNumber;
+        public Gamepad Gamepad;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Gamepad
+    {
+        public Buttons wButtons;
+        public byte bLeftTrigger;
+        public byte bRightTrigger;
+        public short sThumbLX;
+        public short sThumbLY;
+        public short sThumbRX;
+        public short sThumbRY;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Vibration
+    {
+        public ushort wLeftMotorSpeed;
+        public ushort wRightMotorSpeed;
+
+        public Vibration(ushort in_leftMotorSpeed, ushort in_rightMotorSpeed)
+        {
+            wLeftMotorSpeed = in_leftMotorSpeed;
+            wRightMotorSpeed = in_rightMotorSpeed;
+
+            _leftMotorSpeed = in_leftMotorSpeed / 65535.0f;
+            _rightMotorSpeed = in_rightMotorSpeed / 65535.0f;
+        }
+
+        public Vibration(float in_leftMotorSpeed, float in_rightMotorSpeed)
+        {
+            wLeftMotorSpeed = MathHelpers.FloatPercentToRange<ushort>(in_leftMotorSpeed);
+            wRightMotorSpeed = MathHelpers.FloatPercentToRange<ushort>(in_rightMotorSpeed);
+
+            _leftMotorSpeed = in_leftMotorSpeed;
+            _rightMotorSpeed = in_rightMotorSpeed;
+        }
+
+        public Vibration(ushort in_motorSpeed)
+        {
+            wLeftMotorSpeed = wRightMotorSpeed = in_motorSpeed;
+            _leftMotorSpeed = _rightMotorSpeed = in_motorSpeed / 65535.0f;
+        }
+
+        public Vibration(float in_motorSpeed)
+        {
+            wLeftMotorSpeed = wRightMotorSpeed = MathHelpers.FloatPercentToRange<ushort>(in_motorSpeed);
+            _leftMotorSpeed = _rightMotorSpeed = in_motorSpeed;
+        }
+    }
+
+    public State? GetState()
+    {
+        var pState = new State();
+
+        if (XInputGetState(0, ref pState) != 0)
+            return null;
+
+        return pState;
+    }
+
+    public void SetState(Vibration in_vibration)
+    {
+        XInputSetState(0, ref in_vibration);
+    }
+
+    public Vector2 GetAnalog(int in_analogIndex, bool in_isTestDeadzone = true)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return Vector2.Zero;
+
+        Vector2 v = Vector2.Zero;
+
+        switch (in_analogIndex)
+        {
+            case 0:
+                v = new Vector2(pState.Value.Gamepad.sThumbLX / 32767.0f, pState.Value.Gamepad.sThumbLY / 32767.0f);
+                break;
+
+            case 1:
+                v = new Vector2(pState.Value.Gamepad.sThumbRX / 32767.0f, pState.Value.Gamepad.sThumbRY / 32767.0f);
+                break;
+        }
+
+        if (in_isTestDeadzone)
+        {
+            v = IsAnalogNeutral(in_analogIndex)
+                ? Vector2.Zero
+                : v;
+        }
+
+        return v;
+    }
+
+    // Use Player.Input for keyboard parity!
+    public bool IsButtonDown(Buttons in_buttons)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return false;
+
+        return (pState.Value.Gamepad.wButtons & in_buttons) != 0;
+    }
+
+    public float GetTrigger(int in_triggerIndex)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return 0;
+
+        switch (in_triggerIndex)
+        {
+            case 0:
+                return pState.Value.Gamepad.bLeftTrigger / 255.0f;
+
+            case 1:
+                return pState.Value.Gamepad.bRightTrigger / 255.0f;
+        }
+
+        return 0;
+    }
+
+    public bool IsAnalogNeutral(int in_analogIndex)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return true;
+
+        switch (in_analogIndex)
+        {
+            case 0:
+            {
+                short x = pState.Value.Gamepad.sThumbLX;
+                short y = pState.Value.Gamepad.sThumbLY;
+
+                return x < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+                    x > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+                    y < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+                    y > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE;
+            }
+
+            case 1:
+            {
+                short x = pState.Value.Gamepad.sThumbRX;
+                short y = pState.Value.Gamepad.sThumbRY;
+
+                return x < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+                    x > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+                    y < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+                    y > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;
+            }
+        }
+
+        return true;
+    }
+
+    public Vibration GetVibration()
+    {
+        return new Vibration(_leftMotorSpeed, _rightMotorSpeed);
+    }
+
+    public void SetVibration(float in_value)
+    {
+        SetState(new Vibration(in_value));
+    }
+
+    public void SetVibration(int in_motorIndex, float in_value)
+    {
+        switch (in_motorIndex)
+        {
+            case 0:
+            {
+                SetState(new Vibration(in_value, _rightMotorSpeed));
+                break;
+            }
+
+            case 1:
+            {
+                SetState(new Vibration(_leftMotorSpeed, in_value));
+                break;
+            }
+        }
+    }
+}
+
+
+
+Library "VectorHelpers" by "Hyper" 
+{
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+
+    public static Vector3 ClampMagnitude(Vector3 in_vector, float in_maxMagnitude)
+    {
+        if (in_vector.Length() > in_maxMagnitude * in_maxMagnitude)
+            return Vector3.Normalize(in_vector) * in_maxMagnitude;
+
+        return in_vector;
+    }
+
+    public static Vector3 GetForward(Quaternion in_rotation)
+    {
+        return Vector3.Transform(Vector3.UnitZ, Quaternion.Normalize(in_rotation));
+    }
+
+    public static float GetMagnitude(Vector3 in_velocity)
+    {
+        return in_velocity.Length();
+    }
+
+    public static float GetHorizontalMagnitude(Vector3 in_velocity)
+    {
+        return (float)Math.Sqrt(in_velocity.X * in_velocity.X + in_velocity.Z * in_velocity.Z);
+    }
+
+    public static float GetVerticalMagnitude(Vector3 in_velocity)
+    {
+        return in_velocity.Y;
+    }
+
+    public static Quaternion LookRotation(Vector3 in_forward, Vector3 in_upward)
+    {
+        in_forward = Vector3.Normalize(in_forward);
+        in_upward = Vector3.Normalize(in_upward);
+
+        var right = Vector3.Cross(in_upward, in_forward);
+        in_upward = Vector3.Cross(in_forward, right);
+
+        var m = new Matrix4x4
+        (
+            right.X,      right.Y,      right.Z,      0.0f,
+            in_upward.X,  in_upward.Y,  in_upward.Z,  0.0f,
+            in_forward.X, in_forward.Y, in_forward.Z, 0.0f,
+            0.0f,         0.0f,         0.0f,         1.0f
+        );
+
+        return Quaternion.CreateFromRotationMatrix(m);
+    }
+
+    public static Quaternion LookRotation(Vector3 in_forward)
+    {
+        return LookRotation(in_forward, Vector3.UnitY);
+    }
+}
+Library "HMM" by "Hyper"
+{
+    #lib "INI"
+
+    using Microsoft.Win32;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Reflection;
+    using System.Threading;
+
+    public string GetGameDirectory()
+    {
+        return Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+    }
+
+    public Dictionary<string, Dictionary<string, string>> GetModsDatabase()
+    {
+        string cpkredirCfgPath = Path.Combine(GetGameDirectory(), "cpkredir.ini");
+        
+        if (!File.Exists(cpkredirCfgPath))
+            return new();
+
+        var cpkredirCfg = INI.Read(cpkredirCfgPath);
+        string modsDbPath = cpkredirCfg["CPKREDIR"]["ModsDbIni"];
+
+        if (!File.Exists(modsDbPath))
+            return new();
+
+        return INI.Read(modsDbPath);
+    }
+
+    public List<Mod> GetMods()
+    {
+        List<Mod> result = new();
+
+        var modsDb = GetModsDatabase();
+
+        if (modsDb.Count <= 0)
+            return result;
+        
+        int activeModCount = INI.Parse<int>(modsDb["Main"]["ActiveModCount"], 0);
+
+        foreach (var entry in modsDb["Mods"].Keys)
+        {
+            for (int i = 0; i < activeModCount; i++)
+            {
+                if (modsDb["Main"][$"ActiveMod{i}"].Contains(entry))
+                {
+                    result.Add(new Mod(modsDb["Mods"][entry]));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public Mod GetModByID(string in_id)
+    {
+        foreach (var mod in GetMods())
+        {
+            if (mod.ID == in_id)
+                return mod;
+        }
+
+        return null;
+    }
+
+    public List<Mod> FindModsByName(string name)
+    {
+        List<Mod> result = new();
+
+        foreach (var mod in GetMods())
+        {
+            if (mod.Name.Contains(name))
+            {
+                result.Add(mod);
+            }
+        }
+
+        return result;
+    }
+
+    public List<string> GetCodes()
+    {
+        List<string> result = new();
+
+        var modsDb = GetModsDatabase();
+
+        if (modsDb == null)
+            return result;
+
+        foreach (var value in modsDb["Codes"].Values)
+            result.Add(value);
+
+        return result;
+    }
+
+    public class Mod
+    {
+        public string Name { get; set; }
+        public string Version { get; set; }
+        public string Author { get; set; }
+        public string Description { get; set; }
+        public string Date { get; set; }
+        public string AuthorURL { get; set; }
+        public string UpdateServer { get; set; }
+        public string SaveFile { get; set; }
+        public string ID { get; set; }
+        public List<string> IncludeDirs { get; set; } = new();
+        public List<ModDependency> Dependencies { get; set; } = new();
+        public string DLLFile { get; set; }
+        public string CodeFile { get; set; }
+        public string ConfigSchemaFile { get; set; }
+
+        public string Path { get; set; }
+        public Dictionary<string, Dictionary<string, string>> Ini { get; set; } = new();
+
+        public Mod(string modIniPath)
+        {
+            var ini = INI.Read(modIniPath);
+
+            if (ini == null)
+                return;
+
+            Name             = INI.GetField<string>(ini, "Desc", "Title", Name);
+            Version          = INI.GetField<string>(ini, "Desc", "Version", Version);
+            Author           = INI.GetField<string>(ini, "Desc", "Author", Author);
+            Description      = INI.GetField<string>(ini, "Desc", "Description", Description);
+            Date             = INI.GetField<string>(ini, "Desc", "Date", Date);
+            AuthorURL        = INI.GetField<string>(ini, "Desc", "AuthorURL", AuthorURL);
+            UpdateServer     = INI.GetField<string>(ini, "Main", "UpdateServer", UpdateServer);
+            SaveFile         = INI.GetField<string>(ini, "Main", "SaveFile", SaveFile);
+            ID               = INI.GetField<string>(ini, "Main", "ID", ID);
+            DLLFile          = INI.GetField<string>(ini, "Main", "DLLFile", DLLFile);
+            CodeFile         = INI.GetField<string>(ini, "Main", "CodeFile", CodeFile);
+            ConfigSchemaFile = INI.GetField<string>(ini, "Main", "ConfigSchemaFile", ConfigSchemaFile);
+
+            Path             = System.IO.Path.GetDirectoryName(modIniPath);
+            Ini              = ini;
+
+            int includeDirCount = INI.GetField<int>(ini, "Main", "IncludeDirCount", 1);
+
+            for (int i = 0; i < includeDirCount; i++)
+                IncludeDirs.Add(INI.GetField<string>(ini, "Main", $"IncludeDir{i}", "."));
+
+            int dependencyCount = INI.GetField<int>(ini, "Main", "DependsCount", 0);
+
+            for (int i = 0; i < dependencyCount; i++)
+                Dependencies.Add(new ModDependency(INI.GetField<string>(ini, "Main", $"Depends{i}", "")));
+        }
+    }
+
+    public class ModDependency
+    {
+        public string ID { get; set; }
+
+        public string Name { get; set; }
+        
+        public string Link { get; set; }
+
+        public string Version { get; set; }
+
+        public ModDependency(string in_id, string in_name, string in_link, string in_version)
+        {
+            ID = in_id;
+            Name = in_name;
+            Link = in_link;
+            Version = in_version;
+        }
+
+        public ModDependency(string in_csv)
+        {
+            var fields = in_csv.Split('|');
+
+            for (int i = 0; i < fields.Length; i++)
+            {
+                switch (i)
+                {
+                    case 0:
+                        ID = fields[i];
+                        break;
+
+                    case 1:
+                        Name = fields[i];
+                        break;
+
+                    case 2:
+                    {
+                        if (fields.Length > 2)
+                        {
+                            Link = fields[i];
+                        }
+                        else
+                        {
+                            Version = fields[i];
+                        }
+
+                        break;
+                    }
+
+                    case 3:
+                        Version = fields[i];
+                        break;
+                }
+            }
+        }
+    }
+
+    public static class RegistryConfig
+    {
+        public static string ConfigPath { get; } = @"SOFTWARE\HEDGEMM";
+
+        public static bool CheckLoaderUpdates { get; set; } = true;
+        public static bool CheckManagerUpdates { get; set; } = true;
+        public static bool CheckModUpdates { get; set; } = true;
+        public static int CodesSortingColumnIndex { get; set; } = 1;
+        public static bool CodesUseTreeView { get; set; } = true;
+        public static string ExecutablePath { get; set; }
+        public static string ExtraGameDirectories { get; set; }
+        public static bool KeepOpen { get; set; } = true;
+        public static string LastGameDirectory { get; set; }
+        public static string UILanguage { get; set; }
+        public static string UITheme { get; set; }
+        public static bool UpdateCodesOnLaunch { get; set; } = true;
+
+        static RegistryConfig()
+        {
+            Load();
+        }
+
+        public static void Load()
+        {
+            var personalizeKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+
+            bool isLightTheme = false;
+            if (personalizeKey != null)
+            {
+                var useLightThemeStr = personalizeKey.GetValue("AppsUseLightTheme", 0)?.ToString();
+
+                if (int.TryParse(useLightThemeStr, out int out_isLightTheme))
+                    isLightTheme = out_isLightTheme != 0;
+
+                personalizeKey.Close();
+            }
+
+            var key = Registry.CurrentUser.CreateSubKey(ConfigPath);
+
+            LastGameDirectory       = (string)key.GetValue("LastGame", string.Empty);
+            ExtraGameDirectories    = (string)key.GetValue(nameof(ExtraGameDirectories), string.Empty);
+            UILanguage              = (string)key.GetValue(nameof(UILanguage), Thread.CurrentThread.CurrentCulture.Name);
+            UITheme                 = (string)key.GetValue(nameof(UITheme), isLightTheme ? "LightTheme" : "DarkerTheme");
+            CodesSortingColumnIndex = (int)key.GetValue(nameof(CodesSortingColumnIndex), 1);
+            CodesUseTreeView        = (int)key.GetValue(nameof(CodesUseTreeView), 1) != 0;
+            UpdateCodesOnLaunch     = (int)key.GetValue(nameof(UpdateCodesOnLaunch), 1) != 0;
+            CheckManagerUpdates     = (int)key.GetValue(nameof(CheckManagerUpdates), 1) != 0;
+            CheckLoaderUpdates      = (int)key.GetValue(nameof(CheckLoaderUpdates), 1) != 0;
+            CheckModUpdates         = (int)key.GetValue(nameof(CheckModUpdates), 1) != 0;
+            KeepOpen                = (int)key.GetValue(nameof(KeepOpen), 1) != 0;
+
+            key.Close();
+        }
+
+        public static void Save()
+        {
+            var key = Registry.CurrentUser.CreateSubKey(ConfigPath);
+
+            key.SetValue("ExecutablePath", Assembly.GetExecutingAssembly().Location);
+            key.SetValue("LastGame", LastGameDirectory);
+            key.SetValue(nameof(ExtraGameDirectories), ExtraGameDirectories);
+            key.SetValue(nameof(UILanguage), UILanguage);
+            key.SetValue(nameof(UITheme), UITheme);
+            key.SetValue(nameof(CodesSortingColumnIndex), CodesSortingColumnIndex);
+            key.SetValue(nameof(CodesUseTreeView), CodesUseTreeView ? 1 : 0);
+            key.SetValue(nameof(UpdateCodesOnLaunch), UpdateCodesOnLaunch ? 1 : 0);
+            key.SetValue(nameof(CheckManagerUpdates), CheckManagerUpdates ? 1 : 0);
+            key.SetValue(nameof(CheckLoaderUpdates), CheckLoaderUpdates ? 1 : 0);
+            key.SetValue(nameof(CheckModUpdates), CheckModUpdates ? 1 : 0);
+            key.SetValue(nameof(KeepOpen), KeepOpen ? 1 : 0);
+
+            key.Close();
+        }
+    }
+}
+Library "Logger" by "Hyper"
+{
+    #define PRINT_OBJECT(obj, format, caller) Logger.Utility(#obj + " = " + obj.ToString(format), caller);
+    #define PRINT_OBJECT(obj, format) Logger.Utility(#obj + " = " + obj.ToString(format));
+
+    public enum LogLevel
+    {
+        None,
+        Utility,
+        Warning,
+        Error
+    }
+
+    public void Log(object message, LogLevel level = LogLevel.None, string caller = "")
+    {
+        var oldColour = Console.ForegroundColor;
+
+        switch (level)
+        {
+            case LogLevel.Warning:
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                break;
+
+            case LogLevel.Error:
+                Console.ForegroundColor = ConsoleColor.Red;
+                break;
+
+            case LogLevel.Utility:
+                Console.ForegroundColor = ConsoleColor.Green;
+                break;
+        }
+
+        Console.WriteLine(string.IsNullOrEmpty(caller) ? message.ToString() : $"[{caller}] {message}");
+
+        Console.ForegroundColor = oldColour;
+    }
+
+    public void Utility(object message, string caller = "")
+    {
+        Log(message, LogLevel.Utility, caller);
+    }
+
+    public void Warning(object message, string caller = "")
+    {
+        Log(message, LogLevel.Warning, caller);
+    }
+
+    public void Error(object message, string caller = "")
+    {
+        Log(message, LogLevel.Error, caller);
+    }
+}
+Library "StringMapOperation" by "ĐeäTh" 
+{
+    /// <summary>
+    /// Computes a hash based on the input string.
+    /// </summary>
+    /// <param name="in_key">The string to hash.</param>
+    /// <returns>A string hash.</returns>
+    public uint ComputeHash(string in_key)
+    {
+        uint hash = in_key[0];
+
+        for (int i = 1; i < in_key.Length; i++)
+            hash = in_key[i] + 31 * hash;
+
+        return hash & 0x7FFFFFFF;
+    }
+}
+Library "MathHelpers" by "Hyper" 
+{
+    using System.Collections.Generic;
+
+    public T Clamp<T>(T in_value, T in_minValue, T in_maxValue) where T : IComparable<T>
+    {
+        if (in_value.CompareTo(in_minValue) < 0)
+        {
+            return in_minValue;
+        }
+        else if (in_value.CompareTo(in_maxValue) > 0)
+        {
+            return in_maxValue;
+        }
+        else
+        {
+            return in_value;
+        }
+    }
+
+    public T Clamp01<T>(T value) where T : IComparable<T>
+    {
+        if (value.CompareTo(default(T)) < 0)
+        {
+            return default(T);
+        }
+        else if (value.CompareTo((T)Convert.ChangeType(1, typeof(T))) > 0)
+        {
+            return (T)Convert.ChangeType(1, typeof(T));
+        }
+        else
+        {
+            return value;
+        }
+    }
+
+    public T FloatPercentToRange<T>(float in_value)
+    {
+        if (typeof(T) == typeof(sbyte))
+        {
+            return (T)(object)(byte)(in_value * (sbyte.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(byte))
+        {
+            return (T)(object)(byte)(in_value * (byte.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(short))
+        {
+            return (T)(object)(short)(in_value * (short.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(ushort))
+        {
+            return (T)(object)(ushort)(in_value * (ushort.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(int))
+        {
+            return (T)(object)(int)(in_value * (int.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(uint))
+        {
+            return (T)(object)(uint)(in_value * (uint.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(long))
+        {
+            return (T)(object)(long)(in_value * (long.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(ulong))
+        {
+            return (T)(object)(ulong)(in_value * (ulong.MaxValue * 1.0f));
+        }
+        
+        return default;
+    }
+    
+    public float Lerp(float in_start, float in_end, float in_time)
+    {
+        return in_start + (in_end - in_start) * in_time;
+    }
+
+    public static float InverseLerp(float a, float b, float value)
+    {
+        if (a == b)
+            return 0.0f;
+
+        return Clamp01<float>((value - a) / (b - a));
+    }
+
+    public static float ToDegrees(float in_radians)
+    {
+        return in_radians * (180.0f / (float)Math.PI);
+    }
+
+    public static float ToRadians(float in_degrees)
+    {
+        return in_degrees * ((float)Math.PI / 180.0f);
+    }
+
+    public static float WrapToRadians(float in_value)
+    {
+        float sign = in_value > 0.0f ? 1.0f : -1.0f;
+        float mod = (float)Math.Abs(in_value) % 6.28319f;
+
+        return mod * sign;
+    }
+}
+Library "Bitwise" by "Hyper" 
+{
+    public long Set(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
+    {
+        return in_base | (in_isOffsetBitIndex ? (1L << in_offset) : in_offset);
+    }
+
+    public long Reset(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
+    {
+        return in_base & (in_isOffsetBitIndex ? ~(1L << in_offset) : in_offset);
+    }
+
+    public bool Test(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
+    {
+        return (in_base & (in_isOffsetBitIndex ? (1L << in_offset) : in_offset)) != 0;
+    }
+}
+Library "INI" by "Hyper"
+{
+    using System.Collections.Generic;
+    using System.IO;
+    
+    public Dictionary<string, Dictionary<string, string>> Read(string path)
+    {
+        Dictionary<string, Dictionary<string, string>> result = new();
+
+        if (!File.Exists(path))
+            return result;
+
+        using (StreamReader reader = new StreamReader(path))
+        {
+            string section = string.Empty;
+            string line = string.Empty;
+
+            // Add root section.
+            result.Add(section, new Dictionary<string, string>());
+
+            while ((line = reader.ReadLine()) != null)
+            {
+                if (line.StartsWith("[") && line.EndsWith("]"))
+                {
+                    section = line.Substring(1, line.Length - 2);
+                    result.Add(section, new Dictionary<string, string>());
+                    continue;
+                }
+
+                if (line.StartsWith(";") || line.StartsWith("#"))
+                    continue;
+
+                int delimiterIndex = line.IndexOf('=');
+
+                if (delimiterIndex == -1)
+                    continue;
+
+                string key = line.Substring(0, delimiterIndex);
+                string value = line.Substring(delimiterIndex + 1);
+
+                if (value.StartsWith("\"") && value.EndsWith("\"") && value.Length > 1)
+                    value = value.Substring(1, value.Length - 2);
+                
+                result[section].Add(key, value);
+            }
+        }
+
+        return result;
+    }
+
+    public T Parse<T>(string in_value, T in_defaultValue)
+    {
+        T result = in_defaultValue;
+
+        if (typeof(T) == typeof(string))
+        {
+            result = (T)(object)in_value;
+        }
+        else if (typeof(T) == typeof(int))
+        {
+            if (int.TryParse(in_value, out int intValue))
+            {
+                result = (T)(object)intValue;
+            }
+        }
+        else if (typeof(T) == typeof(double))
+        {
+            if (double.TryParse(in_value, out double doubleValue))
+            {
+                result = (T)(object)doubleValue;
+            }
+        }
+        else if (typeof(T) == typeof(float))
+        {
+            if (float.TryParse(in_value, out float floatValue))
+            {
+                result = (T)(object)floatValue;
+            }
+        }
+
+        return result;
+    }
+
+    public T GetField<T>(Dictionary<string, Dictionary<string, string>> in_ini, string in_section, string in_key, T in_defaultValue)
+    {
+        if (!in_ini.ContainsKey(in_section))
+            return in_defaultValue;
+
+        if (!in_ini[in_section].ContainsKey(in_key))
+            return in_defaultValue;
+
+        return Parse<T>(in_ini[in_section][in_key], in_defaultValue);
+    }
+}
+Library "Helpers" by "Hyper & Sajid"
+{
+    #lib "StringMapOperation"
+
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
+    /// <summary>
+    /// Creates an `__stdcall` delegate with an unmanaged function pointer based on the provided function signature.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Library
+    /// {
+    ///     #include "Helpers" noemit
+    ///     
+    ///     UNMANAGED_FUNCTION(void, MyUnmanagedFunction, string in_str)
+    ///     {
+    ///         Console.WriteLine("Hello from native code!");
+    ///     }
+    ///     
+    ///     public void Init()
+    ///     {
+    ///         // This can be used for mid-asm hooks to call your own functions from the game code.
+    ///         var ptrToMyUnmanagedFunction = GET_UNMANAGED_FUNCTION_PTR(MyUnmanagedFunction);
+    ///     }
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define UNMANAGED_FUNCTION(in_returnType, in_functionName, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public static T##in_functionName _del##in_functionName = new T##in_functionName(in_functionName); \
+        public static long _fp##in_functionName = (long)System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate(_del##in_functionName); \
+        public static in_returnType in_functionName(__VA_ARGS__)
+
+    /// <summary>
+    /// Creates an `__stdcall` delegate based on the provided function signature.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #include "Helpers" noemit
+    ///     
+    ///     UNMANAGED_FUNCTION_DELEGATE(void, GetNameHash)
+    /// //
+    /// {
+    ///     // Calls the function at 0xDEADBEEF using this function signature.
+    ///     CREATE_UNMANAGED_FUNCTION_PTR(GetNameHash, 0xDEADBEEF)();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define UNMANAGED_FUNCTION_DELEGATE(in_returnType, in_functionName, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType in_functionName(__VA_ARGS__);
+
+    /// <summary>
+    /// Gets a pointer created by `UNMANAGED_FUNCTION` by name.
+    /// </summary>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <returns>A pointer to the unmanaged function.</returns>
+    #define GET_UNMANAGED_FUNCTION_PTR(in_functionName) _fp##in_functionName
+
+    /// <summary>
+    /// Creates a delegate using the signature created by `UNMANAGED_FUNCTION_DELEGATE`.
+    /// </summary>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="in_location">The location of the function.</param>
+    /// <returns>A delegate for the unmanaged function.</returns>
+    #define CREATE_UNMANAGED_FUNCTION_PTR(in_functionName, in_location) System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<in_functionName>((IntPtr)(in_location))
+
+    /// <summary>
+    /// Creates a function pointer to native code at the specified location.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #include "Helpers" noemit
+    ///     
+    ///     FUNCTION_PTR(void, GetNameHash, 0xDEADBEEF)
+    /// //
+    /// {
+    ///     GET_FUNCTION_PTR(GetNameHash)();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="in_location">The location of the function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define FUNCTION_PTR(in_returnType, in_functionName, in_location, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public static long _addr##in_functionName = in_location;
+    
+    /// <summary>
+    /// Creates a function pointer to a virtual function at an instance of a struct.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #include "Helpers" noemit
+    ///
+    ///     public struct MyStruct
+    ///     {
+    ///         VFUNCTION_PTR(MyStruct, 1, void, GetNameHash)
+    ///     }
+    /// //
+    /// {
+    ///     myInstanceOfMyStruct->GetNameHash()();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_thisType">The struct type this is nested inside.</param>
+    /// <param name="in_functionIndex">The index of this function in the virtual function table.</param>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="in_location">The location of the function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define VFUNCTION_PTR(in_thisType, in_functionIndex, in_returnType, in_functionName, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public T##in_functionName in_functionName() \
+        { \
+            fixed (in_thisType* pThis = &this) \
+                return System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<T##in_functionName>((IntPtr)(*(long*)((*(long*)pThis) + (1 * sizeof(nint)) * in_functionIndex))); \
+        }
+
+    /// <summary>
+    /// Gets a pointer created by `FUNCTION_PTR` by name.
+    /// </summary>
+    /// <param name="in_functionName">The name of the function pointer.</param>
+    /// <returns>A delegate to the native function.</returns>
+    #define GET_FUNCTION_PTR(in_functionName) System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<T##in_functionName>((IntPtr)_addr##in_functionName)
+
+    /// <summary>
+    /// Creates a fixed byte array with a special accessor for the real type.
+    /// </summary>
+    /// <param name="in_type">The real type of this array.</param>
+    /// <param name="in_name">The name of this array.</param>
+    /// <param name="in_size">The size of this array.</param>
+    #define UNMANAGED_FIXED_ARRAY(in_type, in_name, in_size) \
+        public fixed byte _##in_name[in_size]; \
+        public in_type* in_name \
+        { \
+            get \
+            { \
+                fixed (byte* p_##in_name = _##in_name) \
+                    return (in_type*)p_##in_name; \
+            } \
+        }
+
+    #define MAKE_GENERIC_API(in_functionName) \
+        public T* in_functionName<T>() where T : unmanaged \
+        { \
+            var name = Helpers.GetInternalName(typeof(T)); \
+\
+            return (T*)in_functionName(string.IsNullOrEmpty(name) ? typeof(T).Name : name); \
+        } \
+
+    #define MAKE_STATIC_GENERIC_API(in_functionName) \
+        public static T* in_functionName<T>() where T : unmanaged \
+        { \
+            var name = Helpers.GetInternalName(typeof(T)); \
+\
+            return (T*)in_functionName(string.IsNullOrEmpty(name) ? typeof(T).Name : name); \
+        } \
+
+    /// <summary>
+    /// Gets a pointer to an ANSI string.
+    /// </summary>
+    /// <param name="in_str">The ANSI string to get a pointer to.</param>
+    /// <returns>A pointer to the input ANSI string.</returns>
+    #define TO_STRING_PTR(in_str) (long)System.Runtime.InteropServices.Marshal.StringToHGlobalAnsi((##in_str##))
+
+    /// <summary>
+    /// Gets a pointer to a Unicode string.
+    /// </summary>
+    /// <param name="in_str">The Unicode string to get a pointer to.</param>
+    /// <returns>A pointer to the input Unicode string.</returns>
+    #define TO_WSTRING_PTR(in_str) (long)System.Runtime.InteropServices.Marshal.StringToHGlobalUni((##in_str##))
+
+    /// <summary>
+    /// Gets a pointer to a UTF-8 string.
+    /// </summary>
+    /// <param name="in_str">The UTF-8 string to get a pointer to.</param>
+    /// <returns>A pointer to the input UTF-8 string.</returns>
+    #define TO_U8STRING_PTR(in_str) (long)Helpers.StringToCoTaskMemUTF8((##in_str##))
+
+    /// <summary>
+    /// Gets an ANSI string from a pointer.
+    /// </summary>
+    /// <param name="in_ptr">The pointer to read an ANSI string from.</param>
+    /// <returns>An ANSI string.</returns>
+    #define FROM_STRING_PTR(in_ptr) System.Runtime.InteropServices.Marshal.PtrToStringAnsi((nint)(in_ptr))
+
+    /// <summary>
+    /// Gets a Unicode string from a pointer.
+    /// </summary>
+    /// <param name="in_ptr">The pointer to read a Unicode string from.</param>
+    /// <returns>A Unicode string.</returns>
+    #define FROM_WSTRING_PTR(in_ptr) System.Runtime.InteropServices.Marshal.PtrToStringUni((nint)(in_ptr))
+
+    /// <summary>
+    /// Gets a UTF-8 string from a pointer.
+    /// </summary>
+    /// <param name="in_ptr">The pointer to read a UTF-8 string from.</param>
+    /// <returns>A UTF-8 string.</returns>
+    #define FROM_U8STRING_PTR(in_ptr) Helpers.PtrToStringUTF8((nint)(in_ptr))
+
+
+    /// <summary>
+    /// Exposes a base field on the super class as a property
+    /// </summary>
+    /// <param name="TYPE">The field type.</param>
+    /// <param name="NAME">The field name.</param>
+    #define DEFINE_BASE_PROPERTY(TYPE, NAME) public TYPE NAME { get => Base.NAME; set => Base.NAME = value; }
+
+    #define DEFINE_INTERFACE_PROPERTY(INTERFACE, TYPE, NAME) TYPE INTERFACE.NAME { get => NAME; set => NAME = value; }
+
+    /// <summary>
+    /// A struct representation of a `const char*`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 8)]
+    public struct UnmanagedString
+    {
+        [FieldOffset(0)] public long pValue;
+        
+        public string Value
+        {
+            get
+            {
+                if (pValue == 0)
+                    return string.Empty;
+
+                return FROM_STRING_PTR(pValue);
+            }
+
+            set => pValue = TO_STRING_PTR(value);
+        }
+
+        public UnmanagedString(string in_value)
+        {
+            Value = in_value;
+        }
+
+        public static implicit operator UnmanagedString(string in_value)
+        {
+            return new UnmanagedString(in_value);
+        }
+
+        public static bool operator ==(UnmanagedString in_left, string in_right)
+        {
+            return in_left.Value == in_right;
+        }
+
+        public static bool operator !=(UnmanagedString in_left, string in_right)
+        {
+            return !(in_left == in_right);
+        }
+
+        public override bool Equals(object in_obj)
+        {
+            if (in_obj is string str)
+                return Value == str;
+            
+            return base.Equals(in_obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (int)StringMapOperation.ComputeHash(Value);
+        }
+
+        public override string ToString()
+        {
+            return Value;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
+    public sealed class InternalNameAttribute : Attribute
+    {
+        public string InternalName { get; }
+
+        public InternalNameAttribute(string in_internalName)
+        {
+            InternalName = in_internalName;
+        }
+    }
+
+    /// <summary>
+    /// Gets a list of indices where the input substring is found in a given string.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "Helpers"
+    /// //
+    /// {
+    ///     string myString = "lots of uses of the word of";
+    ///     
+    ///     var substrs = Helpers.GetSubstringIndices(myString, "of");
+    ///     
+    ///     // This list should contain three entries.
+    ///     // 0 - 5
+    ///     // 1 - 13
+    ///     // 2 - 25
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_str">The string to find substrings in.</param>
+    /// <param name="in_substr">The substring to search for.</param>
+    /// <returns>A list of indices where a substring appears in the given string.</returns>
+    public List<int> GetSubstringIndices(string in_str, string in_substr)
+    {
+        var indices = new List<int>();
+
+        int i = 0;
+        while ((i = in_str.IndexOf(in_substr, i)) != -1)
+        {
+            indices.Add(i);
+            i += in_substr.Length;
+        }
+
+        return indices;
+    }
+
+    /// <summary>
+    /// Gets a name from a InternalNameAttribute attached to a type.
+    /// </summary>
+    /// <param name="in_type">The type to get the attribute from.</param>
+    /// <returns>A string representing the internal name of the input type.</returns>
+    public static string GetInternalName(Type in_type)
+    {
+        var attr = (InternalNameAttribute)Attribute.GetCustomAttribute(in_type, typeof(InternalNameAttribute));
+
+        return attr == null ? string.Empty : attr.InternalName;
+    }
+
+    // https://github.com/scripthookvdotnet/scripthookvdotnet/blob/main/source/core/StringMarshal.cs
+    /*
+        Copyright (C) 2015 crosire, kagikn
+
+        This software is  provided 'as-is', without any express  or implied  warranty. In no event will the
+        authors be held liable for any damages arising from the use of this software.
+        Permission  is granted  to anyone  to use  this software  for  any  purpose,  including  commercial
+        applications, and to alter it and redistribute it freely, subject to the following restrictions:
+
+        1. The origin of this software must not be misrepresented; you must not claim that you  wrote the
+            original  software. If you use this  software  in a product, an  acknowledgment in the product
+            documentation would be appreciated but is not required.
+        2. Altered source versions must  be plainly  marked as such, and  must not be  misrepresented  as
+            being the original software.
+        3. This notice may not be removed or altered from any source distribution.
+
+        Changes;
+            - 29/08/2023
+                - (Hyper) renamed buffer
+                - (Hyper) renamed functions to use uppercase "UTF8"
+                - (Hyper) removed braces to compact code
+                - (Hyper) removed unsafe clauses (HMM always uses unsafe code)
+                - (Hyper) removed static modifiers
+
+            - 20/09/2023
+                - (Hyper) changed argument naming conventions
+                - (Hyper) changed IntPtr to nint
+                - (Hyper) changed string null check in StringToCoTaskMemUTF8 to use string.IsNullOrEmpty
+    */
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private static byte[] _bufferStringToCoTaskMemUTF8 = new byte[100];
+
+    /// <summary>
+    /// Gets a UTF-8 string from a memory location.
+    /// </summary>
+    /// <param name="in_ptr">The memory location where the UTF-8 string is.</param>
+    /// <returns>A UTF-8 string.</returns>
+    public string PtrToStringUTF8(nint in_ptr)
+    {
+        if (in_ptr == 0)
+            return string.Empty;
+
+        byte* data = (byte*)in_ptr;
+
+        int len = 0;
+        while (data[len] != 0)
+            ++len;
+
+        return PtrToStringUTF8(in_ptr, len);
+    }
+
+    /// <summary>
+    /// Gets a fixed-length UTF-8 string from a memory location.
+    /// </summary>
+    /// <param name="in_ptr">The memory location where the UTF-8 string is.</param>
+    /// <param name="in_length">The length of the UTF-8 string in memory.</param>
+    /// <returns>A UTF-8 string.</returns>
+    public string PtrToStringUTF8(nint in_ptr, int in_length)
+    {
+        if (in_length < 0)
+            throw new ArgumentException(null, nameof(in_length));
+
+        if (in_ptr == 0)
+            return null;
+
+        if (in_length == 0)
+            return string.Empty;
+
+        return Encoding.UTF8.GetString((byte*)in_ptr, in_length);
+    }
+
+    /// <summary>
+    /// Creates a pointer to a UTF-8 string.
+    /// </summary>
+    /// <param name="in_str">The UTF-8 string to get a pointer for.</param>
+    /// <returns>A pointer to the input UTF-8 string.</returns>
+    public nint StringToCoTaskMemUTF8(string in_str)
+    {
+        if (string.IsNullOrEmpty(in_str))
+            return 0;
+
+        int byteCountUtf8 = Encoding.UTF8.GetByteCount(in_str);
+        if (byteCountUtf8 > _bufferStringToCoTaskMemUTF8.Length)
+            _bufferStringToCoTaskMemUTF8 = new byte[byteCountUtf8 * 2];
+
+        Encoding.UTF8.GetBytes(in_str, 0, in_str.Length, _bufferStringToCoTaskMemUTF8, 0);
+
+        nint dest = Marshal.AllocCoTaskMem(byteCountUtf8 + 1);
+        if (dest == 0)
+            throw new OutOfMemoryException();
+
+        Marshal.Copy(_bufferStringToCoTaskMemUTF8, 0, dest, byteCountUtf8);
+        
+        ((byte*)dest)[byteCountUtf8] = 0;
+
+        return dest;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+}
+Library "RTTI" by "Hyper"
+{
+    #lib "Memory"
+
+    #define RESOLVE_RELATIVE_PTR(in_offset) (IntPtr.Size == 4 ? in_offset : (0x140000000 + in_offset))
+
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
+    [DllImport("imagehlp.dll", CallingConvention = CallingConvention.StdCall)]
+    private static extern uint UnDecorateSymbolName([MarshalAs(UnmanagedType.LPStr)] string name, byte[] outputString, uint maxStringLength, uint flags);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CompleteObjectLocator
+    {
+        public int Signature;
+        public int VftableOffset;
+        public int CtorDisplacementOffset;
+        public int pTypeDescriptor;
+        public int pClassHierarchyDescriptor;
+        public int pObjectBase;
+
+        public TypeDescriptor* GetTypeDescriptor()
+        {
+            return (TypeDescriptor*)RESOLVE_RELATIVE_PTR(pTypeDescriptor);
+        }
+
+        public ClassHierarchyDescriptor* GetClassHierarchyDescriptor()
+        {
+            return (ClassHierarchyDescriptor*)RESOLVE_RELATIVE_PTR(pClassHierarchyDescriptor);
+        }
+
+        public override string ToString()
+            => $"const {GetTypeDescriptor()->GetName()}::`RTTI Complete Object Locator'";
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct TypeDescriptor
+    {
+        public void* pTypeInfo;
+        public void* pRuntimeRef;
+        
+        public string GetName(bool in_isDemangled = true, IEnumerable<DemanglerFlags> in_demanglerFlags = null)
+        {
+            fixed (TypeDescriptor* pThis = &this)
+            {
+                var result = Marshal.PtrToStringAnsi((nint)((long)pThis + (IntPtr.Size == 4 ? 0x08 : 0x10)));
+
+                if (string.IsNullOrEmpty(result))
+                    return string.Empty;
+
+                result = result.TrimStart('.');
+                
+                if (in_isDemangled)
+                {
+                    if (in_demanglerFlags == null)
+                        in_demanglerFlags = new[] { RTTI.DemanglerFlags.NAME_ONLY };
+                    
+                    return Demangle(result, in_demanglerFlags);
+                }
+                else
+                {
+                    return result;
+                }
+            }
+        }
+
+        public string[] GetNamespaces()
+        {
+            return GetName().Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        public override string ToString()
+            => $"class {GetName()} `RTTI Type Descriptor'";
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ClassHierarchyDescriptor
+    {
+        public int Signature;
+        public int Attributes;
+        public int BaseClassCount;
+        public int pBaseClasses;
+
+        public BaseClassDescriptor* GetBaseClass(int in_index)
+        {
+            if (in_index > BaseClassCount)
+                return null;
+                
+            var ptr = *(int*)(RESOLVE_RELATIVE_PTR(pBaseClasses) + (in_index * 4));
+            
+            return (BaseClassDescriptor*)(RESOLVE_RELATIVE_PTR(ptr));
+        }
+
+        public override string ToString()
+            => $"{GetBaseClass(0)->GetTypeDescriptor()->GetName()}::`RTTI Class Hierarchy Descriptor'";
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct BaseClassDescriptor
+    {
+        public int pTypeDescriptor;
+        public int SubElementCount;
+        public int MemberDisplacement;
+        public int VftableDisplacement;
+        public int DisplacementWithinVftable;
+        public int BaseClassAttributes;
+        public int pClassHierarchyDescriptor;
+
+        public TypeDescriptor* GetTypeDescriptor()
+        {
+            return (TypeDescriptor*)RESOLVE_RELATIVE_PTR(pTypeDescriptor);
+        }
+
+        public ClassHierarchyDescriptor* GetClassHierarchyDescriptor()
+        {
+            return (ClassHierarchyDescriptor*)RESOLVE_RELATIVE_PTR(pClassHierarchyDescriptor);
+        }
+
+        public override string ToString()
+            => $"{GetTypeDescriptor()->GetName()}::`RTTI Base Class Descriptor at ({MemberDisplacement}, {VftableDisplacement}, {DisplacementWithinVftable}, {BaseClassAttributes})'";
+    }
+
+    public CompleteObjectLocator* GetRuntimeInfoFromVftable(void* in_pVftable)
+    {
+        if (in_pVftable == null)
+            return null;
+
+        var runtimeInfoOffset = *(long*)((long)in_pVftable - IntPtr.Size);
+
+        if (!Memory.IsAccessible((nint)runtimeInfoOffset))
+            return null;
+        
+        return (CompleteObjectLocator*)runtimeInfoOffset;
+    }
+
+    public CompleteObjectLocator* GetRuntimeInfo(void* in_pClass)
+    {
+        return GetRuntimeInfoFromVftable((void*)*(long*)in_pClass);
+    }
+
+    public string GetClassName(void* in_pClass, bool in_isDemangled = true, IEnumerable<DemanglerFlags> in_demanglerFlags = null)
+    {
+        var pRuntimeInfo = RTTI.GetRuntimeInfo(in_pClass);
+
+        if (pRuntimeInfo == null)
+            return string.Empty;
+
+        var pTypeDescriptor = pRuntimeInfo->GetTypeDescriptor();
+
+        if (pTypeDescriptor == null)
+            return string.Empty;
+            
+        return pTypeDescriptor->GetName(in_isDemangled, in_demanglerFlags);
+    }
+
+    public string[] GetClassNamespaces(void* in_pClass)
+    {
+        return GetClassName(in_pClass).Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    public string Demangle(string in_mangledName, IEnumerable<DemanglerFlags> in_flags)
+    {
+        var result = string.Empty;
+        var flags = 0U;
+        var demangledBytes = new byte[1024];
+
+        foreach (var flag in in_flags)
+            flags |= (uint)flag;
+
+        while (true)
+        {
+            var resultLength = UnDecorateSymbolName
+            (
+                in_mangledName,
+                demangledBytes,
+                (uint)demangledBytes.Length,
+                (uint)flags
+            );
+
+            if (resultLength == (demangledBytes.Length - 2))
+            {
+                demangledBytes = new byte[demangledBytes.Length * 2];
+                continue;
+            }
+            else
+            {
+                int count = Array.IndexOf<byte>(demangledBytes, 0, 0);
+
+                if (count < 0)
+                    count = demangledBytes.Length;
+
+                result = Encoding.ASCII.GetString(demangledBytes, 0, count);
+
+                break;
+            }
+        }
+
+        if (string.IsNullOrEmpty(result))
+            return result;
+        
+        var namespaces = result.Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (namespaces.Length > 0)
+        {
+            var last = namespaces[namespaces.Length - 1];
+            
+            if (last.StartsWith("AV"))
+                namespaces[namespaces.Length - 1] = last.Remove(0, 2);
+
+            result = string.Join("::", namespaces);
+        }
+
+        return result;
+    }
+
+    public enum DemanglerFlags
+    {
+        /// <summary>
+        /// Enable full undecoration.
+        /// </summary>
+        COMPLETE = 0x0000,
+
+        /// <summary>
+        /// Remove leading underscores from Microsoft keywords.
+        /// </summary>
+        NO_LEADING_UNDERSCORES = 0x0001,
+
+        /// <summary>
+        /// Disable expansion of Microsoft keywords.
+        /// </summary>
+        NO_MS_KEYWORDS = 0x0002,
+
+        /// <summary>
+        /// Disable expansion of return types for primary declarations.
+        /// </summary>
+        NO_FUNCTION_RETURNS = 0x0004,
+
+        /// <summary>
+        /// Disable expansion of the declaration model.
+        /// </summary>
+        NO_ALLOCATION_MODEL = 0x0008,
+
+        /// <summary>
+        /// Disable expansion of the declaration language specifier.
+        /// </summary>
+        NO_ALLOCATION_LANGUAGE = 0x0010,
+
+        /// <summary>
+        /// Disable expansion of Microsoft keywords on the this type for primary declaration.
+        /// </summary>
+        NO_MS_THISTYPE = 0x0020,
+
+        /// <summary>
+        /// Disable expansion of CodeView modifiers on the this type for primary declaration.
+        /// </summary>
+        NO_CV_THISTYPE = 0x0040,
+
+        /// <summary>
+        /// Disable all modifiers on the "this" type.
+        /// </summary>
+        NO_THISTYPE = 0x0060,
+
+        /// <summary>
+        /// Disable expansion of access specifiers for members.
+        /// </summary>
+        NO_ACCESS_SPECIFIERS = 0x0080,
+
+        /// <summary>
+        /// Disable expansion of throw-signatures for functions and pointers to functions.
+        /// </summary>
+        NO_THROW_SIGNATURES = 0x0100,
+
+        /// <summary>
+        /// Disable expansion of the static or virtual attribute of members.
+        /// </summary>
+        NO_MEMBER_TYPE = 0x0200,
+
+        /// <summary>
+        /// Disable expansion of the Microsoft model for user-defined type returns.
+        /// </summary>
+        NO_RETURN_UDT_MODEL = 0x0400,
+
+        /// <summary>
+        /// Undecorate 32-bit decorated names.
+        /// </summary>
+        P32_BIT_DECODE = 0x0800,
+
+        /// <summary>
+        /// Undecorate only the name for primary declaration. Returns [scope::]name. Does expand template parameters.
+        /// </summary>
+        NAME_ONLY = 0x1000,
+
+        /// <summary>
+        /// Do not undecorate function arguments.
+        /// </summary>
+        NO_ARGUMENTS = 0x2000,
+
+        /// <summary>
+        /// Do not undecorate special names, such as vtable, vcall, vector, metatype, and so on.
+        /// </summary>
+        NO_SPECIAL_SYMS = 0x4000
+    }
+}
+Library "Memory" by "Hyper & Sajid" 
+{
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Runtime.CompilerServices;
+    using System.Text;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr VirtualQuery(IntPtr lpAddress, ref MEMORY_BASIC_INFORMATION lpBuffer, UIntPtr dwLength);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MEMORY_BASIC_INFORMATION
+    {
+        public IntPtr BaseAddress;
+        public IntPtr AllocationBase;
+        public uint AllocationProtect;
+        public IntPtr RegionSize;
+        public uint State;
+        public uint Protect;
+        public uint Type;
+    }
+
+    private static Dictionary<nint, List<byte>> _preservedMemory = new();
+
+    public void Preserve(nint in_location, nint in_length, bool in_isPreservedOnce = true)
+    {
+        if (in_location == 0)
+            return;
+
+        if (in_isPreservedOnce)
+        {
+            if (_preservedMemory.ContainsKey(in_location))
+                return;
+        }
+        else
+        {
+            if (_preservedMemory.ContainsKey(in_location))
+                _preservedMemory.Remove(in_location);
+        }
+        
+        List<byte> buffer = new();
+        for (nint i = 0; i < in_length; i++)
+            buffer.Add(Read<byte>(in_location + i));
+
+        _preservedMemory.Add(in_location, buffer);
+    }
+
+    public void Preserve(long in_location, long in_length, bool in_isPreservedOnce = true)
+    {
+        Preserve((nint)in_location, (nint)in_length, in_isPreservedOnce);
+    }
+
+    public void Restore(nint in_location)
+    {
+        if (in_location == 0)
+            return;
+
+        if (!_preservedMemory.ContainsKey(in_location))
+            return;
+
+        nint i = 0;
+        foreach (byte b in _preservedMemory[in_location])
+        {
+            WriteProtected<byte>(in_location + i, b);
+            i++;
+        }
+    }
+
+    public void Restore(long in_location)
+    {
+        Restore((nint)in_location);
+    }
+
+    public uint GetPageProtectFlags(nint in_location)
+    {
+        var memInfo = new MEMORY_BASIC_INFORMATION();
+
+        if (VirtualQuery(in_location, ref memInfo, (UIntPtr)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION))) == IntPtr.Zero)
+            return 1;
+
+        return memInfo.Protect;
+    }
+
+    public bool IsAccessible(nint in_location)
+    {
+        // PAGE_NOACCESS
+        if ((GetPageProtectFlags(in_location) & 1) != 0)
+            return false;
+
+        return true;
+    }
+
+    public nint ReadCall(nint in_location)
+    {
+        if (in_location == 0)
+            return 0;
+
+        return in_location + Read<int>(in_location + 0x01) + 0x05;
+    }
+
+    public long ReadCall(long in_location)
+    {
+        return (long)ReadCall((nint)in_location);
+    }
+
+    public nint ReadEffectiveAddress(nint in_location)
+    {
+        if (in_location == 0)
+            return 0;
+
+        return in_location + Read<int>(in_location + 0x03) + 0x07;
+    }
+
+    public long ReadEffectiveAddress(long in_location)
+    {
+        return (long)ReadEffectiveAddress((nint)in_location);
+    }
+
+    public enum JumpType : sbyte
+    {
+        Unknown = -1,
+        ShortCond,
+        NearJmp,
+        NearCond,
+        LongJmp
+    }
+
+    public JumpType ReadJumpOpcode(nint in_location)
+    {
+        JumpType result = JumpType.Unknown;
+
+        if (in_location == 0)
+            return result;
+
+        byte opcode = Read<byte>(in_location);
+
+        if ((opcode & 0xF0) == 0x70)
+        {
+            result = JumpType.ShortCond;
+        }
+        else
+        {
+            switch (opcode)
+            {
+                case 0xE3:
+                case 0xEB:
+                    result = JumpType.ShortCond;
+                    break;
+
+                case 0xE9:
+                    result = JumpType.NearJmp;
+                    break;
+
+                case 0x0F:
+                    result = JumpType.NearCond;
+                    break;
+
+                case 0xFF:
+                    result = JumpType.LongJmp;
+                    break;
+            }
+        }
+
+        return result;
+    }
+
+    public JumpType ReadJumpOpcode(long in_location)
+    {
+        return ReadJumpOpcode((nint)in_location);
+    }
+
+    public nint ReadJump(nint in_location)
+    {
+        if (in_location == 0)
+            return 0;
+
+        switch (ReadJumpOpcode(in_location))
+        {
+            case JumpType.ShortCond:
+                return in_location + Read<byte>(in_location + 0x01) + 0x02;
+
+            case JumpType.NearJmp:
+                return in_location + Read<int>(in_location + 0x01) + 0x05;
+
+            case JumpType.NearCond:
+                return in_location + Read<int>(in_location + 0x02) + 0x06;
+
+            case JumpType.LongJmp:
+                return (nint)Read<long>(in_location + 0x06);
+        }
+
+        return 0;
+    }
+
+    public long ReadJump(long in_location)
+    {
+        return (long)ReadJump((nint)in_location);
+    }
+
+    public void WriteForceJump(nint in_location)
+    {
+        if (in_location == 0)
+            return;
+        
+        switch (ReadJumpOpcode(in_location))
+        {
+            case JumpType.ShortCond:
+                WriteProtected<byte>(in_location, 0xEB);
+                break;
+
+            case JumpType.NearCond:
+                WriteProtected<byte>(in_location, 0xE9);
+                WriteProtected<int>(in_location + 0x01, Read<int>(in_location + 0x02) + 0x01);
+                break;
+        }
+    }
+
+    public void WriteForceJump(long in_location)
+    {
+        WriteForceJump((nint)in_location);
+    }
+
+    public nint ReadThunk(nint in_location, nint in_offset = 0)
+    {
+        return ReadJump(ReadCall(in_location) + in_offset);
+    }
+
+    public long ReadThunk(long in_location, long in_offset = 0)
+    {
+        return (long)ReadThunk((nint)in_location, (nint)in_offset);
+    }
+
+    public void WriteString(long in_location, string in_str, Encoding in_encoding)
+    {
+        WriteProtected<byte>(in_location, in_encoding.GetBytes(in_str));
+    }
+
+    public void WriteString(long in_location, string in_str)
+    {
+        WriteString(in_location, in_str, Encoding.ASCII);
+    }
+
+    public void PrintMemory<T>(IntPtr in_address, int in_rowCount) where T : unmanaged
+    {
+        for (int i = 0; i < in_rowCount * 16; i += 16)
+        {
+            Console.Write($"{(in_address + i).ToInt64():X16}: ");
+
+            if (typeof(T) == typeof(byte) || typeof(T) == typeof(sbyte))
+            {
+                for (int j = 0; j < 16; j++)
+                    Console.Write($"{Read<T>(in_address + i + j):X2} ");
+            }
+            else if (typeof(T) == typeof(short) || typeof(T) == typeof(ushort))
+            {
+                for (int j = 0; j < 16; j += 2)
+                    Console.Write($"{Read<T>(in_address + i + j):X4} ");
+            }
+            else if (typeof(T) == typeof(int) || typeof(T) == typeof(uint))
+            {
+                for (int j = 0; j < 16; j += 4)
+                    Console.Write($"{Read<T>(in_address + i + j):X8} ");
+            }
+            else if (typeof(T) == typeof(long) || typeof(T) == typeof(ulong))
+            {
+                for (int j = 0; j < 16; j += 8)
+                    Console.Write($"{Read<T>(in_address + i + j):X16} ");
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                for (int j = 0; j < 16; j += 4)
+                    Console.Write($"{Read<float>(in_address + i + j)} ");
+            }
+            else if (typeof(T) == typeof(double))
+            {
+                for (int j = 0; j < 16; j += 8)
+                    Console.Write($"{Read<double>(in_address + i + j)} ");
+            }
+
+            Console.WriteLine();
+        }
+    }
+
+    public void PrintMemory(IntPtr in_address, int in_rowCount)
+    {
+        PrintMemory<byte>(in_address, in_rowCount);
+    }
+    
+    public struct Pointer<T> where T : unmanaged
+    {
+        public T* pData;
+
+        public Pointer(ref T data)
+        {
+            fixed(T* dataPtr = &data)
+            {
+                pData = dataPtr;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Pointer(T* in_pData)
+        {
+            pData = in_pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool IsValid()
+        {
+            return pData != null;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref T Ref()
+        {
+            return ref *pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T* Get()
+        {
+            return pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator bool(Pointer<T> self) => self.IsValid();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator Pointer<T>(T* data) => new(data);
+
+        public override string ToString() => $"0x{((long)pData):X}";
+    }
+}
+Patch "Disable Character Action Voices" in "Audio" by "Hyper" 
+WriteProtected<uint>(0xDF0B96, 0xFFFFFF);  /* 3002_action01 (used for Unleashed jump selector) */
+WriteProtected<uint>(0xDF0C08, 0xFFFFFF);  /* 3002_action01 (used for Unleashed jump selector) */
+WriteProtected<uint>(0xDFC993, 0xFFFFFF);  /* 3002_action01 (used for bouncing off physics objects) */
+WriteProtected<uint>(0xE4B684, 0xFFFFFF);  /* 3002_action01 (used for tricks) */
+WriteProtected<uint>(0xE4B8E0, 0xFFFFFF);  /* 3002_action01 (used for trick finish) */
+WriteProtected<uint>(0xE57E6F, 0xFFFFFF);  /* 3002_action01 (used for jumping) */
+WriteProtected<uint>(0x11D7B8C, 0xFFFFFF); /* 3002_action01 (used for grinding) */
+WriteProtected<uint>(0x123B475, 0xFFFFFF); /* 3002_action01 (used for cannons) */
+WriteProtected<uint>(0x1252740, 0xFFFFFF); /* 3002_action01 (used for squat kick) */
+WriteProtected<uint>(0x1117EF4, 0xFFFFFF); /* 3002_stumble */
+WriteProtected<uint>(0xE0248C, 0xFFFFFF);  /* 3002_damage01 */
+WriteProtected<uint>(0xE02496, 0xFFFFFF);  /* 3002_damage02 */
+WriteProtected<uint>(0xE024A0, 0xFFFFFF);  /* 3002_damage03 */
+WriteProtected<uint>(0xE024AA, 0xFFFFFF);  /* 3002_damage04 */
+WriteProtected<uint>(0xDF0B63, 0xFFFFFF);  /* 3002_damage05 (used for Unleashed jump selector) */
+WriteProtected<uint>(0xE4466E, 0xFFFFFF);  /* 3002_strain (used for pushing) */
+WriteProtected<uint>(0xE023E3, 0xFFFFFF);  /* 3002_dead (used for dying from enemies) */
+WriteProtected<uint>(0xE55D3D, 0xFFFFFF);  /* 3002_dead (used for dying from falling) */
+WriteProtected<uint>(0x1117CEB, 0xFFFFFF); /* 3002_action03 (used for boost) */
+WriteProtected<uint>(0x1254E04, 0xFFFFFF); /* 3002_action03 (used for stomping) */
+WriteProtected<uint>(0xDF3710, 0xFFFFFF);  /* 3002_action04 (used for drift) */
+WriteProtected<uint>(0x1117D09, 0xFFFFFF); /* 3002_action04 (used for boost) */
+WriteProtected<uint>(0x11184E4, 0xFFFFFF); /* 3002_action04 (used for homing success) */
+WriteProtected<uint>(0x1118512, 0xFFFFFF); /* 3002_action03 (used for homing success) */
+WriteProtected<uint>(0x1119B1F, 0xFFFFFF); /* 3002_action04 (used for board drift) */
+WriteProtected<uint>(0xE3DADD, 0xFFFFFF);  /* 3002_success01 (used for blast off) */
+WriteProtected<uint>(0xE462AA, 0xFFFFFF);  /* 3002_success01 (used for pulleys) */
+WriteProtected<uint>(0x1117D27, 0xFFFFFF); /* 3002_action05 (used for boost) */
+WriteProtected<uint>(0x1231971, 0xFFFFFF); /* 3002_action05 (used for light dash) */
+WriteProtected<uint>(0xDF0B63, 0xFFFFFF);  /* 3002_damage06 */
+WriteProtected<uint>(0x11D72DC, 0xFFFFFF); /* 3002_action06 */
+
+
+
+Patch "Disable Boost Audio Filter" in "Audio" by "Hyper" 
+WriteProtected<byte>(0xE2E26B, 0xEB); /* Sonic::Player::CPlayerSpeedPosturePluginAisacGhz */
+WriteProtected<byte>(0xE2E409, 0xEB); /* Sonic::Player::CPlayerSpeedPosturePluginAisac */
+
+
+
+Patch "Disable Water Audio Filter" in "Audio" by "Hyper" 
+WriteProtected<byte>(0xD6F084, 0xC7, 0x06, 0xFC, 0xD2, 0x6D, 0x01); /* replace WaterToGround with Nop */
+WriteProtected<byte>(0xD6F53A, 0xE9, 0xC7, 0x00, 0x00, 0x00); /* Sonic::CSoundBgmAisacController::GroundToWater */
+
+
+
+Patch "Disable Timer" in "Cheats" by "Muzzarino" 
+WriteNop(0xD02E48, 8)
+
+
+
+Patch "Disable Damage" in "Cheats" by "SuperSonic16 & brianuuu" 
+WriteProtected<byte>(0xDEAF2A, 0xEB)
+WriteProtected<byte>(0xE28364, 0xEB)
+
+
+
+Patch "Fix Homing Trail Position" in "Fixes" by "Ahremic" 
+WriteProtected<byte>(0xE4F442, 0xF0); // Replaces "UpVector" (0x450), i.e. the floor normal,
+                                      // with "ModelUpVector" (0x4F0), Sonic's actual upward direction.
+                                      // This fixes an actual *bug* where the homing trail position was just WRONG.
+
+
+
+Patch "Fix Input Delay at Arbitrary Framerates (experimental)" in "Fixes" by "Skyth" 
+WriteProtected<byte>(0xD6CBCA, 0xF3, 0x0F, 0x10, 0x44, 0x24, 0x24);
+WriteNop(0xD6CBD0, 14);
+
+
+
+Code "Fix Spin Dash Crashing in 3D" in "Fixes" by "Chimera" 
+WriteProtected<uint>(0x16D8CD4, 0x11D6140) /* Replaces the vftable entry for classic's 3D spindash update with his slide. */
+
+
+
+Patch "Fix Skydive Collision Detection" in "Fixes" by "N69" 
+WriteNop(0x119822E, 18)
+
+
+
+Patch "Fix Boost Gauge Particles (experimental)" in "Fixes" by "Skyth" does 
+/*
+Fixes the chaos energy particles going to the top-left of the screen instead of the boost gauge.
+
+Known issues;
+- Crashes during the rival battle against Shadow.
+- Crashes in Casino Night.
+*/
+WriteProtected<byte>(0x11AEC51, 0xB9, 0x00, 0x00, 0x34, 0x44, 0x66, 0x0F, 0x6E, 0xD1, 0xB9, 0x00, 0x00, 0xA0, 0x44, 0x66, 0x0F, 0x6E, 0xC1)
+WriteNop(0x11AEC63, 22)
+
+
+
+Patch "Fix Loading Screen Stutter" in "Fixes" by "Skyth"
+WriteNop(0xD67E9A, 4);
+Patch "Always Controllable Cameras" in "Camera" by "Skyth" 
+WriteNop(0x10E7515, 2);
+
+
+
+Patch "Increased Super Sonic FOV" in "Camera" by "brianuuu" 
+WriteProtected<byte>(0x11D9F32, 0xC7, 0x80, 0x70, 0x01, 0x00, 0x00)
+WriteProtected<float>(0x11D9F38, (float)1.3089969288525)
+WriteNop(0x11D9F3C, 2)
+WriteProtected<byte>(0x11D9EFB, 0x8B, 0x16, 0xC7, 0x82, 0x6C, 0x01, 0x00, 0x00)
+WriteProtected<float>(0x11D9F03, (float)0.8)
+WriteNop(0x11D9F07, 8)
+WriteProtected<byte>(0x10E7B96, 0xEB, 0x0A)
+
+
+
+Code "Unleashed Style Camera" in "Camera" by "Skyth" 
+static bool initialized = false;
+static double _0 = 0.0;
+static double _50_60 = 50.0 / 60.0;
+
+if (!initialized)
+{
+    WriteAsmHook("mulss xmm0, ds:0x14AF8CC", 0x10ED952, HookBehavior.After);
+    WriteAsmHook("mulss xmm3, ds:0x14AF8CC", 0x10EDB4C, HookBehavior.After);
+    WriteAsmHook("mulss xmm3, ds:0x14AF8CC", 0x10EDAC2, HookBehavior.After);
+
+    WriteAsmHook("cvtps2pd xmm2, xmm1; mulsd xmm0, xmm2", 0x10ED123, HookBehavior.Replace);
+    WriteAsmHook("movss xmm1, ds:0x1559A98", 0x10ED12F, HookBehavior.After);
+    WriteAsmHook("xorpd xmm0, ds:0x1703930; addsd xmm0, ds:0x1703940", 0x10ED14A, HookBehavior.Before);
+
+    fixed (double* p0 = &_0)
+    fixed (double* p50_60 = &_50_60)
+    {
+        WriteProtected<uint>(0x10ED879, (uint)p0);
+        WriteProtected<uint>(0x10ED884, (uint)p50_60);
+    }
+
+    WriteProtected<byte>(0x10EDEC4, 0xEB);
+    WriteProtected<byte>(0x10EE1AA, 0x0F, 0x57, 0xC0, 0x90, 0x90, 0x90, 0x90, 0x90);
+
+    initialized = true;
+}
+
+Write(0x1A48BFC, 3.0f); // DRIFT_TARGET_SIDE_OFFSET_SCALE
+Write(0x1A48B60, 60.0f); // CAMERA_MAX_PITCH
+Write(0x1A48B6C, 20.0f); // CAMERA_PITCH_MOVE_VELOCITY_MIN
+
+
+
+Patch "Restore Right Stick Camera Controls" in "Camera" by "Skyth & Ahremic" 
+//=====//
+// Pan //
+//=====//
+static double PanSmoothingRate = 0.65;
+fixed (double* pPanSmoothingRate = &PanSmoothingRate)
+    WriteProtected(0x10E723E, (uint)pPanSmoothingRate);
+
+// X
+WriteAsmHook(@"
+movss xmm0, ds:0x1E77B74
+shufps xmm0, xmm0, 0
+cvtps2pd xmm0, xmm0
+movapd xmm3, xmm0
+movsd xmm0, ds:0x1464F30
+subsd xmm3, xmm2
+", 0x10E7232, HookBehavior.Replace);
+
+// Y
+WriteAsmHook(@"
+movss xmm0, ds:0x1E77B78
+shufps xmm0, xmm0, 0
+cvtps2pd xmm0, xmm0
+movapd xmm4, xmm0
+movsd xmm0, ds:0x1703C98
+cvtps2pd xmm3, xmm1
+", 0x10E7265, HookBehavior.Replace);
+
+//========//
+// Orient //
+//========//
+
+// X
+WriteAsmHook(@"
+movss xmm1, ds:0x1E77B74
+mulss xmm1, ds:0x13E08A4
+shufps xmm1, xmm1, 0
+cvtps2pd xmm3, xmm1
+xorps xmm1, xmm1
+add esp, 8
+", 0x10EE053, HookBehavior.Replace);
+
+// Y
+WriteAsmHook(@"
+movss xmm1, ds:0x1E77B78
+mulss xmm1, ds:0x13E40B8
+xorps xmm1, ds:0x1703930
+shufps xmm1, xmm1, 0
+cvtps2pd xmm0, xmm1
+xorps xmm1, xmm1
+cvtps2pd xmm2, xmm2
+", 0x10EE030, HookBehavior.Replace);
+
+
+
+Patch "Unleashed Style Stomp" in "Physics" by "Skyth, brianuuu & Ahremic" 
+WriteAsmHook(@"
+movss [esp + 2Ch], xmm0
+movaps xmm0, [esp + 20h]
+cmp byte ptr [edi + 5E8h], 0
+jz skip
+push esi
+mov esi, edi
+mov eax, 0E4F100h
+call eax
+pop esi
+skip:
+movaps [edi + 2B0h], xmm0
+", 0x1254D41, HookBehavior.Replace);
+WriteProtected<byte>(0x1254D47, 0xEB, 0x0A);
+WriteProtected<byte>(0x1254D59, 0x00);
+WriteProtected<byte>(0x1254D60, 0x01);
+WriteProtected<byte>(0x12548C0, 0xE9, 0x7B, 0x09, 0x00, 0x00);
+WriteProtected<int>(0x1255275, 500);
+WriteProtected<int>(0x125539A, 498);
+WriteProtected<int>(0x125541C, 497);
+WriteProtected<byte>(0x12552E4, 0x78, 0xA3, 0xBA);
+
+WriteAsmHook(@"
+cmp byte ptr [esi + 440h], 0
+jz skip
+push ebx
+sub esp, 8
+mov ebx, dword ptr [esi]
+mov ebx, dword ptr [ebx + 74h]
+push 1
+push 1E8C7Bh
+lea eax, dword ptr [esp + 8]
+push eax
+mov ecx, esi
+call ebx
+mov ebx, 50CA30h
+call ebx
+add esp, 8
+pop ebx
+skip:
+cmp byte ptr [esi + 440h], 0
+", 0x12552C5, HookBehavior.Replace);
+
+
+
+Patch "Retain Horizontal Velocity from Jump Dash" in "Physics" by "Ahremic" 
+WriteProtected<byte>(0x01231B0C, 0xE8);// Modern
+WriteNop(0x01231B0D, 4);
+WriteProtected<byte>(0x0122E9BB, 0xE8);// Classic
+WriteNop(0x0122E9BC, 4);
+
+
+
+Patch "Retain Horizontal Velocity from Stomp" in "Physics" by "TGE" 
+string code = @"
+movaps xmm1, [edi+0x290]
+addps xmm0, xmm1
+movaps [edi+0x290], xmm0"
+WriteAsmHook(code, 0x01254D4C, HookBehavior.Replace)
+
+
+
+Patch "Always Replay Rescue Cutscenes" in "Gameplay" by "Muzzarino" does "Always plays the rescue cutscenes after finishing a stage and returning to White Space." 
+WriteProtected<ushort>(0xD29532, 0x6EB)
+
+
+
+Patch "Hide Boost Gauge" in "UI" by "Hyper" 
+WriteNop(0x109B8DD, 2);
+
+
+
+Patch "Hide Homing Reticle" in "UI" by "Hyper" 
+WriteProtected<byte>(0xB6AB8C, 0xE9, 0xF7, 0x01, 0x00, 0x00);
+WriteProtected<byte>(0xDEBC36, 0x00);
+
+
+
+Patch "Hide Boost Button Prompt" in "UI" by "Hyper" 
+WriteProtected<byte>(0x109BC7C, 0xE9, 0x71, 0x01, 0x00, 0x00);
+
+
+
+Patch "Disable HUD in Stages" in "UI" by "brianuuu" 
+WriteNop(0x108AB3F, 2)
+WriteProtected<byte>(0x108ABFE, 0xE9, 0xED, 0x00, 0x00, 0x00, 0x90)
+WriteNop(0x108D563, 6)
+WriteProtected<byte>(0x108D5D5, 0xE9, 0xED, 0x00, 0x00, 0x00, 0x90)
+WriteNop(0x1098AFB, 6)
+WriteProtected<byte>(0x1098B6D, 0xE9, 0xF6, 0x00, 0x00, 0x00, 0x90)
+WriteNop(0x117DE55, 2)
+WriteProtected<byte>(0x117DE67, 0xEB)
+
+
+
+Patch "Disable Title Loading Video" in "UI" by "Hyper" does "Disables the few extra low resolution frames of Sonic falling when loading out of the title screen." 
+WriteProtected<byte>(0xD6966E, 0xE9, 0x14, 0x01, 0x00, 0x00);
+
+
+
+Patch "Always Display Level Names" in "UI" by "Muzzarino & brianuuu" does "Always displays the stage title in the loading screen regardless of whether the stage has been played already." 
+WriteProtected<byte>(0xD58A93, 0xEB, 0x41, 0xEB, 0x3F)
+
+
+
+Patch "Disable Title Outro" in "UI" by "Skyth" does "Immediately transitions out of the title screen without Sonic jumping from the logo." 
+WriteProtected<int>(0x57346F, 0x16A36CC);
+
+
+
+Patch "Hide Lap Time Display" in "UI" by "Hyper" does "Disables the timer that appears when passing a checkpoint you've been to previously." 
+WriteProtected<byte>(0x10976EF, 0x90, 0xE9);
+
+
+
+Patch "Enable Object Collision Debug View" in "Debug" by "Aruki" 
+*(bool*)0x1E5E3A0 = true;
+
+
+
+Patch "Enable Terrain Collision Debug View" in "Debug" by "Sajid" 
+WriteProtected<byte>(0xCF2497, 1);
+WriteNop(0xCF2515, 23);
+
+
+
+Patch "Enable Volume Debug View" in "Debug" by "Aruki" 
+*(bool*)0x1E5E39B = true;
+
+
+
+Patch "Enable Stage Collision Debug View" in "Debug" by "M&M" 
+*(bool*)0x1E5E382 = true;
+
+
+
+Patch "Allow Controller Hotplugging" in "System" by "Skyth" 
+WriteProtected<byte>(0x9C85FA, 0x83)
+WriteProtected<byte>(0x9C85FB, 0xFA)
+WriteProtected<byte>(0x9C85FC, 0x4)
+WriteNop(0x9C8603, 12)
+WriteProtected<byte>(0x9C86B2, 0x83)
+WriteProtected<byte>(0x9C86B3, 0xFA)
+WriteProtected<byte>(0x9C86B4, 0x4)
+WriteNop(0x9C86BB, 12)
+WriteNop(0x9C8163, 2)
+WriteNop(0x9C8168, 8)
+WriteNop(0x9C8173, 1)
+WriteProtected<byte>(0x9C8176, 0xE8)
+WriteProtected<byte>(0x9C8177, 0xC7)
+WriteProtected<byte>(0x9C8178, 0x40)
+WriteProtected<byte>(0x9C8179, 0xC)
+WriteProtected<byte>(0x9C817A, 0x4)
+WriteProtected<byte>(0x9C817B, 0x0)
+WriteProtected<byte>(0x9C817C, 0x0)
+WriteProtected<byte>(0x9C817D, 0x0)
+WriteNop(0x9C8A70, 2)
+WriteNop(0x9C8AC0, 2)
+
+
+
+Patch "Allow Multiple Instances" in "System" by "Sajid & Skyth" does "Allows multiple instances of Sonic Generations to be running at once." 
+WriteProtected<byte>(0xE7A6E6, 0x83)
+WriteProtected<byte>(0xE7A6E7, 0xC4)
+WriteProtected<byte>(0xE7A6E8, 0xC)
+WriteNop(0xE7A6E9, 0x3)
+
+
+
+Patch "Always Run in the Background" in "System" by "SuperSonic16" does "Stops the game from pausing when the window is unfocused." 
+WriteProtected<byte>(0xE7BF04, 0xEB)
+
+
+
+Patch "Disable Artificial Loading Times" in "System" by "Hyper" does "Disables the Omochao hints during the loading screens, which create artificial loading times for the hints to be readable." 
+WriteProtected<byte>(0x448959, 0xE9, 0x12, 0x01, 0x00, 0x00);
+
+
+
+Patch "60 FPS Cutscenes (experimental)" in "Graphics/FPS" by "M&M" 
+WriteProtected<byte>(0xB21F0B, 0xCC, 0xF8, 0x4A);
+
+
+
+Patch "Disable Framerate Limiter" in "Graphics/FPS" by "Skyth" 
+WriteProtected<byte>(0xE7B580, 0xEB);
+
+
+
+Patch "Unleashed Style Blue Trail" in "Graphics/Effects" by "N69 & Nekit" 
+WriteNop(0xE5FB17, 6)
+WriteProtected<byte>(0xE5FE10, 0x48)
+WriteProtected<byte>(0xE5FE70, 0x48)
+
+
+
+Patch "Disable Light Dash Hint Particles" in "Graphics/Effects" by "Hyper" does "Disables the particle effects that hint about a light dash trail." 
+WriteProtected<byte>(0x10538EB, 0xE9, 0x8F, 0x00, 0x00, 0x00, 0x90);
+
+
+
+Patch "Disable Blue Trail" in "Graphics/Effects" by "Hyper" does "Removes the blue trail from Sonic after performing certain actions." 
+WriteProtected<byte>(0xE5FDE5, 0xE9, 0x19, 0x01, 0x00, 0x00);
+
+
+
+Patch "Boost Energy Goes To Sonic" in "Graphics/Effects" by "brianuuu" does "Makes the boost energy particles from enemies travel to Sonic instead of the boost gauge."
+WriteProtected<byte>(0x10967B4,0xA1,0xF0,0xE2,0xE5,0x01,0x85,0xC0,0x0F,0x84,0x27,0x01,0x00,0x00,0x8B,0x80,0x10)
+WriteProtected<byte>(0x10967C4,0x01,0x00,0x00,0x8B,0x80,0xAC,0x00,0x00,0x00,0x85,0xC0,0x0F,0x84,0x13,0x01,0x00)
+WriteProtected<byte>(0x10967D4,0x00,0x8B,0x40,0x10,0xF3,0x0F,0x10,0x50,0x74,0xBA,0x00,0x00,0x00,0x3F,0x66,0x0F)
+WriteProtected<byte>(0x10967E4,0x6E,0xC2,0xF3,0x0F,0x58,0xD0,0xF3,0x0F,0x10,0x40,0x70,0xF3,0x0F,0x10,0x48,0x78)
+WriteProtected<byte>(0x10967F4,0x8B,0x55,0x08,0xF3,0x0F,0x11,0x42,0x10,0xF3,0x0F,0x11,0x52,0x14,0xF3,0x0F,0x11)
+WriteProtected<byte>(0x1096804,0x4A,0x18,0xE9,0xDD,0x00,0x00,0x00)
+
+
+
+Patch "Disable Drift Particles" in "Graphics/Effects" by "Hyper" 
+WriteProtected<byte>(0x15E92B4, 0x00);
+WriteProtected<byte>(0x15E92CC, 0x00);
+
+
+
+Patch "Disable Stomp Particles" in "Graphics/Effects" by "Skyth" 
+WriteProtected<byte>(0x15E9094, 0x00);
+WriteProtected<byte>(0x15E90AC, 0x00);
+WriteProtected<byte>(0x15E90C4, 0x00);
+
+
+
+Patch "Disable Boost Particles" in "Graphics/Effects" by "Hyper" 
+WriteProtected<byte>(0x15A3568, 0x00); /* ef_bo_sha_yh1_boost1 */
+WriteProtected<byte>(0x15E9048, 0x00); /* ef_ch_sng_yh1_boost1 */
+WriteProtected<byte>(0x15E9060, 0x00); /* ef_ch_sng_yh1_boost2 */
+WriteProtected<byte>(0x15EE774, 0x00); /* ef_bo_sha_yh1_hyper_sn */
+WriteProtected<byte>(0x15EE78C, 0x00); /* ef_bo_sha_yh1_hyper_sn */
+WriteProtected<byte>(0x15F99F8, 0x00); /* ef_ch_sps_yh1_boost1 */
+WriteProtected<byte>(0x15F9A10, 0x00); /* ef_ch_sps_yh1_boost2 */
+WriteProtected<byte>(0x164330C, 0x00); /* ef_st_ssh_yh1_bobsled_boost */
+
+
+
+Patch "Disable Trick Particles" in "Graphics/Effects" by "Hyper" 
+WriteProtected<byte>(0x15E9128, 0x00); /* ef_ch_sng_yh1_jump_trick1 */
+WriteProtected<byte>(0x15E9144, 0x00); /* ef_ch_sng_yh1_jump_trick2 */
+WriteProtected<byte>(0x15E9160, 0x00); /* ef_ch_sng_yh1_jump_trick3 */
+WriteProtected<byte>(0x15E917C, 0x00); /* ef_ch_sng_yh1_jump_trick4 */
+WriteProtected<byte>(0x15E9198, 0x00); /* ef_ch_sng_yh1_jump_trick5 */
+
+
+
+Patch "Disable Spin Jump Particles" in "Graphics/Effects" by "Hyper" does "Disables the particle effect for when Sonic jumps and curls into a ball." 
+WriteProtected<byte>(0x15E902C, 0x00);
+WriteProtected<byte>(0x15F99DC, 0x00);
+
+
+
+Patch "Disable Classic Run Particles" in "Graphics/Effects" by "Hyper" 
+WriteProtected<byte>(0xDC1C6F, 0xE9, 0x99, 0x00, 0x00, 0x00);
+
+
+
+Patch "Disable Super Sonic Aura Particles" in "Graphics/Effects" by "Hyper" 
+WriteProtected<byte>(0xDA28DC, 0xEB);
+WriteNop(0xDA79B1, 5);
+WriteProtected<byte>(0xDA892C, 0xEB);
+WriteNop(0xDAD371, 5);
+
+
+
+Patch "Disable Sonic Smoke Trail" in "Graphics/Effects" by "Sajid" 
+Write<byte>(0x1A44AE2, 0)
+WriteNop(0x11A2D28, 23)
+
+
+
+Patch "Disable Slide Particles" in "Graphics/Effects" by "Skyth" 
+WriteProtected<byte>(0x15E91B4, 0x00);
+WriteProtected<byte>(0x15E91CC, 0x00);
+
+
+
+Patch "Disable Brightness Adjustment" in "Graphics/Post-processing" by "Skyth" 
+WriteProtected<byte>(0xD68183, 0x83, 0xC4, 0x08, 0x90, 0x90);
+
+
+
+Patch "Disable Colour Correction" in "Graphics/Post-processing" by "M&M" 
+WriteProtected<byte>(0x1699F54, 0x00);
+
+
+
+Patch "Force Object Blur on All Player Models" in "Graphics/Post-processing" by "Skyth" 
+WriteProtected<uint>(0x13E0000, 8); // MTFx
+WriteProtected<uint>(0x10CDE69, 1); // FxPipeline
+
+
+
+Code "Force Motion Blur" in "Graphics/Post-processing" by "Skyth & Kitzu" 
+Write<byte>(0x1A43103, 1)
+Write<float>(0x1A431F4, 1)
+Write<float>(0x1A43210, 1)
+
+
+
+Code "Disable Depth of Field" in "Graphics/Post-processing" by "Luig" 
+Write<byte>(0x01A4358D, 0)
+
+
+
+Patch "Display Subtitles Additive on Light Backgrounds" in "Graphics/Post-processing" by "Muzzarino" does "Changes the blend mode of the subtitle font if the background colour is too bright for them to be visible." 
+WriteProtected<byte>(0x40FED4, 0xE9)
+WriteProtected<uint>(0x40FED5, 0xFB1DBE)
+WriteNop(0x40FED9, 2)
+WriteProtected<uint>(0x13C1C97, 0x80FB8053)
+WriteProtected<ushort>(0x13C1C9B, 0x2070)
+WriteProtected<ushort>(0x13C1C9D, 0xEBC1)
+WriteProtected<uint>(0x13C1C9F, 0x80FB8008)
+WriteProtected<ushort>(0x13C1CA3, 0x1870)
+WriteProtected<ushort>(0x13C1CA5, 0xEBC1)
+WriteProtected<uint>(0x13C1CA7, 0x80FB8008)
+WriteProtected<ushort>(0x13C1CAB, 0x1070)
+WriteProtected<uint>(0x13C1CAD, 0x54840C7)
+WriteProtected<uint>(0x13C1CB4, 0x24C40C7)
+WriteProtected<ushort>(0x13C1CBB, 0x7EB)
+WriteProtected<uint>(0x13C1CBD, 0x64C40C7)
+WriteProtected<ushort>(0x13C1CC4, 0x1C8B)
+WriteProtected<uint>(0x13C1CC6, 0x4C48324)
+WriteProtected<byte>(0x13C1CCA, 0xE9)
+WriteProtected<uint>(0x13C1CCB, 0xFF04E20C)
+
+
+
+Code "Disable Light Shafts" in "Graphics/Post-processing" by "Skyth" 
+*(bool*)0x1E5E333 = false;
+
+
+
+Code "Disable Motion Blur" in "Graphics/Post-processing" by "Skyth" 
+Write<byte>(0x1A43103, 0)
+
+
+
+Code "Disable Bloom" in "Graphics/Post-processing" by "Skyth" 
+Write<byte>(0x1A4323D, 0)
+Patch "Show Mega Drive in the Hub World" in "Graphics/Objects" by "Hyper" does "Restores the Mega Drive above Green Hill. This does not restore functionality." 
+WriteProtected<byte>(0xEED498, 0x01);
+
+
+
+Patch "Borderless Fullscreen" in "Graphics/Display" by "Sajid" 
+string code = @"mov eax,[ebp+18]
+mov [eax+0x20],00000001
+mov [eax+0x1C],00000000
+mov [eax+0x30],00000000
+mov [ebp-0x1C],ecx
+push 0x00003210"
+WriteAsmHook(code, 0xA5EB5B, HookBehavior.Replace)
+
+
+
+Code "Adjust Aspect Ratio to Resolution" in "Graphics/Display" by "Muzzarino" does "Dynamically adjusts the aspect ratio to match the game resolution (recommended for ultrawide)." 
+Double width = (Double)Read<uint>(0x01DFE228)
+Double height = (Double)Read<uint>(0x01DFE22C)
+Double defaultwidth = 1280.0
+Double defaultheight = 720.0
+Double aspect = width / height
+Double condaspect = 1.777777777777777778
+WriteProtected<double>(0x01703EA0,defaultheight * condaspect / (aspect < condaspect ? aspect : condaspect))
+WriteProtected<double>(0x01703EA8,Read<double>(0x01703EA0) * aspect)
+WriteProtected(0x6754D0,0xC3)
+Double xoffset = (Read<double>(0x01703EA8) - defaultwidth) * 0.5
+Double yoffset = (Read<double>(0x01703EA0) - defaultheight) * 0.5
+WriteProtected<float>(0x01B23F10,Read<float>(0x01B23F08) * (float)xoffset)
+WriteProtected<float>(0x01B23F14,Read<float>(0x01B23F0C) * (float)yoffset)
+WriteProtected<float>(0x013EA85C,200f + (float)yoffset)
+WriteProtected<float>(0x017041F8,880f + (float)xoffset)
+WriteProtected<float>(0x01703CA8,400f + (float)xoffset)
+WriteProtected<double>(0x01703CA0,640 + xoffset)
+WriteProtected<float>(0x016866E4,(float)Read<double>(0x01703CA0))
+WriteProtected<double>(0x01703F58,259 + yoffset)
+
+string code = @"fild dword ptr [0x01DFE228]
+fidiv dword ptr [0x01DFE22C]
+fld st(0)
+fld dword ptr [0x01703B38]
+fdiv dword ptr [0x016D2E4C]
+fld st(0)
+fcomi st(0),st(2)
+fcmovb st(0),st(2)
+fdivp st(2),st(0)
+fdivp st(2),st(0)
+fmulp st(2),st(0)
+fmul dword ptr [ebp+0x10]
+fstp dword ptr [ebp+0x10]
+fld st(0)
+fdiv dword ptr [ebp+0x10]"
+
+string code2 = @"fld st(0)
+fild dword ptr [0x01DFE228]
+fidiv dword ptr [0x01DFE22C]
+fdivrp st(1),st(0)
+fmulp st(1),st(0)
+fstp dword ptr [esi+0xB8]"
+
+string code3 = @"fld qword ptr [0x01703EA8]
+fsub dword ptr [0x01703B38]
+fmul qword ptr [0x017038F8]
+fchs
+fstp dword ptr [ecx+0x60]
+fld qword ptr [0x01703EA0]
+fsub dword ptr [0x016D2E4C]
+fmul qword ptr [0x017038F8]
+fsubr dword ptr [ecx+0x64]
+fstp dword ptr [ecx+0x64]"
+
+string code4 = @"mov eax,0x679B50
+fld qword ptr [0x01703EA8]
+fsub dword ptr [0x01703B38]
+fmul qword ptr [0x017038F8]
+fadd dword ptr [esp]
+fstp dword ptr [esp]
+fld qword ptr [0x01703EA0]
+fsub dword ptr [0x016D2E4C]
+fadd dword ptr [esp+0x4]
+fstp dword ptr [esp+0x4]
+call eax"
+
+string code5 = @"fild dword ptr [0x01DFE228]
+fidiv dword ptr [0x01DFE22C]
+fld dword ptr [0x01703B38]
+fdiv dword ptr [0x016D2E4C]
+fcomi st(0),st(1)
+fcmovb st(0),st(1)
+fdivp st(1),st(0)
+fld dword ptr [0x01703B38]
+fdiv dword ptr [0x016D2E4C]
+fild dword ptr [0x01DFE228]
+fidiv dword ptr [0x01DFE22C]
+fdivp st(1),st(0)
+fmul st(0),st(1)
+fmul qword ptr [0x017038F8]
+fsub qword ptr [0x017038F8]
+fchs
+fst dword ptr [esp+0x18]
+fld1
+fsubrp st(1),st(0)
+fstp dword ptr [esp+0x20]
+fmul qword ptr [0x017038F8]
+fsub qword ptr [0x017038F8]
+fchs
+fst dword ptr [esp+0x1C]
+fld1
+fsubrp st(1),st(0)
+fstp dword ptr [esp+0x24]
+cmp byte ptr [edi+0x30],00"
+
+string code6 = @"fild dword ptr [0x01DFE228]
+fidiv dword ptr [0x01DFE22C]
+fld dword ptr [0x01703B38]
+fdiv dword ptr [0x016D2E4C]
+fcomi st(0),st(1)
+fcmovb st(0),st(1)
+fdivp st(1),st(0)
+push 00
+fstp dword ptr [esp]
+movss xmm0,[esp]
+fld dword ptr [0x01703B38]
+fdiv dword ptr [0x016D2E4C]
+fild dword ptr [0x01DFE228]
+fidiv dword ptr [0x01DFE22C]
+fdivp st(1),st(0)
+fmul dword ptr [esp]
+fmul qword ptr [0x017038F8]
+fsub qword ptr [0x017038F8]
+fchs
+fstp dword ptr [esp]
+movss xmm1,[esp]
+add esp,04
+cvtps2pd xmm0,xmm0"
+
+string code7 = @"fild dword ptr [0x01DFE228]
+fidiv dword ptr [0x01DFE22C]
+fld dword ptr [0x01703B38]
+fdiv dword ptr [0x016D2E4C]
+fcomi st(0),st(1)
+fcmovb st(0),st(1)
+fdivp st(1),st(0)
+push 00
+fstp dword ptr [esp]
+fld dword ptr [0x01703B38]
+fdiv dword ptr [0x016D2E4C]
+fild dword ptr [0x01DFE228]
+fidiv dword ptr [0x01DFE22C]
+fdivp st(1),st(0)
+fmul dword ptr [esp]
+fmul qword ptr [0x017038F8]
+fsub qword ptr [0x017038F8]
+fchs
+fld1
+fsubrp st(1),st(0)
+fstp dword ptr [esp]
+movss xmm2,[esp]
+add esp,04"
+
+string code8 = @"fild dword ptr [0x01DFE228]
+fidiv dword ptr [0x01DFE22C]
+fld st(0)
+fild dword ptr [edi+0xF0]
+fidiv dword ptr [edi+0xF4]
+fdivr st(2),st(0)
+fcomi st(0),st(1)
+fcmovb st(0),st(1)
+fdivp st(1),st(0)
+fmul st(1),st(0)
+fmul qword ptr [0x017038F8]
+fsub qword ptr [0x017038F8]
+fchs
+fst dword ptr [esp+0x48]
+fld1
+fsubrp st(1),st(0)
+fstp dword ptr [esp+0x50]
+fmul qword ptr [0x017038F8]
+fsub qword ptr [0x017038F8]
+fchs
+fst dword ptr [esp+0x44]
+fld1
+fsubrp st(1),st(0)
+fstp dword ptr [esp+0x4C]"
+
+string code9 = @"fld st(0)
+fild dword ptr [0x01DFE228]
+fidiv dword ptr [0x01DFE22C]
+fdivrp st(1),st(0)
+fmulp st(1),st(0)"
+
+if (Read<uint>(0x6F23C6) == 0x75D8C0D9 &&
+Read<ushort>(0x64928A) == 0x9ED9 &&
+Read<uint>(0xD08F88) == 0x49100FF3 &&
+Read<uint>(0xD09112) == 0xFF970A3A &&
+Read<uint>(0x1059D37) == 0x44110FF3 &&
+Read<uint>(0xB1D845) == 0xFC9570F &&
+Read<uint>(0xB1D86F) == 0x15100FF3 &&
+Read<uint>(0x57876F) == 0x44110FF3 &&
+Read<ushort>(0x789A04) == 0x87D9)
+{
+    WriteAsmHook(code, 0x6F23C6, HookBehavior.Replace)
+    WriteAsmHook(code2, 0x64928A, HookBehavior.Replace)
+    WriteAsmHook(code3, 0xD08F88, HookBehavior.After)
+    WriteAsmHook(code4, 0xD09111, HookBehavior.Replace)
+    WriteAsmHook(code5, 0x1059D37, HookBehavior.Before)
+    WriteAsmHook(code6, 0xB1D845, HookBehavior.Replace)
+    WriteAsmHook(code7, 0xB1D86F, HookBehavior.Replace)
+    WriteAsmHook(code8, 0x57876F, HookBehavior.Before)
+    WriteAsmHook(code9, 0x789A04, HookBehavior.Before)
+}
+
+
+
+Patch "Adjust FOV to Aspect Ratio" in "Graphics/Display" by "Muzzarino" does "Dynamically adjusts the field of view based on the current aspect ratio (recommended for ultrawide)." 
+string code = @"push 0x3F800000
+fdiv dword ptr [esp]
+add esp,0x04
+fstp dword ptr [esp+0x0C]
+fld dword ptr [ebp+0x14]"
+WriteAsmHook(code, 0x6F23AA, HookBehavior.Replace)
+
+
+
+Code "Force Shadow Bias to 0.0002" in "Graphics/Quality" by "Skyth" 
+Write<float>(0x1A4356C, 0.0002f)
+
+
+
+Code "Disable Planar Reflections" in "Graphics/Quality" by "Skyth" 
+*(bool*)0x1B22E78 = false;
+
+
+
+Code "2x Extended Shadow Map Draw Distance" in "Graphics/Quality" by "Luig" does "Extends the draw distance of shadow maps by 2x, at the cost of resolution."
+Write<float>(0x01A57310, 50f)
+Write<float>(0x01A57314, 50f)
+Write<float>(0x01A57318, 60f)
+
+
+
+Patch "Disable Fast Music" in "Audio/Music" by "Hyper" does "Prevents the 'faster' music from playing in Green Hill and Sky Sanctuary." 
+WriteNop(0xE2E30F, 2);
+
+
+
+Patch "Always Use Fast Music" in "Audio/Music" by "Hyper" does "Always plays the 'faster' music in Green Hill and Sky Sanctuary." 
+WriteProtected<byte>(0xE2E30F, 0xEB);
+WriteNop(0xE2E3A2, 2);
+WriteProtected<byte>(0xE2E3AC, 0xEB, 0x0E);
+
+
+
+Patch "Disable Ring Loss from Super Sonic" in "Cheats/Player" by "Muzzarino" 
+WriteNop(0xE64E80, 6)
+
+
+
+Patch "Always Have All Chaos Emeralds" in "Cheats/Player" by "Muzzarino" 
+WriteProtected<uint>(0x108BB11, 0x900300C6)
+WriteProtected<byte>(0x108BB15, 0x90)
+WriteProtected<ushort>(0x108BB1F, 0x34EB)
+
+
+
+Code "Infinite Rings" in "Cheats/Player" by "SuperSonic16" 
+Write<uint>(GetPointer(0x1E5E2F0, 0x5B8), 0x3E7)
+
+
+
+Patch "Infinite Lives" in "Cheats/Player" by "CodenameGamma" 
+WriteNop(0xD59A67, 0x6)
+
+
+
+Code "Infinite Boost Gauge" in "Cheats/Player" by "Zoney" 
+Write<float>(GetPointer(0x1E5E2F0, 0x5BC), 500)
+
+
+
+Patch "Disable Life Loss from Restart" in "Cheats/Player" by "M&M" 
+WriteProtected<byte>(0xD06919, 0xEB, 0x29);
+
+
+Patch "Disable Skill Set Limiters" in "Cheats/Skills" by "Hyper" does "Allows skills to be equipped regardless of how many points they require." 
+WriteProtected<byte>(0x421CD7, 0xE9, 0xC6, 0x04, 0x00, 0x00, 0x90); /* disable point limit progress bar */
+WriteProtected<byte>(0x4235F4, 0xE9, 0x9A, 0x00, 0x00, 0x00, 0x90); /* disable greyed out selection animation */
+WriteProtected<byte>(0x4237D0, 0xE9, 0x9A, 0x00, 0x00, 0x00, 0x90); /* disable greyed out animation */
+WriteProtected<byte>(0x424410, 0xEB, 0x0E);
+WriteProtected<byte>(0x42445B, 0xEB, 0x6F);
+
+
+
+Code "Always Available Super Sonic" in "Cheats/Skills" by "Muzzarino" does "Allows Sonic to transform into Super Sonic, regardless of ring count or whether the skill is equipped." 
+WriteProtected<byte>(0x11D33A4, 0xEB)
+WriteProtected<byte>(0xE634C5, 0)
+WriteProtected<byte>(0x11D67DC, 0xEB)
+WriteProtected<byte>(0x111773A, 0xEB)
+WriteProtected<byte>(0xE55D6A, 0x0)
+WriteProtected<byte>(0xE632F1, 0x0)
+WriteProtected<byte>(0xE634C7, 0x0)
+var ptr0 = GetPointer(0x1E5E2F0, 0x1A5)
+var ptr1 = GetPointer(0x1E5E2F0, 0x1228)
+if (ptr0 != 0 && ptr1 != 0)
+{
+    Write<byte>(ptr0, (byte)(Read<byte>(ptr0) | 0x10))
+    Write<byte>(ptr1, (byte)(Read<byte>(ptr1) | 0x10))
+}
+
+
+
+Patch "Infinite Skill Points" in "Cheats/Skills" by "Muzzarino" 
+WriteNop(0x4409D2, 6)
+WriteNop(0x440726, 6)
+
+
+
+Patch "Always Unlocked All Stages" in "Cheats/White Space" by "Muzzarino" 
+WriteProtected<byte>(0xEE5DE8, 0xC)
+WriteProtected<byte>(0xEE6134, 0xC)
+
+
+
+Patch "Disable Boss Key Check" in "Cheats/White Space" by "Muzzarino" does "Allows progression through White Space without collecting the boss keys." 
+WriteProtected<byte>(0xEFB9FC, 0xEB)
+WriteProtected<byte>(0xEFA160, 0x0)
+WriteProtected<byte>(0x108B6DA, 0x0)
+WriteProtected<byte>(0x108B6E7, 0x0)
+WriteProtected<byte>(0x108B6D5, 0x0)
+WriteProtected<byte>(0x4DA787, 0x0)
+WriteProtected<byte>(0x4DA787, 0x8C)
+
+
+
+Patch "Force C Rank" in "Cheats/Results" by "brianuuu" 
+string code = @"mov dword ptr [ebx+0x170],1
+mov dword ptr [ebx+0x174],1
+movq xmm0,qword ptr [eax+0x10]"
+WriteAsmHook(code, 0xCFE22B, HookBehavior.Replace)
+
+
+
+Patch "Force S Rank" in "Cheats/Results" by "brianuuu" 
+string code = @"mov dword ptr [ebx+0x170],4
+mov dword ptr [ebx+0x174],4
+movq xmm0,qword ptr [eax+0x10]"
+WriteAsmHook(code, 0xCFE22B, HookBehavior.Replace)
+
+
+
+Patch "Force D Rank" in "Cheats/Results" by "brianuuu" 
+string code = @"mov dword ptr [ebx+0x170],0
+mov dword ptr [ebx+0x174],0
+movq xmm0,qword ptr [eax+0x10]"
+WriteAsmHook(code, 0xCFE22B, HookBehavior.Replace)
+
+
+
+Patch "Force A Rank" in "Cheats/Results" by "brianuuu" 
+string code = @"mov dword ptr [ebx+0x170],3
+mov dword ptr [ebx+0x174],3
+movq xmm0,qword ptr [eax+0x10]"
+WriteAsmHook(code, 0xCFE22B, HookBehavior.Replace)
+
+
+
+Patch "Force B Rank" in "Cheats/Results" by "brianuuu" 
+string code = @"mov dword ptr [ebx+0x170],2
+mov dword ptr [ebx+0x174],2
+movq xmm0,qword ptr [eax+0x10]"
+WriteAsmHook(code, 0xCFE22B, HookBehavior.Replace)
+
+
+
+Patch "Disable Prerequisites" in "Cheats/Challenges" by "Muzzarino" does "Allows challenges to be beaten without meeting their prerequisites."
+WriteProtected<uint>(0xD0EAB9, 0xCCC301B0)
+
+
+
+Patch "Disable Timer" in "Cheats/Challenges" by "Muzzarino" 
+WriteNop(0x124EFC5, 8)
+WriteNop(0xD0E7D5, 2)
+
+
+
+Patch "Disable Timer-Based Ranks" in "Cheats/Challenges" by "Muzzarino" does "Prevents the challenge timer from affecting your rank, always keeping it at an S rank." 
+WriteProtected<uint>(0xD611B3, 0x90C0570F)
+WriteNop(0xD611B7, 4)
+
+
+
+Patch "Always Use Sphere Spin Dash" in "Animation/Classic Sonic" by "Hyper" 
+WriteProtected<byte>(0x1A545A4, 0xEC, 0xAD);
+
+
+
+Patch "Always Use Ellipse Spin Dash" in "Animation/Classic Sonic" by "Hyper" 
+WriteProtected<byte>(0x1289ADE, 0x14, 0xAE);
+
+
+
+Patch "Unleashed Style Grinding Animations" in "Animation/Modern Sonic" by "Skyth" does "Restores the leaning and stumble animations similar to Sonic Unleashed." 
+WriteProtected<ushort>(0xDF2380, 0xA4E9);
+WriteProtected<byte>(0xDF2382, 0x0);
+WriteNop(0xDF2385, 1);
+WriteProtected<byte>(0xDF2356, 0xEB);
+WriteProtected<byte>(0xDF2485, 0xEB);
+
+// GrindStumbleLimit
+WriteAsmHook(@"
+add esp, 4
+movss xmm0, ds:0x13F9EDC
+", 0xDF21C5, HookBehavior.Replace);
+WriteAsmHook(@"
+add esp, 4
+movss xmm0, ds:0x13F9EDC
+", 0xDF225E, HookBehavior.Replace);
+
+
+
+Patch "Disable Fast Fall Animation" in "Animation/Modern Sonic" by "Skyth" 
+WriteProtected<byte>(0x111913A, 0xEB);
+
+
+
+Code "Disable Damage on Enemy Contact" in "Gameplay/Player" by "Skyth" does "Prevents Sonic from taking damage when colliding with enemies, similar to Sonic Unleashed." 
+*(int*)0x1E0BE34 = 0;
+
+
+
+Patch "Disable Lives" in "Gameplay/Player" by "Hyper" does "Prevents Sonic from losing lives and removes all 1-UP related items from the stages." 
+WriteNop(0xD59A67, 6);
+WriteNop(0xE68562, 5);
+WriteProtected<byte>(0x1098C82, 0xEB);
+WriteProtected<byte>(0x109B1A4, 0xE9, 0xDC, 0x02, 0x00, 0x00);
+WriteProtected<byte>(0x11CCA82, 0xE9, 0xB1, 0x00, 0x00, 0x00);
+WriteProtected<byte>(0x166463C, 0x00);
+WriteProtected<byte>(0x167DDE4, 0x00);
+
+
+
+Patch "Instantly Collect Super Rings" in "Gameplay/Player" by "brianuuu" does "Immediately increases the ring counter by 10, instead of gradually adding 10 rings, similar to Sonic Unleashed." 
+WriteNop(0xE4155E, 2);
+WriteNop(0xE415C8, 2);
+WriteProtected<int>(0xE4157A, -1);
+
+
+
+Patch "Decrease Super Sonic Rings Every Second" in "Gameplay/Player" by "brianuuu and M&M"
+// Modern
+WriteProtected<byte>(0x11D6807, 0xC7, 0x47, 0x64)
+WriteProtected<float>(0x11D680A, 1)
+WriteProtected<byte>(0x11D680E, 0xEB, 0x1D)
+// Classic
+WriteProtected<byte>(0x11D33BC, 0xC7, 0x47, 0x64)
+WriteProtected<float>(0x11D33BF, 1)
+WriteProtected<byte>(0x11D33C3, 0xEB, 0x0C)
+
+
+
+Patch "Disable Ring Cap" in "Gameplay/Player" by "Darío" does "Allows the ring counter to exceed 999 rings." 
+WriteProtected<ushort>(0xE68522, 0xDEB)
+WriteProtected<byte>(0x1098E5F, 0xEB)
+
+
+
+Patch "Disable Homing Delay" in "Gameplay/Player" by "Hyper" 
+WriteNop(0x1205D44, 8);
+WriteProtected<byte>(0x15FA49C, 0x00);
+
+
+
+Patch "Increased Homing Speed" in "Gameplay/Skills" by "Hyper" 
+WriteProtected<byte>(0x120FF35, 0xF3, 0x0F, 0x10, 0x05, 0xFC, 0x15, 0xA4, 0x01);
+WriteProtected<byte>(0x121618B, 0xF3, 0x0F, 0x10, 0x05, 0xFC, 0x15, 0xA4, 0x01);
+WriteProtected<byte>(0x15FDC18, 0x00);
+WriteProtected<byte>(0x15FFD80, 0x00);
+
+
+
+Patch "Disable Homing Attack" in "Gameplay/Skills" by "Sajid" 
+WriteProtected<float>(0x1704800, 0)
+
+
+
+Patch "Disable Dropped Rings" in "Gameplay/Objects" by "Hyper" does "Removes the bouncing rings when taking damage, similar to Sonic Unleashed." 
+WriteProtected<byte>(0x1055002, 0xE9, 0xBD, 0x03, 0x00, 0x00);
+
+
+
+Code "Always Allow Wall Jump from Any Wall" in "Gameplay/Objects" by "SWS90" 
+Write<byte>(GetPointer(0x1E5E2F0, 0x80C), 1)
+
+
+
+Patch "Dropped Rings Bounce Less and Flicker" in "Gameplay/Objects" by "Ahremic" 
+// Set new bounce multiplier on contact
+static float NewMultiplier = 1.65f; // Previously 2.0f, would just reflect your velocity 1:1 on flat ground.
+fixed (float* pNewMultiplier = &NewMultiplier)
+    WriteProtected(0x006F2936, (uint)pNewMultiplier);
+
+// Initialize extra allocated memory-- data size is 0x180 but it only uses up to 0x174
+WriteAsmHook(@"movss dword ptr [esi + 0x174], xmm0
+mov dword ptr [esi + 0x178], 0",    0x01054F43, HookBehavior.After);
+
+// Ring flashing when time is about to run out
+static float WarningTime  =  1.0f;                   // Amount of time the rings will flash before disappearing
+static float TargetTime   =  2.0f * (1.0f / 60.0f);  // Number of frames each flash interval lasts (2) at 60fps
+
+fixed (float* pWarningTime = &WarningTime)
+fixed (float* pTargetTime  = &TargetTime)
+{
+    WriteAsmHook($@"movss  xmm0, [edi + 0x128]
+subss  xmm0, ds:{(uint)pWarningTime}
+movss  xmm1, ds:{(uint)pTargetTime}
+subss  xmm0, xmm1
+comiss xmm0, [edi + 0x160]
+ja return
+
+; Add flicker timer by deltaTime (ebx), check if it exceeds our timer
+movss  xmm0, [edi + 0x174]
+addss  xmm0, [ebx]
+movss  [edi + 0x174], xmm0
+comiss xmm1, xmm0
+ja return
+
+; Flip visibility when we hit our desired time
+cmp    byte ptr [edi + 0x178], 0
+sete   al
+mov    [edi + 0x178], al
+; Set timer back to zero
+mov dword ptr [edi + 0x174], 0
+
+
+; Function Call for setting a CGameObject's visibility
+push ecx
+push  eax
+mov   eax, [edi + 0x178]
+push  eax
+push  edi
+xor   eax, eax
+mov   ecx, 0x00D5F770 ; Actual function address
+call  ecx
+pop   eax
+pop   ecx
+
+; Continue with the rest of the update function
+return:
+", 0x01054B37,HookBehavior.After);
+}
+
+
+
+Patch "Disable Tricks from Rainbow Rings" in "Gameplay/Objects" by "Hyper" 
+WriteNop(0x115A6AF, 2);
+
+
+
+Patch "Always Show Red Rings on New Game" in "Gameplay/Objects" by "brianuuu" 
+WriteNop(0x11A9ECB, 2);
+
+
+
+Patch "Disable Out of Control Balloons" in "Gameplay/Objects" by "N69" does "Prevents control being restricted after hitting a balloon." 
+WriteProtected<uint>(0x11BEBAA, 0xB6E9)
+WriteProtected<byte>(0x11BEBAE, 0x0)
+WriteNop(0x11BEBAF, 2)
+
+
+
+Patch "Disable Grind Rail Lock-On" in "Gameplay/Objects" by "brianuuu" does "Removes the homing targets from the beginning and end of rails." 
+WriteProtected<byte>(0x121EDA4, 0xE9, 0xAD, 0x00, 0x00, 0x00)
+
+
+
+Patch "Disable Out of Control Jump Springs" in "Gameplay/Objects" does "Prevents control being restricted after hitting a spring." 
+WriteProtected<uint>(0x11BEA91, 0x1CFE9)
+WriteProtected<ushort>(0x11BEA95, 0x8B00)
+WriteProtected<byte>(0x11BEA97, 0x83)
+
+
+
+Patch "Disable Rail Boosters" in "Gameplay/Objects" by "Hyper" 
+WriteProtected<byte>(0x166F238, 0x00);
+
+
+
+Patch "Disable Checkpoints" in "Gameplay/Objects" by "Hyper" 
+WriteNop(0x1033338, 2);
+
+
+
+Patch "Replace Fire Pillars with Ice Pillars" in "Gameplay/Objects" by "N69 & RFunk195" 
+WriteProtected<byte>(0xE020EB, 0x1)
+WriteProtected<byte>(0x16617CB, 0x31)
+WriteProtected<byte>(0x16617D2, 0x31)
+WriteProtected<byte>(0x1661882, 0x69, 0x63, 0x65, 0x70, 0x61, 0x6E, 0x65, 0x6C, 0x5F)
+WriteProtected<byte>(0x166189E, 0x69, 0x63, 0x65, 0x70, 0x61, 0x6E, 0x65, 0x6C, 0x5F)
+WriteProtected<byte>(0x16618BA, 0x69, 0x63, 0x65, 0x70, 0x61, 0x6E, 0x65, 0x6C, 0x5F)
+
+
+
+Patch "Always Allow Light Dash from Any Ring" in "Gameplay/Objects" by "Skyth" 
+WriteProtected<uint>(0x105334D, 0x10C47C6)
+WriteNop(0x1053351, 16)
+
+
+
+Patch "Always Show Sparkles in White Space" in "Gameplay/Objects" by "Muzzarino" does "Keeps the sparkle effects in White Space for stages you haven't played yet." 
+WriteProtected<ushort>(0xEE3DA6, 0x6EB)
+
+
+
+Code "Everything is 2x Speed Except for Sonic" in "Gameplay/Speed" by "Sajid" 
+Write<byte>(GetPointer(0x1E0BE5C, 8, 0x19D), 1)
+Write<float>(GetPointer(0x1E0BE5C, 8, 0x1A4), 2)
+
+
+
+Code "Everything is 0.25x Speed Except for Sonic" in "Gameplay/Speed" by "Sajid" 
+Write<byte>(GetPointer(0x1E0BE5C, 8, 0x19D), 1)
+Write<float>(GetPointer(0x1E0BE5C, 8, 0x1A4), 0.25f)
+
+
+
+Code "Everything is 0.5x Speed Except for Sonic" in "Gameplay/Speed" by "Sajid" 
+Write<byte>(GetPointer(0x1E0BE5C, 8, 0x19D), 1)
+Write<float>(GetPointer(0x1E0BE5C, 8, 0x1A4), 0.5f)
+
+
+
+Code "Everything is 2x Speed" in "Gameplay/Speed" by "Darío" 
+Write<byte>(GetPointer(0x1E0BE5C, 8, 0x19C), 1)
+Write<float>(GetPointer(0x1E0BE5C, 8, 0x1A0), 2)
+
+
+
+Code "Everything is 4x Speed Except for Sonic" in "Gameplay/Speed" by "Sajid" 
+Write<byte>(GetPointer(0x1E0BE5C, 8, 0x19D), 1)
+Write<float>(GetPointer(0x1E0BE5C, 8, 0x1A4), 4)
+
+
+
+Patch "Homing Attack on Boost" in "Gameplay/Input" by "SWS90" does "Remaps the homing attack to the X button like Sonic Unleashed." 
+WriteProtected<byte>(0x015FA418, 0)
+
+
+
+Patch "Disable Controller Vibration" in "Gameplay/Input" by "brianuuu" 
+WriteProtected<byte>(0x9C7F56, 0xB8, 0x01, 0x00, 0x00, 0x00, 0xEB, 0x11, 0x90, 0x90)
+
+
+
+Patch "Use Bumpers to Switch Grind Rails" in "Gameplay/Input" by "Skyth" 
+WriteProtected<uint>(0xDFCC92, 0x10244C8B)
+WriteNop(0xDFCC96, 2)
+WriteProtected<ushort>(0xDFCC99, 0xE1BA)
+WriteProtected<byte>(0xDFCC9B, 0xD)
+WriteNop(0xDFCC9C, 3)
+WriteProtected<byte>(0xDFCC9F, 0x73)
+WriteProtected<uint>(0xDFCCA8, 0xCE1BA0F)
+WriteNop(0xDFCCAC, 7)
+WriteProtected<byte>(0xDFCCB3, 0x73)
+
+
+
+Patch "Unleashed Stick Deadzones" in "Gameplay/Input" by "M&M" 
+WriteProtected<byte>(0x16055EC, 0x69); /* InputThreshold (0.02f) */
+WriteProtected<byte>(0xE75F93, 0x38, 0x71); /* InputTransformHalf (0.85f) */
+WriteProtected<byte>(0x1605610, 0x69);
+WriteProtected<byte>(0x160562C, 0x69); /* InputTransformPower (3.0f) */
+
+
+
+Patch "Always Display Japanese Name for Rooftop Run" in "UI/White Space" by "Hyper" does "Uses the 'Orange Roofs' stage title instead of 'Rooftop Run' for White Space, which is the Japanese name of the stage." 
+WriteNop(0xEE51E5, 2);
+
+
+
+Patch "Always Use Original Stage Text Colours" in "UI/White Space" by "Hyper" does "Uses the coloured stage title models in White Space, instead of being gold if you have S ranks for those particular stages." 
+WriteProtected<byte>(0xEE3F90, 0xEB, 0x2A);
+
+
+
+Patch "29.97 FPS" in "Graphics/FPS/Dynamic" by "PTKay"
+static float FPS = 29.97f; 
+
+fixed (float* pFPS = &FPS)
+    WriteProtected<uint>(0xE7B460, (uint)pFPS);
+
+
+
+Patch "59.94 FPS" in "Graphics/FPS/Dynamic" by "PTKay" 
+static float FPS = 59.94f; 
+
+fixed (float* pFPS = &FPS)
+    WriteProtected<uint>(0xE7B460, (uint)pFPS);
+
+
+
+Patch "30 FPS (experimental)" in "Graphics/FPS/Locked" by "Skyth and M&M" 
+static float FPS = 30.0f; 
+
+fixed (float* pFPS = &FPS)
+    WriteProtected<uint>(0xE7B460, (uint)pFPS);
+
+WriteNop(0xE7B5D7, 2)
+WriteProtected<float>(0x1704258, 1.0f / 30.0f)
+WriteProtected<float>(0x14AF8CC, 1.0f / 30.0f)
+
+
+
+Patch "144 FPS (experimental)" in "Graphics/FPS/Locked" by "Skyth and M&M" 
+static float FPS = 144.0f; 
+
+fixed (float* pFPS = &FPS)
+    WriteProtected<uint>(0xE7B460, (uint)pFPS);
+
+WriteNop(0xE7B5D7, 2);
+WriteProtected<float>(0x1704258, 1.0f / 144.0f)
+WriteProtected<float>(0x14AF8CC, 1.0f / 144.0f)
+
+
+
+Patch "165 FPS (experimental)" in "Graphics/FPS/Locked" by "Skyth and M&M" 
+static float FPS = 165.0f; 
+
+fixed (float* pFPS = &FPS)
+    WriteProtected<uint>(0xE7B460, (uint)pFPS);
+
+WriteNop(0xE7B5D7, 2);
+WriteProtected<float>(0x1704258, 1.0f / 165.0f)
+WriteProtected<float>(0x14AF8CC, 1.0f / 165.0f)
+
+
+
+Patch "72 FPS (experimental)" in "Graphics/FPS/Locked" by "Skyth and M&M" 
+static float FPS = 72.0f; 
+
+fixed (float* pFPS = &FPS)
+    WriteProtected<uint>(0xE7B460, (uint)pFPS);
+
+WriteNop(0xE7B5D7, 2);
+WriteProtected<float>(0x1704258, 1.0f / 72.0f)
+WriteProtected<float>(0x14AF8CC, 1.0f / 72.0f)
+
+
+
+Patch "120 FPS (experimental)" in "Graphics/FPS/Locked" by "Skyth and M&M" 
+static float FPS = 120.0f; 
+
+fixed (float* pFPS = &FPS)
+    WriteProtected<uint>(0xE7B460, (uint)pFPS);
+
+WriteNop(0xE7B5D7, 2);
+WriteProtected<float>(0x1704258, 1.0f / 120.0f)
+WriteProtected<float>(0x14AF8CC, 1.0f / 120.0f)
+
+
+
+Patch "75 FPS (experimental)" in "Graphics/FPS/Locked" by "Skyth and M&M" 
+static float FPS = 75.0f; 
+
+fixed (float* pFPS = &FPS)
+    WriteProtected<uint>(0xE7B460, (uint)pFPS);
+
+WriteNop(0xE7B5D7, 2);
+WriteProtected<float>(0x1704258, 1.0f / 75.0f)
+WriteProtected<float>(0x14AF8CC, 1.0f / 75.0f)
+
+
+
+Patch "60 FPS" in "Graphics/FPS/Locked" by "Skyth and M&M" 
+static float FPS = 60.0f; 
+
+fixed (float* pFPS = &FPS)
+    WriteProtected<uint>(0xE7B460, (uint)pFPS);
+
+WriteNop(0xE7B5D7, 2)
+WriteProtected<float>(0x1704258, 1.0f / 60.0f)
+WriteProtected<float>(0x14AF8CC, 1.0f / 60.0f)
+
+
+
+Patch "Subtractive Trail Blending" in "Graphics/Effects/Blending" by "Muzzarino" 
+WriteProtected<byte>(0xE8D3AC, 0xB)
+
+
+
+Patch "Normal Trail Blending" in "Graphics/Effects/Blending" by "Muzzarino" 
+WriteProtected<byte>(0xE8D3B7, 0x6)
+
+
+
+Patch "Lighten Trail Blending" in "Graphics/Effects/Blending" by "Muzzarino" 
+WriteProtected<byte>(0xE8D3AC, 0xA)
+
+
+
+Patch "Colour Burn Trail Blending" in "Graphics/Effects/Blending" by "Muzzarino" 
+WriteProtected<byte>(0xE8D3B7, 0x3)
+
+
+
+Patch "Opaque Trail Blending" in "Graphics/Effects/Blending" by "Muzzarino" 
+WriteProtected<byte>(0xE8D3B7, 0x1)
+
+
+
+Patch "Custom Material Blend Modes" in "Graphics/Effects/Blending" by "Muzzarino" does 
+/*
+Overrides the game's default blend parameter with user specified blend params.
+
+To use, hex edit the model's ".material" file with the blend flag set to mark the offset to be changed.
+When specifying blend types, the source blend is shifted 4 bytes, and the destination factor is added onto the byte. Default is 00.
+
+Examples:
+56 = (05 << 4) || 06
+
+Blend enumerations can be found here:
+https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dblend
+
+Same effect goes with interface .xncp
+*/
+WriteProtected<ushort>(0x6874D4, 0x08EB)
+WriteProtected<ushort>(0x6874DE, 0x9050)
+WriteProtected<byte>(0x6FEAB9, 0x31, 0xD2, 0x8B, 0xC2, 0x0F, 0xB6, 0x4B, 0x5A, 0x88, 0xC8, 0x24, 0x0F, 0xC0, 0xE9, 0x04, 0x84, 0xC9, 0xB2, 0x05, 0x0F, 0x44, 0xCA, 0xB2, 0x06, 0x84, 0xC0, 0x0F, 0x44, 0xC2, 0x50, 0x51, 0x8B, 0xCE, 0x85, 0xED, 0x6A, 0x01, 0x75, 0x07, 0xC7, 0x04, 0x24, 0x02, 0x00, 0x00, 0x00, 0x6A, 0x1B, 0xE8, 0x32, 0xD0, 0xD0, 0xFF, 0x8B, 0xCE, 0xFF, 0x34, 0x24, 0x6A, 0x13, 0xE8, 0x26, 0xD0, 0xD0, 0xFF, 0xFF, 0x74, 0x24, 0x04, 0x6A, 0x14, 0x8B, 0xCE, 0xE8, 0x19, 0xD0, 0xD0, 0xFF, 0x83, 0xC4, 0x08, 0x5F, 0x5D, 0x5B, 0x5E, 0xC3)
+WriteProtected<byte>(0x10DD240, 0x8B, 0x44, 0x24, 0x04, 0x56, 0x50, 0x83, 0x24, 0x24, 0x0F, 0x83, 0x3C, 0x24, 0x00, 0x75, 0x04, 0x83, 0x0C, 0x24, 0x06, 0xC1, 0xE8, 0x04, 0x85, 0xC0, 0x75, 0x03, 0x83, 0xC8, 0x05, 0x50, 0x8B, 0xF1, 0x8B, 0x4E, 0x08, 0x6A, 0x13, 0x83, 0xC1, 0x60, 0xE8, 0xB2, 0xE8, 0x32, 0xFF, 0x8B, 0x4E, 0x08, 0x6A, 0x14, 0x83, 0xC1, 0x60, 0xE8, 0xA5, 0xE8, 0x32, 0xFF, 0x5E, 0xC2, 0x0C, 0x00)
+
+
+
+Patch "Colour Dodge Trail Blending" in "Graphics/Effects/Blending" by "Muzzarino" 
+WriteProtected<byte>(0xE8D3AC, 0x9)
+
+
+
+Patch "Glowing Trail Blending" in "Graphics/Effects/Blending" by "Muzzarino" 
+WriteProtected<byte>(0xE8D3B7, 0x7)
+
+
+
+Patch "Screen Trail Blending" in "Graphics/Effects/Blending" by "Muzzarino" 
+WriteProtected<byte>(0xE8D3AC, 0x2)
+WriteProtected<byte>(0xE8D3B7, 0x4)
+
+
+
+Patch "1280x720 Movie Player" in "Graphics/Display/Internal Resolution" by "N69" does "Forces the CRIWARE video player to use a 1280x720 viewport. This is only useful for mods that have higher resolution video files." 
+WriteProtected<ushort>(0xB210A1, 1280)
+WriteProtected<ushort>(0xB210B1, 720)
+
+
+
+Patch "1920x1080 Movie Player" in "Graphics/Display/Internal Resolution" by "N69" does "Forces the CRIWARE video player to use a 1920x1080 viewport. This is only useful for mods that have higher resolution video files." 
+WriteProtected<ushort>(0xB210A1, 1920)
+WriteProtected<ushort>(0xB210B1, 1080)
+
+
+
+Patch "Disable Spike Wisp Music" in "Audio/Music/Power-Ups" by "Hyper" 
+WriteProtected<byte>(0xE3DD80, 0xEB, 0x33); /* Spike - on contact with wisp active */
+WriteProtected<byte>(0xE3E00A, 0xEB, 0x33); /* Spike - on contact without wisp active */
+
+
+
+Patch "Disable Invincibility Music" in "Audio/Music/Power-Ups" by "Hyper" 
+WriteProtected<byte>(0x11DD879, 0xEB, 0x2F);
+
+
+
+Patch "Disable Rocket Wisp Music" in "Audio/Music/Power-Ups" by "Hyper" 
+WriteProtected<byte>(0xE3E0AA, 0xEB, 0x33);
+
+
+
+Patch "Always Play S Rank Results Music" in "Audio/Music/Results" by "M&M" 
+WriteProtected<byte>(0xCFD4E8, 0xF8, 0x38)
+
+
+
+Patch "Only Play Results Intro" in "Audio/Music/Results" by "M&M" 
+WriteProtected<byte>(0xCFD47F, 0xE9, 0x95, 0x00, 0x00, 0x00)
+WriteProtected<byte>(0xCFD484, 0xC3)
+WriteNop(0xCFD485, 3)
+
+
+
+Patch "Always Play Regular Results Music" in "Audio/Music/Results" by "M&M" 
+WriteProtected<byte>(0xCFD4CA, 0x00, 0x39)
+
+
+
+Patch "Always Have Homing Attack" in "Cheats/Skills/Classic Sonic" by "Sajid" 
+WriteNop(0x00DC50DF, 6)
+
+
+
+Patch "Start Stages with Dash" in "Animation/Modern Sonic/Intros" by "Hyper" 
+WriteProtected<byte>(0xD944D3, 0xE9, 0xC7, 0x00, 0x00, 0x00);
+WriteNop(0xD945C4, 2);
+
+
+
+Patch "Start Stages with ReadyGo" in "Animation/Modern Sonic/Intros" by "Hyper" 
+WriteProtected<byte>(0xD944D3, 0xE9, 0x60, 0x03, 0x00, 0x00);
+WriteNop(0xD94861, 6);
+
+
+
+Patch "Start Stages with CrouchingStartBack" in "Animation/Modern Sonic/Intros" by "Hyper" 
+WriteProtected<byte>(0xD944D3, 0xE9, 0xEF, 0x01, 0x00, 0x00);
+WriteNop(0xD946F0, 2);
+
+
+
+Patch "Start Stages with Stand" in "Animation/Modern Sonic/Intros" by "Hyper" 
+WriteProtected<byte>(0xD944D3, 0xE9, 0x49, 0x02, 0x00, 0x00);
+WriteNop(0xD9474A, 2);
+
+
+
+Patch "Start Stages with CrouchingStartFront" in "Animation/Modern Sonic/Intros" by "Hyper" 
+WriteProtected<byte>(0xD944D3, 0xE9, 0x59, 0x01, 0x00, 0x00);
+WriteNop(0xD9465A, 2);
+
+
+
+Patch "Start Stages with None" in "Animation/Modern Sonic/Intros" by "Hyper" 
+WriteNop(0xD944D3, 6);
+
+
+
+Patch "Disable Boost Energy from Enemies" in "Gameplay/Player/Modern Sonic" by "Hyper" does "Disables receiving boost from killing enemies."
+WriteProtected<byte>(0x112435C, 0xE9, 0xAB, 0x00, 0x00, 0x00);
+WriteNop(0x11246D9, 5);
+
+
+
+Patch "Disable Boost Energy from Rings" in "Gameplay/Player/Modern Sonic" by "Hyper" does "Disables receiving boost from getting rings."
+{
+    void NOP(int floatInstrAddr, int paramStrAddr)
+    {
+        WriteProtected<byte>(floatInstrAddr, 0xD9, 0xEE); /* fldz */
+        WriteNop(floatInstrAddr + 2, 6);
+        WriteProtected<byte>(paramStrAddr, 0x00);
+    }
+
+    NOP(0x120628B, 0x15FA690); /* ChaosEnergyRecoverRateByRing */
+    NOP(0x1206335, 0x15FA6DC); /* ChaosEnergyRecoverRateByRingBonus */
+    NOP(0x12063DF, 0x15FA72C); /* ChaosEnergyRecoverRateByRingPenalty */
+}
+
+
+
+Patch "Disable Boost Energy from Tricks" in "Gameplay/Player/Modern Sonic" by "PTKay" does "Disables receiving boost from performing tricks."
+WriteNop(0xE4B323, 8)
+WriteNop(0xE4B353, 8)
+
+
+
+Patch "Always Start with Empty Boost Gauge" in "Gameplay/Player/Modern Sonic" by "PTKay & brianuuu" 
+WriteProtected<uint>(0xE64F25, 0x90C9570F)
+WriteNop(0xE64F29, 4)
+WriteProtected<uint>(0xE64F2F, 0x90C9570F)
+WriteNop(0xE64F33, 4)
+
+
+
+Patch "Instantly Collect Boost Energy" in "Gameplay/Player/Modern Sonic" by "brianuuu" does "Immediately increases the boost gauge when defeating an enemy." 
+WriteNop(0x1124433, 6)
+WriteProtected<byte>(0x1124489, 0xEB)
+WriteNop(0x11244C1, 6)
+WriteNop(0x11244D0, 6)
+WriteProtected<uint>(0x112459B, 0xFFFFFFFF)
+
+
+
+Patch "Disable Boost Energy from Drift" in "Gameplay/Player/Modern Sonic" by "Hyper" does "Disables receiving boost whilst drifting."
+WriteProtected<byte>(0xE03E46, 0xD9, 0xEE);
+WriteNop(0xE03E48, 6);
+WriteProtected<byte>(0x15E96B0, 0x00);
+
+
+
+Patch "Disable Super Sonic Floating Boost (Air Boost)" in "Gameplay/Skills/Modern Sonic" by "Skyth" 
+WriteProtected<byte>(0xDFE04C, 0xEB);
+
+
+
+Patch "Disable Super Sonic Floating Boost (Ground Boost)" in "Gameplay/Skills/Modern Sonic" by "Skyth" 
+WriteProtected<byte>(0xDFF34C, 0xEB);
+
+
+
+Code "Replace Air Boost with Super Flight" in "Gameplay/Skills/Modern Sonic" by "SWS90 & Ahremic" 
+var BoostPtr = GetPointer(0x01E5E2F0, 0x5BC)
+if (BoostPtr >= 1)
+{
+  var BoostAmt = Read<float>(BoostPtr);
+  if (BoostAmt == 0)
+  {
+    WriteProtected<byte>(0x00DFE04C, 0x74,0x11);
+    WriteProtected<byte>(0x00DFE04E, 0x56);
+    WriteProtected<byte>(0x0123FD3C, 0x75);
+  }
+  else
+  {
+    WriteNop(0x00DFE04C , 2);
+    WriteProtected<byte>(0x0123FD3C, 0xEB);
+  }
+}
+
+
+
+Patch "Disable Spin Dash on Dash Panels" in "Gameplay/Skills/Modern Sonic" by "Hyper" does "Disables the short spin dash animation that occurs when hitting a dash panel." 
+WriteProtected<byte>(0xE0AC1C, 0xE9, 0x27, 0x01, 0x00, 0x00);
+WriteProtected<byte>(0xE0C734, 0xE9, 0x27, 0x01, 0x00, 0x00);
+
+
+
+Patch "Disable Air Boost" in "Gameplay/Skills/Modern Sonic" by "Sajid" 
+WriteProtected<byte>(0x00DFDFC4, 0xEB, 0x27)
+WriteProtected<byte>(0x00DFE046, 0xEB, 0x9E)
+
+
+
+Patch "Replace Squat with Sweep Kick" in "Gameplay/Skills/Modern Sonic" by "N69" does "Replaces the crouch animation with the sweep kick animation. This does not restore functionality." 
+WriteProtected<ushort>(0xDFF8D6, 0x5608)
+
+
+

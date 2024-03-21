@@ -1,5 +1,0 @@
-Patch "Disable Boost Audio Filter" in "Audio" by "Hyper" 
-WriteProtected<byte>(0xE2E26B, 0xEB); /* Sonic::Player::CPlayerSpeedPosturePluginAisacGhz */
-WriteProtected<byte>(0xE2E409, 0xEB); /* Sonic::Player::CPlayerSpeedPosturePluginAisac */
-
-

@@ -1,4 +1,0 @@
-Patch "Infinite Wispon Gauge" in "Cheats/Player" by "CodenameGamma" 
-WriteNop(0x1404D228C, 0x00000004)
-
-

@@ -1,0 +1,1954 @@
+Library "XInput" by "Hyper" 
+{
+    #lib "MathHelpers"
+
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+    using System.Runtime.InteropServices;
+
+    [DllImport("xinput1_4.dll", EntryPoint = "XInputGetState")]
+    public extern int XInputGetState(int in_dwUserIndex, ref State in_pState);
+    
+    [DllImport("xinput1_4.dll", EntryPoint = "XInputSetState")]
+    public extern int XInputSetState(int in_dwUserIndex, ref Vibration in_pVibration);
+
+    public const short XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE = 7849;
+    public const short XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE = 8689;
+
+    private static float _leftMotorSpeed = 0.0f;
+    private static float _rightMotorSpeed = 0.0f;
+
+    [Flags]
+    public enum Buttons : ushort
+    {
+        DPAD_UP        = 0x0001,
+        DPAD_DOWN      = 0x0002,
+        DPAD_LEFT      = 0x0004,
+        DPAD_RIGHT     = 0x0008,
+        START          = 0x0010,
+        BACK           = 0x0020,
+        LEFT_THUMB     = 0x0040,
+        RIGHT_THUMB    = 0x0080,
+        LEFT_SHOULDER  = 0x0100,
+        RIGHT_SHOULDER = 0x0200,
+        A              = 0x1000,
+        B              = 0x2000,
+        X              = 0x4000,
+        Y              = 0x8000
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct State
+    {
+        public int dwPacketNumber;
+        public Gamepad Gamepad;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Gamepad
+    {
+        public Buttons wButtons;
+        public byte bLeftTrigger;
+        public byte bRightTrigger;
+        public short sThumbLX;
+        public short sThumbLY;
+        public short sThumbRX;
+        public short sThumbRY;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Vibration
+    {
+        public ushort wLeftMotorSpeed;
+        public ushort wRightMotorSpeed;
+
+        public Vibration(ushort in_leftMotorSpeed, ushort in_rightMotorSpeed)
+        {
+            wLeftMotorSpeed = in_leftMotorSpeed;
+            wRightMotorSpeed = in_rightMotorSpeed;
+
+            _leftMotorSpeed = in_leftMotorSpeed / 65535.0f;
+            _rightMotorSpeed = in_rightMotorSpeed / 65535.0f;
+        }
+
+        public Vibration(float in_leftMotorSpeed, float in_rightMotorSpeed)
+        {
+            wLeftMotorSpeed = MathHelpers.FloatPercentToRange<ushort>(in_leftMotorSpeed);
+            wRightMotorSpeed = MathHelpers.FloatPercentToRange<ushort>(in_rightMotorSpeed);
+
+            _leftMotorSpeed = in_leftMotorSpeed;
+            _rightMotorSpeed = in_rightMotorSpeed;
+        }
+
+        public Vibration(ushort in_motorSpeed)
+        {
+            wLeftMotorSpeed = wRightMotorSpeed = in_motorSpeed;
+            _leftMotorSpeed = _rightMotorSpeed = in_motorSpeed / 65535.0f;
+        }
+
+        public Vibration(float in_motorSpeed)
+        {
+            wLeftMotorSpeed = wRightMotorSpeed = MathHelpers.FloatPercentToRange<ushort>(in_motorSpeed);
+            _leftMotorSpeed = _rightMotorSpeed = in_motorSpeed;
+        }
+    }
+
+    public State? GetState()
+    {
+        var pState = new State();
+
+        if (XInputGetState(0, ref pState) != 0)
+            return null;
+
+        return pState;
+    }
+
+    public void SetState(Vibration in_vibration)
+    {
+        XInputSetState(0, ref in_vibration);
+    }
+
+    public Vector2 GetAnalog(int in_analogIndex, bool in_isTestDeadzone = true)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return Vector2.Zero;
+
+        Vector2 v = Vector2.Zero;
+
+        switch (in_analogIndex)
+        {
+            case 0:
+                v = new Vector2(pState.Value.Gamepad.sThumbLX / 32767.0f, pState.Value.Gamepad.sThumbLY / 32767.0f);
+                break;
+
+            case 1:
+                v = new Vector2(pState.Value.Gamepad.sThumbRX / 32767.0f, pState.Value.Gamepad.sThumbRY / 32767.0f);
+                break;
+        }
+
+        if (in_isTestDeadzone)
+        {
+            v = IsAnalogNeutral(in_analogIndex)
+                ? Vector2.Zero
+                : v;
+        }
+
+        return v;
+    }
+
+    // Use Player.Input for keyboard parity!
+    public bool IsButtonDown(Buttons in_buttons)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return false;
+
+        return (pState.Value.Gamepad.wButtons & in_buttons) != 0;
+    }
+
+    public float GetTrigger(int in_triggerIndex)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return 0;
+
+        switch (in_triggerIndex)
+        {
+            case 0:
+                return pState.Value.Gamepad.bLeftTrigger / 255.0f;
+
+            case 1:
+                return pState.Value.Gamepad.bRightTrigger / 255.0f;
+        }
+
+        return 0;
+    }
+
+    public bool IsAnalogNeutral(int in_analogIndex)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return true;
+
+        switch (in_analogIndex)
+        {
+            case 0:
+            {
+                short x = pState.Value.Gamepad.sThumbLX;
+                short y = pState.Value.Gamepad.sThumbLY;
+
+                return x < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+                    x > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+                    y < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+                    y > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE;
+            }
+
+            case 1:
+            {
+                short x = pState.Value.Gamepad.sThumbRX;
+                short y = pState.Value.Gamepad.sThumbRY;
+
+                return x < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+                    x > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+                    y < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+                    y > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;
+            }
+        }
+
+        return true;
+    }
+
+    public Vibration GetVibration()
+    {
+        return new Vibration(_leftMotorSpeed, _rightMotorSpeed);
+    }
+
+    public void SetVibration(float in_value)
+    {
+        SetState(new Vibration(in_value));
+    }
+
+    public void SetVibration(int in_motorIndex, float in_value)
+    {
+        switch (in_motorIndex)
+        {
+            case 0:
+            {
+                SetState(new Vibration(in_value, _rightMotorSpeed));
+                break;
+            }
+
+            case 1:
+            {
+                SetState(new Vibration(_leftMotorSpeed, in_value));
+                break;
+            }
+        }
+    }
+}
+
+
+
+Library "VectorHelpers" by "Hyper" 
+{
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+
+    public static Vector3 ClampMagnitude(Vector3 in_vector, float in_maxMagnitude)
+    {
+        if (in_vector.Length() > in_maxMagnitude * in_maxMagnitude)
+            return Vector3.Normalize(in_vector) * in_maxMagnitude;
+
+        return in_vector;
+    }
+
+    public static Vector3 GetForward(Quaternion in_rotation)
+    {
+        return Vector3.Transform(Vector3.UnitZ, Quaternion.Normalize(in_rotation));
+    }
+
+    public static float GetMagnitude(Vector3 in_velocity)
+    {
+        return in_velocity.Length();
+    }
+
+    public static float GetHorizontalMagnitude(Vector3 in_velocity)
+    {
+        return (float)Math.Sqrt(in_velocity.X * in_velocity.X + in_velocity.Z * in_velocity.Z);
+    }
+
+    public static float GetVerticalMagnitude(Vector3 in_velocity)
+    {
+        return in_velocity.Y;
+    }
+
+    public static Quaternion LookRotation(Vector3 in_forward, Vector3 in_upward)
+    {
+        in_forward = Vector3.Normalize(in_forward);
+        in_upward = Vector3.Normalize(in_upward);
+
+        var right = Vector3.Cross(in_upward, in_forward);
+        in_upward = Vector3.Cross(in_forward, right);
+
+        var m = new Matrix4x4
+        (
+            right.X,      right.Y,      right.Z,      0.0f,
+            in_upward.X,  in_upward.Y,  in_upward.Z,  0.0f,
+            in_forward.X, in_forward.Y, in_forward.Z, 0.0f,
+            0.0f,         0.0f,         0.0f,         1.0f
+        );
+
+        return Quaternion.CreateFromRotationMatrix(m);
+    }
+
+    public static Quaternion LookRotation(Vector3 in_forward)
+    {
+        return LookRotation(in_forward, Vector3.UnitY);
+    }
+}
+Library "HMM" by "Hyper"
+{
+    #lib "INI"
+
+    using Microsoft.Win32;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Reflection;
+    using System.Threading;
+
+    public string GetGameDirectory()
+    {
+        return Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+    }
+
+    public Dictionary<string, Dictionary<string, string>> GetModsDatabase()
+    {
+        string cpkredirCfgPath = Path.Combine(GetGameDirectory(), "cpkredir.ini");
+        
+        if (!File.Exists(cpkredirCfgPath))
+            return new();
+
+        var cpkredirCfg = INI.Read(cpkredirCfgPath);
+        string modsDbPath = cpkredirCfg["CPKREDIR"]["ModsDbIni"];
+
+        if (!File.Exists(modsDbPath))
+            return new();
+
+        return INI.Read(modsDbPath);
+    }
+
+    public List<Mod> GetMods()
+    {
+        List<Mod> result = new();
+
+        var modsDb = GetModsDatabase();
+
+        if (modsDb.Count <= 0)
+            return result;
+        
+        int activeModCount = INI.Parse<int>(modsDb["Main"]["ActiveModCount"], 0);
+
+        foreach (var entry in modsDb["Mods"].Keys)
+        {
+            for (int i = 0; i < activeModCount; i++)
+            {
+                if (modsDb["Main"][$"ActiveMod{i}"].Contains(entry))
+                {
+                    result.Add(new Mod(modsDb["Mods"][entry]));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public Mod GetModByID(string in_id)
+    {
+        foreach (var mod in GetMods())
+        {
+            if (mod.ID == in_id)
+                return mod;
+        }
+
+        return null;
+    }
+
+    public List<Mod> FindModsByName(string name)
+    {
+        List<Mod> result = new();
+
+        foreach (var mod in GetMods())
+        {
+            if (mod.Name.Contains(name))
+            {
+                result.Add(mod);
+            }
+        }
+
+        return result;
+    }
+
+    public List<string> GetCodes()
+    {
+        List<string> result = new();
+
+        var modsDb = GetModsDatabase();
+
+        if (modsDb == null)
+            return result;
+
+        foreach (var value in modsDb["Codes"].Values)
+            result.Add(value);
+
+        return result;
+    }
+
+    public class Mod
+    {
+        public string Name { get; set; }
+        public string Version { get; set; }
+        public string Author { get; set; }
+        public string Description { get; set; }
+        public string Date { get; set; }
+        public string AuthorURL { get; set; }
+        public string UpdateServer { get; set; }
+        public string SaveFile { get; set; }
+        public string ID { get; set; }
+        public List<string> IncludeDirs { get; set; } = new();
+        public List<ModDependency> Dependencies { get; set; } = new();
+        public string DLLFile { get; set; }
+        public string CodeFile { get; set; }
+        public string ConfigSchemaFile { get; set; }
+
+        public string Path { get; set; }
+        public Dictionary<string, Dictionary<string, string>> Ini { get; set; } = new();
+
+        public Mod(string modIniPath)
+        {
+            var ini = INI.Read(modIniPath);
+
+            if (ini == null)
+                return;
+
+            Name             = INI.GetField<string>(ini, "Desc", "Title", Name);
+            Version          = INI.GetField<string>(ini, "Desc", "Version", Version);
+            Author           = INI.GetField<string>(ini, "Desc", "Author", Author);
+            Description      = INI.GetField<string>(ini, "Desc", "Description", Description);
+            Date             = INI.GetField<string>(ini, "Desc", "Date", Date);
+            AuthorURL        = INI.GetField<string>(ini, "Desc", "AuthorURL", AuthorURL);
+            UpdateServer     = INI.GetField<string>(ini, "Main", "UpdateServer", UpdateServer);
+            SaveFile         = INI.GetField<string>(ini, "Main", "SaveFile", SaveFile);
+            ID               = INI.GetField<string>(ini, "Main", "ID", ID);
+            DLLFile          = INI.GetField<string>(ini, "Main", "DLLFile", DLLFile);
+            CodeFile         = INI.GetField<string>(ini, "Main", "CodeFile", CodeFile);
+            ConfigSchemaFile = INI.GetField<string>(ini, "Main", "ConfigSchemaFile", ConfigSchemaFile);
+
+            Path             = System.IO.Path.GetDirectoryName(modIniPath);
+            Ini              = ini;
+
+            int includeDirCount = INI.GetField<int>(ini, "Main", "IncludeDirCount", 1);
+
+            for (int i = 0; i < includeDirCount; i++)
+                IncludeDirs.Add(INI.GetField<string>(ini, "Main", $"IncludeDir{i}", "."));
+
+            int dependencyCount = INI.GetField<int>(ini, "Main", "DependsCount", 0);
+
+            for (int i = 0; i < dependencyCount; i++)
+                Dependencies.Add(new ModDependency(INI.GetField<string>(ini, "Main", $"Depends{i}", "")));
+        }
+    }
+
+    public class ModDependency
+    {
+        public string ID { get; set; }
+
+        public string Name { get; set; }
+        
+        public string Link { get; set; }
+
+        public string Version { get; set; }
+
+        public ModDependency(string in_id, string in_name, string in_link, string in_version)
+        {
+            ID = in_id;
+            Name = in_name;
+            Link = in_link;
+            Version = in_version;
+        }
+
+        public ModDependency(string in_csv)
+        {
+            var fields = in_csv.Split('|');
+
+            for (int i = 0; i < fields.Length; i++)
+            {
+                switch (i)
+                {
+                    case 0:
+                        ID = fields[i];
+                        break;
+
+                    case 1:
+                        Name = fields[i];
+                        break;
+
+                    case 2:
+                    {
+                        if (fields.Length > 2)
+                        {
+                            Link = fields[i];
+                        }
+                        else
+                        {
+                            Version = fields[i];
+                        }
+
+                        break;
+                    }
+
+                    case 3:
+                        Version = fields[i];
+                        break;
+                }
+            }
+        }
+    }
+
+    public static class RegistryConfig
+    {
+        public static string ConfigPath { get; } = @"SOFTWARE\HEDGEMM";
+
+        public static bool CheckLoaderUpdates { get; set; } = true;
+        public static bool CheckManagerUpdates { get; set; } = true;
+        public static bool CheckModUpdates { get; set; } = true;
+        public static int CodesSortingColumnIndex { get; set; } = 1;
+        public static bool CodesUseTreeView { get; set; } = true;
+        public static string ExecutablePath { get; set; }
+        public static string ExtraGameDirectories { get; set; }
+        public static bool KeepOpen { get; set; } = true;
+        public static string LastGameDirectory { get; set; }
+        public static string UILanguage { get; set; }
+        public static string UITheme { get; set; }
+        public static bool UpdateCodesOnLaunch { get; set; } = true;
+
+        static RegistryConfig()
+        {
+            Load();
+        }
+
+        public static void Load()
+        {
+            var personalizeKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+
+            bool isLightTheme = false;
+            if (personalizeKey != null)
+            {
+                var useLightThemeStr = personalizeKey.GetValue("AppsUseLightTheme", 0)?.ToString();
+
+                if (int.TryParse(useLightThemeStr, out int out_isLightTheme))
+                    isLightTheme = out_isLightTheme != 0;
+
+                personalizeKey.Close();
+            }
+
+            var key = Registry.CurrentUser.CreateSubKey(ConfigPath);
+
+            LastGameDirectory       = (string)key.GetValue("LastGame", string.Empty);
+            ExtraGameDirectories    = (string)key.GetValue(nameof(ExtraGameDirectories), string.Empty);
+            UILanguage              = (string)key.GetValue(nameof(UILanguage), Thread.CurrentThread.CurrentCulture.Name);
+            UITheme                 = (string)key.GetValue(nameof(UITheme), isLightTheme ? "LightTheme" : "DarkerTheme");
+            CodesSortingColumnIndex = (int)key.GetValue(nameof(CodesSortingColumnIndex), 1);
+            CodesUseTreeView        = (int)key.GetValue(nameof(CodesUseTreeView), 1) != 0;
+            UpdateCodesOnLaunch     = (int)key.GetValue(nameof(UpdateCodesOnLaunch), 1) != 0;
+            CheckManagerUpdates     = (int)key.GetValue(nameof(CheckManagerUpdates), 1) != 0;
+            CheckLoaderUpdates      = (int)key.GetValue(nameof(CheckLoaderUpdates), 1) != 0;
+            CheckModUpdates         = (int)key.GetValue(nameof(CheckModUpdates), 1) != 0;
+            KeepOpen                = (int)key.GetValue(nameof(KeepOpen), 1) != 0;
+
+            key.Close();
+        }
+
+        public static void Save()
+        {
+            var key = Registry.CurrentUser.CreateSubKey(ConfigPath);
+
+            key.SetValue("ExecutablePath", Assembly.GetExecutingAssembly().Location);
+            key.SetValue("LastGame", LastGameDirectory);
+            key.SetValue(nameof(ExtraGameDirectories), ExtraGameDirectories);
+            key.SetValue(nameof(UILanguage), UILanguage);
+            key.SetValue(nameof(UITheme), UITheme);
+            key.SetValue(nameof(CodesSortingColumnIndex), CodesSortingColumnIndex);
+            key.SetValue(nameof(CodesUseTreeView), CodesUseTreeView ? 1 : 0);
+            key.SetValue(nameof(UpdateCodesOnLaunch), UpdateCodesOnLaunch ? 1 : 0);
+            key.SetValue(nameof(CheckManagerUpdates), CheckManagerUpdates ? 1 : 0);
+            key.SetValue(nameof(CheckLoaderUpdates), CheckLoaderUpdates ? 1 : 0);
+            key.SetValue(nameof(CheckModUpdates), CheckModUpdates ? 1 : 0);
+            key.SetValue(nameof(KeepOpen), KeepOpen ? 1 : 0);
+
+            key.Close();
+        }
+    }
+}
+Library "Logger" by "Hyper"
+{
+    #define PRINT_OBJECT(obj, format, caller) Logger.Utility(#obj + " = " + obj.ToString(format), caller);
+    #define PRINT_OBJECT(obj, format) Logger.Utility(#obj + " = " + obj.ToString(format));
+
+    public enum LogLevel
+    {
+        None,
+        Utility,
+        Warning,
+        Error
+    }
+
+    public void Log(object message, LogLevel level = LogLevel.None, string caller = "")
+    {
+        var oldColour = Console.ForegroundColor;
+
+        switch (level)
+        {
+            case LogLevel.Warning:
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                break;
+
+            case LogLevel.Error:
+                Console.ForegroundColor = ConsoleColor.Red;
+                break;
+
+            case LogLevel.Utility:
+                Console.ForegroundColor = ConsoleColor.Green;
+                break;
+        }
+
+        Console.WriteLine(string.IsNullOrEmpty(caller) ? message.ToString() : $"[{caller}] {message}");
+
+        Console.ForegroundColor = oldColour;
+    }
+
+    public void Utility(object message, string caller = "")
+    {
+        Log(message, LogLevel.Utility, caller);
+    }
+
+    public void Warning(object message, string caller = "")
+    {
+        Log(message, LogLevel.Warning, caller);
+    }
+
+    public void Error(object message, string caller = "")
+    {
+        Log(message, LogLevel.Error, caller);
+    }
+}
+Library "StringMapOperation" by "ĐeäTh" 
+{
+    /// <summary>
+    /// Computes a hash based on the input string.
+    /// </summary>
+    /// <param name="in_key">The string to hash.</param>
+    /// <returns>A string hash.</returns>
+    public uint ComputeHash(string in_key)
+    {
+        uint hash = in_key[0];
+
+        for (int i = 1; i < in_key.Length; i++)
+            hash = in_key[i] + 31 * hash;
+
+        return hash & 0x7FFFFFFF;
+    }
+}
+Library "MathHelpers" by "Hyper" 
+{
+    using System.Collections.Generic;
+
+    public T Clamp<T>(T in_value, T in_minValue, T in_maxValue) where T : IComparable<T>
+    {
+        if (in_value.CompareTo(in_minValue) < 0)
+        {
+            return in_minValue;
+        }
+        else if (in_value.CompareTo(in_maxValue) > 0)
+        {
+            return in_maxValue;
+        }
+        else
+        {
+            return in_value;
+        }
+    }
+
+    public T Clamp01<T>(T value) where T : IComparable<T>
+    {
+        if (value.CompareTo(default(T)) < 0)
+        {
+            return default(T);
+        }
+        else if (value.CompareTo((T)Convert.ChangeType(1, typeof(T))) > 0)
+        {
+            return (T)Convert.ChangeType(1, typeof(T));
+        }
+        else
+        {
+            return value;
+        }
+    }
+
+    public T FloatPercentToRange<T>(float in_value)
+    {
+        if (typeof(T) == typeof(sbyte))
+        {
+            return (T)(object)(byte)(in_value * (sbyte.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(byte))
+        {
+            return (T)(object)(byte)(in_value * (byte.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(short))
+        {
+            return (T)(object)(short)(in_value * (short.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(ushort))
+        {
+            return (T)(object)(ushort)(in_value * (ushort.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(int))
+        {
+            return (T)(object)(int)(in_value * (int.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(uint))
+        {
+            return (T)(object)(uint)(in_value * (uint.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(long))
+        {
+            return (T)(object)(long)(in_value * (long.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(ulong))
+        {
+            return (T)(object)(ulong)(in_value * (ulong.MaxValue * 1.0f));
+        }
+        
+        return default;
+    }
+    
+    public float Lerp(float in_start, float in_end, float in_time)
+    {
+        return in_start + (in_end - in_start) * in_time;
+    }
+
+    public static float InverseLerp(float a, float b, float value)
+    {
+        if (a == b)
+            return 0.0f;
+
+        return Clamp01<float>((value - a) / (b - a));
+    }
+
+    public static float ToDegrees(float in_radians)
+    {
+        return in_radians * (180.0f / (float)Math.PI);
+    }
+
+    public static float ToRadians(float in_degrees)
+    {
+        return in_degrees * ((float)Math.PI / 180.0f);
+    }
+
+    public static float WrapToRadians(float in_value)
+    {
+        float sign = in_value > 0.0f ? 1.0f : -1.0f;
+        float mod = (float)Math.Abs(in_value) % 6.28319f;
+
+        return mod * sign;
+    }
+}
+Library "Bitwise" by "Hyper" 
+{
+    public long Set(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
+    {
+        return in_base | (in_isOffsetBitIndex ? (1L << in_offset) : in_offset);
+    }
+
+    public long Reset(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
+    {
+        return in_base & (in_isOffsetBitIndex ? ~(1L << in_offset) : in_offset);
+    }
+
+    public bool Test(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
+    {
+        return (in_base & (in_isOffsetBitIndex ? (1L << in_offset) : in_offset)) != 0;
+    }
+}
+Library "INI" by "Hyper"
+{
+    using System.Collections.Generic;
+    using System.IO;
+    
+    public Dictionary<string, Dictionary<string, string>> Read(string path)
+    {
+        Dictionary<string, Dictionary<string, string>> result = new();
+
+        if (!File.Exists(path))
+            return result;
+
+        using (StreamReader reader = new StreamReader(path))
+        {
+            string section = string.Empty;
+            string line = string.Empty;
+
+            // Add root section.
+            result.Add(section, new Dictionary<string, string>());
+
+            while ((line = reader.ReadLine()) != null)
+            {
+                if (line.StartsWith("[") && line.EndsWith("]"))
+                {
+                    section = line.Substring(1, line.Length - 2);
+                    result.Add(section, new Dictionary<string, string>());
+                    continue;
+                }
+
+                if (line.StartsWith(";") || line.StartsWith("#"))
+                    continue;
+
+                int delimiterIndex = line.IndexOf('=');
+
+                if (delimiterIndex == -1)
+                    continue;
+
+                string key = line.Substring(0, delimiterIndex);
+                string value = line.Substring(delimiterIndex + 1);
+
+                if (value.StartsWith("\"") && value.EndsWith("\"") && value.Length > 1)
+                    value = value.Substring(1, value.Length - 2);
+                
+                result[section].Add(key, value);
+            }
+        }
+
+        return result;
+    }
+
+    public T Parse<T>(string in_value, T in_defaultValue)
+    {
+        T result = in_defaultValue;
+
+        if (typeof(T) == typeof(string))
+        {
+            result = (T)(object)in_value;
+        }
+        else if (typeof(T) == typeof(int))
+        {
+            if (int.TryParse(in_value, out int intValue))
+            {
+                result = (T)(object)intValue;
+            }
+        }
+        else if (typeof(T) == typeof(double))
+        {
+            if (double.TryParse(in_value, out double doubleValue))
+            {
+                result = (T)(object)doubleValue;
+            }
+        }
+        else if (typeof(T) == typeof(float))
+        {
+            if (float.TryParse(in_value, out float floatValue))
+            {
+                result = (T)(object)floatValue;
+            }
+        }
+
+        return result;
+    }
+
+    public T GetField<T>(Dictionary<string, Dictionary<string, string>> in_ini, string in_section, string in_key, T in_defaultValue)
+    {
+        if (!in_ini.ContainsKey(in_section))
+            return in_defaultValue;
+
+        if (!in_ini[in_section].ContainsKey(in_key))
+            return in_defaultValue;
+
+        return Parse<T>(in_ini[in_section][in_key], in_defaultValue);
+    }
+}
+Library "Helpers" by "Hyper & Sajid"
+{
+    #lib "StringMapOperation"
+
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
+    /// <summary>
+    /// Creates an `__stdcall` delegate with an unmanaged function pointer based on the provided function signature.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Library
+    /// {
+    ///     #include "Helpers" noemit
+    ///     
+    ///     UNMANAGED_FUNCTION(void, MyUnmanagedFunction, string in_str)
+    ///     {
+    ///         Console.WriteLine("Hello from native code!");
+    ///     }
+    ///     
+    ///     public void Init()
+    ///     {
+    ///         // This can be used for mid-asm hooks to call your own functions from the game code.
+    ///         var ptrToMyUnmanagedFunction = GET_UNMANAGED_FUNCTION_PTR(MyUnmanagedFunction);
+    ///     }
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define UNMANAGED_FUNCTION(in_returnType, in_functionName, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public static T##in_functionName _del##in_functionName = new T##in_functionName(in_functionName); \
+        public static long _fp##in_functionName = (long)System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate(_del##in_functionName); \
+        public static in_returnType in_functionName(__VA_ARGS__)
+
+    /// <summary>
+    /// Creates an `__stdcall` delegate based on the provided function signature.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #include "Helpers" noemit
+    ///     
+    ///     UNMANAGED_FUNCTION_DELEGATE(void, GetNameHash)
+    /// //
+    /// {
+    ///     // Calls the function at 0xDEADBEEF using this function signature.
+    ///     CREATE_UNMANAGED_FUNCTION_PTR(GetNameHash, 0xDEADBEEF)();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define UNMANAGED_FUNCTION_DELEGATE(in_returnType, in_functionName, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType in_functionName(__VA_ARGS__);
+
+    /// <summary>
+    /// Gets a pointer created by `UNMANAGED_FUNCTION` by name.
+    /// </summary>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <returns>A pointer to the unmanaged function.</returns>
+    #define GET_UNMANAGED_FUNCTION_PTR(in_functionName) _fp##in_functionName
+
+    /// <summary>
+    /// Creates a delegate using the signature created by `UNMANAGED_FUNCTION_DELEGATE`.
+    /// </summary>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="in_location">The location of the function.</param>
+    /// <returns>A delegate for the unmanaged function.</returns>
+    #define CREATE_UNMANAGED_FUNCTION_PTR(in_functionName, in_location) System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<in_functionName>((IntPtr)(in_location))
+
+    /// <summary>
+    /// Creates a function pointer to native code at the specified location.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #include "Helpers" noemit
+    ///     
+    ///     FUNCTION_PTR(void, GetNameHash, 0xDEADBEEF)
+    /// //
+    /// {
+    ///     GET_FUNCTION_PTR(GetNameHash)();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="in_location">The location of the function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define FUNCTION_PTR(in_returnType, in_functionName, in_location, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public static long _addr##in_functionName = in_location;
+    
+    /// <summary>
+    /// Creates a function pointer to a virtual function at an instance of a struct.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #include "Helpers" noemit
+    ///
+    ///     public struct MyStruct
+    ///     {
+    ///         VFUNCTION_PTR(MyStruct, 1, void, GetNameHash)
+    ///     }
+    /// //
+    /// {
+    ///     myInstanceOfMyStruct->GetNameHash()();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_thisType">The struct type this is nested inside.</param>
+    /// <param name="in_functionIndex">The index of this function in the virtual function table.</param>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="in_location">The location of the function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define VFUNCTION_PTR(in_thisType, in_functionIndex, in_returnType, in_functionName, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public T##in_functionName in_functionName() \
+        { \
+            fixed (in_thisType* pThis = &this) \
+                return System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<T##in_functionName>((IntPtr)(*(long*)((*(long*)pThis) + (1 * sizeof(nint)) * in_functionIndex))); \
+        }
+
+    /// <summary>
+    /// Gets a pointer created by `FUNCTION_PTR` by name.
+    /// </summary>
+    /// <param name="in_functionName">The name of the function pointer.</param>
+    /// <returns>A delegate to the native function.</returns>
+    #define GET_FUNCTION_PTR(in_functionName) System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<T##in_functionName>((IntPtr)_addr##in_functionName)
+
+    /// <summary>
+    /// Creates a fixed byte array with a special accessor for the real type.
+    /// </summary>
+    /// <param name="in_type">The real type of this array.</param>
+    /// <param name="in_name">The name of this array.</param>
+    /// <param name="in_size">The size of this array.</param>
+    #define UNMANAGED_FIXED_ARRAY(in_type, in_name, in_size) \
+        public fixed byte _##in_name[in_size]; \
+        public in_type* in_name \
+        { \
+            get \
+            { \
+                fixed (byte* p_##in_name = _##in_name) \
+                    return (in_type*)p_##in_name; \
+            } \
+        }
+
+    #define MAKE_GENERIC_API(in_functionName) \
+        public T* in_functionName<T>() where T : unmanaged \
+        { \
+            var name = Helpers.GetInternalName(typeof(T)); \
+\
+            return (T*)in_functionName(string.IsNullOrEmpty(name) ? typeof(T).Name : name); \
+        } \
+
+    #define MAKE_STATIC_GENERIC_API(in_functionName) \
+        public static T* in_functionName<T>() where T : unmanaged \
+        { \
+            var name = Helpers.GetInternalName(typeof(T)); \
+\
+            return (T*)in_functionName(string.IsNullOrEmpty(name) ? typeof(T).Name : name); \
+        } \
+
+    /// <summary>
+    /// Gets a pointer to an ANSI string.
+    /// </summary>
+    /// <param name="in_str">The ANSI string to get a pointer to.</param>
+    /// <returns>A pointer to the input ANSI string.</returns>
+    #define TO_STRING_PTR(in_str) (long)System.Runtime.InteropServices.Marshal.StringToHGlobalAnsi((##in_str##))
+
+    /// <summary>
+    /// Gets a pointer to a Unicode string.
+    /// </summary>
+    /// <param name="in_str">The Unicode string to get a pointer to.</param>
+    /// <returns>A pointer to the input Unicode string.</returns>
+    #define TO_WSTRING_PTR(in_str) (long)System.Runtime.InteropServices.Marshal.StringToHGlobalUni((##in_str##))
+
+    /// <summary>
+    /// Gets a pointer to a UTF-8 string.
+    /// </summary>
+    /// <param name="in_str">The UTF-8 string to get a pointer to.</param>
+    /// <returns>A pointer to the input UTF-8 string.</returns>
+    #define TO_U8STRING_PTR(in_str) (long)Helpers.StringToCoTaskMemUTF8((##in_str##))
+
+    /// <summary>
+    /// Gets an ANSI string from a pointer.
+    /// </summary>
+    /// <param name="in_ptr">The pointer to read an ANSI string from.</param>
+    /// <returns>An ANSI string.</returns>
+    #define FROM_STRING_PTR(in_ptr) System.Runtime.InteropServices.Marshal.PtrToStringAnsi((nint)(in_ptr))
+
+    /// <summary>
+    /// Gets a Unicode string from a pointer.
+    /// </summary>
+    /// <param name="in_ptr">The pointer to read a Unicode string from.</param>
+    /// <returns>A Unicode string.</returns>
+    #define FROM_WSTRING_PTR(in_ptr) System.Runtime.InteropServices.Marshal.PtrToStringUni((nint)(in_ptr))
+
+    /// <summary>
+    /// Gets a UTF-8 string from a pointer.
+    /// </summary>
+    /// <param name="in_ptr">The pointer to read a UTF-8 string from.</param>
+    /// <returns>A UTF-8 string.</returns>
+    #define FROM_U8STRING_PTR(in_ptr) Helpers.PtrToStringUTF8((nint)(in_ptr))
+
+
+    /// <summary>
+    /// Exposes a base field on the super class as a property
+    /// </summary>
+    /// <param name="TYPE">The field type.</param>
+    /// <param name="NAME">The field name.</param>
+    #define DEFINE_BASE_PROPERTY(TYPE, NAME) public TYPE NAME { get => Base.NAME; set => Base.NAME = value; }
+
+    #define DEFINE_INTERFACE_PROPERTY(INTERFACE, TYPE, NAME) TYPE INTERFACE.NAME { get => NAME; set => NAME = value; }
+
+    /// <summary>
+    /// A struct representation of a `const char*`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 8)]
+    public struct UnmanagedString
+    {
+        [FieldOffset(0)] public long pValue;
+        
+        public string Value
+        {
+            get
+            {
+                if (pValue == 0)
+                    return string.Empty;
+
+                return FROM_STRING_PTR(pValue);
+            }
+
+            set => pValue = TO_STRING_PTR(value);
+        }
+
+        public UnmanagedString(string in_value)
+        {
+            Value = in_value;
+        }
+
+        public static implicit operator UnmanagedString(string in_value)
+        {
+            return new UnmanagedString(in_value);
+        }
+
+        public static bool operator ==(UnmanagedString in_left, string in_right)
+        {
+            return in_left.Value == in_right;
+        }
+
+        public static bool operator !=(UnmanagedString in_left, string in_right)
+        {
+            return !(in_left == in_right);
+        }
+
+        public override bool Equals(object in_obj)
+        {
+            if (in_obj is string str)
+                return Value == str;
+            
+            return base.Equals(in_obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (int)StringMapOperation.ComputeHash(Value);
+        }
+
+        public override string ToString()
+        {
+            return Value;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
+    public sealed class InternalNameAttribute : Attribute
+    {
+        public string InternalName { get; }
+
+        public InternalNameAttribute(string in_internalName)
+        {
+            InternalName = in_internalName;
+        }
+    }
+
+    /// <summary>
+    /// Gets a list of indices where the input substring is found in a given string.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "Helpers"
+    /// //
+    /// {
+    ///     string myString = "lots of uses of the word of";
+    ///     
+    ///     var substrs = Helpers.GetSubstringIndices(myString, "of");
+    ///     
+    ///     // This list should contain three entries.
+    ///     // 0 - 5
+    ///     // 1 - 13
+    ///     // 2 - 25
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_str">The string to find substrings in.</param>
+    /// <param name="in_substr">The substring to search for.</param>
+    /// <returns>A list of indices where a substring appears in the given string.</returns>
+    public List<int> GetSubstringIndices(string in_str, string in_substr)
+    {
+        var indices = new List<int>();
+
+        int i = 0;
+        while ((i = in_str.IndexOf(in_substr, i)) != -1)
+        {
+            indices.Add(i);
+            i += in_substr.Length;
+        }
+
+        return indices;
+    }
+
+    /// <summary>
+    /// Gets a name from a InternalNameAttribute attached to a type.
+    /// </summary>
+    /// <param name="in_type">The type to get the attribute from.</param>
+    /// <returns>A string representing the internal name of the input type.</returns>
+    public static string GetInternalName(Type in_type)
+    {
+        var attr = (InternalNameAttribute)Attribute.GetCustomAttribute(in_type, typeof(InternalNameAttribute));
+
+        return attr == null ? string.Empty : attr.InternalName;
+    }
+
+    // https://github.com/scripthookvdotnet/scripthookvdotnet/blob/main/source/core/StringMarshal.cs
+    /*
+        Copyright (C) 2015 crosire, kagikn
+
+        This software is  provided 'as-is', without any express  or implied  warranty. In no event will the
+        authors be held liable for any damages arising from the use of this software.
+        Permission  is granted  to anyone  to use  this software  for  any  purpose,  including  commercial
+        applications, and to alter it and redistribute it freely, subject to the following restrictions:
+
+        1. The origin of this software must not be misrepresented; you must not claim that you  wrote the
+            original  software. If you use this  software  in a product, an  acknowledgment in the product
+            documentation would be appreciated but is not required.
+        2. Altered source versions must  be plainly  marked as such, and  must not be  misrepresented  as
+            being the original software.
+        3. This notice may not be removed or altered from any source distribution.
+
+        Changes;
+            - 29/08/2023
+                - (Hyper) renamed buffer
+                - (Hyper) renamed functions to use uppercase "UTF8"
+                - (Hyper) removed braces to compact code
+                - (Hyper) removed unsafe clauses (HMM always uses unsafe code)
+                - (Hyper) removed static modifiers
+
+            - 20/09/2023
+                - (Hyper) changed argument naming conventions
+                - (Hyper) changed IntPtr to nint
+                - (Hyper) changed string null check in StringToCoTaskMemUTF8 to use string.IsNullOrEmpty
+    */
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private static byte[] _bufferStringToCoTaskMemUTF8 = new byte[100];
+
+    /// <summary>
+    /// Gets a UTF-8 string from a memory location.
+    /// </summary>
+    /// <param name="in_ptr">The memory location where the UTF-8 string is.</param>
+    /// <returns>A UTF-8 string.</returns>
+    public string PtrToStringUTF8(nint in_ptr)
+    {
+        if (in_ptr == 0)
+            return string.Empty;
+
+        byte* data = (byte*)in_ptr;
+
+        int len = 0;
+        while (data[len] != 0)
+            ++len;
+
+        return PtrToStringUTF8(in_ptr, len);
+    }
+
+    /// <summary>
+    /// Gets a fixed-length UTF-8 string from a memory location.
+    /// </summary>
+    /// <param name="in_ptr">The memory location where the UTF-8 string is.</param>
+    /// <param name="in_length">The length of the UTF-8 string in memory.</param>
+    /// <returns>A UTF-8 string.</returns>
+    public string PtrToStringUTF8(nint in_ptr, int in_length)
+    {
+        if (in_length < 0)
+            throw new ArgumentException(null, nameof(in_length));
+
+        if (in_ptr == 0)
+            return null;
+
+        if (in_length == 0)
+            return string.Empty;
+
+        return Encoding.UTF8.GetString((byte*)in_ptr, in_length);
+    }
+
+    /// <summary>
+    /// Creates a pointer to a UTF-8 string.
+    /// </summary>
+    /// <param name="in_str">The UTF-8 string to get a pointer for.</param>
+    /// <returns>A pointer to the input UTF-8 string.</returns>
+    public nint StringToCoTaskMemUTF8(string in_str)
+    {
+        if (string.IsNullOrEmpty(in_str))
+            return 0;
+
+        int byteCountUtf8 = Encoding.UTF8.GetByteCount(in_str);
+        if (byteCountUtf8 > _bufferStringToCoTaskMemUTF8.Length)
+            _bufferStringToCoTaskMemUTF8 = new byte[byteCountUtf8 * 2];
+
+        Encoding.UTF8.GetBytes(in_str, 0, in_str.Length, _bufferStringToCoTaskMemUTF8, 0);
+
+        nint dest = Marshal.AllocCoTaskMem(byteCountUtf8 + 1);
+        if (dest == 0)
+            throw new OutOfMemoryException();
+
+        Marshal.Copy(_bufferStringToCoTaskMemUTF8, 0, dest, byteCountUtf8);
+        
+        ((byte*)dest)[byteCountUtf8] = 0;
+
+        return dest;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+}
+Library "RTTI" by "Hyper"
+{
+    #lib "Memory"
+
+    #define RESOLVE_RELATIVE_PTR(in_offset) (IntPtr.Size == 4 ? in_offset : (0x140000000 + in_offset))
+
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
+    [DllImport("imagehlp.dll", CallingConvention = CallingConvention.StdCall)]
+    private static extern uint UnDecorateSymbolName([MarshalAs(UnmanagedType.LPStr)] string name, byte[] outputString, uint maxStringLength, uint flags);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CompleteObjectLocator
+    {
+        public int Signature;
+        public int VftableOffset;
+        public int CtorDisplacementOffset;
+        public int pTypeDescriptor;
+        public int pClassHierarchyDescriptor;
+        public int pObjectBase;
+
+        public TypeDescriptor* GetTypeDescriptor()
+        {
+            return (TypeDescriptor*)RESOLVE_RELATIVE_PTR(pTypeDescriptor);
+        }
+
+        public ClassHierarchyDescriptor* GetClassHierarchyDescriptor()
+        {
+            return (ClassHierarchyDescriptor*)RESOLVE_RELATIVE_PTR(pClassHierarchyDescriptor);
+        }
+
+        public override string ToString()
+            => $"const {GetTypeDescriptor()->GetName()}::`RTTI Complete Object Locator'";
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct TypeDescriptor
+    {
+        public void* pTypeInfo;
+        public void* pRuntimeRef;
+        
+        public string GetName(bool in_isDemangled = true, IEnumerable<DemanglerFlags> in_demanglerFlags = null)
+        {
+            fixed (TypeDescriptor* pThis = &this)
+            {
+                var result = Marshal.PtrToStringAnsi((nint)((long)pThis + (IntPtr.Size == 4 ? 0x08 : 0x10)));
+
+                if (string.IsNullOrEmpty(result))
+                    return string.Empty;
+
+                result = result.TrimStart('.');
+                
+                if (in_isDemangled)
+                {
+                    if (in_demanglerFlags == null)
+                        in_demanglerFlags = new[] { RTTI.DemanglerFlags.NAME_ONLY };
+                    
+                    return Demangle(result, in_demanglerFlags);
+                }
+                else
+                {
+                    return result;
+                }
+            }
+        }
+
+        public string[] GetNamespaces()
+        {
+            return GetName().Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        public override string ToString()
+            => $"class {GetName()} `RTTI Type Descriptor'";
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ClassHierarchyDescriptor
+    {
+        public int Signature;
+        public int Attributes;
+        public int BaseClassCount;
+        public int pBaseClasses;
+
+        public BaseClassDescriptor* GetBaseClass(int in_index)
+        {
+            if (in_index > BaseClassCount)
+                return null;
+                
+            var ptr = *(int*)(RESOLVE_RELATIVE_PTR(pBaseClasses) + (in_index * 4));
+            
+            return (BaseClassDescriptor*)(RESOLVE_RELATIVE_PTR(ptr));
+        }
+
+        public override string ToString()
+            => $"{GetBaseClass(0)->GetTypeDescriptor()->GetName()}::`RTTI Class Hierarchy Descriptor'";
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct BaseClassDescriptor
+    {
+        public int pTypeDescriptor;
+        public int SubElementCount;
+        public int MemberDisplacement;
+        public int VftableDisplacement;
+        public int DisplacementWithinVftable;
+        public int BaseClassAttributes;
+        public int pClassHierarchyDescriptor;
+
+        public TypeDescriptor* GetTypeDescriptor()
+        {
+            return (TypeDescriptor*)RESOLVE_RELATIVE_PTR(pTypeDescriptor);
+        }
+
+        public ClassHierarchyDescriptor* GetClassHierarchyDescriptor()
+        {
+            return (ClassHierarchyDescriptor*)RESOLVE_RELATIVE_PTR(pClassHierarchyDescriptor);
+        }
+
+        public override string ToString()
+            => $"{GetTypeDescriptor()->GetName()}::`RTTI Base Class Descriptor at ({MemberDisplacement}, {VftableDisplacement}, {DisplacementWithinVftable}, {BaseClassAttributes})'";
+    }
+
+    public CompleteObjectLocator* GetRuntimeInfoFromVftable(void* in_pVftable)
+    {
+        if (in_pVftable == null)
+            return null;
+
+        var runtimeInfoOffset = *(long*)((long)in_pVftable - IntPtr.Size);
+
+        if (!Memory.IsAccessible((nint)runtimeInfoOffset))
+            return null;
+        
+        return (CompleteObjectLocator*)runtimeInfoOffset;
+    }
+
+    public CompleteObjectLocator* GetRuntimeInfo(void* in_pClass)
+    {
+        return GetRuntimeInfoFromVftable((void*)*(long*)in_pClass);
+    }
+
+    public string GetClassName(void* in_pClass, bool in_isDemangled = true, IEnumerable<DemanglerFlags> in_demanglerFlags = null)
+    {
+        var pRuntimeInfo = RTTI.GetRuntimeInfo(in_pClass);
+
+        if (pRuntimeInfo == null)
+            return string.Empty;
+
+        var pTypeDescriptor = pRuntimeInfo->GetTypeDescriptor();
+
+        if (pTypeDescriptor == null)
+            return string.Empty;
+            
+        return pTypeDescriptor->GetName(in_isDemangled, in_demanglerFlags);
+    }
+
+    public string[] GetClassNamespaces(void* in_pClass)
+    {
+        return GetClassName(in_pClass).Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    public string Demangle(string in_mangledName, IEnumerable<DemanglerFlags> in_flags)
+    {
+        var result = string.Empty;
+        var flags = 0U;
+        var demangledBytes = new byte[1024];
+
+        foreach (var flag in in_flags)
+            flags |= (uint)flag;
+
+        while (true)
+        {
+            var resultLength = UnDecorateSymbolName
+            (
+                in_mangledName,
+                demangledBytes,
+                (uint)demangledBytes.Length,
+                (uint)flags
+            );
+
+            if (resultLength == (demangledBytes.Length - 2))
+            {
+                demangledBytes = new byte[demangledBytes.Length * 2];
+                continue;
+            }
+            else
+            {
+                int count = Array.IndexOf<byte>(demangledBytes, 0, 0);
+
+                if (count < 0)
+                    count = demangledBytes.Length;
+
+                result = Encoding.ASCII.GetString(demangledBytes, 0, count);
+
+                break;
+            }
+        }
+
+        if (string.IsNullOrEmpty(result))
+            return result;
+        
+        var namespaces = result.Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (namespaces.Length > 0)
+        {
+            var last = namespaces[namespaces.Length - 1];
+            
+            if (last.StartsWith("AV"))
+                namespaces[namespaces.Length - 1] = last.Remove(0, 2);
+
+            result = string.Join("::", namespaces);
+        }
+
+        return result;
+    }
+
+    public enum DemanglerFlags
+    {
+        /// <summary>
+        /// Enable full undecoration.
+        /// </summary>
+        COMPLETE = 0x0000,
+
+        /// <summary>
+        /// Remove leading underscores from Microsoft keywords.
+        /// </summary>
+        NO_LEADING_UNDERSCORES = 0x0001,
+
+        /// <summary>
+        /// Disable expansion of Microsoft keywords.
+        /// </summary>
+        NO_MS_KEYWORDS = 0x0002,
+
+        /// <summary>
+        /// Disable expansion of return types for primary declarations.
+        /// </summary>
+        NO_FUNCTION_RETURNS = 0x0004,
+
+        /// <summary>
+        /// Disable expansion of the declaration model.
+        /// </summary>
+        NO_ALLOCATION_MODEL = 0x0008,
+
+        /// <summary>
+        /// Disable expansion of the declaration language specifier.
+        /// </summary>
+        NO_ALLOCATION_LANGUAGE = 0x0010,
+
+        /// <summary>
+        /// Disable expansion of Microsoft keywords on the this type for primary declaration.
+        /// </summary>
+        NO_MS_THISTYPE = 0x0020,
+
+        /// <summary>
+        /// Disable expansion of CodeView modifiers on the this type for primary declaration.
+        /// </summary>
+        NO_CV_THISTYPE = 0x0040,
+
+        /// <summary>
+        /// Disable all modifiers on the "this" type.
+        /// </summary>
+        NO_THISTYPE = 0x0060,
+
+        /// <summary>
+        /// Disable expansion of access specifiers for members.
+        /// </summary>
+        NO_ACCESS_SPECIFIERS = 0x0080,
+
+        /// <summary>
+        /// Disable expansion of throw-signatures for functions and pointers to functions.
+        /// </summary>
+        NO_THROW_SIGNATURES = 0x0100,
+
+        /// <summary>
+        /// Disable expansion of the static or virtual attribute of members.
+        /// </summary>
+        NO_MEMBER_TYPE = 0x0200,
+
+        /// <summary>
+        /// Disable expansion of the Microsoft model for user-defined type returns.
+        /// </summary>
+        NO_RETURN_UDT_MODEL = 0x0400,
+
+        /// <summary>
+        /// Undecorate 32-bit decorated names.
+        /// </summary>
+        P32_BIT_DECODE = 0x0800,
+
+        /// <summary>
+        /// Undecorate only the name for primary declaration. Returns [scope::]name. Does expand template parameters.
+        /// </summary>
+        NAME_ONLY = 0x1000,
+
+        /// <summary>
+        /// Do not undecorate function arguments.
+        /// </summary>
+        NO_ARGUMENTS = 0x2000,
+
+        /// <summary>
+        /// Do not undecorate special names, such as vtable, vcall, vector, metatype, and so on.
+        /// </summary>
+        NO_SPECIAL_SYMS = 0x4000
+    }
+}
+Library "Memory" by "Hyper & Sajid" 
+{
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Runtime.CompilerServices;
+    using System.Text;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr VirtualQuery(IntPtr lpAddress, ref MEMORY_BASIC_INFORMATION lpBuffer, UIntPtr dwLength);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MEMORY_BASIC_INFORMATION
+    {
+        public IntPtr BaseAddress;
+        public IntPtr AllocationBase;
+        public uint AllocationProtect;
+        public IntPtr RegionSize;
+        public uint State;
+        public uint Protect;
+        public uint Type;
+    }
+
+    private static Dictionary<nint, List<byte>> _preservedMemory = new();
+
+    public void Preserve(nint in_location, nint in_length, bool in_isPreservedOnce = true)
+    {
+        if (in_location == 0)
+            return;
+
+        if (in_isPreservedOnce)
+        {
+            if (_preservedMemory.ContainsKey(in_location))
+                return;
+        }
+        else
+        {
+            if (_preservedMemory.ContainsKey(in_location))
+                _preservedMemory.Remove(in_location);
+        }
+        
+        List<byte> buffer = new();
+        for (nint i = 0; i < in_length; i++)
+            buffer.Add(Read<byte>(in_location + i));
+
+        _preservedMemory.Add(in_location, buffer);
+    }
+
+    public void Preserve(long in_location, long in_length, bool in_isPreservedOnce = true)
+    {
+        Preserve((nint)in_location, (nint)in_length, in_isPreservedOnce);
+    }
+
+    public void Restore(nint in_location)
+    {
+        if (in_location == 0)
+            return;
+
+        if (!_preservedMemory.ContainsKey(in_location))
+            return;
+
+        nint i = 0;
+        foreach (byte b in _preservedMemory[in_location])
+        {
+            WriteProtected<byte>(in_location + i, b);
+            i++;
+        }
+    }
+
+    public void Restore(long in_location)
+    {
+        Restore((nint)in_location);
+    }
+
+    public uint GetPageProtectFlags(nint in_location)
+    {
+        var memInfo = new MEMORY_BASIC_INFORMATION();
+
+        if (VirtualQuery(in_location, ref memInfo, (UIntPtr)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION))) == IntPtr.Zero)
+            return 1;
+
+        return memInfo.Protect;
+    }
+
+    public bool IsAccessible(nint in_location)
+    {
+        // PAGE_NOACCESS
+        if ((GetPageProtectFlags(in_location) & 1) != 0)
+            return false;
+
+        return true;
+    }
+
+    public nint ReadCall(nint in_location)
+    {
+        if (in_location == 0)
+            return 0;
+
+        return in_location + Read<int>(in_location + 0x01) + 0x05;
+    }
+
+    public long ReadCall(long in_location)
+    {
+        return (long)ReadCall((nint)in_location);
+    }
+
+    public nint ReadEffectiveAddress(nint in_location)
+    {
+        if (in_location == 0)
+            return 0;
+
+        return in_location + Read<int>(in_location + 0x03) + 0x07;
+    }
+
+    public long ReadEffectiveAddress(long in_location)
+    {
+        return (long)ReadEffectiveAddress((nint)in_location);
+    }
+
+    public enum JumpType : sbyte
+    {
+        Unknown = -1,
+        ShortCond,
+        NearJmp,
+        NearCond,
+        LongJmp
+    }
+
+    public JumpType ReadJumpOpcode(nint in_location)
+    {
+        JumpType result = JumpType.Unknown;
+
+        if (in_location == 0)
+            return result;
+
+        byte opcode = Read<byte>(in_location);
+
+        if ((opcode & 0xF0) == 0x70)
+        {
+            result = JumpType.ShortCond;
+        }
+        else
+        {
+            switch (opcode)
+            {
+                case 0xE3:
+                case 0xEB:
+                    result = JumpType.ShortCond;
+                    break;
+
+                case 0xE9:
+                    result = JumpType.NearJmp;
+                    break;
+
+                case 0x0F:
+                    result = JumpType.NearCond;
+                    break;
+
+                case 0xFF:
+                    result = JumpType.LongJmp;
+                    break;
+            }
+        }
+
+        return result;
+    }
+
+    public JumpType ReadJumpOpcode(long in_location)
+    {
+        return ReadJumpOpcode((nint)in_location);
+    }
+
+    public nint ReadJump(nint in_location)
+    {
+        if (in_location == 0)
+            return 0;
+
+        switch (ReadJumpOpcode(in_location))
+        {
+            case JumpType.ShortCond:
+                return in_location + Read<byte>(in_location + 0x01) + 0x02;
+
+            case JumpType.NearJmp:
+                return in_location + Read<int>(in_location + 0x01) + 0x05;
+
+            case JumpType.NearCond:
+                return in_location + Read<int>(in_location + 0x02) + 0x06;
+
+            case JumpType.LongJmp:
+                return (nint)Read<long>(in_location + 0x06);
+        }
+
+        return 0;
+    }
+
+    public long ReadJump(long in_location)
+    {
+        return (long)ReadJump((nint)in_location);
+    }
+
+    public void WriteForceJump(nint in_location)
+    {
+        if (in_location == 0)
+            return;
+        
+        switch (ReadJumpOpcode(in_location))
+        {
+            case JumpType.ShortCond:
+                WriteProtected<byte>(in_location, 0xEB);
+                break;
+
+            case JumpType.NearCond:
+                WriteProtected<byte>(in_location, 0xE9);
+                WriteProtected<int>(in_location + 0x01, Read<int>(in_location + 0x02) + 0x01);
+                break;
+        }
+    }
+
+    public void WriteForceJump(long in_location)
+    {
+        WriteForceJump((nint)in_location);
+    }
+
+    public nint ReadThunk(nint in_location, nint in_offset = 0)
+    {
+        return ReadJump(ReadCall(in_location) + in_offset);
+    }
+
+    public long ReadThunk(long in_location, long in_offset = 0)
+    {
+        return (long)ReadThunk((nint)in_location, (nint)in_offset);
+    }
+
+    public void WriteString(long in_location, string in_str, Encoding in_encoding)
+    {
+        WriteProtected<byte>(in_location, in_encoding.GetBytes(in_str));
+    }
+
+    public void WriteString(long in_location, string in_str)
+    {
+        WriteString(in_location, in_str, Encoding.ASCII);
+    }
+
+    public void PrintMemory<T>(IntPtr in_address, int in_rowCount) where T : unmanaged
+    {
+        for (int i = 0; i < in_rowCount * 16; i += 16)
+        {
+            Console.Write($"{(in_address + i).ToInt64():X16}: ");
+
+            if (typeof(T) == typeof(byte) || typeof(T) == typeof(sbyte))
+            {
+                for (int j = 0; j < 16; j++)
+                    Console.Write($"{Read<T>(in_address + i + j):X2} ");
+            }
+            else if (typeof(T) == typeof(short) || typeof(T) == typeof(ushort))
+            {
+                for (int j = 0; j < 16; j += 2)
+                    Console.Write($"{Read<T>(in_address + i + j):X4} ");
+            }
+            else if (typeof(T) == typeof(int) || typeof(T) == typeof(uint))
+            {
+                for (int j = 0; j < 16; j += 4)
+                    Console.Write($"{Read<T>(in_address + i + j):X8} ");
+            }
+            else if (typeof(T) == typeof(long) || typeof(T) == typeof(ulong))
+            {
+                for (int j = 0; j < 16; j += 8)
+                    Console.Write($"{Read<T>(in_address + i + j):X16} ");
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                for (int j = 0; j < 16; j += 4)
+                    Console.Write($"{Read<float>(in_address + i + j)} ");
+            }
+            else if (typeof(T) == typeof(double))
+            {
+                for (int j = 0; j < 16; j += 8)
+                    Console.Write($"{Read<double>(in_address + i + j)} ");
+            }
+
+            Console.WriteLine();
+        }
+    }
+
+    public void PrintMemory(IntPtr in_address, int in_rowCount)
+    {
+        PrintMemory<byte>(in_address, in_rowCount);
+    }
+    
+    public struct Pointer<T> where T : unmanaged
+    {
+        public T* pData;
+
+        public Pointer(ref T data)
+        {
+            fixed(T* dataPtr = &data)
+            {
+                pData = dataPtr;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Pointer(T* in_pData)
+        {
+            pData = in_pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool IsValid()
+        {
+            return pData != null;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref T Ref()
+        {
+            return ref *pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T* Get()
+        {
+            return pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator bool(Pointer<T> self) => self.IsValid();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator Pointer<T>(T* data) => new(data);
+
+        public override string ToString() => $"0x{((long)pData):X}";
+    }
+}

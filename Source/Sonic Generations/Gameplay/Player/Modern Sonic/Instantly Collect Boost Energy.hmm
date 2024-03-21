@@ -1,8 +1,0 @@
-Patch "Instantly Collect Boost Energy" in "Gameplay/Player/Modern Sonic" by "brianuuu" does "Immediately increases the boost gauge when defeating an enemy." 
-WriteNop(0x1124433, 6)
-WriteProtected<byte>(0x1124489, 0xEB)
-WriteNop(0x11244C1, 6)
-WriteNop(0x11244D0, 6)
-WriteProtected<uint>(0x112459B, 0xFFFFFFFF)
-
-

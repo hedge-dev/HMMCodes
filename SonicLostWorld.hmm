@@ -1,0 +1,3387 @@
+Library "XInput" by "Hyper" 
+{
+    #lib "MathHelpers"
+
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+    using System.Runtime.InteropServices;
+
+    [DllImport("xinput1_4.dll", EntryPoint = "XInputGetState")]
+    public extern int XInputGetState(int in_dwUserIndex, ref State in_pState);
+    
+    [DllImport("xinput1_4.dll", EntryPoint = "XInputSetState")]
+    public extern int XInputSetState(int in_dwUserIndex, ref Vibration in_pVibration);
+
+    public const short XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE = 7849;
+    public const short XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE = 8689;
+
+    private static float _leftMotorSpeed = 0.0f;
+    private static float _rightMotorSpeed = 0.0f;
+
+    [Flags]
+    public enum Buttons : ushort
+    {
+        DPAD_UP        = 0x0001,
+        DPAD_DOWN      = 0x0002,
+        DPAD_LEFT      = 0x0004,
+        DPAD_RIGHT     = 0x0008,
+        START          = 0x0010,
+        BACK           = 0x0020,
+        LEFT_THUMB     = 0x0040,
+        RIGHT_THUMB    = 0x0080,
+        LEFT_SHOULDER  = 0x0100,
+        RIGHT_SHOULDER = 0x0200,
+        A              = 0x1000,
+        B              = 0x2000,
+        X              = 0x4000,
+        Y              = 0x8000
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct State
+    {
+        public int dwPacketNumber;
+        public Gamepad Gamepad;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Gamepad
+    {
+        public Buttons wButtons;
+        public byte bLeftTrigger;
+        public byte bRightTrigger;
+        public short sThumbLX;
+        public short sThumbLY;
+        public short sThumbRX;
+        public short sThumbRY;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Vibration
+    {
+        public ushort wLeftMotorSpeed;
+        public ushort wRightMotorSpeed;
+
+        public Vibration(ushort in_leftMotorSpeed, ushort in_rightMotorSpeed)
+        {
+            wLeftMotorSpeed = in_leftMotorSpeed;
+            wRightMotorSpeed = in_rightMotorSpeed;
+
+            _leftMotorSpeed = in_leftMotorSpeed / 65535.0f;
+            _rightMotorSpeed = in_rightMotorSpeed / 65535.0f;
+        }
+
+        public Vibration(float in_leftMotorSpeed, float in_rightMotorSpeed)
+        {
+            wLeftMotorSpeed = MathHelpers.FloatPercentToRange<ushort>(in_leftMotorSpeed);
+            wRightMotorSpeed = MathHelpers.FloatPercentToRange<ushort>(in_rightMotorSpeed);
+
+            _leftMotorSpeed = in_leftMotorSpeed;
+            _rightMotorSpeed = in_rightMotorSpeed;
+        }
+
+        public Vibration(ushort in_motorSpeed)
+        {
+            wLeftMotorSpeed = wRightMotorSpeed = in_motorSpeed;
+            _leftMotorSpeed = _rightMotorSpeed = in_motorSpeed / 65535.0f;
+        }
+
+        public Vibration(float in_motorSpeed)
+        {
+            wLeftMotorSpeed = wRightMotorSpeed = MathHelpers.FloatPercentToRange<ushort>(in_motorSpeed);
+            _leftMotorSpeed = _rightMotorSpeed = in_motorSpeed;
+        }
+    }
+
+    public State? GetState()
+    {
+        var pState = new State();
+
+        if (XInputGetState(0, ref pState) != 0)
+            return null;
+
+        return pState;
+    }
+
+    public void SetState(Vibration in_vibration)
+    {
+        XInputSetState(0, ref in_vibration);
+    }
+
+    public Vector2 GetAnalog(int in_analogIndex, bool in_isTestDeadzone = true)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return Vector2.Zero;
+
+        Vector2 v = Vector2.Zero;
+
+        switch (in_analogIndex)
+        {
+            case 0:
+                v = new Vector2(pState.Value.Gamepad.sThumbLX / 32767.0f, pState.Value.Gamepad.sThumbLY / 32767.0f);
+                break;
+
+            case 1:
+                v = new Vector2(pState.Value.Gamepad.sThumbRX / 32767.0f, pState.Value.Gamepad.sThumbRY / 32767.0f);
+                break;
+        }
+
+        if (in_isTestDeadzone)
+        {
+            v = IsAnalogNeutral(in_analogIndex)
+                ? Vector2.Zero
+                : v;
+        }
+
+        return v;
+    }
+
+    // Use Player.Input for keyboard parity!
+    public bool IsButtonDown(Buttons in_buttons)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return false;
+
+        return (pState.Value.Gamepad.wButtons & in_buttons) != 0;
+    }
+
+    public float GetTrigger(int in_triggerIndex)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return 0;
+
+        switch (in_triggerIndex)
+        {
+            case 0:
+                return pState.Value.Gamepad.bLeftTrigger / 255.0f;
+
+            case 1:
+                return pState.Value.Gamepad.bRightTrigger / 255.0f;
+        }
+
+        return 0;
+    }
+
+    public bool IsAnalogNeutral(int in_analogIndex)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return true;
+
+        switch (in_analogIndex)
+        {
+            case 0:
+            {
+                short x = pState.Value.Gamepad.sThumbLX;
+                short y = pState.Value.Gamepad.sThumbLY;
+
+                return x < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+                    x > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+                    y < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+                    y > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE;
+            }
+
+            case 1:
+            {
+                short x = pState.Value.Gamepad.sThumbRX;
+                short y = pState.Value.Gamepad.sThumbRY;
+
+                return x < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+                    x > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+                    y < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+                    y > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;
+            }
+        }
+
+        return true;
+    }
+
+    public Vibration GetVibration()
+    {
+        return new Vibration(_leftMotorSpeed, _rightMotorSpeed);
+    }
+
+    public void SetVibration(float in_value)
+    {
+        SetState(new Vibration(in_value));
+    }
+
+    public void SetVibration(int in_motorIndex, float in_value)
+    {
+        switch (in_motorIndex)
+        {
+            case 0:
+            {
+                SetState(new Vibration(in_value, _rightMotorSpeed));
+                break;
+            }
+
+            case 1:
+            {
+                SetState(new Vibration(_leftMotorSpeed, in_value));
+                break;
+            }
+        }
+    }
+}
+
+
+
+Library "VectorHelpers" by "Hyper" 
+{
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+
+    public static Vector3 ClampMagnitude(Vector3 in_vector, float in_maxMagnitude)
+    {
+        if (in_vector.Length() > in_maxMagnitude * in_maxMagnitude)
+            return Vector3.Normalize(in_vector) * in_maxMagnitude;
+
+        return in_vector;
+    }
+
+    public static Vector3 GetForward(Quaternion in_rotation)
+    {
+        return Vector3.Transform(Vector3.UnitZ, Quaternion.Normalize(in_rotation));
+    }
+
+    public static float GetMagnitude(Vector3 in_velocity)
+    {
+        return in_velocity.Length();
+    }
+
+    public static float GetHorizontalMagnitude(Vector3 in_velocity)
+    {
+        return (float)Math.Sqrt(in_velocity.X * in_velocity.X + in_velocity.Z * in_velocity.Z);
+    }
+
+    public static float GetVerticalMagnitude(Vector3 in_velocity)
+    {
+        return in_velocity.Y;
+    }
+
+    public static Quaternion LookRotation(Vector3 in_forward, Vector3 in_upward)
+    {
+        in_forward = Vector3.Normalize(in_forward);
+        in_upward = Vector3.Normalize(in_upward);
+
+        var right = Vector3.Cross(in_upward, in_forward);
+        in_upward = Vector3.Cross(in_forward, right);
+
+        var m = new Matrix4x4
+        (
+            right.X,      right.Y,      right.Z,      0.0f,
+            in_upward.X,  in_upward.Y,  in_upward.Z,  0.0f,
+            in_forward.X, in_forward.Y, in_forward.Z, 0.0f,
+            0.0f,         0.0f,         0.0f,         1.0f
+        );
+
+        return Quaternion.CreateFromRotationMatrix(m);
+    }
+
+    public static Quaternion LookRotation(Vector3 in_forward)
+    {
+        return LookRotation(in_forward, Vector3.UnitY);
+    }
+}
+Library "HMM" by "Hyper"
+{
+    #lib "INI"
+
+    using Microsoft.Win32;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Reflection;
+    using System.Threading;
+
+    public string GetGameDirectory()
+    {
+        return Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+    }
+
+    public Dictionary<string, Dictionary<string, string>> GetModsDatabase()
+    {
+        string cpkredirCfgPath = Path.Combine(GetGameDirectory(), "cpkredir.ini");
+        
+        if (!File.Exists(cpkredirCfgPath))
+            return new();
+
+        var cpkredirCfg = INI.Read(cpkredirCfgPath);
+        string modsDbPath = cpkredirCfg["CPKREDIR"]["ModsDbIni"];
+
+        if (!File.Exists(modsDbPath))
+            return new();
+
+        return INI.Read(modsDbPath);
+    }
+
+    public List<Mod> GetMods()
+    {
+        List<Mod> result = new();
+
+        var modsDb = GetModsDatabase();
+
+        if (modsDb.Count <= 0)
+            return result;
+        
+        int activeModCount = INI.Parse<int>(modsDb["Main"]["ActiveModCount"], 0);
+
+        foreach (var entry in modsDb["Mods"].Keys)
+        {
+            for (int i = 0; i < activeModCount; i++)
+            {
+                if (modsDb["Main"][$"ActiveMod{i}"].Contains(entry))
+                {
+                    result.Add(new Mod(modsDb["Mods"][entry]));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public Mod GetModByID(string in_id)
+    {
+        foreach (var mod in GetMods())
+        {
+            if (mod.ID == in_id)
+                return mod;
+        }
+
+        return null;
+    }
+
+    public List<Mod> FindModsByName(string name)
+    {
+        List<Mod> result = new();
+
+        foreach (var mod in GetMods())
+        {
+            if (mod.Name.Contains(name))
+            {
+                result.Add(mod);
+            }
+        }
+
+        return result;
+    }
+
+    public List<string> GetCodes()
+    {
+        List<string> result = new();
+
+        var modsDb = GetModsDatabase();
+
+        if (modsDb == null)
+            return result;
+
+        foreach (var value in modsDb["Codes"].Values)
+            result.Add(value);
+
+        return result;
+    }
+
+    public class Mod
+    {
+        public string Name { get; set; }
+        public string Version { get; set; }
+        public string Author { get; set; }
+        public string Description { get; set; }
+        public string Date { get; set; }
+        public string AuthorURL { get; set; }
+        public string UpdateServer { get; set; }
+        public string SaveFile { get; set; }
+        public string ID { get; set; }
+        public List<string> IncludeDirs { get; set; } = new();
+        public List<ModDependency> Dependencies { get; set; } = new();
+        public string DLLFile { get; set; }
+        public string CodeFile { get; set; }
+        public string ConfigSchemaFile { get; set; }
+
+        public string Path { get; set; }
+        public Dictionary<string, Dictionary<string, string>> Ini { get; set; } = new();
+
+        public Mod(string modIniPath)
+        {
+            var ini = INI.Read(modIniPath);
+
+            if (ini == null)
+                return;
+
+            Name             = INI.GetField<string>(ini, "Desc", "Title", Name);
+            Version          = INI.GetField<string>(ini, "Desc", "Version", Version);
+            Author           = INI.GetField<string>(ini, "Desc", "Author", Author);
+            Description      = INI.GetField<string>(ini, "Desc", "Description", Description);
+            Date             = INI.GetField<string>(ini, "Desc", "Date", Date);
+            AuthorURL        = INI.GetField<string>(ini, "Desc", "AuthorURL", AuthorURL);
+            UpdateServer     = INI.GetField<string>(ini, "Main", "UpdateServer", UpdateServer);
+            SaveFile         = INI.GetField<string>(ini, "Main", "SaveFile", SaveFile);
+            ID               = INI.GetField<string>(ini, "Main", "ID", ID);
+            DLLFile          = INI.GetField<string>(ini, "Main", "DLLFile", DLLFile);
+            CodeFile         = INI.GetField<string>(ini, "Main", "CodeFile", CodeFile);
+            ConfigSchemaFile = INI.GetField<string>(ini, "Main", "ConfigSchemaFile", ConfigSchemaFile);
+
+            Path             = System.IO.Path.GetDirectoryName(modIniPath);
+            Ini              = ini;
+
+            int includeDirCount = INI.GetField<int>(ini, "Main", "IncludeDirCount", 1);
+
+            for (int i = 0; i < includeDirCount; i++)
+                IncludeDirs.Add(INI.GetField<string>(ini, "Main", $"IncludeDir{i}", "."));
+
+            int dependencyCount = INI.GetField<int>(ini, "Main", "DependsCount", 0);
+
+            for (int i = 0; i < dependencyCount; i++)
+                Dependencies.Add(new ModDependency(INI.GetField<string>(ini, "Main", $"Depends{i}", "")));
+        }
+    }
+
+    public class ModDependency
+    {
+        public string ID { get; set; }
+
+        public string Name { get; set; }
+        
+        public string Link { get; set; }
+
+        public string Version { get; set; }
+
+        public ModDependency(string in_id, string in_name, string in_link, string in_version)
+        {
+            ID = in_id;
+            Name = in_name;
+            Link = in_link;
+            Version = in_version;
+        }
+
+        public ModDependency(string in_csv)
+        {
+            var fields = in_csv.Split('|');
+
+            for (int i = 0; i < fields.Length; i++)
+            {
+                switch (i)
+                {
+                    case 0:
+                        ID = fields[i];
+                        break;
+
+                    case 1:
+                        Name = fields[i];
+                        break;
+
+                    case 2:
+                    {
+                        if (fields.Length > 2)
+                        {
+                            Link = fields[i];
+                        }
+                        else
+                        {
+                            Version = fields[i];
+                        }
+
+                        break;
+                    }
+
+                    case 3:
+                        Version = fields[i];
+                        break;
+                }
+            }
+        }
+    }
+
+    public static class RegistryConfig
+    {
+        public static string ConfigPath { get; } = @"SOFTWARE\HEDGEMM";
+
+        public static bool CheckLoaderUpdates { get; set; } = true;
+        public static bool CheckManagerUpdates { get; set; } = true;
+        public static bool CheckModUpdates { get; set; } = true;
+        public static int CodesSortingColumnIndex { get; set; } = 1;
+        public static bool CodesUseTreeView { get; set; } = true;
+        public static string ExecutablePath { get; set; }
+        public static string ExtraGameDirectories { get; set; }
+        public static bool KeepOpen { get; set; } = true;
+        public static string LastGameDirectory { get; set; }
+        public static string UILanguage { get; set; }
+        public static string UITheme { get; set; }
+        public static bool UpdateCodesOnLaunch { get; set; } = true;
+
+        static RegistryConfig()
+        {
+            Load();
+        }
+
+        public static void Load()
+        {
+            var personalizeKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+
+            bool isLightTheme = false;
+            if (personalizeKey != null)
+            {
+                var useLightThemeStr = personalizeKey.GetValue("AppsUseLightTheme", 0)?.ToString();
+
+                if (int.TryParse(useLightThemeStr, out int out_isLightTheme))
+                    isLightTheme = out_isLightTheme != 0;
+
+                personalizeKey.Close();
+            }
+
+            var key = Registry.CurrentUser.CreateSubKey(ConfigPath);
+
+            LastGameDirectory       = (string)key.GetValue("LastGame", string.Empty);
+            ExtraGameDirectories    = (string)key.GetValue(nameof(ExtraGameDirectories), string.Empty);
+            UILanguage              = (string)key.GetValue(nameof(UILanguage), Thread.CurrentThread.CurrentCulture.Name);
+            UITheme                 = (string)key.GetValue(nameof(UITheme), isLightTheme ? "LightTheme" : "DarkerTheme");
+            CodesSortingColumnIndex = (int)key.GetValue(nameof(CodesSortingColumnIndex), 1);
+            CodesUseTreeView        = (int)key.GetValue(nameof(CodesUseTreeView), 1) != 0;
+            UpdateCodesOnLaunch     = (int)key.GetValue(nameof(UpdateCodesOnLaunch), 1) != 0;
+            CheckManagerUpdates     = (int)key.GetValue(nameof(CheckManagerUpdates), 1) != 0;
+            CheckLoaderUpdates      = (int)key.GetValue(nameof(CheckLoaderUpdates), 1) != 0;
+            CheckModUpdates         = (int)key.GetValue(nameof(CheckModUpdates), 1) != 0;
+            KeepOpen                = (int)key.GetValue(nameof(KeepOpen), 1) != 0;
+
+            key.Close();
+        }
+
+        public static void Save()
+        {
+            var key = Registry.CurrentUser.CreateSubKey(ConfigPath);
+
+            key.SetValue("ExecutablePath", Assembly.GetExecutingAssembly().Location);
+            key.SetValue("LastGame", LastGameDirectory);
+            key.SetValue(nameof(ExtraGameDirectories), ExtraGameDirectories);
+            key.SetValue(nameof(UILanguage), UILanguage);
+            key.SetValue(nameof(UITheme), UITheme);
+            key.SetValue(nameof(CodesSortingColumnIndex), CodesSortingColumnIndex);
+            key.SetValue(nameof(CodesUseTreeView), CodesUseTreeView ? 1 : 0);
+            key.SetValue(nameof(UpdateCodesOnLaunch), UpdateCodesOnLaunch ? 1 : 0);
+            key.SetValue(nameof(CheckManagerUpdates), CheckManagerUpdates ? 1 : 0);
+            key.SetValue(nameof(CheckLoaderUpdates), CheckLoaderUpdates ? 1 : 0);
+            key.SetValue(nameof(CheckModUpdates), CheckModUpdates ? 1 : 0);
+            key.SetValue(nameof(KeepOpen), KeepOpen ? 1 : 0);
+
+            key.Close();
+        }
+    }
+}
+Library "Logger" by "Hyper"
+{
+    #define PRINT_OBJECT(obj, format, caller) Logger.Utility(#obj + " = " + obj.ToString(format), caller);
+    #define PRINT_OBJECT(obj, format) Logger.Utility(#obj + " = " + obj.ToString(format));
+
+    public enum LogLevel
+    {
+        None,
+        Utility,
+        Warning,
+        Error
+    }
+
+    public void Log(object message, LogLevel level = LogLevel.None, string caller = "")
+    {
+        var oldColour = Console.ForegroundColor;
+
+        switch (level)
+        {
+            case LogLevel.Warning:
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                break;
+
+            case LogLevel.Error:
+                Console.ForegroundColor = ConsoleColor.Red;
+                break;
+
+            case LogLevel.Utility:
+                Console.ForegroundColor = ConsoleColor.Green;
+                break;
+        }
+
+        Console.WriteLine(string.IsNullOrEmpty(caller) ? message.ToString() : $"[{caller}] {message}");
+
+        Console.ForegroundColor = oldColour;
+    }
+
+    public void Utility(object message, string caller = "")
+    {
+        Log(message, LogLevel.Utility, caller);
+    }
+
+    public void Warning(object message, string caller = "")
+    {
+        Log(message, LogLevel.Warning, caller);
+    }
+
+    public void Error(object message, string caller = "")
+    {
+        Log(message, LogLevel.Error, caller);
+    }
+}
+Library "StringMapOperation" by "ĐeäTh" 
+{
+    /// <summary>
+    /// Computes a hash based on the input string.
+    /// </summary>
+    /// <param name="in_key">The string to hash.</param>
+    /// <returns>A string hash.</returns>
+    public uint ComputeHash(string in_key)
+    {
+        uint hash = in_key[0];
+
+        for (int i = 1; i < in_key.Length; i++)
+            hash = in_key[i] + 31 * hash;
+
+        return hash & 0x7FFFFFFF;
+    }
+}
+Library "MathHelpers" by "Hyper" 
+{
+    using System.Collections.Generic;
+
+    public T Clamp<T>(T in_value, T in_minValue, T in_maxValue) where T : IComparable<T>
+    {
+        if (in_value.CompareTo(in_minValue) < 0)
+        {
+            return in_minValue;
+        }
+        else if (in_value.CompareTo(in_maxValue) > 0)
+        {
+            return in_maxValue;
+        }
+        else
+        {
+            return in_value;
+        }
+    }
+
+    public T Clamp01<T>(T value) where T : IComparable<T>
+    {
+        if (value.CompareTo(default(T)) < 0)
+        {
+            return default(T);
+        }
+        else if (value.CompareTo((T)Convert.ChangeType(1, typeof(T))) > 0)
+        {
+            return (T)Convert.ChangeType(1, typeof(T));
+        }
+        else
+        {
+            return value;
+        }
+    }
+
+    public T FloatPercentToRange<T>(float in_value)
+    {
+        if (typeof(T) == typeof(sbyte))
+        {
+            return (T)(object)(byte)(in_value * (sbyte.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(byte))
+        {
+            return (T)(object)(byte)(in_value * (byte.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(short))
+        {
+            return (T)(object)(short)(in_value * (short.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(ushort))
+        {
+            return (T)(object)(ushort)(in_value * (ushort.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(int))
+        {
+            return (T)(object)(int)(in_value * (int.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(uint))
+        {
+            return (T)(object)(uint)(in_value * (uint.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(long))
+        {
+            return (T)(object)(long)(in_value * (long.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(ulong))
+        {
+            return (T)(object)(ulong)(in_value * (ulong.MaxValue * 1.0f));
+        }
+        
+        return default;
+    }
+    
+    public float Lerp(float in_start, float in_end, float in_time)
+    {
+        return in_start + (in_end - in_start) * in_time;
+    }
+
+    public static float InverseLerp(float a, float b, float value)
+    {
+        if (a == b)
+            return 0.0f;
+
+        return Clamp01<float>((value - a) / (b - a));
+    }
+
+    public static float ToDegrees(float in_radians)
+    {
+        return in_radians * (180.0f / (float)Math.PI);
+    }
+
+    public static float ToRadians(float in_degrees)
+    {
+        return in_degrees * ((float)Math.PI / 180.0f);
+    }
+
+    public static float WrapToRadians(float in_value)
+    {
+        float sign = in_value > 0.0f ? 1.0f : -1.0f;
+        float mod = (float)Math.Abs(in_value) % 6.28319f;
+
+        return mod * sign;
+    }
+}
+Library "Bitwise" by "Hyper" 
+{
+    public long Set(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
+    {
+        return in_base | (in_isOffsetBitIndex ? (1L << in_offset) : in_offset);
+    }
+
+    public long Reset(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
+    {
+        return in_base & (in_isOffsetBitIndex ? ~(1L << in_offset) : in_offset);
+    }
+
+    public bool Test(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
+    {
+        return (in_base & (in_isOffsetBitIndex ? (1L << in_offset) : in_offset)) != 0;
+    }
+}
+Library "INI" by "Hyper"
+{
+    using System.Collections.Generic;
+    using System.IO;
+    
+    public Dictionary<string, Dictionary<string, string>> Read(string path)
+    {
+        Dictionary<string, Dictionary<string, string>> result = new();
+
+        if (!File.Exists(path))
+            return result;
+
+        using (StreamReader reader = new StreamReader(path))
+        {
+            string section = string.Empty;
+            string line = string.Empty;
+
+            // Add root section.
+            result.Add(section, new Dictionary<string, string>());
+
+            while ((line = reader.ReadLine()) != null)
+            {
+                if (line.StartsWith("[") && line.EndsWith("]"))
+                {
+                    section = line.Substring(1, line.Length - 2);
+                    result.Add(section, new Dictionary<string, string>());
+                    continue;
+                }
+
+                if (line.StartsWith(";") || line.StartsWith("#"))
+                    continue;
+
+                int delimiterIndex = line.IndexOf('=');
+
+                if (delimiterIndex == -1)
+                    continue;
+
+                string key = line.Substring(0, delimiterIndex);
+                string value = line.Substring(delimiterIndex + 1);
+
+                if (value.StartsWith("\"") && value.EndsWith("\"") && value.Length > 1)
+                    value = value.Substring(1, value.Length - 2);
+                
+                result[section].Add(key, value);
+            }
+        }
+
+        return result;
+    }
+
+    public T Parse<T>(string in_value, T in_defaultValue)
+    {
+        T result = in_defaultValue;
+
+        if (typeof(T) == typeof(string))
+        {
+            result = (T)(object)in_value;
+        }
+        else if (typeof(T) == typeof(int))
+        {
+            if (int.TryParse(in_value, out int intValue))
+            {
+                result = (T)(object)intValue;
+            }
+        }
+        else if (typeof(T) == typeof(double))
+        {
+            if (double.TryParse(in_value, out double doubleValue))
+            {
+                result = (T)(object)doubleValue;
+            }
+        }
+        else if (typeof(T) == typeof(float))
+        {
+            if (float.TryParse(in_value, out float floatValue))
+            {
+                result = (T)(object)floatValue;
+            }
+        }
+
+        return result;
+    }
+
+    public T GetField<T>(Dictionary<string, Dictionary<string, string>> in_ini, string in_section, string in_key, T in_defaultValue)
+    {
+        if (!in_ini.ContainsKey(in_section))
+            return in_defaultValue;
+
+        if (!in_ini[in_section].ContainsKey(in_key))
+            return in_defaultValue;
+
+        return Parse<T>(in_ini[in_section][in_key], in_defaultValue);
+    }
+}
+Library "Helpers" by "Hyper & Sajid"
+{
+    #lib "StringMapOperation"
+
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
+    /// <summary>
+    /// Creates an `__stdcall` delegate with an unmanaged function pointer based on the provided function signature.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Library
+    /// {
+    ///     #include "Helpers" noemit
+    ///     
+    ///     UNMANAGED_FUNCTION(void, MyUnmanagedFunction, string in_str)
+    ///     {
+    ///         Console.WriteLine("Hello from native code!");
+    ///     }
+    ///     
+    ///     public void Init()
+    ///     {
+    ///         // This can be used for mid-asm hooks to call your own functions from the game code.
+    ///         var ptrToMyUnmanagedFunction = GET_UNMANAGED_FUNCTION_PTR(MyUnmanagedFunction);
+    ///     }
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define UNMANAGED_FUNCTION(in_returnType, in_functionName, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public static T##in_functionName _del##in_functionName = new T##in_functionName(in_functionName); \
+        public static long _fp##in_functionName = (long)System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate(_del##in_functionName); \
+        public static in_returnType in_functionName(__VA_ARGS__)
+
+    /// <summary>
+    /// Creates an `__stdcall` delegate based on the provided function signature.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #include "Helpers" noemit
+    ///     
+    ///     UNMANAGED_FUNCTION_DELEGATE(void, GetNameHash)
+    /// //
+    /// {
+    ///     // Calls the function at 0xDEADBEEF using this function signature.
+    ///     CREATE_UNMANAGED_FUNCTION_PTR(GetNameHash, 0xDEADBEEF)();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define UNMANAGED_FUNCTION_DELEGATE(in_returnType, in_functionName, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType in_functionName(__VA_ARGS__);
+
+    /// <summary>
+    /// Gets a pointer created by `UNMANAGED_FUNCTION` by name.
+    /// </summary>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <returns>A pointer to the unmanaged function.</returns>
+    #define GET_UNMANAGED_FUNCTION_PTR(in_functionName) _fp##in_functionName
+
+    /// <summary>
+    /// Creates a delegate using the signature created by `UNMANAGED_FUNCTION_DELEGATE`.
+    /// </summary>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="in_location">The location of the function.</param>
+    /// <returns>A delegate for the unmanaged function.</returns>
+    #define CREATE_UNMANAGED_FUNCTION_PTR(in_functionName, in_location) System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<in_functionName>((IntPtr)(in_location))
+
+    /// <summary>
+    /// Creates a function pointer to native code at the specified location.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #include "Helpers" noemit
+    ///     
+    ///     FUNCTION_PTR(void, GetNameHash, 0xDEADBEEF)
+    /// //
+    /// {
+    ///     GET_FUNCTION_PTR(GetNameHash)();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="in_location">The location of the function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define FUNCTION_PTR(in_returnType, in_functionName, in_location, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public static long _addr##in_functionName = in_location;
+    
+    /// <summary>
+    /// Creates a function pointer to a virtual function at an instance of a struct.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #include "Helpers" noemit
+    ///
+    ///     public struct MyStruct
+    ///     {
+    ///         VFUNCTION_PTR(MyStruct, 1, void, GetNameHash)
+    ///     }
+    /// //
+    /// {
+    ///     myInstanceOfMyStruct->GetNameHash()();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_thisType">The struct type this is nested inside.</param>
+    /// <param name="in_functionIndex">The index of this function in the virtual function table.</param>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="in_location">The location of the function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define VFUNCTION_PTR(in_thisType, in_functionIndex, in_returnType, in_functionName, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public T##in_functionName in_functionName() \
+        { \
+            fixed (in_thisType* pThis = &this) \
+                return System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<T##in_functionName>((IntPtr)(*(long*)((*(long*)pThis) + (1 * sizeof(nint)) * in_functionIndex))); \
+        }
+
+    /// <summary>
+    /// Gets a pointer created by `FUNCTION_PTR` by name.
+    /// </summary>
+    /// <param name="in_functionName">The name of the function pointer.</param>
+    /// <returns>A delegate to the native function.</returns>
+    #define GET_FUNCTION_PTR(in_functionName) System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<T##in_functionName>((IntPtr)_addr##in_functionName)
+
+    /// <summary>
+    /// Creates a fixed byte array with a special accessor for the real type.
+    /// </summary>
+    /// <param name="in_type">The real type of this array.</param>
+    /// <param name="in_name">The name of this array.</param>
+    /// <param name="in_size">The size of this array.</param>
+    #define UNMANAGED_FIXED_ARRAY(in_type, in_name, in_size) \
+        public fixed byte _##in_name[in_size]; \
+        public in_type* in_name \
+        { \
+            get \
+            { \
+                fixed (byte* p_##in_name = _##in_name) \
+                    return (in_type*)p_##in_name; \
+            } \
+        }
+
+    #define MAKE_GENERIC_API(in_functionName) \
+        public T* in_functionName<T>() where T : unmanaged \
+        { \
+            var name = Helpers.GetInternalName(typeof(T)); \
+\
+            return (T*)in_functionName(string.IsNullOrEmpty(name) ? typeof(T).Name : name); \
+        } \
+
+    #define MAKE_STATIC_GENERIC_API(in_functionName) \
+        public static T* in_functionName<T>() where T : unmanaged \
+        { \
+            var name = Helpers.GetInternalName(typeof(T)); \
+\
+            return (T*)in_functionName(string.IsNullOrEmpty(name) ? typeof(T).Name : name); \
+        } \
+
+    /// <summary>
+    /// Gets a pointer to an ANSI string.
+    /// </summary>
+    /// <param name="in_str">The ANSI string to get a pointer to.</param>
+    /// <returns>A pointer to the input ANSI string.</returns>
+    #define TO_STRING_PTR(in_str) (long)System.Runtime.InteropServices.Marshal.StringToHGlobalAnsi((##in_str##))
+
+    /// <summary>
+    /// Gets a pointer to a Unicode string.
+    /// </summary>
+    /// <param name="in_str">The Unicode string to get a pointer to.</param>
+    /// <returns>A pointer to the input Unicode string.</returns>
+    #define TO_WSTRING_PTR(in_str) (long)System.Runtime.InteropServices.Marshal.StringToHGlobalUni((##in_str##))
+
+    /// <summary>
+    /// Gets a pointer to a UTF-8 string.
+    /// </summary>
+    /// <param name="in_str">The UTF-8 string to get a pointer to.</param>
+    /// <returns>A pointer to the input UTF-8 string.</returns>
+    #define TO_U8STRING_PTR(in_str) (long)Helpers.StringToCoTaskMemUTF8((##in_str##))
+
+    /// <summary>
+    /// Gets an ANSI string from a pointer.
+    /// </summary>
+    /// <param name="in_ptr">The pointer to read an ANSI string from.</param>
+    /// <returns>An ANSI string.</returns>
+    #define FROM_STRING_PTR(in_ptr) System.Runtime.InteropServices.Marshal.PtrToStringAnsi((nint)(in_ptr))
+
+    /// <summary>
+    /// Gets a Unicode string from a pointer.
+    /// </summary>
+    /// <param name="in_ptr">The pointer to read a Unicode string from.</param>
+    /// <returns>A Unicode string.</returns>
+    #define FROM_WSTRING_PTR(in_ptr) System.Runtime.InteropServices.Marshal.PtrToStringUni((nint)(in_ptr))
+
+    /// <summary>
+    /// Gets a UTF-8 string from a pointer.
+    /// </summary>
+    /// <param name="in_ptr">The pointer to read a UTF-8 string from.</param>
+    /// <returns>A UTF-8 string.</returns>
+    #define FROM_U8STRING_PTR(in_ptr) Helpers.PtrToStringUTF8((nint)(in_ptr))
+
+
+    /// <summary>
+    /// Exposes a base field on the super class as a property
+    /// </summary>
+    /// <param name="TYPE">The field type.</param>
+    /// <param name="NAME">The field name.</param>
+    #define DEFINE_BASE_PROPERTY(TYPE, NAME) public TYPE NAME { get => Base.NAME; set => Base.NAME = value; }
+
+    #define DEFINE_INTERFACE_PROPERTY(INTERFACE, TYPE, NAME) TYPE INTERFACE.NAME { get => NAME; set => NAME = value; }
+
+    /// <summary>
+    /// A struct representation of a `const char*`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 8)]
+    public struct UnmanagedString
+    {
+        [FieldOffset(0)] public long pValue;
+        
+        public string Value
+        {
+            get
+            {
+                if (pValue == 0)
+                    return string.Empty;
+
+                return FROM_STRING_PTR(pValue);
+            }
+
+            set => pValue = TO_STRING_PTR(value);
+        }
+
+        public UnmanagedString(string in_value)
+        {
+            Value = in_value;
+        }
+
+        public static implicit operator UnmanagedString(string in_value)
+        {
+            return new UnmanagedString(in_value);
+        }
+
+        public static bool operator ==(UnmanagedString in_left, string in_right)
+        {
+            return in_left.Value == in_right;
+        }
+
+        public static bool operator !=(UnmanagedString in_left, string in_right)
+        {
+            return !(in_left == in_right);
+        }
+
+        public override bool Equals(object in_obj)
+        {
+            if (in_obj is string str)
+                return Value == str;
+            
+            return base.Equals(in_obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (int)StringMapOperation.ComputeHash(Value);
+        }
+
+        public override string ToString()
+        {
+            return Value;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
+    public sealed class InternalNameAttribute : Attribute
+    {
+        public string InternalName { get; }
+
+        public InternalNameAttribute(string in_internalName)
+        {
+            InternalName = in_internalName;
+        }
+    }
+
+    /// <summary>
+    /// Gets a list of indices where the input substring is found in a given string.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "Helpers"
+    /// //
+    /// {
+    ///     string myString = "lots of uses of the word of";
+    ///     
+    ///     var substrs = Helpers.GetSubstringIndices(myString, "of");
+    ///     
+    ///     // This list should contain three entries.
+    ///     // 0 - 5
+    ///     // 1 - 13
+    ///     // 2 - 25
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_str">The string to find substrings in.</param>
+    /// <param name="in_substr">The substring to search for.</param>
+    /// <returns>A list of indices where a substring appears in the given string.</returns>
+    public List<int> GetSubstringIndices(string in_str, string in_substr)
+    {
+        var indices = new List<int>();
+
+        int i = 0;
+        while ((i = in_str.IndexOf(in_substr, i)) != -1)
+        {
+            indices.Add(i);
+            i += in_substr.Length;
+        }
+
+        return indices;
+    }
+
+    /// <summary>
+    /// Gets a name from a InternalNameAttribute attached to a type.
+    /// </summary>
+    /// <param name="in_type">The type to get the attribute from.</param>
+    /// <returns>A string representing the internal name of the input type.</returns>
+    public static string GetInternalName(Type in_type)
+    {
+        var attr = (InternalNameAttribute)Attribute.GetCustomAttribute(in_type, typeof(InternalNameAttribute));
+
+        return attr == null ? string.Empty : attr.InternalName;
+    }
+
+    // https://github.com/scripthookvdotnet/scripthookvdotnet/blob/main/source/core/StringMarshal.cs
+    /*
+        Copyright (C) 2015 crosire, kagikn
+
+        This software is  provided 'as-is', without any express  or implied  warranty. In no event will the
+        authors be held liable for any damages arising from the use of this software.
+        Permission  is granted  to anyone  to use  this software  for  any  purpose,  including  commercial
+        applications, and to alter it and redistribute it freely, subject to the following restrictions:
+
+        1. The origin of this software must not be misrepresented; you must not claim that you  wrote the
+            original  software. If you use this  software  in a product, an  acknowledgment in the product
+            documentation would be appreciated but is not required.
+        2. Altered source versions must  be plainly  marked as such, and  must not be  misrepresented  as
+            being the original software.
+        3. This notice may not be removed or altered from any source distribution.
+
+        Changes;
+            - 29/08/2023
+                - (Hyper) renamed buffer
+                - (Hyper) renamed functions to use uppercase "UTF8"
+                - (Hyper) removed braces to compact code
+                - (Hyper) removed unsafe clauses (HMM always uses unsafe code)
+                - (Hyper) removed static modifiers
+
+            - 20/09/2023
+                - (Hyper) changed argument naming conventions
+                - (Hyper) changed IntPtr to nint
+                - (Hyper) changed string null check in StringToCoTaskMemUTF8 to use string.IsNullOrEmpty
+    */
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private static byte[] _bufferStringToCoTaskMemUTF8 = new byte[100];
+
+    /// <summary>
+    /// Gets a UTF-8 string from a memory location.
+    /// </summary>
+    /// <param name="in_ptr">The memory location where the UTF-8 string is.</param>
+    /// <returns>A UTF-8 string.</returns>
+    public string PtrToStringUTF8(nint in_ptr)
+    {
+        if (in_ptr == 0)
+            return string.Empty;
+
+        byte* data = (byte*)in_ptr;
+
+        int len = 0;
+        while (data[len] != 0)
+            ++len;
+
+        return PtrToStringUTF8(in_ptr, len);
+    }
+
+    /// <summary>
+    /// Gets a fixed-length UTF-8 string from a memory location.
+    /// </summary>
+    /// <param name="in_ptr">The memory location where the UTF-8 string is.</param>
+    /// <param name="in_length">The length of the UTF-8 string in memory.</param>
+    /// <returns>A UTF-8 string.</returns>
+    public string PtrToStringUTF8(nint in_ptr, int in_length)
+    {
+        if (in_length < 0)
+            throw new ArgumentException(null, nameof(in_length));
+
+        if (in_ptr == 0)
+            return null;
+
+        if (in_length == 0)
+            return string.Empty;
+
+        return Encoding.UTF8.GetString((byte*)in_ptr, in_length);
+    }
+
+    /// <summary>
+    /// Creates a pointer to a UTF-8 string.
+    /// </summary>
+    /// <param name="in_str">The UTF-8 string to get a pointer for.</param>
+    /// <returns>A pointer to the input UTF-8 string.</returns>
+    public nint StringToCoTaskMemUTF8(string in_str)
+    {
+        if (string.IsNullOrEmpty(in_str))
+            return 0;
+
+        int byteCountUtf8 = Encoding.UTF8.GetByteCount(in_str);
+        if (byteCountUtf8 > _bufferStringToCoTaskMemUTF8.Length)
+            _bufferStringToCoTaskMemUTF8 = new byte[byteCountUtf8 * 2];
+
+        Encoding.UTF8.GetBytes(in_str, 0, in_str.Length, _bufferStringToCoTaskMemUTF8, 0);
+
+        nint dest = Marshal.AllocCoTaskMem(byteCountUtf8 + 1);
+        if (dest == 0)
+            throw new OutOfMemoryException();
+
+        Marshal.Copy(_bufferStringToCoTaskMemUTF8, 0, dest, byteCountUtf8);
+        
+        ((byte*)dest)[byteCountUtf8] = 0;
+
+        return dest;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+}
+Library "RTTI" by "Hyper"
+{
+    #lib "Memory"
+
+    #define RESOLVE_RELATIVE_PTR(in_offset) (IntPtr.Size == 4 ? in_offset : (0x140000000 + in_offset))
+
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
+    [DllImport("imagehlp.dll", CallingConvention = CallingConvention.StdCall)]
+    private static extern uint UnDecorateSymbolName([MarshalAs(UnmanagedType.LPStr)] string name, byte[] outputString, uint maxStringLength, uint flags);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CompleteObjectLocator
+    {
+        public int Signature;
+        public int VftableOffset;
+        public int CtorDisplacementOffset;
+        public int pTypeDescriptor;
+        public int pClassHierarchyDescriptor;
+        public int pObjectBase;
+
+        public TypeDescriptor* GetTypeDescriptor()
+        {
+            return (TypeDescriptor*)RESOLVE_RELATIVE_PTR(pTypeDescriptor);
+        }
+
+        public ClassHierarchyDescriptor* GetClassHierarchyDescriptor()
+        {
+            return (ClassHierarchyDescriptor*)RESOLVE_RELATIVE_PTR(pClassHierarchyDescriptor);
+        }
+
+        public override string ToString()
+            => $"const {GetTypeDescriptor()->GetName()}::`RTTI Complete Object Locator'";
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct TypeDescriptor
+    {
+        public void* pTypeInfo;
+        public void* pRuntimeRef;
+        
+        public string GetName(bool in_isDemangled = true, IEnumerable<DemanglerFlags> in_demanglerFlags = null)
+        {
+            fixed (TypeDescriptor* pThis = &this)
+            {
+                var result = Marshal.PtrToStringAnsi((nint)((long)pThis + (IntPtr.Size == 4 ? 0x08 : 0x10)));
+
+                if (string.IsNullOrEmpty(result))
+                    return string.Empty;
+
+                result = result.TrimStart('.');
+                
+                if (in_isDemangled)
+                {
+                    if (in_demanglerFlags == null)
+                        in_demanglerFlags = new[] { RTTI.DemanglerFlags.NAME_ONLY };
+                    
+                    return Demangle(result, in_demanglerFlags);
+                }
+                else
+                {
+                    return result;
+                }
+            }
+        }
+
+        public string[] GetNamespaces()
+        {
+            return GetName().Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        public override string ToString()
+            => $"class {GetName()} `RTTI Type Descriptor'";
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ClassHierarchyDescriptor
+    {
+        public int Signature;
+        public int Attributes;
+        public int BaseClassCount;
+        public int pBaseClasses;
+
+        public BaseClassDescriptor* GetBaseClass(int in_index)
+        {
+            if (in_index > BaseClassCount)
+                return null;
+                
+            var ptr = *(int*)(RESOLVE_RELATIVE_PTR(pBaseClasses) + (in_index * 4));
+            
+            return (BaseClassDescriptor*)(RESOLVE_RELATIVE_PTR(ptr));
+        }
+
+        public override string ToString()
+            => $"{GetBaseClass(0)->GetTypeDescriptor()->GetName()}::`RTTI Class Hierarchy Descriptor'";
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct BaseClassDescriptor
+    {
+        public int pTypeDescriptor;
+        public int SubElementCount;
+        public int MemberDisplacement;
+        public int VftableDisplacement;
+        public int DisplacementWithinVftable;
+        public int BaseClassAttributes;
+        public int pClassHierarchyDescriptor;
+
+        public TypeDescriptor* GetTypeDescriptor()
+        {
+            return (TypeDescriptor*)RESOLVE_RELATIVE_PTR(pTypeDescriptor);
+        }
+
+        public ClassHierarchyDescriptor* GetClassHierarchyDescriptor()
+        {
+            return (ClassHierarchyDescriptor*)RESOLVE_RELATIVE_PTR(pClassHierarchyDescriptor);
+        }
+
+        public override string ToString()
+            => $"{GetTypeDescriptor()->GetName()}::`RTTI Base Class Descriptor at ({MemberDisplacement}, {VftableDisplacement}, {DisplacementWithinVftable}, {BaseClassAttributes})'";
+    }
+
+    public CompleteObjectLocator* GetRuntimeInfoFromVftable(void* in_pVftable)
+    {
+        if (in_pVftable == null)
+            return null;
+
+        var runtimeInfoOffset = *(long*)((long)in_pVftable - IntPtr.Size);
+
+        if (!Memory.IsAccessible((nint)runtimeInfoOffset))
+            return null;
+        
+        return (CompleteObjectLocator*)runtimeInfoOffset;
+    }
+
+    public CompleteObjectLocator* GetRuntimeInfo(void* in_pClass)
+    {
+        return GetRuntimeInfoFromVftable((void*)*(long*)in_pClass);
+    }
+
+    public string GetClassName(void* in_pClass, bool in_isDemangled = true, IEnumerable<DemanglerFlags> in_demanglerFlags = null)
+    {
+        var pRuntimeInfo = RTTI.GetRuntimeInfo(in_pClass);
+
+        if (pRuntimeInfo == null)
+            return string.Empty;
+
+        var pTypeDescriptor = pRuntimeInfo->GetTypeDescriptor();
+
+        if (pTypeDescriptor == null)
+            return string.Empty;
+            
+        return pTypeDescriptor->GetName(in_isDemangled, in_demanglerFlags);
+    }
+
+    public string[] GetClassNamespaces(void* in_pClass)
+    {
+        return GetClassName(in_pClass).Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    public string Demangle(string in_mangledName, IEnumerable<DemanglerFlags> in_flags)
+    {
+        var result = string.Empty;
+        var flags = 0U;
+        var demangledBytes = new byte[1024];
+
+        foreach (var flag in in_flags)
+            flags |= (uint)flag;
+
+        while (true)
+        {
+            var resultLength = UnDecorateSymbolName
+            (
+                in_mangledName,
+                demangledBytes,
+                (uint)demangledBytes.Length,
+                (uint)flags
+            );
+
+            if (resultLength == (demangledBytes.Length - 2))
+            {
+                demangledBytes = new byte[demangledBytes.Length * 2];
+                continue;
+            }
+            else
+            {
+                int count = Array.IndexOf<byte>(demangledBytes, 0, 0);
+
+                if (count < 0)
+                    count = demangledBytes.Length;
+
+                result = Encoding.ASCII.GetString(demangledBytes, 0, count);
+
+                break;
+            }
+        }
+
+        if (string.IsNullOrEmpty(result))
+            return result;
+        
+        var namespaces = result.Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (namespaces.Length > 0)
+        {
+            var last = namespaces[namespaces.Length - 1];
+            
+            if (last.StartsWith("AV"))
+                namespaces[namespaces.Length - 1] = last.Remove(0, 2);
+
+            result = string.Join("::", namespaces);
+        }
+
+        return result;
+    }
+
+    public enum DemanglerFlags
+    {
+        /// <summary>
+        /// Enable full undecoration.
+        /// </summary>
+        COMPLETE = 0x0000,
+
+        /// <summary>
+        /// Remove leading underscores from Microsoft keywords.
+        /// </summary>
+        NO_LEADING_UNDERSCORES = 0x0001,
+
+        /// <summary>
+        /// Disable expansion of Microsoft keywords.
+        /// </summary>
+        NO_MS_KEYWORDS = 0x0002,
+
+        /// <summary>
+        /// Disable expansion of return types for primary declarations.
+        /// </summary>
+        NO_FUNCTION_RETURNS = 0x0004,
+
+        /// <summary>
+        /// Disable expansion of the declaration model.
+        /// </summary>
+        NO_ALLOCATION_MODEL = 0x0008,
+
+        /// <summary>
+        /// Disable expansion of the declaration language specifier.
+        /// </summary>
+        NO_ALLOCATION_LANGUAGE = 0x0010,
+
+        /// <summary>
+        /// Disable expansion of Microsoft keywords on the this type for primary declaration.
+        /// </summary>
+        NO_MS_THISTYPE = 0x0020,
+
+        /// <summary>
+        /// Disable expansion of CodeView modifiers on the this type for primary declaration.
+        /// </summary>
+        NO_CV_THISTYPE = 0x0040,
+
+        /// <summary>
+        /// Disable all modifiers on the "this" type.
+        /// </summary>
+        NO_THISTYPE = 0x0060,
+
+        /// <summary>
+        /// Disable expansion of access specifiers for members.
+        /// </summary>
+        NO_ACCESS_SPECIFIERS = 0x0080,
+
+        /// <summary>
+        /// Disable expansion of throw-signatures for functions and pointers to functions.
+        /// </summary>
+        NO_THROW_SIGNATURES = 0x0100,
+
+        /// <summary>
+        /// Disable expansion of the static or virtual attribute of members.
+        /// </summary>
+        NO_MEMBER_TYPE = 0x0200,
+
+        /// <summary>
+        /// Disable expansion of the Microsoft model for user-defined type returns.
+        /// </summary>
+        NO_RETURN_UDT_MODEL = 0x0400,
+
+        /// <summary>
+        /// Undecorate 32-bit decorated names.
+        /// </summary>
+        P32_BIT_DECODE = 0x0800,
+
+        /// <summary>
+        /// Undecorate only the name for primary declaration. Returns [scope::]name. Does expand template parameters.
+        /// </summary>
+        NAME_ONLY = 0x1000,
+
+        /// <summary>
+        /// Do not undecorate function arguments.
+        /// </summary>
+        NO_ARGUMENTS = 0x2000,
+
+        /// <summary>
+        /// Do not undecorate special names, such as vtable, vcall, vector, metatype, and so on.
+        /// </summary>
+        NO_SPECIAL_SYMS = 0x4000
+    }
+}
+Library "Memory" by "Hyper & Sajid" 
+{
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Runtime.CompilerServices;
+    using System.Text;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr VirtualQuery(IntPtr lpAddress, ref MEMORY_BASIC_INFORMATION lpBuffer, UIntPtr dwLength);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MEMORY_BASIC_INFORMATION
+    {
+        public IntPtr BaseAddress;
+        public IntPtr AllocationBase;
+        public uint AllocationProtect;
+        public IntPtr RegionSize;
+        public uint State;
+        public uint Protect;
+        public uint Type;
+    }
+
+    private static Dictionary<nint, List<byte>> _preservedMemory = new();
+
+    public void Preserve(nint in_location, nint in_length, bool in_isPreservedOnce = true)
+    {
+        if (in_location == 0)
+            return;
+
+        if (in_isPreservedOnce)
+        {
+            if (_preservedMemory.ContainsKey(in_location))
+                return;
+        }
+        else
+        {
+            if (_preservedMemory.ContainsKey(in_location))
+                _preservedMemory.Remove(in_location);
+        }
+        
+        List<byte> buffer = new();
+        for (nint i = 0; i < in_length; i++)
+            buffer.Add(Read<byte>(in_location + i));
+
+        _preservedMemory.Add(in_location, buffer);
+    }
+
+    public void Preserve(long in_location, long in_length, bool in_isPreservedOnce = true)
+    {
+        Preserve((nint)in_location, (nint)in_length, in_isPreservedOnce);
+    }
+
+    public void Restore(nint in_location)
+    {
+        if (in_location == 0)
+            return;
+
+        if (!_preservedMemory.ContainsKey(in_location))
+            return;
+
+        nint i = 0;
+        foreach (byte b in _preservedMemory[in_location])
+        {
+            WriteProtected<byte>(in_location + i, b);
+            i++;
+        }
+    }
+
+    public void Restore(long in_location)
+    {
+        Restore((nint)in_location);
+    }
+
+    public uint GetPageProtectFlags(nint in_location)
+    {
+        var memInfo = new MEMORY_BASIC_INFORMATION();
+
+        if (VirtualQuery(in_location, ref memInfo, (UIntPtr)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION))) == IntPtr.Zero)
+            return 1;
+
+        return memInfo.Protect;
+    }
+
+    public bool IsAccessible(nint in_location)
+    {
+        // PAGE_NOACCESS
+        if ((GetPageProtectFlags(in_location) & 1) != 0)
+            return false;
+
+        return true;
+    }
+
+    public nint ReadCall(nint in_location)
+    {
+        if (in_location == 0)
+            return 0;
+
+        return in_location + Read<int>(in_location + 0x01) + 0x05;
+    }
+
+    public long ReadCall(long in_location)
+    {
+        return (long)ReadCall((nint)in_location);
+    }
+
+    public nint ReadEffectiveAddress(nint in_location)
+    {
+        if (in_location == 0)
+            return 0;
+
+        return in_location + Read<int>(in_location + 0x03) + 0x07;
+    }
+
+    public long ReadEffectiveAddress(long in_location)
+    {
+        return (long)ReadEffectiveAddress((nint)in_location);
+    }
+
+    public enum JumpType : sbyte
+    {
+        Unknown = -1,
+        ShortCond,
+        NearJmp,
+        NearCond,
+        LongJmp
+    }
+
+    public JumpType ReadJumpOpcode(nint in_location)
+    {
+        JumpType result = JumpType.Unknown;
+
+        if (in_location == 0)
+            return result;
+
+        byte opcode = Read<byte>(in_location);
+
+        if ((opcode & 0xF0) == 0x70)
+        {
+            result = JumpType.ShortCond;
+        }
+        else
+        {
+            switch (opcode)
+            {
+                case 0xE3:
+                case 0xEB:
+                    result = JumpType.ShortCond;
+                    break;
+
+                case 0xE9:
+                    result = JumpType.NearJmp;
+                    break;
+
+                case 0x0F:
+                    result = JumpType.NearCond;
+                    break;
+
+                case 0xFF:
+                    result = JumpType.LongJmp;
+                    break;
+            }
+        }
+
+        return result;
+    }
+
+    public JumpType ReadJumpOpcode(long in_location)
+    {
+        return ReadJumpOpcode((nint)in_location);
+    }
+
+    public nint ReadJump(nint in_location)
+    {
+        if (in_location == 0)
+            return 0;
+
+        switch (ReadJumpOpcode(in_location))
+        {
+            case JumpType.ShortCond:
+                return in_location + Read<byte>(in_location + 0x01) + 0x02;
+
+            case JumpType.NearJmp:
+                return in_location + Read<int>(in_location + 0x01) + 0x05;
+
+            case JumpType.NearCond:
+                return in_location + Read<int>(in_location + 0x02) + 0x06;
+
+            case JumpType.LongJmp:
+                return (nint)Read<long>(in_location + 0x06);
+        }
+
+        return 0;
+    }
+
+    public long ReadJump(long in_location)
+    {
+        return (long)ReadJump((nint)in_location);
+    }
+
+    public void WriteForceJump(nint in_location)
+    {
+        if (in_location == 0)
+            return;
+        
+        switch (ReadJumpOpcode(in_location))
+        {
+            case JumpType.ShortCond:
+                WriteProtected<byte>(in_location, 0xEB);
+                break;
+
+            case JumpType.NearCond:
+                WriteProtected<byte>(in_location, 0xE9);
+                WriteProtected<int>(in_location + 0x01, Read<int>(in_location + 0x02) + 0x01);
+                break;
+        }
+    }
+
+    public void WriteForceJump(long in_location)
+    {
+        WriteForceJump((nint)in_location);
+    }
+
+    public nint ReadThunk(nint in_location, nint in_offset = 0)
+    {
+        return ReadJump(ReadCall(in_location) + in_offset);
+    }
+
+    public long ReadThunk(long in_location, long in_offset = 0)
+    {
+        return (long)ReadThunk((nint)in_location, (nint)in_offset);
+    }
+
+    public void WriteString(long in_location, string in_str, Encoding in_encoding)
+    {
+        WriteProtected<byte>(in_location, in_encoding.GetBytes(in_str));
+    }
+
+    public void WriteString(long in_location, string in_str)
+    {
+        WriteString(in_location, in_str, Encoding.ASCII);
+    }
+
+    public void PrintMemory<T>(IntPtr in_address, int in_rowCount) where T : unmanaged
+    {
+        for (int i = 0; i < in_rowCount * 16; i += 16)
+        {
+            Console.Write($"{(in_address + i).ToInt64():X16}: ");
+
+            if (typeof(T) == typeof(byte) || typeof(T) == typeof(sbyte))
+            {
+                for (int j = 0; j < 16; j++)
+                    Console.Write($"{Read<T>(in_address + i + j):X2} ");
+            }
+            else if (typeof(T) == typeof(short) || typeof(T) == typeof(ushort))
+            {
+                for (int j = 0; j < 16; j += 2)
+                    Console.Write($"{Read<T>(in_address + i + j):X4} ");
+            }
+            else if (typeof(T) == typeof(int) || typeof(T) == typeof(uint))
+            {
+                for (int j = 0; j < 16; j += 4)
+                    Console.Write($"{Read<T>(in_address + i + j):X8} ");
+            }
+            else if (typeof(T) == typeof(long) || typeof(T) == typeof(ulong))
+            {
+                for (int j = 0; j < 16; j += 8)
+                    Console.Write($"{Read<T>(in_address + i + j):X16} ");
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                for (int j = 0; j < 16; j += 4)
+                    Console.Write($"{Read<float>(in_address + i + j)} ");
+            }
+            else if (typeof(T) == typeof(double))
+            {
+                for (int j = 0; j < 16; j += 8)
+                    Console.Write($"{Read<double>(in_address + i + j)} ");
+            }
+
+            Console.WriteLine();
+        }
+    }
+
+    public void PrintMemory(IntPtr in_address, int in_rowCount)
+    {
+        PrintMemory<byte>(in_address, in_rowCount);
+    }
+    
+    public struct Pointer<T> where T : unmanaged
+    {
+        public T* pData;
+
+        public Pointer(ref T data)
+        {
+            fixed(T* dataPtr = &data)
+            {
+                pData = dataPtr;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Pointer(T* in_pData)
+        {
+            pData = in_pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool IsValid()
+        {
+            return pData != null;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref T Ref()
+        {
+            return ref *pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T* Get()
+        {
+            return pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator bool(Pointer<T> self) => self.IsValid();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator Pointer<T>(T* data) => new(data);
+
+        public override string ToString() => $"0x{((long)pData):X}";
+    }
+}
+Patch "Enable Mouth Switching in 3D" in "Graphics" by "ĐeäTh" does "Enables the mouth switching to occur on the player anywhere instead of just in 2D sections."
+{
+    WriteNop(ASLR(0x008F263A), 2)
+}
+Patch "Disable Player Model Scaling" by "ĐeäTh" in "Graphics" does "Disables the scaling applied to Sonic's model during gameplay (includes a version of the 'Fix Pull Switch Grip Height' code in it, the use of the two together is unnecessary)." 
+// Nop out the app::GOCVisualTransformed::SetLocalScale(0.9f, 0.9f, 0.9f); in app::Player::RegisterBodyModel()
+WriteNop(ASLR(0x008FE046), 41);
+
+// Adjust Spin Model Spin Scale
+WriteProtected<float>(ASLR(0x00E03670), 1.5f * 1.0f / 0.9f, 1.5f * 1.0f / 0.9f, 1.5f * 1.0f / 0.9f)
+
+// Adjust Grip Position for Light Switches in Silent Forest Act 4
+WriteProtected<float>(ASLR(0x00DF2D14), -11.7f)
+
+
+Patch "Invisible Cloak Sonic" in "Graphics" by "Muzzarino" does "Turns Sonic's textures into a highly reflective material to blend in (requires the Jump or Spin button to be pressed to enable it)." 
+WriteNop(ASLR(0x0085C68E), 6)
+
+
+
+Patch "Higher Resolution Steam Profile Picture" in "Graphics" by "Skyth" does "Changes the Steam Profile Picture from the Medium (64px) size one to the Large (184px) one on the Main Menu."
+WriteProtected<byte>(ASLR(0x52528E), 0x90);
+
+WriteNop(ASLR(0x525376), 0x6);
+WriteAsmHook(@"
+mov esi, [ebp - 0x10]
+imul esi, [ebp - 0x1C]
+mov ebx, ecx
+shl ebx, 2
+add esi, ebx
+add esi, [ebp - 0x18]
+mov bl, [eax + 3]
+movzx ebx, bl
+", ASLR(0x525376), HookBehavior.Replace);
+Patch "Disable Super Music" in "Audio" by "Sajid" does "Prevents the Super Sonic theme from overwriting the stage music." 
+WriteNop(ASLR(0x0091ABAD), 6)
+
+
+
+Patch "Enable DLC Music in Battle Mode" in "Audio" by "ĐeäTh" does "Enables the level music of the DLC levels to play during the game's multiplayer mode." 
+WriteNop(ASLR(0x0095B570), 6)
+
+
+
+Patch "Disable Voice Option Completely" in "Audio" by "M&M" does "Prevents any sound considered as 'Voice' from playing, which in result prevents the music from lowering in volume. This is preferable over lowering the 'Voice' volume to 0 in the game's settings." 
+WriteNop(ASLR(0x004A3D82), 5)
+
+
+
+Patch "Disable Ring Loss" in "Cheats" by "Sajid" does "Disables the loss of rings upon being damaged by an enemy." 
+WriteNop(ASLR(0x00866900), 2)
+
+
+
+Patch "Always Replayable DLC Stages" in "Cheats" by "ĐeäTh" does "Disables the 100000 score requirement for unlocking the DLC levels once they are completed. Instead they will always stay on the world map." 
+WriteNop(ASLR(0x0090D2BC), 2);
+String code = $@"mov eax, {ASLR(0x0090D210)}
+push 0
+push 0
+push 0
+mov ecx, esi
+call eax
+mov eax, {ASLR(0x0090D210)}
+push 0
+push 0
+push 1
+mov ecx, esi
+call eax
+mov eax, {ASLR(0x0090D210)}
+push 0
+push 0
+push 2
+mov ecx, esi
+call eax
+mov ecx, [ebp+0xC]
+mov eax, [ecx]
+cmp eax, -4";
+WriteAsmHook
+(
+    ASLR(0x00911F2D),
+    HookBehavior.Replace,
+    code
+)
+
+WriteAsmHook
+(
+    ASLR(0x00912332),
+    HookBehavior.After,
+    "mov edi, 1"
+)
+WriteProtected<byte>(ASLR(0x00912338), 0x57);
+WriteProtected<byte>(ASLR(0x00912326), 0x6A, 0x00);
+WriteNop(ASLR(0x0094594F), 12);
+
+
+
+Patch "Disable Bomb Cart Instant Death" in "Cheats" by "ĐeäTh" 
+WriteNop(ASLR(0x007D82A2), 3);
+
+
+
+Patch "Infinite Bounce Attacks" in "Cheats" by "ĐeäTh" does "Disables the 3 times limit on the bounce attack." 
+WriteNop(ASLR(0x008CA177), 4);
+
+
+
+Patch "Fix Rigid Bodies Falling Through Collision" in "Fixes" by "ĐeäTh & Darío" does "Fixes enemies falling through the collision of the level occasionally." 
+static int p_updateBroadphaseAndResetCollisionInformationOfWarpedBody = (int)ASLR(0x00AED500);
+static int p_setLinearVelocity = (int)ASLR(0x00B88220);
+
+WriteAsmHook
+(
+    $@"mov eax, {p_setLinearVelocity}
+    call eax
+    mov edx, [esi+14h]
+    mov edx, [edx+10h]
+    push edx
+    mov eax, {p_updateBroadphaseAndResetCollisionInformationOfWarpedBody}
+    call eax
+    add esp, 4",
+    ASLR(0x004B974F), HookBehavior.Replace
+)
+
+
+
+Patch "Fix Pull Switch Grip Height" in "Fixes" by "ĐeäTh" does "Fixes the position of Sonic's grip compared to the light switches found in Silent Forest Act 4." 
+WriteProtected<float>(ASLR(0x00DF2D14), -10.5f)
+
+
+
+Patch "Fix Sideways Wall Jump" in "Fixes" by "Sajid" 
+WriteNop(ASLR(0x008C142C), 2)
+
+
+
+Patch "Disable Lock-On" in "Gameplay" by "Sajid" does "Disables the player's ability to Homing Attack or Kick enemies and objects. Enabled for a few bosses to prevent softlocks."
+WriteProtected<uint>(ASLR(0x00537D15), 0x5005)
+WriteProtected<uint>(ASLR(0x0053AFD1), 0x1003)
+WriteProtected<uint>(ASLR(0x005A8121), 0x1003)
+WriteProtected<uint>(ASLR(0x005C7A91), 0x1003)
+WriteProtected<uint>(ASLR(0x00587A71), 0x1003)
+WriteProtected<uint>(ASLR(0x0059889A), 0x5005)
+WriteProtected<uint>(ASLR(0x0058FDC1), 0x1003)
+Patch "Disable DLC Prizes" in "Gameplay" by "ĐeäTh" does "Disables the prizes given by the DLC levels (bomb wisp) upon completion." 
+WriteNop(ASLR(0x0094595B), 12);
+WriteNop(ASLR(0x00945630), 5);
+
+
+
+Patch "Enable Stage Retry Option" in "UI" by "Sajid" does "Enables the Retry option from the game's time attack mode in normal play." 
+WriteAsmHook
+(
+    ASLR(0x005169E3),
+    HookBehavior.After,
+    "mov DWORD PTR [ebp+8], 1"
+)
+
+
+
+Patch "Disable Wisp Hints" in "UI" by "Sajid" 
+WriteNop(ASLR(0x0091AAF8), 6)
+
+
+
+Patch "Traditional Countdown Timer" in "UI" by "ĐeäTh" does "Displays the timer in the typical 00:00.00 format instead of the 000 format found in the game. The timer's functionality is not changed." 
+// Allow bigger time constraints to be displayed on HUD
+WriteProtected<int>(ASLR(0x00501CC5), 3599);
+WriteProtected<int>(ASLR(0x00501CCC), 3599);
+
+// Lower Count Down Timer flashing red to 1 minute from 99 seconds
+WriteProtected<byte>(ASLR(0x00501D31), 59);
+
+// Remove check to only update the HUD if the seconds value changed
+WriteNop(ASLR(0x00501CDE), 2);
+
+static int ms_fpSnprintf = (int)ASLR(0x004047E0);
+static int ms_pRetAddressCountDownUpdate = (int)ASLR(0x00501CF7);
+
+static int ms_milliseconds = 0;
+static string ms_format = "%02d:%02d.%02d";
+static IntPtr ms_pFormat = System.Runtime.InteropServices.Marshal.StringToHGlobalAnsi(ms_format);
+
+fixed(int* millisecondsPtr = &ms_milliseconds)
+{
+    // Calculate Milliseconds
+    WriteAsmHook
+    (
+        $@"mov eax, [ebp - 0x3C]
+        mov edx, 0
+        mov ecx, 100
+        div ecx
+        sub ecx, edx
+        cmp ecx, 100
+        jne ignoreFallback
+        mov ecx, 00
+
+        ignoreFallback:
+        mov [{(uint)millisecondsPtr}], ecx
+        mov ecx, [ebx + 128h]",
+        ASLR(0x0091685E), HookBehavior.Replace
+    )
+
+    // Change Display String for Count Down Timer
+    WriteAsmHook
+    (
+        $@"mov eax, [{(uint)millisecondsPtr}]
+        push eax
+        mov edx, 0
+        mov eax, edi
+        mov ecx, 0x3C
+        div ecx
+        push edx
+        push eax
+        push {(uint)ms_pFormat}
+        lea eax, [ebp - 44h]
+        push 40h
+        push eax
+        mov [esi + 1B0h], edi
+        mov eax, {ms_fpSnprintf}
+        call eax
+        add esp, 8
+        mov eax, {ms_pRetAddressCountDownUpdate}
+        jmp eax",
+        ASLR(0x00501CE0), HookBehavior.Replace
+    )
+}
+
+
+
+Code "Adjust Aspect Ratio to Resolution" in "Graphics/Display" by "Muzzarino" does "Dynamically adjusts the aspect ratio to match the game resolution (recommended for ultrawide)." 
+var ptr = GetPointer(ASLR(0x00FD3CA8))
+WriteProtected<float>(ASLR(0x00D56D30), ptr != 0 ? (float)(Read<uint>(ptr + 0xF8)) / (float)(Read<uint>(ptr + 0xFC)) : 16f / 9f)
+WriteProtected<double>(ASLR(0x00EB2E00), (Double)Read<float>(ASLR(0x00D56D30)))
+WriteProtected<float>(ASLR(0x00FB6AF0), 2f * (float)Math.Atan((float)Math.Tan(60f * 0.00872664625997164788461845384244) / (Read<float>(ASLR(0x00D56D30)) < 16f / 9f ? Read<float>(ASLR(0x00D56D30)) : 16f / 9f) * (16f / 9f)))
+WriteProtected<float>(ASLR(0x00D6F364), 720f / (Read<float>(ASLR(0x00D56D30)) < 16f / 9f ? Read<float>(ASLR(0x00D56D30)) : 16f / 9f) * (16f / 9f)))
+WriteProtected<float>(ASLR(0x00D6F360), Read<float>(ASLR(0x00D6F364)) * Read<float>(ASLR(0x00D56D30)))
+
+string code = $@"mulss xmm0,[{ASLR(0x00E737E4)}]
+cvtps2pd xmm0,xmm0
+pushad
+mov eax,{ASLR(0x00C76D12)}
+call eax
+mov eax,{ASLR(0x00C64010)}
+call eax
+cvtsi2sd xmm2,eax
+cvtsi2sd xmm1,edx
+popad
+divsd xmm2,xmm1
+movss xmm1,[esp+0x4]
+cvtps2pd xmm1,xmm1
+minsd xmm1,xmm2
+divsd xmm1,xmm2
+divsd xmm0,xmm1
+sub esp,0x8
+movsd [esp],xmm0
+fld qword ptr [esp]
+add esp,0x8
+fld1
+fpatan
+fdiv dword ptr [{ASLR(0x00E737E4)}]
+fstp dword ptr [esp]
+mov eax,{ASLR(0x008FF5B0)}
+call eax"
+
+string code2 = $@"mulss xmm0,[{ASLR(0x00E737E4)}]
+cvtps2pd xmm0,xmm0
+pushad
+mov eax,{ASLR(0x00C76D12)}
+call eax
+mov eax,{ASLR(0x00C64010)}
+call eax
+cvtsi2sd xmm2,eax
+cvtsi2sd xmm1,edx
+popad
+divsd xmm2,xmm1
+movss xmm1,[esp+0x8]
+cvtps2pd xmm1,xmm1
+minsd xmm1,xmm2
+divsd xmm1,xmm2
+divsd xmm0,xmm1
+sub esp,0x8
+movsd [esp],xmm0
+fld qword ptr [esp]
+add esp,0x8
+fld1
+fpatan
+fdiv dword ptr [{ASLR(0x00E737E4)}]
+fstp dword ptr [esp+0x4]
+mov eax,{ASLR(0x00967820)}
+call eax"
+
+string code3 = $@"mov eax,[{ASLR(0x00FD3CA8)}]
+test eax,eax
+je NoVPaddress
+mov edx,[eax+0xFC]
+mov eax,[eax+0xF8]
+NoVPaddress:"
+
+string code4 = $@"cvtdq2ps xmm0,xmm0
+cvtdq2ps xmm1,xmm1
+sub esp,0x8
+movss [esp],xmm0
+movss [esp+0x4],xmm1
+mov eax,[{ASLR(0x00FD3CA8)}]
+movd xmm0,[eax+0xF8]
+movd xmm1,[eax+0xFC]
+mov eax,{ASLR(0x00C64010)}
+call eax
+sar eax,1
+sar edx,1
+cvtdq2ps xmm0,xmm0
+cvtdq2ps xmm1,xmm1
+divss xmm0,xmm1
+movss xmm4,xmm0
+movss xmm1,[esp]
+divss xmm1,[esp+0x4]
+minss xmm0,xmm1
+divss xmm0,xmm1
+divss xmm1,xmm4
+mulss xmm1,xmm0
+cvtsi2ss xmm4,eax
+movss xmm5,xmm4
+divss xmm4,xmm1
+subss xmm4,xmm5
+addss xmm2,xmm4
+cvtsi2ss xmm4,edx
+movss xmm5,xmm4
+divss xmm4,xmm0
+subss xmm4,xmm5
+addss xmm3,xmm4
+movss xmm4,xmm0
+movss xmm5,xmm1
+movss xmm0,[esp]
+movss xmm1,[esp+0x4]
+mulss xmm0,xmm5
+mulss xmm1,xmm4
+add esp,0x8
+cvtps2dq xmm0,xmm0
+cvtps2dq xmm1,xmm1"
+
+string code5 = $@"mov eax,{ASLR(0x00C64010)}
+call eax
+cvtsi2ss xmm3,eax
+cvtsi2ss xmm2,edx
+divss xmm3,xmm2"
+
+string code6 = $@"mov eax,{ASLR(0x00C76F67)}
+call eax
+movss xmm1,xmm0
+divss xmm0,[{ASLR(0x00D56D30)}]
+divss xmm0,[{ASLR(0x00D56D2C)}]
+maxss xmm0,xmm1"
+
+string code7 = $@"movss xmm0,xmm5
+divss xmm0,[edi+0x1B4]
+minss xmm0,[{ASLR(0x00D56D30)}]
+divss xmm0,[{ASLR(0x00D56D30)}]
+mulss xmm5,xmm0"
+
+string code8 = $@"movss xmm4,[edi+0x1B0]
+divss xmm4,[edi+0x1B4]
+maxss xmm4,[{ASLR(0x00D56D30)}]
+divss xmm4,[{ASLR(0x00D56D30)}]
+divss xmm7,xmm4"
+
+string code9 = $@"movss xmm6,[{ASLR(0x00D56D30)}]
+divss xmm0,[{ASLR(0x00D56D2C)}]
+minss xmm6,xmm0
+divss xmm6,xmm0
+movss xmm0,xmm6"
+
+string code10 = $@"movss xmm5,[{ASLR(0x00E72E24)}]
+divss xmm5,[{ASLR(0x00D56D2C)}]
+minss xmm5,[{ASLR(0x00D56D30)}]
+divss xmm2,xmm5
+mulss xmm2,[{ASLR(0x00D56D30)}]"
+
+string code11 = $@"movss xmm5,[{ASLR(0x00E72E24)}]
+divss xmm5,[{ASLR(0x00D56D2C)}]
+maxss xmm5,[{ASLR(0x00D56D30)}]
+mulss xmm1,xmm5
+divss xmm1,[{ASLR(0x00D56D30)}]"
+
+if (Read<byte>(ASLR(0x004178AB)) == 0xE8)
+{
+    WriteAsmHook(code, ASLR(0x004178AB), HookBehavior.Replace)
+    WriteAsmHook(code, ASLR(0x00419601), HookBehavior.Replace)
+    WriteAsmHook(code2, ASLR(0x0041E9D0), HookBehavior.Replace)
+    WriteAsmHook(code2, ASLR(0x0042589C), HookBehavior.Replace)
+    WriteAsmHook(code2, ASLR(0x004272F5), HookBehavior.Replace)
+    WriteAsmHook(code2, ASLR(0x00427DF0), HookBehavior.Replace)
+    WriteAsmHook(code2, ASLR(0x00428878), HookBehavior.Replace)
+    WriteAsmHook(code2, ASLR(0x004292FE), HookBehavior.Replace)
+    WriteAsmHook(code2, ASLR(0x00437490), HookBehavior.Replace)
+    WriteAsmHook(code2, ASLR(0x0043CB11), HookBehavior.Replace)
+    WriteAsmHook(code2, ASLR(0x00530664), HookBehavior.Replace)
+    WriteAsmHook(code3, ASLR(0x005305F9), HookBehavior.Replace)
+    WriteAsmHook(code4, ASLR(0x004A824C), HookBehavior.Before)
+    WriteAsmHook(code5, ASLR(0x00401737), HookBehavior.Replace)
+    WriteAsmHook(code6, ASLR(0x0043D41E), HookBehavior.Replace)
+    WriteAsmHook(code6, ASLR(0x00441D41), HookBehavior.Replace)
+    WriteAsmHook(code7, ASLR(0x0049C380), HookBehavior.Before)
+    WriteAsmHook(code8, ASLR(0x0049C3BA), HookBehavior.Before)
+    WriteAsmHook(code9, ASLR(0x0041EA22), HookBehavior.Before)
+    WriteAsmHook(code10, ASLR(0x008FF420), HookBehavior.Before)
+    WriteAsmHook(code11, ASLR(0x008FF456), HookBehavior.Before)
+}
+
+
+
+Patch "Fix Parkour Trail Model" in "Fixes/Graphics" by "ĐeäTh & Sajid" does "Fixes hidden meshes (such as the secondary mouth mesh) being visible from the player's after image effect created by wallrunning."
+{
+WriteAsmHook
+(
+    $@"
+        mov ecx, [esi+0x320]
+        mov ecx, [ecx]
+        mov eax, edi
+        push ecx
+        push eax
+        call copyVisibilityFlags
+        add esp, 8
+        jmp originalReplace
+
+    copyVisibilityFlags:
+        push    ebp
+        mov     ebp, esp
+        push    ebx
+        mov     ebx, [ebp+0xC]
+        push    edi
+        xor     edi, edi
+        mov     ecx, [ebx+0xE0]
+        mov     eax, [ecx+0x58]
+        cmp     [eax+4], edi
+        jbe     loc_10072B3C
+        push    esi
+        xor     esi, esi
+        nop     dword ptr [eax+eax]
+
+    loc_10072B00:
+        mov     eax, [ecx+0x58]
+        mov     ecx, [eax]
+        lea     eax, [ecx+esi]
+        neg     ecx
+        sbb     ecx, ecx
+        and     ecx, eax
+        mov     eax, [ecx]
+        mov     ecx, [ebp+8]
+        mov     ecx, [ecx+0xE0]
+        mov     ecx, [ecx+0x58]
+        mov     edx, [ecx]
+        lea     ecx, [edx+esi]
+        neg     edx
+        lea     esi, [esi+0x5C]
+        sbb     edx, edx
+        inc     edi
+        and     edx, ecx
+        mov     [edx], eax
+        mov     ecx, [ebx+0xE0]
+        mov     eax, [ecx+0x58]
+        cmp     edi, [eax+4]
+        jb      loc_10072B00
+        pop     esi
+
+    loc_10072B3C:
+        pop     edi
+        pop     ebx
+        pop     ebp
+        ret
+
+    originalReplace:
+        pop edi
+        mov dword ptr [esi+0x320]
+    ",
+    ASLR(0x004CB4B6), HookBehavior.Replace
+)
+}
+Patch "Fix Super Sonic Mouth Switching" in "Fixes/Graphics" by "ĐeäTh & Sajid" does
+/*
+Fixes the double mouth showing up on Super Sonic's Model instead of the mouth swapping working in real time.
+*/
+// The following is copied assembly from a compiled C++ DLL code.
+// The full C++ source code for the code for this code can be found on:
+// https://github.com/DeaTh-G/slw-super-sonic-fix 
+
+{
+MemoryProvider.SetAssemblerSymbol("aChrSupersonic", (uint)System.Runtime.InteropServices.Marshal.StringToHGlobalAnsi("chr_supersonic").ToInt32());
+MemoryProvider.SetAssemblerSymbol("aSonicMouthL", (uint)System.Runtime.InteropServices.Marshal.StringToHGlobalAnsi("Sonic_Mouth_L").ToInt32());
+MemoryProvider.SetAssemblerSymbol("buffer", (uint)System.Runtime.InteropServices.Marshal.AllocHGlobal(2097152).ToInt32());
+MemoryProvider.SetAssemblerSymbol("pos", (uint)System.Runtime.InteropServices.Marshal.AllocHGlobal(4).ToInt32());
+MemoryProvider.SetAssemblerSymbol("returnAddress", (uint)ASLR(0x00BFDC16));
+
+WriteAsmHook
+(
+    $@"
+        push ebp
+        mov ebp, esp
+        sub esp, 0x18
+        push ebx
+        push esi
+        push edi
+        mov edi, ecx
+        mov dword ptr ss:[ebp-0x18], edx
+        mov ecx, dword ptr ss:[ebp+8]
+        mov esi, aChrSupersonic
+        mov dword ptr ss:[ebp-0xC], edi
+        mov eax, ecx
+        cmp byte ptr ds:[ecx], 0
+        je loc_10003A87
+
+    loc_10003A70:
+        mov cl, byte ptr ds:[esi]
+        test cl, cl
+        je loc_10003A87
+        mov dl, byte ptr ds:[eax]
+        cmp dl, cl
+        jne loc_10003B70
+        inc eax
+        inc esi
+        cmp byte ptr ds:[eax], 0
+        jne loc_10003A70
+
+    loc_10003A87:
+        cmp byte ptr ds:[eax], 0
+        jne loc_10003F6D
+        cmp byte ptr ds:[esi], 0
+
+    loc_10003A93:
+        jne loc_10003F6D
+        mov ebx, dword ptr ds:[edi]
+        mov ecx, dword ptr ds:[ebx]
+        bswap ecx
+        test ecx, ecx
+        jns loc_10003F6D
+        and ecx, 0x7FFFFFFF
+        mov dword ptr ss:[ebp-4], 0
+        mov dword ptr ss:[ebp-0x10], ecx
+        mov edx, 0
+        jbe loc_10003B25
+        cmp ecx, 8
+        jb loc_10003B25
+        mov eax, ecx
+        xorps xmm1, xmm1
+        and eax, 0xFFFFFFF8
+        xorps xmm2, xmm2
+        xchg ax, ax
+
+    loc_10003AD0:
+        movd xmm0, dword ptr ds:[ebx+edx]
+        punpcklbw xmm0, xmm0
+        punpcklwd xmm0, xmm0
+        psrad xmm0, 0x18
+        paddd xmm1, xmm0
+        movd xmm0, dword ptr ds:[ebx+edx+4]
+        punpcklbw xmm0, xmm0
+        add edx, 8
+        punpcklwd xmm0, xmm0
+        psrad xmm0, 0x18
+        paddd xmm2, xmm0
+        cmp edx, eax
+        jb loc_10003AD0
+        paddd xmm1, xmm2
+        movaps xmm0, xmm1
+        psrldq xmm0, 8
+        paddd xmm1, xmm0
+        movups xmm0, xmm1
+        psrldq xmm0, 4
+        paddd xmm1, xmm0
+        movd dword ptr ss:[ebp-4], xmm1
+
+    loc_10003B25:
+        xor esi, esi
+        xor edi, edi
+        cmp edx, ecx
+        jae loc_10003B87
+        mov eax, ecx
+        sub eax, edx
+        cmp eax, 2
+        jb loc_10003B60
+        lea eax, dword ptr ds:[ecx-1]
+        mov ecx, eax
+        nop dword ptr ds:[eax+eax], eax
+
+    loc_10003B40:
+        movsx eax, byte ptr ds:[ebx+edx]
+        add esi, eax
+        movsx eax, byte ptr ds:[ebx+edx+1]
+        add edx, 2
+        add edi, eax
+        cmp edx, ecx
+        jb loc_10003B40
+        mov ecx, dword ptr ss:[ebp-0x10]
+        cmp edx, ecx
+        jae loc_10003B7D
+        nop dword ptr ds:[eax+eax], eax
+
+    loc_10003B60:
+        movsx eax, byte ptr ds:[ebx+edx]
+        mov edx, dword ptr ss:[ebp-4]
+        add edx, eax
+        lea eax, dword ptr ds:[edi+esi]
+        add edx, eax
+        jmp loc_10003B8A
+
+    loc_10003B70:
+        movsx eax, cl
+        movsx ecx, dl
+        sub ecx, eax
+        jmp loc_10003A93
+
+    loc_10003B7D:
+        mov edx, dword ptr ss:[ebp-4]
+        lea eax, dword ptr ds:[edi+esi]
+        add edx, eax
+        jmp loc_10003B8A
+
+    loc_10003B87:
+        mov edx, dword ptr ss:[ebp-4]
+
+    loc_10003B8A:
+        cmp edx, 0x3E7A1D
+        jne loc_10003F6A
+        mov esi, dword ptr ss:[ebp-0xC]
+        mov ebx, buffer
+        mov dword ptr ds:[pos], ecx
+        mov esi, dword ptr ds:[esi]
+        cmp ebx, esi
+        jae loc_10003BC3
+        test ecx, ecx
+        je loc_10003BDE
+        mov edx, ebx
+        sub esi, ebx
+
+    loc_10003BB3:
+        mov al, byte ptr ds:[esi+edx]
+        lea edx, dword ptr ds:[edx+1]
+        mov byte ptr ds:[edx-1], al
+        sub ecx, 1
+        jne loc_10003BB3
+        jmp loc_10003BDE
+
+    loc_10003BC3:
+        jbe loc_10003BDE
+        test ecx, ecx
+        je loc_10003BDE
+        lea edx, dword ptr ds:[ebx-1]
+        add edx, ecx
+        sub esi, ebx
+
+    loc_10003BD0:
+        mov al, byte ptr ds:[edx+esi]
+        lea edx, dword ptr ds:[edx-1]
+        mov byte ptr ds:[edx+1], al
+        sub ecx, 1
+        jne loc_10003BD0
+
+    loc_10003BDE:
+        mov esi, dword ptr ds:[ebx+8]
+        lea edi, dword ptr ds:[ebx+0x10]
+        mov eax, dword ptr ds:[ebx+0xC]
+        xor edx, edx
+        bswap esi
+        bswap eax
+        add esi, ebx
+        test eax, eax
+        je loc_10003C0C
+
+    loc_10003BF3:
+        mov ecx, dword ptr ds:[esi+edx*4]
+        inc edx
+        bswap ecx
+        mov eax, dword ptr ds:[ecx+edi]
+        bswap eax
+        add eax, edi
+        mov dword ptr ds:[ecx+edi], eax
+        mov eax, dword ptr ds:[ebx+0xC]
+        bswap eax
+        cmp edx, eax
+        jb loc_10003BF3
+
+    loc_10003C0C:
+        add dword ptr ds:[ebx+0x30], 0x1000000
+        mov eax, dword ptr ds:[pos]
+        mov edx, dword ptr ds:[ebx+0x30]
+        bswap edx
+        lea ecx, dword ptr ds:[eax+3]
+        and ecx, 0xFFFFFFFC
+        lea eax, dword ptr ds:[eax+edx*4]
+        mov dword ptr ds:[pos], eax
+        mov eax, dword ptr ds:[ebx+0x30]
+        lea edx, dword ptr ds:[ecx+ebx]
+        xor ecx, ecx
+        bswap eax
+        sub eax, 1
+        je loc_10003C54
+        nop word ptr ds:[eax+eax], ax
+
+    loc_10003C40:
+        mov eax, dword ptr ds:[ebx+0x34]
+        mov eax, dword ptr ds:[eax+ecx*4]
+        mov dword ptr ds:[edx+ecx*4], eax
+        inc ecx
+        mov eax, dword ptr ds:[ebx+0x30]
+        bswap eax
+        dec eax
+        cmp ecx, eax
+        jb loc_10003C40
+
+    loc_10003C54:
+        mov dword ptr ds:[ebx+0x34], edx
+        mov edx, dword ptr ds:[pos]
+        lea ecx, dword ptr ds:[edx+0xB]
+        and ecx, 0xFFFFFFFC
+        lea edi, dword ptr ds:[edx+3]
+        and edi, 0xFFFFFFFC
+        lea eax, dword ptr ds:[edx+0x3D]
+        add edi, ebx
+        mov dword ptr ds:[pos], eax
+        lea edx, dword ptr ds:[ecx+ebx]
+        test edx, edx
+        je loc_10003CB8
+        lea eax, dword ptr ds:[edx+0x28]
+        mov dword ptr ds:[edx], 0x2000000
+        mov esi, aSonicMouthL
+        mov dword ptr ds:[edx+4], edi
+        mov dword ptr ds:[edx+8], 0
+        mov cl, 0x53
+        mov dword ptr ds:[edx+0x10], 0
+        sub esi, eax
+        mov dword ptr ds:[edx+0x18], 0
+
+    loc_10003CA4:
+        mov byte ptr ds:[eax], cl
+        lea eax, dword ptr ds:[eax+1]
+        mov cl, byte ptr ds:[eax+esi]
+        test cl, cl
+        jne loc_10003CA4
+        mov byte ptr ds:[eax], cl
+        mov eax, dword ptr ds:[ebx+0x34]
+        mov dword ptr ds:[eax+8], edx
+
+    loc_10003CB8:
+        test edi, edi
+        je loc_10003D39
+        mov eax, dword ptr ds:[ebx+0x34]
+        mov eax, dword ptr ds:[eax]
+        mov eax, dword ptr ds:[eax+4]
+        mov eax, dword ptr ds:[eax+0xC]
+        mov dword ptr ds:[edi], eax
+        mov eax, dword ptr ds:[ebx+0x34]
+        mov eax, dword ptr ds:[eax]
+        mov eax, dword ptr ds:[eax+4]
+        lea ecx, dword ptr ds:[eax+0xC]
+        lea edx, dword ptr ds:[eax+0x10]
+        cmp ecx, edx
+        jae loc_10003D12
+        lea eax, dword ptr ds:[edx+0x1F]
+        lea esi, dword ptr ds:[ecx+0x1F]
+        cmp ecx, eax
+        ja loc_10003D02
+        cmp esi, edx
+        jb loc_10003D02
+        mov edx, 0x20
+
+    loc_10003CF2:
+        mov al, byte ptr ds:[ecx+4]
+        lea ecx, dword ptr ds:[ecx+1]
+        mov byte ptr ds:[ecx-1], al
+        sub edx, 1
+        jne loc_10003CF2
+        jmp loc_10003D2E
+
+    loc_10003D02:
+        movups xmm0, xmmword ptr ds:[edx]
+        movups xmmword ptr ds:[ecx], xmm0
+        movups xmm0, xmmword ptr ds:[edx+0x10]
+        movups xmmword ptr ds:[ecx+0x10], xmm0
+        jmp loc_10003D2E
+
+    loc_10003D12:
+        jbe loc_10003D2E
+        add ecx, 0x1F
+        mov edx, 0x20
+        nop dword ptr ds:[eax], eax
+
+    loc_10003D20:
+        mov al, byte ptr ds:[ecx+4]
+        lea ecx, dword ptr ds:[ecx-1]
+        mov byte ptr ds:[ecx+1], al
+        sub edx, 1
+        jne loc_10003D20
+
+    loc_10003D2E:
+        mov eax, dword ptr ds:[ebx+0x34]
+        mov eax, dword ptr ds:[eax]
+        add dword ptr ds:[eax], 0xFF000000
+
+    loc_10003D39:
+        mov esi, dword ptr ds:[pos]
+        add dword ptr ds:[pos], 0x2C
+        add esi, 3
+        and esi, 0xFFFFFFFC
+        add esi, ebx
+        mov dword ptr ss:[ebp-0x10], esi
+        je loc_10003D9C
+        mov eax, dword ptr ds:[ebx+0x34]
+        mov eax, dword ptr ds:[eax]
+        mov eax, dword ptr ds:[eax+4]
+        mov eax, dword ptr ds:[eax]
+        mov eax, dword ptr ds:[eax]
+        mov dword ptr ds:[esi], eax
+        mov eax, dword ptr ds:[ebx+0x34]
+        mov eax, dword ptr ds:[eax]
+        mov eax, dword ptr ds:[eax+4]
+        mov eax, dword ptr ds:[eax]
+        mov eax, dword ptr ds:[eax+0x18]
+        mov dword ptr ds:[esi+0x18], eax
+        mov eax, dword ptr ds:[ebx+0x34]
+        mov eax, dword ptr ds:[eax]
+        mov eax, dword ptr ds:[eax+4]
+        mov eax, dword ptr ds:[eax]
+        mov ecx, dword ptr ds:[eax+0x24]
+        mov eax, dword ptr ds:[eax+0x28]
+        mov dword ptr ds:[esi+0x24], ecx
+        mov dword ptr ds:[esi+0x28], eax
+        mov dword ptr ds:[esi+0xC], 0x4C000000
+        mov dword ptr ds:[esi+0x10], 0x68000000
+        test edi, edi
+        je loc_10003D9C
+        mov dword ptr ds:[edi+4], esi
+
+    loc_10003D9C:
+        mov eax, dword ptr ds:[pos]
+        lea edx, dword ptr ds:[eax+0x118]
+        lea edi, dword ptr ds:[eax+ebx]
+        mov dword ptr ds:[pos], edx
+        mov ecx, dword ptr ds:[esi+0x10]
+        add eax, 3
+        and eax, 0xFFFFFFFE
+        add eax, ebx
+        mov dword ptr ss:[ebp-8], eax
+        mov eax, dword ptr ds:[esi+0xC]
+        bswap ecx
+        bswap eax
+        imul ecx, eax
+        add ecx, edx
+        mov dword ptr ds:[pos], ecx
+        lea ecx, dword ptr ds:[edx+ebx]
+        mov dword ptr ss:[ebp-4], ecx
+        test edi, edi
+        je loc_10003DE9
+        mov word ptr ds:[edi], 0x332F
+        mov dword ptr ds:[esi+0x1C], 0x2000000
+        mov dword ptr ds:[esi+0x20], edi
+
+    loc_10003DE9:
+        cmp dword ptr ss:[ebp-8], 0
+        je loc_10003E81
+        mov eax, dword ptr ds:[ebx+0x34]
+        xor edi, edi
+        xor edx, edx
+        mov eax, dword ptr ds:[eax]
+        mov eax, dword ptr ds:[eax+4]
+        mov esi, dword ptr ds:[eax]
+        mov eax, dword ptr ds:[esi+4]
+        bswap eax
+        test eax, eax
+        je loc_10003E73
+        mov ebx, dword ptr ss:[ebp-8]
+        nop dword ptr ds:[eax], eax
+
+    loc_10003E10:
+        mov eax, dword ptr ds:[esi+8]
+        movzx ecx, word ptr ds:[eax+edx*2]
+        mov eax, 0xFFFF
+        cmp cx, ax
+        je loc_10003E60
+        mov ah, cl
+        mov al, ch
+        mov ecx, dword ptr ds:[esi+0x10]
+        mov dword ptr ss:[ebp-0x14], eax
+        movzx eax, ax
+        bswap ecx
+        imul ecx, eax
+        mov eax, dword ptr ds:[esi+0x14]
+        mov al, byte ptr ds:[ecx+eax+0x60]
+        cmp al, 9
+        je loc_10003E42
+        cmp al, 0xA
+        jne loc_10003E60
+
+    loc_10003E42:
+        mov ecx, dword ptr ss:[ebp-0x14]
+        add ecx, 0xFFFFFF02
+        mov ah, cl
+        mov al, ch
+        mov ecx, 0xFFFF
+        mov word ptr ds:[ebx+edi*2], ax
+        inc edi
+        mov eax, dword ptr ds:[esi+8]
+        mov word ptr ds:[eax+edx*2], cx
+
+    loc_10003E60:
+        mov eax, dword ptr ds:[esi+4]
+        inc edx
+        bswap eax
+        cmp edx, eax
+        jb loc_10003E10
+        mov ebx, buffer
+        mov ecx, dword ptr ss:[ebp-4]
+
+    loc_10003E73:
+        mov esi, dword ptr ss:[ebp-0x10]
+        mov eax, dword ptr ss:[ebp-8]
+        bswap edi
+        mov dword ptr ds:[esi+4], edi
+        mov dword ptr ds:[esi+8], eax
+
+    loc_10003E81:
+        test ecx, ecx
+        je loc_10003F5A
+        mov eax, dword ptr ds:[ebx+0x34]
+        xor edi, edi
+        mov dword ptr ss:[ebp-8], edi
+        mov eax, dword ptr ds:[eax]
+        mov eax, dword ptr ds:[eax+4]
+        mov eax, dword ptr ds:[eax]
+        mov dword ptr ss:[ebp-0x14], eax
+        mov ecx, dword ptr ds:[eax+0xC]
+        mov edx, dword ptr ds:[eax+0x10]
+        mov eax, edx
+        bswap ecx
+        bswap eax
+        imul ecx, eax
+        test ecx, ecx
+        je loc_10003F54
+        xor ebx, ebx
+
+    loc_10003EB4:
+        mov eax, dword ptr ss:[ebp-0x14]
+        add edi, dword ptr ds:[eax+0x14]
+        mov al, byte ptr ds:[edi+0x60]
+        cmp al, 9
+        je loc_10003EC5
+        cmp al, 0xA
+        jne loc_10003F22
+
+    loc_10003EC5:
+        mov ecx, dword ptr ds:[esi+0x10]
+        bswap ecx
+        imul ecx, ebx
+        bswap edx
+        add ecx, dword ptr ss:[ebp-4]
+        cmp ecx, edi
+        jae loc_10003EF0
+        test edx, edx
+        je loc_10003F11
+        sub edi, ecx
+        nop dword ptr ds:[eax], eax
+
+    loc_10003EE0:
+        mov al, byte ptr ds:[edi+ecx]
+        lea ecx, dword ptr ds:[ecx+1]
+        mov byte ptr ds:[ecx-1], al
+        sub edx, 1
+        jne loc_10003EE0
+        jmp loc_10003F11
+
+    loc_10003EF0:
+        jbe loc_10003F11
+        test edx, edx
+        je loc_10003F11
+        lea esi, dword ptr ds:[ecx-1]
+        add esi, edx
+        sub edi, ecx
+        nop dword ptr ds:[eax], eax
+
+    loc_10003F00:
+        mov al, byte ptr ds:[esi+edi]
+        lea esi, dword ptr ds:[esi-1]
+        mov byte ptr ds:[esi+1], al
+        sub edx, 1
+        jne loc_10003F00
+        mov esi, dword ptr ss:[ebp-0x10]
+
+    loc_10003F11:
+        mov eax, dword ptr ds:[esi+0x10]
+        mov ecx, dword ptr ss:[ebp-4]
+        bswap eax
+        imul eax, ebx
+        add byte ptr ds:[eax+ecx+0x60], 0xF7
+        inc ebx
+
+    loc_10003F22:
+        mov eax, dword ptr ds:[esi+0xC]
+        bswap eax
+        cmp ebx, eax
+        je loc_10003F4E
+        mov eax, dword ptr ss:[ebp-0x14]
+        mov edi, dword ptr ss:[ebp-8]
+        add edi, 0x68
+        mov dword ptr ss:[ebp-8], edi
+        mov edx, dword ptr ds:[eax+0x10]
+        mov ecx, edx
+        mov eax, dword ptr ds:[eax+0xC]
+        bswap ecx
+        bswap eax
+        imul ecx, eax
+        cmp edi, ecx
+        jb loc_10003EB4
+
+    loc_10003F4E:
+        mov ebx, buffer
+
+    loc_10003F54:
+        mov eax, dword ptr ss:[ebp-4]
+        mov dword ptr ds:[esi+0x14], eax
+
+    loc_10003F5A:
+        mov eax, dword ptr ss:[ebp-0xC]
+        mov ecx, eax
+        mov dword ptr ds:[ebx+0xC], 0
+        mov dword ptr ds:[eax], ebx
+        jmp loc_10003F6F
+
+    loc_10003F6A:
+        mov edi, dword ptr ss:[ebp-0xC]
+
+    loc_10003F6D:    
+        mov ecx, edi
+
+    loc_10003F6F:
+        push dword ptr ss:[ebp+0x10]
+        mov edx, dword ptr ss:[ebp-0x18]
+        push dword ptr ss:[ebp+0xC]
+        push dword ptr ss:[ebp+8]
+        call originalReplace
+        pop edi
+        pop esi
+        pop ebx
+        mov esp, ebp
+        pop ebp
+        ret 0xC
+        endp
+        
+    originalReplace:
+        push ebp
+        mov ebp, esp
+        sub esp, 0x3C
+        mov eax, returnAddress
+        jmp eax
+    ",
+    ASLR(0x00BFDC10), HookBehavior.Replace
+)
+}
+Patch "Fix Steam Profile Picture" in "Fixes/Graphics" by "ĐeäTh" does "Fixes the steam profile picture used on the Title Menu being squashed and stretched."
+{
+    #include "Helpers" noemit
+
+    static class SteamIconFix
+    {
+        private static bool _isTitleMenuModified = false;
+        private static bool _isAlreadyCompared = false;
+
+        UNMANAGED_FUNCTION(void, IsTitleMenuModifiedImpl, IntPtr in_pResourceName, IntPtr in_pResource)
+        {
+            if (_isAlreadyCompared)
+                return;
+
+            byte* pResourceName = (byte*)in_pResourceName;
+            byte[] name = new byte[16];
+            for (int i = 0; i < 16; i++)
+                name[i] = pResourceName[i];
+
+            string fileName = System.Text.Encoding.UTF8.GetString(name);
+
+            if (fileName != "ui_titlemenu_ugp")
+                return;
+
+            int checksum = 0;
+            for (int i = 0; i < 0x30BD0; i++)
+                checksum += ((byte*)in_pResource)[i];
+
+            Console.WriteLine(checksum.ToString("X"));
+
+            _isAlreadyCompared = true;
+
+            if (checksum != 0x9D9836)
+                _isTitleMenuModified = true;
+        }
+
+        public static long IsTitleMenuModified() => GET_UNMANAGED_FUNCTION_PTR(IsTitleMenuModifiedImpl);
+
+        UNMANAGED_FUNCTION(void, UnstretchImpl, IntPtr in_pHudGoc)
+        {
+            if (_isTitleMenuModified)
+                return;
+            
+            IntPtr rcProjects = *(IntPtr*)IntPtr.Add(in_pHudGoc, 0x40);
+            IntPtr rcProject = *(IntPtr*)IntPtr.Add(rcProjects, 0);
+            IntPtr pBinaryProject = *(IntPtr*)IntPtr.Add(rcProject, 0x64);
+            IntPtr pScenes = *(IntPtr*)IntPtr.Add(pBinaryProject, 0xC);
+            IntPtr pLayers = *(IntPtr*)IntPtr.Add(pScenes, 0x10);
+            IntPtr pMiiIconLayerCells = *(IntPtr*)IntPtr.Add(pLayers, 0x3C);
+            float* pMiiIconCellScaleX = (float*)IntPtr.Add(pMiiIconLayerCells, 0x1D4);
+            float* pMiiIconCellScaleY = (float*)IntPtr.Add(pMiiIconLayerCells, 0x1D8);
+
+            *pMiiIconCellScaleX = 1.0125f;
+            *pMiiIconCellScaleY = 1.0125f;
+        }
+
+        public static long Unstretch() => GET_UNMANAGED_FUNCTION_PTR(UnstretchImpl);
+    }
+
+    WriteAsmHook
+    (
+        $@"
+            push ebx
+            push eax
+            push edx
+            mov edx, eax
+            push edx
+            mov ebx, [ebp + 0xC]
+            push ebx
+            mov eax, {SteamIconFix.IsTitleMenuModified()}
+            call eax
+
+            pop edx
+            pop eax
+            pop ebx
+
+            push 0
+            push eax
+            lea ecx, [ebp + 0x10]
+        ",
+        ASLR(0x0050EEF2), HookBehavior.Replace
+    )
+
+    WriteAsmHook
+    (
+        $@"
+            push ebx
+            mov ebx, [esi + 0xD4]
+            push ebx
+            mov eax, {SteamIconFix.Unstretch()}
+            call eax
+
+            pop ebx
+            mov ecx, [esi + 0xD4]
+
+        ",
+        ASLR(0x005296E9), HookBehavior.Replace
+    )
+}
+Patch "Fix Depth of Field Draw Order" in "Fixes/Graphics" by "Sajid & ĐeäTh" does "Changes the pseudo-dof implementation of the game into the proper one seen on Wii U." 
+static int p_DofRes = (int)ASLR(0x00FEFC7C);
+static int p_GrassRes = (int)ASLR(0x00FB6D1C);
+static int p_ShadowRes = (int)ASLR(0x00FB6D1D);
+static int p_RetAddress = (int)ASLR(0x00904E94);
+
+WriteAsmHook
+(
+    $@"mov al, byte ptr [edi+28Ch]
+    mov dl, [{p_DofRes}]
+    and al, dl
+    mov [edi+28Ch], al
+    cmp byte ptr [{p_GrassRes}], 0
+    sete cl
+    mov [edi+49Ch], cl
+    mov al, [{p_ShadowRes}]
+    mov [edi+4F4h], al
+
+    mov eax, {p_RetAddress}
+    jmp eax",
+    ASLR(0x00904E64), HookBehavior.Replace
+)
+
+
+
+Patch "Fix Depth Effects on Intel GPUs" in "Fixes/Graphics" by "Skyth" 
+WriteAsmHook(ASLR(0x00C2B233), HookBehavior.Replace, @"
+mov eax, dword ptr [ebp + 8]
+
+loop:
+cmp dword ptr [eax], 0xFFFF
+jz break
+
+cmp dword ptr [eax], 0x3B7F0001
+jnz continue
+cmp dword ptr [eax + 4], 0x377F0001
+jnz continue
+cmp dword ptr [eax + 8], 0x3F7F0001
+jnz continue
+
+mov dword ptr [eax], 0x3F800000
+mov dword ptr [eax + 4], 0
+mov dword ptr [eax + 8], 0
+jmp break
+
+continue:
+add eax, 4
+jmp loop
+
+break:
+mov eax, [ecx + 0x64]
+mov ecx, [eax]
+");
+
+
+
+Patch "Force Language to Italian" in "System/Language" by "M&M & ĐeäTh" 
+WriteAsmHook(ASLR(0x004AB9FF), HookBehavior.Replace, "mov eax, 4");
+
+
+
+Patch "Force Language to Japanese" in "System/Language" by "M&M & ĐeäTh" 
+WriteAsmHook(ASLR(0x004AB9FF), HookBehavior.Replace, "mov eax, 0");
+
+
+
+Patch "Force Language to French" in "System/Language" by "M&M & ĐeäTh" 
+WriteAsmHook(ASLR(0x004AB9FF), HookBehavior.Replace, "mov eax, 2");
+
+
+
+Patch "Force Language to Spanish" in "System/Language" by "M&M & ĐeäTh" 
+WriteAsmHook(ASLR(0x004AB9FF), HookBehavior.Replace, "mov eax, 5");
+
+
+
+Patch "Force Language to English" in "System/Language" by "M&M & ĐeäTh" 
+WriteAsmHook(ASLR(0x004AB9FF), HookBehavior.Replace, "mov eax, 1");
+
+
+
+Patch "Force Language to German" in "System/Language" by "M&M & ĐeäTh" 
+WriteAsmHook(ASLR(0x004AB9FF), HookBehavior.Replace, "mov eax, 3");
+
+
+
+Patch "21:9 (3440x1440)" in "Graphics/Display/Internal Resolution" by "ĐeäTh" does "Changes the game in-game resolution to a 21:9 (3440x1440) aspect ratio." 
+WriteProtected<int>(ASLR(0x00D56D30), 0x4018E38E)
+
+
+
+Patch "16:10" in "Graphics/Display/Internal Resolution" by "ĐeäTh" does "Changes the game in-game resolution to a 16:10 aspect ratio. Perfect for the Steam Deck." 
+WriteProtected<int>(ASLR(0x00D56D30), 0x3FCCCCCD)
+
+
+
+Patch "32:9" in "Graphics/Display/Internal Resolution" by "ĐeäTh" does "Changes the game in-game resolution to a 32:9 aspect ratio." 
+WriteProtected<int>(ASLR(0x00D56D30), 0x40638E39)
+
+
+
+Patch "21:9 (3840x1600)" in "Graphics/Display/Internal Resolution" by "ĐeäTh" does "Changes the game in-game resolution to a 21:9 (3840x1600) aspect ratio." 
+WriteProtected<int>(ASLR(0x00D56D30), 0x4019999A)
+
+
+
+Patch "21:9 (2560x1080)" in "Graphics/Display/Internal Resolution" by "ĐeäTh" does "Changes the game in-game resolution to a 21:9 (2560x1080) aspect ratio." 
+WriteProtected<int>(ASLR(0x00D56D30), 0x4017B426)
+
+
+
+Patch "2560x1440" in "Graphics/Display/Internal Resolution/Movie Player" by "ĐeäTh" does "Forces the CRIWARE video player to use a 2560x1440 viewport. This is only useful for mods that have higher resolution video files." 
+static float ms_RenderTextureMultiplier = 1.0f;
+fixed(float* multiplierPtr = &ms_RenderTextureMultiplier)
+{
+    WriteAsmHook
+    (
+        ASLR(0x0049C398),
+        HookBehavior.Replace,
+        $"mulss xmm5, [{(uint)multiplierPtr}]"
+    )
+
+    WriteAsmHook
+    (
+        ASLR(0x0049C3C2),
+        HookBehavior.Replace,
+        $"mulss xmm7, [{(uint)multiplierPtr}]"
+    )
+}
+
+WriteProtected<float>(ASLR(0x00D61CE8), 2560);
+WriteProtected<float>(ASLR(0x00D593B0), 1440);
+
+
+
+Patch "1280x720" in "Graphics/Display/Internal Resolution/Movie Player" by "ĐeäTh" does "Forces the CRIWARE video player to use a 1280x720 viewport. This is only useful for mods that have higher resolution video files." 
+static float ms_RenderTextureMultiplier = 1.0f;
+fixed(float* multiplierPtr = &ms_RenderTextureMultiplier)
+{
+    WriteAsmHook
+    (
+        ASLR(0x0049C398),
+        HookBehavior.Replace,
+        $"mulss xmm5, [{(uint)multiplierPtr}]"
+    )
+
+    WriteAsmHook
+    (
+        ASLR(0x0049C3C2),
+        HookBehavior.Replace,
+        $"mulss xmm7, [{(uint)multiplierPtr}]"
+    )
+}
+
+WriteProtected<float>(ASLR(0x00D61CE8), 1280);
+WriteProtected<float>(ASLR(0x00D593B0), 720);
+
+
+
+Patch "5120x2160" in "Graphics/Display/Internal Resolution/Movie Player" by "ĐeäTh" does "Forces the CRIWARE video player to use a 5120x2160 viewport. This is only useful for mods that have higher resolution video files." 
+static float ms_RenderTextureMultiplier = 1.0f;
+fixed(float* multiplierPtr = &ms_RenderTextureMultiplier)
+{
+    WriteAsmHook
+    (
+        ASLR(0x0049C398),
+        HookBehavior.Replace,
+        $"mulss xmm5, [{(uint)multiplierPtr}]"
+    )
+
+    WriteAsmHook
+    (
+        ASLR(0x0049C3C2),
+        HookBehavior.Replace,
+        $"mulss xmm7, [{(uint)multiplierPtr}]"
+    )
+}
+
+WriteProtected<float>(ASLR(0x00D61CE8), 5120);
+WriteProtected<float>(ASLR(0x00D593B0), 2160);
+
+
+
+Patch "3440x1440" in "Graphics/Display/Internal Resolution/Movie Player" by "ĐeäTh" does "Forces the CRIWARE video player to use a 3440x1440 viewport. This is only useful for mods that have higher resolution video files." 
+static float ms_RenderTextureMultiplier = 1.0f;
+fixed(float* multiplierPtr = &ms_RenderTextureMultiplier)
+{
+    WriteAsmHook
+    (
+        ASLR(0x0049C398),
+        HookBehavior.Replace,
+        $"mulss xmm5, [{(uint)multiplierPtr}]"
+    )
+
+    WriteAsmHook
+    (
+        ASLR(0x0049C3C2),
+        HookBehavior.Replace,
+        $"mulss xmm7, [{(uint)multiplierPtr}]"
+    )
+}
+
+WriteProtected<float>(ASLR(0x00D61CE8), 3440);
+WriteProtected<float>(ASLR(0x00D593B0), 1440);
+
+
+
+Patch "3840x2160" in "Graphics/Display/Internal Resolution/Movie Player" by "ĐeäTh" does "Forces the CRIWARE video player to use a 3840x2160 viewport. This is only useful for mods that have higher resolution video files." 
+static float ms_RenderTextureMultiplier = 1.0f;
+fixed(float* multiplierPtr = &ms_RenderTextureMultiplier)
+{
+    WriteAsmHook
+    (
+        ASLR(0x0049C398),
+        HookBehavior.Replace,
+        $"mulss xmm5, [{(uint)multiplierPtr}]"
+    )
+
+    WriteAsmHook
+    (
+        ASLR(0x0049C3C2),
+        HookBehavior.Replace,
+        $"mulss xmm7, [{(uint)multiplierPtr}]"
+    )
+}
+
+WriteProtected<float>(ASLR(0x00D61CE8), 3840);
+WriteProtected<float>(ASLR(0x00D593B0), 2160);
+
+
+
+Patch "2560x1080" in "Graphics/Display/Internal Resolution/Movie Player" by "ĐeäTh" does "Forces the CRIWARE video player to use a 2560x1080 viewport. This is only useful for mods that have higher resolution video files." 
+static float ms_RenderTextureMultiplier = 1.0f;
+fixed(float* multiplierPtr = &ms_RenderTextureMultiplier)
+{
+    WriteAsmHook
+    (
+        ASLR(0x0049C398),
+        HookBehavior.Replace,
+        $"mulss xmm5, [{(uint)multiplierPtr}]"
+    )
+
+    WriteAsmHook
+    (
+        ASLR(0x0049C3C2),
+        HookBehavior.Replace,
+        $"mulss xmm7, [{(uint)multiplierPtr}]"
+    )
+}
+
+WriteProtected<float>(ASLR(0x00D61CE8), 2560);
+WriteProtected<float>(ASLR(0x00D593B0), 1080);
+
+
+
+Patch "1920x1080" in "Graphics/Display/Internal Resolution/Movie Player" by "ĐeäTh" does "Forces the CRIWARE video player to use a 1920x1080 viewport. This is only useful for mods that have higher resolution video files." 
+static float ms_RenderTextureMultiplier = 1.0f;
+fixed(float* multiplierPtr = &ms_RenderTextureMultiplier)
+{
+    WriteAsmHook
+    (
+        ASLR(0x0049C398),
+        HookBehavior.Replace,
+        $"mulss xmm5, [{(uint)multiplierPtr}]"
+    )
+
+    WriteAsmHook
+    (
+        ASLR(0x0049C3C2),
+        HookBehavior.Replace,
+        $"mulss xmm7, [{(uint)multiplierPtr}]"
+    )
+}
+
+WriteProtected<float>(ASLR(0x00D61CE8), 1920);
+WriteProtected<float>(ASLR(0x00D593B0), 1080);
+
+
+

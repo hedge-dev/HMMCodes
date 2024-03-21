@@ -1,0 +1,4217 @@
+Library "XInput" by "Hyper" 
+{
+    #lib "MathHelpers"
+
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+    using System.Runtime.InteropServices;
+
+    [DllImport("xinput1_4.dll", EntryPoint = "XInputGetState")]
+    public extern int XInputGetState(int in_dwUserIndex, ref State in_pState);
+    
+    [DllImport("xinput1_4.dll", EntryPoint = "XInputSetState")]
+    public extern int XInputSetState(int in_dwUserIndex, ref Vibration in_pVibration);
+
+    public const short XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE = 7849;
+    public const short XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE = 8689;
+
+    private static float _leftMotorSpeed = 0.0f;
+    private static float _rightMotorSpeed = 0.0f;
+
+    [Flags]
+    public enum Buttons : ushort
+    {
+        DPAD_UP        = 0x0001,
+        DPAD_DOWN      = 0x0002,
+        DPAD_LEFT      = 0x0004,
+        DPAD_RIGHT     = 0x0008,
+        START          = 0x0010,
+        BACK           = 0x0020,
+        LEFT_THUMB     = 0x0040,
+        RIGHT_THUMB    = 0x0080,
+        LEFT_SHOULDER  = 0x0100,
+        RIGHT_SHOULDER = 0x0200,
+        A              = 0x1000,
+        B              = 0x2000,
+        X              = 0x4000,
+        Y              = 0x8000
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct State
+    {
+        public int dwPacketNumber;
+        public Gamepad Gamepad;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Gamepad
+    {
+        public Buttons wButtons;
+        public byte bLeftTrigger;
+        public byte bRightTrigger;
+        public short sThumbLX;
+        public short sThumbLY;
+        public short sThumbRX;
+        public short sThumbRY;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Vibration
+    {
+        public ushort wLeftMotorSpeed;
+        public ushort wRightMotorSpeed;
+
+        public Vibration(ushort in_leftMotorSpeed, ushort in_rightMotorSpeed)
+        {
+            wLeftMotorSpeed = in_leftMotorSpeed;
+            wRightMotorSpeed = in_rightMotorSpeed;
+
+            _leftMotorSpeed = in_leftMotorSpeed / 65535.0f;
+            _rightMotorSpeed = in_rightMotorSpeed / 65535.0f;
+        }
+
+        public Vibration(float in_leftMotorSpeed, float in_rightMotorSpeed)
+        {
+            wLeftMotorSpeed = MathHelpers.FloatPercentToRange<ushort>(in_leftMotorSpeed);
+            wRightMotorSpeed = MathHelpers.FloatPercentToRange<ushort>(in_rightMotorSpeed);
+
+            _leftMotorSpeed = in_leftMotorSpeed;
+            _rightMotorSpeed = in_rightMotorSpeed;
+        }
+
+        public Vibration(ushort in_motorSpeed)
+        {
+            wLeftMotorSpeed = wRightMotorSpeed = in_motorSpeed;
+            _leftMotorSpeed = _rightMotorSpeed = in_motorSpeed / 65535.0f;
+        }
+
+        public Vibration(float in_motorSpeed)
+        {
+            wLeftMotorSpeed = wRightMotorSpeed = MathHelpers.FloatPercentToRange<ushort>(in_motorSpeed);
+            _leftMotorSpeed = _rightMotorSpeed = in_motorSpeed;
+        }
+    }
+
+    public State? GetState()
+    {
+        var pState = new State();
+
+        if (XInputGetState(0, ref pState) != 0)
+            return null;
+
+        return pState;
+    }
+
+    public void SetState(Vibration in_vibration)
+    {
+        XInputSetState(0, ref in_vibration);
+    }
+
+    public Vector2 GetAnalog(int in_analogIndex, bool in_isTestDeadzone = true)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return Vector2.Zero;
+
+        Vector2 v = Vector2.Zero;
+
+        switch (in_analogIndex)
+        {
+            case 0:
+                v = new Vector2(pState.Value.Gamepad.sThumbLX / 32767.0f, pState.Value.Gamepad.sThumbLY / 32767.0f);
+                break;
+
+            case 1:
+                v = new Vector2(pState.Value.Gamepad.sThumbRX / 32767.0f, pState.Value.Gamepad.sThumbRY / 32767.0f);
+                break;
+        }
+
+        if (in_isTestDeadzone)
+        {
+            v = IsAnalogNeutral(in_analogIndex)
+                ? Vector2.Zero
+                : v;
+        }
+
+        return v;
+    }
+
+    // Use Player.Input for keyboard parity!
+    public bool IsButtonDown(Buttons in_buttons)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return false;
+
+        return (pState.Value.Gamepad.wButtons & in_buttons) != 0;
+    }
+
+    public float GetTrigger(int in_triggerIndex)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return 0;
+
+        switch (in_triggerIndex)
+        {
+            case 0:
+                return pState.Value.Gamepad.bLeftTrigger / 255.0f;
+
+            case 1:
+                return pState.Value.Gamepad.bRightTrigger / 255.0f;
+        }
+
+        return 0;
+    }
+
+    public bool IsAnalogNeutral(int in_analogIndex)
+    {
+        var pState = GetState();
+
+        if (pState == null)
+            return true;
+
+        switch (in_analogIndex)
+        {
+            case 0:
+            {
+                short x = pState.Value.Gamepad.sThumbLX;
+                short y = pState.Value.Gamepad.sThumbLY;
+
+                return x < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+                    x > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+                    y < XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE &&
+                    y > -XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE;
+            }
+
+            case 1:
+            {
+                short x = pState.Value.Gamepad.sThumbRX;
+                short y = pState.Value.Gamepad.sThumbRY;
+
+                return x < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+                    x > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+                    y < XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE &&
+                    y > -XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE;
+            }
+        }
+
+        return true;
+    }
+
+    public Vibration GetVibration()
+    {
+        return new Vibration(_leftMotorSpeed, _rightMotorSpeed);
+    }
+
+    public void SetVibration(float in_value)
+    {
+        SetState(new Vibration(in_value));
+    }
+
+    public void SetVibration(int in_motorIndex, float in_value)
+    {
+        switch (in_motorIndex)
+        {
+            case 0:
+            {
+                SetState(new Vibration(in_value, _rightMotorSpeed));
+                break;
+            }
+
+            case 1:
+            {
+                SetState(new Vibration(_leftMotorSpeed, in_value));
+                break;
+            }
+        }
+    }
+}
+
+
+
+Library "VectorHelpers" by "Hyper" 
+{
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+
+    public static Vector3 ClampMagnitude(Vector3 in_vector, float in_maxMagnitude)
+    {
+        if (in_vector.Length() > in_maxMagnitude * in_maxMagnitude)
+            return Vector3.Normalize(in_vector) * in_maxMagnitude;
+
+        return in_vector;
+    }
+
+    public static Vector3 GetForward(Quaternion in_rotation)
+    {
+        return Vector3.Transform(Vector3.UnitZ, Quaternion.Normalize(in_rotation));
+    }
+
+    public static float GetMagnitude(Vector3 in_velocity)
+    {
+        return in_velocity.Length();
+    }
+
+    public static float GetHorizontalMagnitude(Vector3 in_velocity)
+    {
+        return (float)Math.Sqrt(in_velocity.X * in_velocity.X + in_velocity.Z * in_velocity.Z);
+    }
+
+    public static float GetVerticalMagnitude(Vector3 in_velocity)
+    {
+        return in_velocity.Y;
+    }
+
+    public static Quaternion LookRotation(Vector3 in_forward, Vector3 in_upward)
+    {
+        in_forward = Vector3.Normalize(in_forward);
+        in_upward = Vector3.Normalize(in_upward);
+
+        var right = Vector3.Cross(in_upward, in_forward);
+        in_upward = Vector3.Cross(in_forward, right);
+
+        var m = new Matrix4x4
+        (
+            right.X,      right.Y,      right.Z,      0.0f,
+            in_upward.X,  in_upward.Y,  in_upward.Z,  0.0f,
+            in_forward.X, in_forward.Y, in_forward.Z, 0.0f,
+            0.0f,         0.0f,         0.0f,         1.0f
+        );
+
+        return Quaternion.CreateFromRotationMatrix(m);
+    }
+
+    public static Quaternion LookRotation(Vector3 in_forward)
+    {
+        return LookRotation(in_forward, Vector3.UnitY);
+    }
+}
+Library "HMM" by "Hyper"
+{
+    #lib "INI"
+
+    using Microsoft.Win32;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Reflection;
+    using System.Threading;
+
+    public string GetGameDirectory()
+    {
+        return Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+    }
+
+    public Dictionary<string, Dictionary<string, string>> GetModsDatabase()
+    {
+        string cpkredirCfgPath = Path.Combine(GetGameDirectory(), "cpkredir.ini");
+        
+        if (!File.Exists(cpkredirCfgPath))
+            return new();
+
+        var cpkredirCfg = INI.Read(cpkredirCfgPath);
+        string modsDbPath = cpkredirCfg["CPKREDIR"]["ModsDbIni"];
+
+        if (!File.Exists(modsDbPath))
+            return new();
+
+        return INI.Read(modsDbPath);
+    }
+
+    public List<Mod> GetMods()
+    {
+        List<Mod> result = new();
+
+        var modsDb = GetModsDatabase();
+
+        if (modsDb.Count <= 0)
+            return result;
+        
+        int activeModCount = INI.Parse<int>(modsDb["Main"]["ActiveModCount"], 0);
+
+        foreach (var entry in modsDb["Mods"].Keys)
+        {
+            for (int i = 0; i < activeModCount; i++)
+            {
+                if (modsDb["Main"][$"ActiveMod{i}"].Contains(entry))
+                {
+                    result.Add(new Mod(modsDb["Mods"][entry]));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public Mod GetModByID(string in_id)
+    {
+        foreach (var mod in GetMods())
+        {
+            if (mod.ID == in_id)
+                return mod;
+        }
+
+        return null;
+    }
+
+    public List<Mod> FindModsByName(string name)
+    {
+        List<Mod> result = new();
+
+        foreach (var mod in GetMods())
+        {
+            if (mod.Name.Contains(name))
+            {
+                result.Add(mod);
+            }
+        }
+
+        return result;
+    }
+
+    public List<string> GetCodes()
+    {
+        List<string> result = new();
+
+        var modsDb = GetModsDatabase();
+
+        if (modsDb == null)
+            return result;
+
+        foreach (var value in modsDb["Codes"].Values)
+            result.Add(value);
+
+        return result;
+    }
+
+    public class Mod
+    {
+        public string Name { get; set; }
+        public string Version { get; set; }
+        public string Author { get; set; }
+        public string Description { get; set; }
+        public string Date { get; set; }
+        public string AuthorURL { get; set; }
+        public string UpdateServer { get; set; }
+        public string SaveFile { get; set; }
+        public string ID { get; set; }
+        public List<string> IncludeDirs { get; set; } = new();
+        public List<ModDependency> Dependencies { get; set; } = new();
+        public string DLLFile { get; set; }
+        public string CodeFile { get; set; }
+        public string ConfigSchemaFile { get; set; }
+
+        public string Path { get; set; }
+        public Dictionary<string, Dictionary<string, string>> Ini { get; set; } = new();
+
+        public Mod(string modIniPath)
+        {
+            var ini = INI.Read(modIniPath);
+
+            if (ini == null)
+                return;
+
+            Name             = INI.GetField<string>(ini, "Desc", "Title", Name);
+            Version          = INI.GetField<string>(ini, "Desc", "Version", Version);
+            Author           = INI.GetField<string>(ini, "Desc", "Author", Author);
+            Description      = INI.GetField<string>(ini, "Desc", "Description", Description);
+            Date             = INI.GetField<string>(ini, "Desc", "Date", Date);
+            AuthorURL        = INI.GetField<string>(ini, "Desc", "AuthorURL", AuthorURL);
+            UpdateServer     = INI.GetField<string>(ini, "Main", "UpdateServer", UpdateServer);
+            SaveFile         = INI.GetField<string>(ini, "Main", "SaveFile", SaveFile);
+            ID               = INI.GetField<string>(ini, "Main", "ID", ID);
+            DLLFile          = INI.GetField<string>(ini, "Main", "DLLFile", DLLFile);
+            CodeFile         = INI.GetField<string>(ini, "Main", "CodeFile", CodeFile);
+            ConfigSchemaFile = INI.GetField<string>(ini, "Main", "ConfigSchemaFile", ConfigSchemaFile);
+
+            Path             = System.IO.Path.GetDirectoryName(modIniPath);
+            Ini              = ini;
+
+            int includeDirCount = INI.GetField<int>(ini, "Main", "IncludeDirCount", 1);
+
+            for (int i = 0; i < includeDirCount; i++)
+                IncludeDirs.Add(INI.GetField<string>(ini, "Main", $"IncludeDir{i}", "."));
+
+            int dependencyCount = INI.GetField<int>(ini, "Main", "DependsCount", 0);
+
+            for (int i = 0; i < dependencyCount; i++)
+                Dependencies.Add(new ModDependency(INI.GetField<string>(ini, "Main", $"Depends{i}", "")));
+        }
+    }
+
+    public class ModDependency
+    {
+        public string ID { get; set; }
+
+        public string Name { get; set; }
+        
+        public string Link { get; set; }
+
+        public string Version { get; set; }
+
+        public ModDependency(string in_id, string in_name, string in_link, string in_version)
+        {
+            ID = in_id;
+            Name = in_name;
+            Link = in_link;
+            Version = in_version;
+        }
+
+        public ModDependency(string in_csv)
+        {
+            var fields = in_csv.Split('|');
+
+            for (int i = 0; i < fields.Length; i++)
+            {
+                switch (i)
+                {
+                    case 0:
+                        ID = fields[i];
+                        break;
+
+                    case 1:
+                        Name = fields[i];
+                        break;
+
+                    case 2:
+                    {
+                        if (fields.Length > 2)
+                        {
+                            Link = fields[i];
+                        }
+                        else
+                        {
+                            Version = fields[i];
+                        }
+
+                        break;
+                    }
+
+                    case 3:
+                        Version = fields[i];
+                        break;
+                }
+            }
+        }
+    }
+
+    public static class RegistryConfig
+    {
+        public static string ConfigPath { get; } = @"SOFTWARE\HEDGEMM";
+
+        public static bool CheckLoaderUpdates { get; set; } = true;
+        public static bool CheckManagerUpdates { get; set; } = true;
+        public static bool CheckModUpdates { get; set; } = true;
+        public static int CodesSortingColumnIndex { get; set; } = 1;
+        public static bool CodesUseTreeView { get; set; } = true;
+        public static string ExecutablePath { get; set; }
+        public static string ExtraGameDirectories { get; set; }
+        public static bool KeepOpen { get; set; } = true;
+        public static string LastGameDirectory { get; set; }
+        public static string UILanguage { get; set; }
+        public static string UITheme { get; set; }
+        public static bool UpdateCodesOnLaunch { get; set; } = true;
+
+        static RegistryConfig()
+        {
+            Load();
+        }
+
+        public static void Load()
+        {
+            var personalizeKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+
+            bool isLightTheme = false;
+            if (personalizeKey != null)
+            {
+                var useLightThemeStr = personalizeKey.GetValue("AppsUseLightTheme", 0)?.ToString();
+
+                if (int.TryParse(useLightThemeStr, out int out_isLightTheme))
+                    isLightTheme = out_isLightTheme != 0;
+
+                personalizeKey.Close();
+            }
+
+            var key = Registry.CurrentUser.CreateSubKey(ConfigPath);
+
+            LastGameDirectory       = (string)key.GetValue("LastGame", string.Empty);
+            ExtraGameDirectories    = (string)key.GetValue(nameof(ExtraGameDirectories), string.Empty);
+            UILanguage              = (string)key.GetValue(nameof(UILanguage), Thread.CurrentThread.CurrentCulture.Name);
+            UITheme                 = (string)key.GetValue(nameof(UITheme), isLightTheme ? "LightTheme" : "DarkerTheme");
+            CodesSortingColumnIndex = (int)key.GetValue(nameof(CodesSortingColumnIndex), 1);
+            CodesUseTreeView        = (int)key.GetValue(nameof(CodesUseTreeView), 1) != 0;
+            UpdateCodesOnLaunch     = (int)key.GetValue(nameof(UpdateCodesOnLaunch), 1) != 0;
+            CheckManagerUpdates     = (int)key.GetValue(nameof(CheckManagerUpdates), 1) != 0;
+            CheckLoaderUpdates      = (int)key.GetValue(nameof(CheckLoaderUpdates), 1) != 0;
+            CheckModUpdates         = (int)key.GetValue(nameof(CheckModUpdates), 1) != 0;
+            KeepOpen                = (int)key.GetValue(nameof(KeepOpen), 1) != 0;
+
+            key.Close();
+        }
+
+        public static void Save()
+        {
+            var key = Registry.CurrentUser.CreateSubKey(ConfigPath);
+
+            key.SetValue("ExecutablePath", Assembly.GetExecutingAssembly().Location);
+            key.SetValue("LastGame", LastGameDirectory);
+            key.SetValue(nameof(ExtraGameDirectories), ExtraGameDirectories);
+            key.SetValue(nameof(UILanguage), UILanguage);
+            key.SetValue(nameof(UITheme), UITheme);
+            key.SetValue(nameof(CodesSortingColumnIndex), CodesSortingColumnIndex);
+            key.SetValue(nameof(CodesUseTreeView), CodesUseTreeView ? 1 : 0);
+            key.SetValue(nameof(UpdateCodesOnLaunch), UpdateCodesOnLaunch ? 1 : 0);
+            key.SetValue(nameof(CheckManagerUpdates), CheckManagerUpdates ? 1 : 0);
+            key.SetValue(nameof(CheckLoaderUpdates), CheckLoaderUpdates ? 1 : 0);
+            key.SetValue(nameof(CheckModUpdates), CheckModUpdates ? 1 : 0);
+            key.SetValue(nameof(KeepOpen), KeepOpen ? 1 : 0);
+
+            key.Close();
+        }
+    }
+}
+Library "Logger" by "Hyper"
+{
+    #define PRINT_OBJECT(obj, format, caller) Logger.Utility(#obj + " = " + obj.ToString(format), caller);
+    #define PRINT_OBJECT(obj, format) Logger.Utility(#obj + " = " + obj.ToString(format));
+
+    public enum LogLevel
+    {
+        None,
+        Utility,
+        Warning,
+        Error
+    }
+
+    public void Log(object message, LogLevel level = LogLevel.None, string caller = "")
+    {
+        var oldColour = Console.ForegroundColor;
+
+        switch (level)
+        {
+            case LogLevel.Warning:
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                break;
+
+            case LogLevel.Error:
+                Console.ForegroundColor = ConsoleColor.Red;
+                break;
+
+            case LogLevel.Utility:
+                Console.ForegroundColor = ConsoleColor.Green;
+                break;
+        }
+
+        Console.WriteLine(string.IsNullOrEmpty(caller) ? message.ToString() : $"[{caller}] {message}");
+
+        Console.ForegroundColor = oldColour;
+    }
+
+    public void Utility(object message, string caller = "")
+    {
+        Log(message, LogLevel.Utility, caller);
+    }
+
+    public void Warning(object message, string caller = "")
+    {
+        Log(message, LogLevel.Warning, caller);
+    }
+
+    public void Error(object message, string caller = "")
+    {
+        Log(message, LogLevel.Error, caller);
+    }
+}
+Library "StringMapOperation" by "ĐeäTh" 
+{
+    /// <summary>
+    /// Computes a hash based on the input string.
+    /// </summary>
+    /// <param name="in_key">The string to hash.</param>
+    /// <returns>A string hash.</returns>
+    public uint ComputeHash(string in_key)
+    {
+        uint hash = in_key[0];
+
+        for (int i = 1; i < in_key.Length; i++)
+            hash = in_key[i] + 31 * hash;
+
+        return hash & 0x7FFFFFFF;
+    }
+}
+Library "MathHelpers" by "Hyper" 
+{
+    using System.Collections.Generic;
+
+    public T Clamp<T>(T in_value, T in_minValue, T in_maxValue) where T : IComparable<T>
+    {
+        if (in_value.CompareTo(in_minValue) < 0)
+        {
+            return in_minValue;
+        }
+        else if (in_value.CompareTo(in_maxValue) > 0)
+        {
+            return in_maxValue;
+        }
+        else
+        {
+            return in_value;
+        }
+    }
+
+    public T Clamp01<T>(T value) where T : IComparable<T>
+    {
+        if (value.CompareTo(default(T)) < 0)
+        {
+            return default(T);
+        }
+        else if (value.CompareTo((T)Convert.ChangeType(1, typeof(T))) > 0)
+        {
+            return (T)Convert.ChangeType(1, typeof(T));
+        }
+        else
+        {
+            return value;
+        }
+    }
+
+    public T FloatPercentToRange<T>(float in_value)
+    {
+        if (typeof(T) == typeof(sbyte))
+        {
+            return (T)(object)(byte)(in_value * (sbyte.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(byte))
+        {
+            return (T)(object)(byte)(in_value * (byte.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(short))
+        {
+            return (T)(object)(short)(in_value * (short.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(ushort))
+        {
+            return (T)(object)(ushort)(in_value * (ushort.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(int))
+        {
+            return (T)(object)(int)(in_value * (int.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(uint))
+        {
+            return (T)(object)(uint)(in_value * (uint.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(long))
+        {
+            return (T)(object)(long)(in_value * (long.MaxValue * 1.0f));
+        }
+        else if (typeof(T) == typeof(ulong))
+        {
+            return (T)(object)(ulong)(in_value * (ulong.MaxValue * 1.0f));
+        }
+        
+        return default;
+    }
+    
+    public float Lerp(float in_start, float in_end, float in_time)
+    {
+        return in_start + (in_end - in_start) * in_time;
+    }
+
+    public static float InverseLerp(float a, float b, float value)
+    {
+        if (a == b)
+            return 0.0f;
+
+        return Clamp01<float>((value - a) / (b - a));
+    }
+
+    public static float ToDegrees(float in_radians)
+    {
+        return in_radians * (180.0f / (float)Math.PI);
+    }
+
+    public static float ToRadians(float in_degrees)
+    {
+        return in_degrees * ((float)Math.PI / 180.0f);
+    }
+
+    public static float WrapToRadians(float in_value)
+    {
+        float sign = in_value > 0.0f ? 1.0f : -1.0f;
+        float mod = (float)Math.Abs(in_value) % 6.28319f;
+
+        return mod * sign;
+    }
+}
+Library "Bitwise" by "Hyper" 
+{
+    public long Set(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
+    {
+        return in_base | (in_isOffsetBitIndex ? (1L << in_offset) : in_offset);
+    }
+
+    public long Reset(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
+    {
+        return in_base & (in_isOffsetBitIndex ? ~(1L << in_offset) : in_offset);
+    }
+
+    public bool Test(long in_base, int in_offset, bool in_isOffsetBitIndex = true)
+    {
+        return (in_base & (in_isOffsetBitIndex ? (1L << in_offset) : in_offset)) != 0;
+    }
+}
+Library "INI" by "Hyper"
+{
+    using System.Collections.Generic;
+    using System.IO;
+    
+    public Dictionary<string, Dictionary<string, string>> Read(string path)
+    {
+        Dictionary<string, Dictionary<string, string>> result = new();
+
+        if (!File.Exists(path))
+            return result;
+
+        using (StreamReader reader = new StreamReader(path))
+        {
+            string section = string.Empty;
+            string line = string.Empty;
+
+            // Add root section.
+            result.Add(section, new Dictionary<string, string>());
+
+            while ((line = reader.ReadLine()) != null)
+            {
+                if (line.StartsWith("[") && line.EndsWith("]"))
+                {
+                    section = line.Substring(1, line.Length - 2);
+                    result.Add(section, new Dictionary<string, string>());
+                    continue;
+                }
+
+                if (line.StartsWith(";") || line.StartsWith("#"))
+                    continue;
+
+                int delimiterIndex = line.IndexOf('=');
+
+                if (delimiterIndex == -1)
+                    continue;
+
+                string key = line.Substring(0, delimiterIndex);
+                string value = line.Substring(delimiterIndex + 1);
+
+                if (value.StartsWith("\"") && value.EndsWith("\"") && value.Length > 1)
+                    value = value.Substring(1, value.Length - 2);
+                
+                result[section].Add(key, value);
+            }
+        }
+
+        return result;
+    }
+
+    public T Parse<T>(string in_value, T in_defaultValue)
+    {
+        T result = in_defaultValue;
+
+        if (typeof(T) == typeof(string))
+        {
+            result = (T)(object)in_value;
+        }
+        else if (typeof(T) == typeof(int))
+        {
+            if (int.TryParse(in_value, out int intValue))
+            {
+                result = (T)(object)intValue;
+            }
+        }
+        else if (typeof(T) == typeof(double))
+        {
+            if (double.TryParse(in_value, out double doubleValue))
+            {
+                result = (T)(object)doubleValue;
+            }
+        }
+        else if (typeof(T) == typeof(float))
+        {
+            if (float.TryParse(in_value, out float floatValue))
+            {
+                result = (T)(object)floatValue;
+            }
+        }
+
+        return result;
+    }
+
+    public T GetField<T>(Dictionary<string, Dictionary<string, string>> in_ini, string in_section, string in_key, T in_defaultValue)
+    {
+        if (!in_ini.ContainsKey(in_section))
+            return in_defaultValue;
+
+        if (!in_ini[in_section].ContainsKey(in_key))
+            return in_defaultValue;
+
+        return Parse<T>(in_ini[in_section][in_key], in_defaultValue);
+    }
+}
+Library "Helpers" by "Hyper & Sajid"
+{
+    #lib "StringMapOperation"
+
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
+    /// <summary>
+    /// Creates an `__stdcall` delegate with an unmanaged function pointer based on the provided function signature.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Library
+    /// {
+    ///     #include "Helpers" noemit
+    ///     
+    ///     UNMANAGED_FUNCTION(void, MyUnmanagedFunction, string in_str)
+    ///     {
+    ///         Console.WriteLine("Hello from native code!");
+    ///     }
+    ///     
+    ///     public void Init()
+    ///     {
+    ///         // This can be used for mid-asm hooks to call your own functions from the game code.
+    ///         var ptrToMyUnmanagedFunction = GET_UNMANAGED_FUNCTION_PTR(MyUnmanagedFunction);
+    ///     }
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define UNMANAGED_FUNCTION(in_returnType, in_functionName, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public static T##in_functionName _del##in_functionName = new T##in_functionName(in_functionName); \
+        public static long _fp##in_functionName = (long)System.Runtime.InteropServices.Marshal.GetFunctionPointerForDelegate(_del##in_functionName); \
+        public static in_returnType in_functionName(__VA_ARGS__)
+
+    /// <summary>
+    /// Creates an `__stdcall` delegate based on the provided function signature.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #include "Helpers" noemit
+    ///     
+    ///     UNMANAGED_FUNCTION_DELEGATE(void, GetNameHash)
+    /// //
+    /// {
+    ///     // Calls the function at 0xDEADBEEF using this function signature.
+    ///     CREATE_UNMANAGED_FUNCTION_PTR(GetNameHash, 0xDEADBEEF)();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define UNMANAGED_FUNCTION_DELEGATE(in_returnType, in_functionName, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType in_functionName(__VA_ARGS__);
+
+    /// <summary>
+    /// Gets a pointer created by `UNMANAGED_FUNCTION` by name.
+    /// </summary>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <returns>A pointer to the unmanaged function.</returns>
+    #define GET_UNMANAGED_FUNCTION_PTR(in_functionName) _fp##in_functionName
+
+    /// <summary>
+    /// Creates a delegate using the signature created by `UNMANAGED_FUNCTION_DELEGATE`.
+    /// </summary>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="in_location">The location of the function.</param>
+    /// <returns>A delegate for the unmanaged function.</returns>
+    #define CREATE_UNMANAGED_FUNCTION_PTR(in_functionName, in_location) System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<in_functionName>((IntPtr)(in_location))
+
+    /// <summary>
+    /// Creates a function pointer to native code at the specified location.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #include "Helpers" noemit
+    ///     
+    ///     FUNCTION_PTR(void, GetNameHash, 0xDEADBEEF)
+    /// //
+    /// {
+    ///     GET_FUNCTION_PTR(GetNameHash)();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="in_location">The location of the function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define FUNCTION_PTR(in_returnType, in_functionName, in_location, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public static long _addr##in_functionName = in_location;
+    
+    /// <summary>
+    /// Creates a function pointer to a virtual function at an instance of a struct.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #include "Helpers" noemit
+    ///
+    ///     public struct MyStruct
+    ///     {
+    ///         VFUNCTION_PTR(MyStruct, 1, void, GetNameHash)
+    ///     }
+    /// //
+    /// {
+    ///     myInstanceOfMyStruct->GetNameHash()();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_thisType">The struct type this is nested inside.</param>
+    /// <param name="in_functionIndex">The index of this function in the virtual function table.</param>
+    /// <param name="in_returnType">The return type of the unmanaged function.</param>
+    /// <param name="in_functionName">The name of the unmanaged function.</param>
+    /// <param name="in_location">The location of the function.</param>
+    /// <param name="...">The arguments of the unmanaged function.</param>
+    #define VFUNCTION_PTR(in_thisType, in_functionIndex, in_returnType, in_functionName, ...) \
+        [System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.StdCall)] \
+        public delegate in_returnType T##in_functionName(__VA_ARGS__); \
+        public T##in_functionName in_functionName() \
+        { \
+            fixed (in_thisType* pThis = &this) \
+                return System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<T##in_functionName>((IntPtr)(*(long*)((*(long*)pThis) + (1 * sizeof(nint)) * in_functionIndex))); \
+        }
+
+    /// <summary>
+    /// Gets a pointer created by `FUNCTION_PTR` by name.
+    /// </summary>
+    /// <param name="in_functionName">The name of the function pointer.</param>
+    /// <returns>A delegate to the native function.</returns>
+    #define GET_FUNCTION_PTR(in_functionName) System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<T##in_functionName>((IntPtr)_addr##in_functionName)
+
+    /// <summary>
+    /// Creates a fixed byte array with a special accessor for the real type.
+    /// </summary>
+    /// <param name="in_type">The real type of this array.</param>
+    /// <param name="in_name">The name of this array.</param>
+    /// <param name="in_size">The size of this array.</param>
+    #define UNMANAGED_FIXED_ARRAY(in_type, in_name, in_size) \
+        public fixed byte _##in_name[in_size]; \
+        public in_type* in_name \
+        { \
+            get \
+            { \
+                fixed (byte* p_##in_name = _##in_name) \
+                    return (in_type*)p_##in_name; \
+            } \
+        }
+
+    #define MAKE_GENERIC_API(in_functionName) \
+        public T* in_functionName<T>() where T : unmanaged \
+        { \
+            var name = Helpers.GetInternalName(typeof(T)); \
+\
+            return (T*)in_functionName(string.IsNullOrEmpty(name) ? typeof(T).Name : name); \
+        } \
+
+    #define MAKE_STATIC_GENERIC_API(in_functionName) \
+        public static T* in_functionName<T>() where T : unmanaged \
+        { \
+            var name = Helpers.GetInternalName(typeof(T)); \
+\
+            return (T*)in_functionName(string.IsNullOrEmpty(name) ? typeof(T).Name : name); \
+        } \
+
+    /// <summary>
+    /// Gets a pointer to an ANSI string.
+    /// </summary>
+    /// <param name="in_str">The ANSI string to get a pointer to.</param>
+    /// <returns>A pointer to the input ANSI string.</returns>
+    #define TO_STRING_PTR(in_str) (long)System.Runtime.InteropServices.Marshal.StringToHGlobalAnsi((##in_str##))
+
+    /// <summary>
+    /// Gets a pointer to a Unicode string.
+    /// </summary>
+    /// <param name="in_str">The Unicode string to get a pointer to.</param>
+    /// <returns>A pointer to the input Unicode string.</returns>
+    #define TO_WSTRING_PTR(in_str) (long)System.Runtime.InteropServices.Marshal.StringToHGlobalUni((##in_str##))
+
+    /// <summary>
+    /// Gets a pointer to a UTF-8 string.
+    /// </summary>
+    /// <param name="in_str">The UTF-8 string to get a pointer to.</param>
+    /// <returns>A pointer to the input UTF-8 string.</returns>
+    #define TO_U8STRING_PTR(in_str) (long)Helpers.StringToCoTaskMemUTF8((##in_str##))
+
+    /// <summary>
+    /// Gets an ANSI string from a pointer.
+    /// </summary>
+    /// <param name="in_ptr">The pointer to read an ANSI string from.</param>
+    /// <returns>An ANSI string.</returns>
+    #define FROM_STRING_PTR(in_ptr) System.Runtime.InteropServices.Marshal.PtrToStringAnsi((nint)(in_ptr))
+
+    /// <summary>
+    /// Gets a Unicode string from a pointer.
+    /// </summary>
+    /// <param name="in_ptr">The pointer to read a Unicode string from.</param>
+    /// <returns>A Unicode string.</returns>
+    #define FROM_WSTRING_PTR(in_ptr) System.Runtime.InteropServices.Marshal.PtrToStringUni((nint)(in_ptr))
+
+    /// <summary>
+    /// Gets a UTF-8 string from a pointer.
+    /// </summary>
+    /// <param name="in_ptr">The pointer to read a UTF-8 string from.</param>
+    /// <returns>A UTF-8 string.</returns>
+    #define FROM_U8STRING_PTR(in_ptr) Helpers.PtrToStringUTF8((nint)(in_ptr))
+
+
+    /// <summary>
+    /// Exposes a base field on the super class as a property
+    /// </summary>
+    /// <param name="TYPE">The field type.</param>
+    /// <param name="NAME">The field name.</param>
+    #define DEFINE_BASE_PROPERTY(TYPE, NAME) public TYPE NAME { get => Base.NAME; set => Base.NAME = value; }
+
+    #define DEFINE_INTERFACE_PROPERTY(INTERFACE, TYPE, NAME) TYPE INTERFACE.NAME { get => NAME; set => NAME = value; }
+
+    /// <summary>
+    /// A struct representation of a `const char*`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 8)]
+    public struct UnmanagedString
+    {
+        [FieldOffset(0)] public long pValue;
+        
+        public string Value
+        {
+            get
+            {
+                if (pValue == 0)
+                    return string.Empty;
+
+                return FROM_STRING_PTR(pValue);
+            }
+
+            set => pValue = TO_STRING_PTR(value);
+        }
+
+        public UnmanagedString(string in_value)
+        {
+            Value = in_value;
+        }
+
+        public static implicit operator UnmanagedString(string in_value)
+        {
+            return new UnmanagedString(in_value);
+        }
+
+        public static bool operator ==(UnmanagedString in_left, string in_right)
+        {
+            return in_left.Value == in_right;
+        }
+
+        public static bool operator !=(UnmanagedString in_left, string in_right)
+        {
+            return !(in_left == in_right);
+        }
+
+        public override bool Equals(object in_obj)
+        {
+            if (in_obj is string str)
+                return Value == str;
+            
+            return base.Equals(in_obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (int)StringMapOperation.ComputeHash(Value);
+        }
+
+        public override string ToString()
+        {
+            return Value;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
+    public sealed class InternalNameAttribute : Attribute
+    {
+        public string InternalName { get; }
+
+        public InternalNameAttribute(string in_internalName)
+        {
+            InternalName = in_internalName;
+        }
+    }
+
+    /// <summary>
+    /// Gets a list of indices where the input substring is found in a given string.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "Helpers"
+    /// //
+    /// {
+    ///     string myString = "lots of uses of the word of";
+    ///     
+    ///     var substrs = Helpers.GetSubstringIndices(myString, "of");
+    ///     
+    ///     // This list should contain three entries.
+    ///     // 0 - 5
+    ///     // 1 - 13
+    ///     // 2 - 25
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_str">The string to find substrings in.</param>
+    /// <param name="in_substr">The substring to search for.</param>
+    /// <returns>A list of indices where a substring appears in the given string.</returns>
+    public List<int> GetSubstringIndices(string in_str, string in_substr)
+    {
+        var indices = new List<int>();
+
+        int i = 0;
+        while ((i = in_str.IndexOf(in_substr, i)) != -1)
+        {
+            indices.Add(i);
+            i += in_substr.Length;
+        }
+
+        return indices;
+    }
+
+    /// <summary>
+    /// Gets a name from a InternalNameAttribute attached to a type.
+    /// </summary>
+    /// <param name="in_type">The type to get the attribute from.</param>
+    /// <returns>A string representing the internal name of the input type.</returns>
+    public static string GetInternalName(Type in_type)
+    {
+        var attr = (InternalNameAttribute)Attribute.GetCustomAttribute(in_type, typeof(InternalNameAttribute));
+
+        return attr == null ? string.Empty : attr.InternalName;
+    }
+
+    // https://github.com/scripthookvdotnet/scripthookvdotnet/blob/main/source/core/StringMarshal.cs
+    /*
+        Copyright (C) 2015 crosire, kagikn
+
+        This software is  provided 'as-is', without any express  or implied  warranty. In no event will the
+        authors be held liable for any damages arising from the use of this software.
+        Permission  is granted  to anyone  to use  this software  for  any  purpose,  including  commercial
+        applications, and to alter it and redistribute it freely, subject to the following restrictions:
+
+        1. The origin of this software must not be misrepresented; you must not claim that you  wrote the
+            original  software. If you use this  software  in a product, an  acknowledgment in the product
+            documentation would be appreciated but is not required.
+        2. Altered source versions must  be plainly  marked as such, and  must not be  misrepresented  as
+            being the original software.
+        3. This notice may not be removed or altered from any source distribution.
+
+        Changes;
+            - 29/08/2023
+                - (Hyper) renamed buffer
+                - (Hyper) renamed functions to use uppercase "UTF8"
+                - (Hyper) removed braces to compact code
+                - (Hyper) removed unsafe clauses (HMM always uses unsafe code)
+                - (Hyper) removed static modifiers
+
+            - 20/09/2023
+                - (Hyper) changed argument naming conventions
+                - (Hyper) changed IntPtr to nint
+                - (Hyper) changed string null check in StringToCoTaskMemUTF8 to use string.IsNullOrEmpty
+    */
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private static byte[] _bufferStringToCoTaskMemUTF8 = new byte[100];
+
+    /// <summary>
+    /// Gets a UTF-8 string from a memory location.
+    /// </summary>
+    /// <param name="in_ptr">The memory location where the UTF-8 string is.</param>
+    /// <returns>A UTF-8 string.</returns>
+    public string PtrToStringUTF8(nint in_ptr)
+    {
+        if (in_ptr == 0)
+            return string.Empty;
+
+        byte* data = (byte*)in_ptr;
+
+        int len = 0;
+        while (data[len] != 0)
+            ++len;
+
+        return PtrToStringUTF8(in_ptr, len);
+    }
+
+    /// <summary>
+    /// Gets a fixed-length UTF-8 string from a memory location.
+    /// </summary>
+    /// <param name="in_ptr">The memory location where the UTF-8 string is.</param>
+    /// <param name="in_length">The length of the UTF-8 string in memory.</param>
+    /// <returns>A UTF-8 string.</returns>
+    public string PtrToStringUTF8(nint in_ptr, int in_length)
+    {
+        if (in_length < 0)
+            throw new ArgumentException(null, nameof(in_length));
+
+        if (in_ptr == 0)
+            return null;
+
+        if (in_length == 0)
+            return string.Empty;
+
+        return Encoding.UTF8.GetString((byte*)in_ptr, in_length);
+    }
+
+    /// <summary>
+    /// Creates a pointer to a UTF-8 string.
+    /// </summary>
+    /// <param name="in_str">The UTF-8 string to get a pointer for.</param>
+    /// <returns>A pointer to the input UTF-8 string.</returns>
+    public nint StringToCoTaskMemUTF8(string in_str)
+    {
+        if (string.IsNullOrEmpty(in_str))
+            return 0;
+
+        int byteCountUtf8 = Encoding.UTF8.GetByteCount(in_str);
+        if (byteCountUtf8 > _bufferStringToCoTaskMemUTF8.Length)
+            _bufferStringToCoTaskMemUTF8 = new byte[byteCountUtf8 * 2];
+
+        Encoding.UTF8.GetBytes(in_str, 0, in_str.Length, _bufferStringToCoTaskMemUTF8, 0);
+
+        nint dest = Marshal.AllocCoTaskMem(byteCountUtf8 + 1);
+        if (dest == 0)
+            throw new OutOfMemoryException();
+
+        Marshal.Copy(_bufferStringToCoTaskMemUTF8, 0, dest, byteCountUtf8);
+        
+        ((byte*)dest)[byteCountUtf8] = 0;
+
+        return dest;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+}
+Library "RTTI" by "Hyper"
+{
+    #lib "Memory"
+
+    #define RESOLVE_RELATIVE_PTR(in_offset) (IntPtr.Size == 4 ? in_offset : (0x140000000 + in_offset))
+
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
+    [DllImport("imagehlp.dll", CallingConvention = CallingConvention.StdCall)]
+    private static extern uint UnDecorateSymbolName([MarshalAs(UnmanagedType.LPStr)] string name, byte[] outputString, uint maxStringLength, uint flags);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CompleteObjectLocator
+    {
+        public int Signature;
+        public int VftableOffset;
+        public int CtorDisplacementOffset;
+        public int pTypeDescriptor;
+        public int pClassHierarchyDescriptor;
+        public int pObjectBase;
+
+        public TypeDescriptor* GetTypeDescriptor()
+        {
+            return (TypeDescriptor*)RESOLVE_RELATIVE_PTR(pTypeDescriptor);
+        }
+
+        public ClassHierarchyDescriptor* GetClassHierarchyDescriptor()
+        {
+            return (ClassHierarchyDescriptor*)RESOLVE_RELATIVE_PTR(pClassHierarchyDescriptor);
+        }
+
+        public override string ToString()
+            => $"const {GetTypeDescriptor()->GetName()}::`RTTI Complete Object Locator'";
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct TypeDescriptor
+    {
+        public void* pTypeInfo;
+        public void* pRuntimeRef;
+        
+        public string GetName(bool in_isDemangled = true, IEnumerable<DemanglerFlags> in_demanglerFlags = null)
+        {
+            fixed (TypeDescriptor* pThis = &this)
+            {
+                var result = Marshal.PtrToStringAnsi((nint)((long)pThis + (IntPtr.Size == 4 ? 0x08 : 0x10)));
+
+                if (string.IsNullOrEmpty(result))
+                    return string.Empty;
+
+                result = result.TrimStart('.');
+                
+                if (in_isDemangled)
+                {
+                    if (in_demanglerFlags == null)
+                        in_demanglerFlags = new[] { RTTI.DemanglerFlags.NAME_ONLY };
+                    
+                    return Demangle(result, in_demanglerFlags);
+                }
+                else
+                {
+                    return result;
+                }
+            }
+        }
+
+        public string[] GetNamespaces()
+        {
+            return GetName().Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        public override string ToString()
+            => $"class {GetName()} `RTTI Type Descriptor'";
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ClassHierarchyDescriptor
+    {
+        public int Signature;
+        public int Attributes;
+        public int BaseClassCount;
+        public int pBaseClasses;
+
+        public BaseClassDescriptor* GetBaseClass(int in_index)
+        {
+            if (in_index > BaseClassCount)
+                return null;
+                
+            var ptr = *(int*)(RESOLVE_RELATIVE_PTR(pBaseClasses) + (in_index * 4));
+            
+            return (BaseClassDescriptor*)(RESOLVE_RELATIVE_PTR(ptr));
+        }
+
+        public override string ToString()
+            => $"{GetBaseClass(0)->GetTypeDescriptor()->GetName()}::`RTTI Class Hierarchy Descriptor'";
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct BaseClassDescriptor
+    {
+        public int pTypeDescriptor;
+        public int SubElementCount;
+        public int MemberDisplacement;
+        public int VftableDisplacement;
+        public int DisplacementWithinVftable;
+        public int BaseClassAttributes;
+        public int pClassHierarchyDescriptor;
+
+        public TypeDescriptor* GetTypeDescriptor()
+        {
+            return (TypeDescriptor*)RESOLVE_RELATIVE_PTR(pTypeDescriptor);
+        }
+
+        public ClassHierarchyDescriptor* GetClassHierarchyDescriptor()
+        {
+            return (ClassHierarchyDescriptor*)RESOLVE_RELATIVE_PTR(pClassHierarchyDescriptor);
+        }
+
+        public override string ToString()
+            => $"{GetTypeDescriptor()->GetName()}::`RTTI Base Class Descriptor at ({MemberDisplacement}, {VftableDisplacement}, {DisplacementWithinVftable}, {BaseClassAttributes})'";
+    }
+
+    public CompleteObjectLocator* GetRuntimeInfoFromVftable(void* in_pVftable)
+    {
+        if (in_pVftable == null)
+            return null;
+
+        var runtimeInfoOffset = *(long*)((long)in_pVftable - IntPtr.Size);
+
+        if (!Memory.IsAccessible((nint)runtimeInfoOffset))
+            return null;
+        
+        return (CompleteObjectLocator*)runtimeInfoOffset;
+    }
+
+    public CompleteObjectLocator* GetRuntimeInfo(void* in_pClass)
+    {
+        return GetRuntimeInfoFromVftable((void*)*(long*)in_pClass);
+    }
+
+    public string GetClassName(void* in_pClass, bool in_isDemangled = true, IEnumerable<DemanglerFlags> in_demanglerFlags = null)
+    {
+        var pRuntimeInfo = RTTI.GetRuntimeInfo(in_pClass);
+
+        if (pRuntimeInfo == null)
+            return string.Empty;
+
+        var pTypeDescriptor = pRuntimeInfo->GetTypeDescriptor();
+
+        if (pTypeDescriptor == null)
+            return string.Empty;
+            
+        return pTypeDescriptor->GetName(in_isDemangled, in_demanglerFlags);
+    }
+
+    public string[] GetClassNamespaces(void* in_pClass)
+    {
+        return GetClassName(in_pClass).Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    public string Demangle(string in_mangledName, IEnumerable<DemanglerFlags> in_flags)
+    {
+        var result = string.Empty;
+        var flags = 0U;
+        var demangledBytes = new byte[1024];
+
+        foreach (var flag in in_flags)
+            flags |= (uint)flag;
+
+        while (true)
+        {
+            var resultLength = UnDecorateSymbolName
+            (
+                in_mangledName,
+                demangledBytes,
+                (uint)demangledBytes.Length,
+                (uint)flags
+            );
+
+            if (resultLength == (demangledBytes.Length - 2))
+            {
+                demangledBytes = new byte[demangledBytes.Length * 2];
+                continue;
+            }
+            else
+            {
+                int count = Array.IndexOf<byte>(demangledBytes, 0, 0);
+
+                if (count < 0)
+                    count = demangledBytes.Length;
+
+                result = Encoding.ASCII.GetString(demangledBytes, 0, count);
+
+                break;
+            }
+        }
+
+        if (string.IsNullOrEmpty(result))
+            return result;
+        
+        var namespaces = result.Split(new[] { "::" }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (namespaces.Length > 0)
+        {
+            var last = namespaces[namespaces.Length - 1];
+            
+            if (last.StartsWith("AV"))
+                namespaces[namespaces.Length - 1] = last.Remove(0, 2);
+
+            result = string.Join("::", namespaces);
+        }
+
+        return result;
+    }
+
+    public enum DemanglerFlags
+    {
+        /// <summary>
+        /// Enable full undecoration.
+        /// </summary>
+        COMPLETE = 0x0000,
+
+        /// <summary>
+        /// Remove leading underscores from Microsoft keywords.
+        /// </summary>
+        NO_LEADING_UNDERSCORES = 0x0001,
+
+        /// <summary>
+        /// Disable expansion of Microsoft keywords.
+        /// </summary>
+        NO_MS_KEYWORDS = 0x0002,
+
+        /// <summary>
+        /// Disable expansion of return types for primary declarations.
+        /// </summary>
+        NO_FUNCTION_RETURNS = 0x0004,
+
+        /// <summary>
+        /// Disable expansion of the declaration model.
+        /// </summary>
+        NO_ALLOCATION_MODEL = 0x0008,
+
+        /// <summary>
+        /// Disable expansion of the declaration language specifier.
+        /// </summary>
+        NO_ALLOCATION_LANGUAGE = 0x0010,
+
+        /// <summary>
+        /// Disable expansion of Microsoft keywords on the this type for primary declaration.
+        /// </summary>
+        NO_MS_THISTYPE = 0x0020,
+
+        /// <summary>
+        /// Disable expansion of CodeView modifiers on the this type for primary declaration.
+        /// </summary>
+        NO_CV_THISTYPE = 0x0040,
+
+        /// <summary>
+        /// Disable all modifiers on the "this" type.
+        /// </summary>
+        NO_THISTYPE = 0x0060,
+
+        /// <summary>
+        /// Disable expansion of access specifiers for members.
+        /// </summary>
+        NO_ACCESS_SPECIFIERS = 0x0080,
+
+        /// <summary>
+        /// Disable expansion of throw-signatures for functions and pointers to functions.
+        /// </summary>
+        NO_THROW_SIGNATURES = 0x0100,
+
+        /// <summary>
+        /// Disable expansion of the static or virtual attribute of members.
+        /// </summary>
+        NO_MEMBER_TYPE = 0x0200,
+
+        /// <summary>
+        /// Disable expansion of the Microsoft model for user-defined type returns.
+        /// </summary>
+        NO_RETURN_UDT_MODEL = 0x0400,
+
+        /// <summary>
+        /// Undecorate 32-bit decorated names.
+        /// </summary>
+        P32_BIT_DECODE = 0x0800,
+
+        /// <summary>
+        /// Undecorate only the name for primary declaration. Returns [scope::]name. Does expand template parameters.
+        /// </summary>
+        NAME_ONLY = 0x1000,
+
+        /// <summary>
+        /// Do not undecorate function arguments.
+        /// </summary>
+        NO_ARGUMENTS = 0x2000,
+
+        /// <summary>
+        /// Do not undecorate special names, such as vtable, vcall, vector, metatype, and so on.
+        /// </summary>
+        NO_SPECIAL_SYMS = 0x4000
+    }
+}
+Library "Memory" by "Hyper & Sajid" 
+{
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Runtime.CompilerServices;
+    using System.Text;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr VirtualQuery(IntPtr lpAddress, ref MEMORY_BASIC_INFORMATION lpBuffer, UIntPtr dwLength);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MEMORY_BASIC_INFORMATION
+    {
+        public IntPtr BaseAddress;
+        public IntPtr AllocationBase;
+        public uint AllocationProtect;
+        public IntPtr RegionSize;
+        public uint State;
+        public uint Protect;
+        public uint Type;
+    }
+
+    private static Dictionary<nint, List<byte>> _preservedMemory = new();
+
+    public void Preserve(nint in_location, nint in_length, bool in_isPreservedOnce = true)
+    {
+        if (in_location == 0)
+            return;
+
+        if (in_isPreservedOnce)
+        {
+            if (_preservedMemory.ContainsKey(in_location))
+                return;
+        }
+        else
+        {
+            if (_preservedMemory.ContainsKey(in_location))
+                _preservedMemory.Remove(in_location);
+        }
+        
+        List<byte> buffer = new();
+        for (nint i = 0; i < in_length; i++)
+            buffer.Add(Read<byte>(in_location + i));
+
+        _preservedMemory.Add(in_location, buffer);
+    }
+
+    public void Preserve(long in_location, long in_length, bool in_isPreservedOnce = true)
+    {
+        Preserve((nint)in_location, (nint)in_length, in_isPreservedOnce);
+    }
+
+    public void Restore(nint in_location)
+    {
+        if (in_location == 0)
+            return;
+
+        if (!_preservedMemory.ContainsKey(in_location))
+            return;
+
+        nint i = 0;
+        foreach (byte b in _preservedMemory[in_location])
+        {
+            WriteProtected<byte>(in_location + i, b);
+            i++;
+        }
+    }
+
+    public void Restore(long in_location)
+    {
+        Restore((nint)in_location);
+    }
+
+    public uint GetPageProtectFlags(nint in_location)
+    {
+        var memInfo = new MEMORY_BASIC_INFORMATION();
+
+        if (VirtualQuery(in_location, ref memInfo, (UIntPtr)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION))) == IntPtr.Zero)
+            return 1;
+
+        return memInfo.Protect;
+    }
+
+    public bool IsAccessible(nint in_location)
+    {
+        // PAGE_NOACCESS
+        if ((GetPageProtectFlags(in_location) & 1) != 0)
+            return false;
+
+        return true;
+    }
+
+    public nint ReadCall(nint in_location)
+    {
+        if (in_location == 0)
+            return 0;
+
+        return in_location + Read<int>(in_location + 0x01) + 0x05;
+    }
+
+    public long ReadCall(long in_location)
+    {
+        return (long)ReadCall((nint)in_location);
+    }
+
+    public nint ReadEffectiveAddress(nint in_location)
+    {
+        if (in_location == 0)
+            return 0;
+
+        return in_location + Read<int>(in_location + 0x03) + 0x07;
+    }
+
+    public long ReadEffectiveAddress(long in_location)
+    {
+        return (long)ReadEffectiveAddress((nint)in_location);
+    }
+
+    public enum JumpType : sbyte
+    {
+        Unknown = -1,
+        ShortCond,
+        NearJmp,
+        NearCond,
+        LongJmp
+    }
+
+    public JumpType ReadJumpOpcode(nint in_location)
+    {
+        JumpType result = JumpType.Unknown;
+
+        if (in_location == 0)
+            return result;
+
+        byte opcode = Read<byte>(in_location);
+
+        if ((opcode & 0xF0) == 0x70)
+        {
+            result = JumpType.ShortCond;
+        }
+        else
+        {
+            switch (opcode)
+            {
+                case 0xE3:
+                case 0xEB:
+                    result = JumpType.ShortCond;
+                    break;
+
+                case 0xE9:
+                    result = JumpType.NearJmp;
+                    break;
+
+                case 0x0F:
+                    result = JumpType.NearCond;
+                    break;
+
+                case 0xFF:
+                    result = JumpType.LongJmp;
+                    break;
+            }
+        }
+
+        return result;
+    }
+
+    public JumpType ReadJumpOpcode(long in_location)
+    {
+        return ReadJumpOpcode((nint)in_location);
+    }
+
+    public nint ReadJump(nint in_location)
+    {
+        if (in_location == 0)
+            return 0;
+
+        switch (ReadJumpOpcode(in_location))
+        {
+            case JumpType.ShortCond:
+                return in_location + Read<byte>(in_location + 0x01) + 0x02;
+
+            case JumpType.NearJmp:
+                return in_location + Read<int>(in_location + 0x01) + 0x05;
+
+            case JumpType.NearCond:
+                return in_location + Read<int>(in_location + 0x02) + 0x06;
+
+            case JumpType.LongJmp:
+                return (nint)Read<long>(in_location + 0x06);
+        }
+
+        return 0;
+    }
+
+    public long ReadJump(long in_location)
+    {
+        return (long)ReadJump((nint)in_location);
+    }
+
+    public void WriteForceJump(nint in_location)
+    {
+        if (in_location == 0)
+            return;
+        
+        switch (ReadJumpOpcode(in_location))
+        {
+            case JumpType.ShortCond:
+                WriteProtected<byte>(in_location, 0xEB);
+                break;
+
+            case JumpType.NearCond:
+                WriteProtected<byte>(in_location, 0xE9);
+                WriteProtected<int>(in_location + 0x01, Read<int>(in_location + 0x02) + 0x01);
+                break;
+        }
+    }
+
+    public void WriteForceJump(long in_location)
+    {
+        WriteForceJump((nint)in_location);
+    }
+
+    public nint ReadThunk(nint in_location, nint in_offset = 0)
+    {
+        return ReadJump(ReadCall(in_location) + in_offset);
+    }
+
+    public long ReadThunk(long in_location, long in_offset = 0)
+    {
+        return (long)ReadThunk((nint)in_location, (nint)in_offset);
+    }
+
+    public void WriteString(long in_location, string in_str, Encoding in_encoding)
+    {
+        WriteProtected<byte>(in_location, in_encoding.GetBytes(in_str));
+    }
+
+    public void WriteString(long in_location, string in_str)
+    {
+        WriteString(in_location, in_str, Encoding.ASCII);
+    }
+
+    public void PrintMemory<T>(IntPtr in_address, int in_rowCount) where T : unmanaged
+    {
+        for (int i = 0; i < in_rowCount * 16; i += 16)
+        {
+            Console.Write($"{(in_address + i).ToInt64():X16}: ");
+
+            if (typeof(T) == typeof(byte) || typeof(T) == typeof(sbyte))
+            {
+                for (int j = 0; j < 16; j++)
+                    Console.Write($"{Read<T>(in_address + i + j):X2} ");
+            }
+            else if (typeof(T) == typeof(short) || typeof(T) == typeof(ushort))
+            {
+                for (int j = 0; j < 16; j += 2)
+                    Console.Write($"{Read<T>(in_address + i + j):X4} ");
+            }
+            else if (typeof(T) == typeof(int) || typeof(T) == typeof(uint))
+            {
+                for (int j = 0; j < 16; j += 4)
+                    Console.Write($"{Read<T>(in_address + i + j):X8} ");
+            }
+            else if (typeof(T) == typeof(long) || typeof(T) == typeof(ulong))
+            {
+                for (int j = 0; j < 16; j += 8)
+                    Console.Write($"{Read<T>(in_address + i + j):X16} ");
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                for (int j = 0; j < 16; j += 4)
+                    Console.Write($"{Read<float>(in_address + i + j)} ");
+            }
+            else if (typeof(T) == typeof(double))
+            {
+                for (int j = 0; j < 16; j += 8)
+                    Console.Write($"{Read<double>(in_address + i + j)} ");
+            }
+
+            Console.WriteLine();
+        }
+    }
+
+    public void PrintMemory(IntPtr in_address, int in_rowCount)
+    {
+        PrintMemory<byte>(in_address, in_rowCount);
+    }
+    
+    public struct Pointer<T> where T : unmanaged
+    {
+        public T* pData;
+
+        public Pointer(ref T data)
+        {
+            fixed(T* dataPtr = &data)
+            {
+                pData = dataPtr;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Pointer(T* in_pData)
+        {
+            pData = in_pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool IsValid()
+        {
+            return pData != null;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref T Ref()
+        {
+            return ref *pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T* Get()
+        {
+            return pData;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator bool(Pointer<T> self) => self.IsValid();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator Pointer<T>(T* data) => new(data);
+
+        public override string ToString() => $"0x{((long)pData):X}";
+    }
+}
+Library "Cameras" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of a wrapper for storing instances of `app_cmn::camera::CameraController` in arrays.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct CameraControllerWrapper
+    {
+        /// <summary>
+        /// A pointer to an instance of `app_cmn::camera::CameraController`.
+        /// </summary>
+        [FieldOffset(0)] public CameraController* pCameraController;
+    }
+
+    /// <summary>
+    /// A struct representation of `app_cmn::camera::CameraController`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x90)]
+    public struct CameraController
+    {
+        /// <summary>
+        /// The position of the camera.
+        /// </summary>
+        [FieldOffset(0x20)] public Vector3 Position;
+
+        VFUNCTION_PTR(CameraController, 1, long, GetName)
+    }
+}
+Library "Plugins" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    #lib "Helpers"
+
+    #import "Collections"
+
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `app::player::StatePluginBase`.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Size = 0x28)]
+    public struct StatePluginBase
+    {
+        VFUNCTION_PTR(StatePluginBase, 1, Helpers.UnmanagedString, GetName)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::StatePlugin<T>`.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Size = 0x28)]
+    public struct StatePlugin
+    {
+        public StatePluginBase Base;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::PlayerStatePlugin`.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Size = 0x28)]
+    public struct PlayerStatePlugin
+    {
+        public StatePlugin Base;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::StatePluginManager`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x48)]
+    public struct StatePluginManager
+    {
+        /// <summary>
+        /// An array of pointers to `app::player::StatePluginBase` instances.
+        /// </summary>
+        [FieldOffset(0x20)] public ObjectMoveArray<Memory.Pointer<StatePluginBase>> Plugins;
+
+        /// <summary>
+        /// Gets an instance of `app::player::StatePluginBase` by name.
+        /// </summary>
+        /// <param name="in_pluginName">The name of the state plugin.</param>
+        /// <returns>An instance of `app::player::StatePluginBase` requested by name.</returns>
+        public StatePluginBase* GetStatePlugin(string in_pluginName)
+        {
+            foreach (var pPlugin in Plugins)
+            {
+                if (pPlugin.pData == null)
+                    continue;
+
+                if (pPlugin.pData->GetName()() == in_pluginName)
+                    return pPlugin.pData;
+            }
+
+            return null;
+        }
+
+        MAKE_GENERIC_API(GetStatePlugin)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::StatePluginAutoRun`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x38)]
+    public struct StatePluginAutoRun
+    {
+        [FieldOffset(0x30)] public float Speed;
+    }
+}
+Library "Sonic" by "Hyper"
+{
+    public enum StateID : int
+    {
+        Default = -1,
+        StateAutoJump = 84,
+        StateBallMove = 47,
+        StateBlowDead = 31,
+        StateBlown = 49,
+        StateBrake = 5,
+        StateBreathe = 34,
+        StateCaught = 91,
+        StateCeilingRun = 77,
+        StateClassicDead = 33,
+        StateClimbWall = 75,
+        StateDamage = 23,
+        StateDamageAir = 24,
+        StateDamageQuake = 28,
+        StateDamageRunning = 25,
+        StateDead = 29,
+        StateDiving = 66,       // StateDivingRoot
+        StateDivingDamage = 68, // StateDivingRoot
+        StateDivingFall = 67,   // StateDivingRoot
+        StateDivingRoot = 65,
+        StateReturnSuperSonic = 101,
+        StateFall = 10,
+        StateFallingDead = 11,
+        StateFallSlope = 52,
+        StateFan = 82,
+        StateFollowBrake = 104,
+        StateFollowCancelStep = 140,
+        StateFollowClimbWall = 133,
+        StateFollowDiving = 111,
+        StateFollowDead = 108,
+        StateFollowDrill = 125,
+        StateFollowFall = 107,
+        StateFollowGrind = 112,
+        StateFollowGrindJump = 113,
+        StateFollowJump = 105,
+        StateFollowJumpBoard = 115,
+        StateFollowDoubleJump = 106,
+        StateFollowSpring = 114,
+        StateFollowKnockedBack = 122,
+        PlayerStateLevitationFollow = 144,
+        StateFollowPassHitWall = 132,
+        StateFollowRun = 103,
+        StateFollowSideWallRun = 136,
+        StateFollowSliding = 118,       // StateFollowSquatRoot
+        StateFollowSlidingToStand = 119,
+        StateFollowSquat = 117, // StateFollowSquatRoot
+        StateFollowSquatRoot = 116,
+        StateFollowStand = 102,
+        StateFollowStomping = 120,
+        StateFollowStompingLand = 121,
+        StateFollowWallJump = 124,
+        StateFollowWallJumpReady = 123,
+        StateFollowWallKick = 139,
+        StateFollowWallRun = 134,
+        StateFollowWallSideStep = 135,
+        StateFollowWallSlip = 137,
+        StateFollowWallSlipFall = 138,
+        StateFollowUpReel = 126,
+        StateFollowBoostTrio = 127,
+        StateFollowBoostJumpTrio = 128,
+        StateFollowBoostFallTrio = 129,
+        StateFollowGadgetAction = 130,
+        StateFollowGadgetSpAction = 131,
+        StateGetOverStep = 74,
+        StateGoal = 44,
+        StateGoal2 = 45,
+        StateFixedGoal = 46,
+        StateGrind = 36,        // StateGrindRoot
+        StateGrindDamage = 39,  // StateGrindRoot
+        StateGrindDamageAir = 40,       // StateGrindRoot
+        StateGrindJump = 37,    // StateGrindRoot
+        StateGrindDoubleJump = 38,      // StateGrindRoot
+        StateGrindRoot = 35,
+        StateGrindStep = 41,
+        StateHoldStand = 90,
+        StateJump = 6,
+        StateJumpBoardLaunch = 95,
+        StateDoubleJump = 7,
+        StateSpringJump = 20,
+        StateSpringJumpHeadLand = 21,
+        StateBigSpringJump = 22,
+        StateJumpGoingTarget = 86,
+        StateKnockedBack = 50,
+        StateLaunchAutoRunCannon = 94,
+        StateLeftStep = 61,
+        StateLeftStepRun = 63,
+        PlayerStateLevitation = 143,
+        StateParkourLanding = 76,
+        StatePathJump = 85,
+        StatePinBall = 96,
+        StatePipeMove = 92,
+        StatePipeOut = 93,
+        StatePressDead = 30,
+        StateQuickStep = 57,    // StateQuickStepRoot
+        StateQuickStepCrash = 60,       // StateQuickStepRoot
+        StateQuickStepLeft = 58,        // StateQuickStepRoot
+        StateQuickStepRight = 59,       // StateQuickStepRoot
+        StateQuickStepRoot = 56,
+        StateRightStep = 62,
+        StateRightStepRun = 64,
+        StateRun = 4,
+        StateRunningStart = 83,
+        StateSandSlider = 98,
+        StateSideWallRun = 73,
+        StateSleep = 0,
+        StateSlider = 97,
+        StateSliding = 16,      // StateSquatRoot
+        StateSlidingToStand = 17,
+        StateSpinAttack = 9,
+        StateSquat = 15,        // StateSquatRoot
+        StateSquatRoot = 14,
+        StateStagger = 51,
+        StateStandRoot = 1,
+        StateStand = 2, // StateStandRoot
+        StateStandWater = 3,    // StateStandRoot
+        StateHoldStart = 89,
+        StateChangeSuperSonic = 100,
+        StateStomping = 42,
+        StateStompingLand = 43,
+        StateStraightJump = 48,
+        StateSuffocatingDead = 13,
+        StateUpDead = 12,
+        StateWallCrashDead = 32,
+        StateWallJump = 19,
+        StateWallJumpReady = 18,
+        StateWallKick = 71,
+        StateWallRun = 69,
+        StateHoldWarp = 88,
+        StateHoldWarpStart = 87,
+        StateWaterFall = 99,
+        StateHomingAttackRoot = 53,
+        StateHomingFinished = 55,       // StateHomingAttackRoot
+        StateHomingAttack = 54, // StateHomingAttackRoot
+        StateFollowHomingAttack = 109,  // StateHomingAttackRoot
+        StateFollowHomingAttackFinished = 110,  // StateHomingAttackRoot
+        StateBoost = 78,        // StateRun
+        StateBoostAir = 79,     // StateRun
+        StateBoostJump = 80,
+        StateBoostFall = 81,
+        StateEventDERSonic = 141,
+        StateEventDERBuddy = 142,
+        TagStateDoubleJump = 223,
+        TagStateFollowDoubleJump = 224,
+        TagStateDoubleBoostRoot = 227,
+        TagStateDoubleBoostStart = 228, // TagStateDoubleBoostRoot
+        TagStateDoubleBoostRun = 229,   // TagStateDoubleBoostRoot
+        TagStateDoubleBoostRunWeak = 230,       // TagStateDoubleBoostRoot
+        TagStateDoubleBoostJump = 231,  // TagStateDoubleBoostRoot
+        TagStateDoubleBoostJumpWeak = 232,      // TagStateDoubleBoostRoot
+        TagStateDoubleBoostDamage = 233,        // TagStateDoubleBoostRoot
+        TagStateFollowDoubleBoostStart = 234,
+        TagStateFollowDoubleBoost = 235,
+        TagStateFollowDoubleBoostWeak = 236,
+        TagStateFollowDoubleBoostJump = 237,
+        TagStateFollowDoubleBoostJumpWeak = 238,
+        TagStateFollowDoubleBoostDamage = 239,
+        TagStateHomingAttack = 240,     // StateHomingAttackRoot
+        TagStateFollowHomingObject = 241,       // StateHomingAttackRoot
+        TagStateFollowHomingAttack = 242,       // StateHomingAttackRoot
+        TagStateHomingAttackFinished = 243,     // StateHomingAttackRoot
+        TagStateFollowHomingAttackFinished = 244,       // StateHomingAttackRoot
+        TagStateHomingThrow = 245,      // StateHomingAttackRoot
+        TagStateFollowHomingThrow = 246,        // StateHomingAttackRoot
+        TagStateHomingThrowFinished = 247,      // StateHomingAttackRoot
+        TagStateFollowHomingThrowFinished = 248,        // StateHomingAttackRoot
+        TagStateHomingKickWait = 249,   // StateHomingAttackRoot
+        TagStateFollowHomingKickWait = 250,     // StateHomingAttackRoot
+        TagStateHomingKick = 251,       // StateHomingAttackRoot
+        TagStateFollowHomingKick = 252, // StateHomingAttackRoot
+        TagStateHomingKickFinished = 253,       // StateHomingAttackRoot
+        TagStateFollowHomingKickFinished = 254, // StateHomingAttackRoot
+        TagStateRescueBeginBuddy = 255,
+        TagStateRescueBeginSonic = 256,
+        TagStateRescueMain = 257,
+        TagStateRescueSub = 258,
+        SonicStateFollowWireTrack = 148,
+        SonicStateFollowWireLaunch = 147,
+        SonicStateFollowWireGiantSwing = 149,
+        SonicStateFollowWireTurn = 150,
+        SonicStateFollowWireDrift = 151,
+        TagStateFollowWireBoostBegin = 152,
+        SonicStateFollowGadgetHoverJump = 153,
+        SonicStateFollowGadgetHoverFloating = 154,
+        SonicStateFollowGadgetHoverRescue = 155,
+        TrioStateTripleBoost = 156,
+        TrioStateTripleBoostFailed = 157,
+    }
+}
+Library "Allocators" by "Hyper, Sajid & ĐeäTh"
+{
+    #include "Helpers" noemit
+
+    /// <summary>
+    /// A struct representation of the `csl::fnd::IAllocator` interface.
+    /// </summary>
+    public struct IAllocator
+    {
+        /// <summary>
+        /// Destroys an instance of an allocator with the `csl::fnd::IAllocator` interface.
+        /// </summary>
+        /// <param name="in_pThis">The instance to destroy.</param>
+        VFUNCTION_PTR(IAllocator, 0, void, Dtor, IAllocator* in_pThis)
+        
+        /// <summary>
+        /// Allocates an amount of memory to be used for a resource.
+        /// </summary>
+        /// <param name="in_size">The amount of memory to allocate.</param>
+        /// <param name="in_alignment">The alignment of the data.</param>
+        VFUNCTION_PTR(IAllocator, 1, void*, Alloc, IAllocator* in_pThis, long in_size, int in_alignment)
+
+        /// <summary>
+        /// Frees used memory at a location.
+        /// </summary>
+        /// <param name="in_pMemory">A pointer to the memory to free.</param>
+        VFUNCTION_PTR(IAllocator, 2, void, Free, IAllocator* in_pThis, void* in_pMemory)
+    }
+}
+Library "GOComponentManager" by "Hyper"
+{
+    #lib "Memory"
+    #lib "HandleManagerBase"
+
+    #import "GameTypes"
+    #import "GOComponents"
+
+    using System.Runtime.InteropServices;
+
+    public HandleManagerBase.Data* GetHandleManagerSingleton()
+    {
+        return *(HandleManagerBase.Data**)0x14240E808;
+    }
+
+    public GOComponent* GetGOCFromHandle(int in_handle)
+    {
+        var manager = GetHandleManagerSingleton();
+        
+        if (manager == null)
+            return null;
+
+        return (GOComponent*)manager->GetObject(in_handle);
+    }
+}
+Library "Blackboards" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    #lib "Memory"
+
+    #import "Collections"
+
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `app::player::BlackboardContent`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct BlackboardContent
+    {
+        VFUNCTION_PTR(BlackboardContent, 1, Helpers.UnmanagedString, GetName)
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::Blackboard2`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x38)]
+    public struct Blackboard2
+    {
+        [FieldOffset(0x18)] public ObjectMoveArray<Memory.Pointer<BlackboardContent>> Blackboards;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::BlackboardBoost`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x68)]
+    public struct BlackboardBoost
+    {
+        [FieldOffset(0x18)] public float BoostAmount;
+
+        [FieldOffset(0x24)] public float DoubleBoostAmount;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::BlackboardItem`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x28)]
+    public struct BlackboardItem
+    {
+        [FieldOffset(0x1C)] public int RingCount;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::BlackboardStatus`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x170)]
+    public struct BlackboardStatus
+    {
+        [FieldOffset(0x28)] public BitSet8 WorldFlags;
+
+        [FieldOffset(0x30)] public bool IsSideView;
+    }
+
+    public enum WorldFlags
+    {
+        IsDead = 5
+    }
+}
+Library "Player" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    #lib "GameManager"
+    #lib "GameObject"
+
+    #lib "Sonic"
+    #lib "Buddy"
+
+    #import "Blackboards"
+    #import "GOComponents"
+    #import "PlayerTargets"
+    #import "Plugins"
+    #import "Services"
+
+    using System.Runtime.InteropServices;
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x208)]
+    public struct Data
+    {
+        [FieldOffset(0)] public GameObject.Data Base;
+        
+        public PlayerContext* GetContext()
+        {
+            fixed (Data* pThis = &this)
+            {
+                var pGOCPlayerHsm = GameObject.GetGOC<GOCPlayerHsm>(&pThis->Base);
+
+                if (pGOCPlayerHsm == null)
+                    return null;
+                
+                return pGOCPlayerHsm->pPlayerContext;
+            }
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0xA8)]
+    public struct PlayerContext
+    {
+        [FieldOffset(0x18)] public Data* pPlayer;
+        
+        [FieldOffset(0x20)] public BlackboardStatus* pBlackboardStatus;
+
+        [FieldOffset(0x38)] public GOCPlayerHsm* pGOCPlayerHsm;
+    }
+    
+    public Data* GetSonicData()
+    {
+        return (Data*)GameManager.GetGameObject("Sonic");
+    }
+
+    public Data* GetClassicSonicData()
+    {
+        return (Data*)GameManager.GetGameObject("SonicClassic");
+    }
+
+    public Data* GetBuddyData()
+    {
+        return (Data*)GameManager.GetGameObject("Buddy");
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    public static class State
+    {
+        public static T GetCurrentStateID<T>(Data* in_pPlayer)
+        {
+            if (in_pPlayer == null)
+                return default;
+            
+            var pContext = in_pPlayer->GetContext();
+
+            if (pContext == null)
+                return default;
+
+            var pGOCPlayerHsm = pContext->pGOCPlayerHsm;
+
+            if (pGOCPlayerHsm == null)
+                return default;
+
+            return (T)(object)pGOCPlayerHsm->CurrentStateID;
+        }
+
+        public static void SetState<T>(Data* in_pPlayer, T in_destination)
+        {
+            if (in_pPlayer == null)
+                return;
+            
+            var pContext = in_pPlayer->GetContext();
+
+            if (pContext == null)
+                return;
+
+            var pGOCPlayerHsm = pContext->pGOCPlayerHsm;
+
+            if (pGOCPlayerHsm == null)
+                return;
+
+            pGOCPlayerHsm->DestinationStateID = (int)(object)in_destination;
+            pGOCPlayerHsm->StateFlags |= 0x10;
+            pGOCPlayerHsm->StateFlags &= 0xDF;
+        }
+
+        public static StatePluginBase* GetStatePlugin(Data* in_pPlayer, string in_pluginName)
+        {
+            if (in_pPlayer == null)
+                return null;
+            
+            var pContext = in_pPlayer->GetContext();
+
+            if (pContext == null)
+                return null;
+            
+            var pStatePluginManager = pContext->pGOCPlayerHsm->pStatePluginManager;
+
+            if (pStatePluginManager == null)
+                return null;
+
+            return pStatePluginManager->GetStatePlugin(in_pluginName);
+        }
+
+        public static T* GetStatePlugin<T>(Data* in_pPlayer) where T : unmanaged
+        {
+            var name = Helpers.GetInternalName(typeof(T));
+            
+            return (T*)GetStatePlugin(in_pPlayer, string.IsNullOrEmpty(name) ? typeof(T).Name : name);
+        }
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public static class Status
+    {
+        public static GameObject.Data* GetLockOnTarget()
+        {
+            var pPlayerTargetService = GameManager.GetService<PlayerTargetService>();
+
+            if (pPlayerTargetService == null)
+                return null;
+                
+            var pHomingTarget = pPlayerTargetService->GetTargetComponent<HomingTarget>();
+
+            if (pHomingTarget == null)
+                return null;
+                
+            // TODO: check if homing reticle is visible.
+
+            return pHomingTarget->GetPriorityTarget();
+        }
+    }
+}
+Library "PlayerTargets" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    #lib "GameObject"
+    #lib "GOComponentManager"
+
+    #import "Collections"
+
+    using System.Runtime.InteropServices;
+
+    [StructLayout(LayoutKind.Explicit, Size = 0xA0)]
+    public struct PlayerTargetComponent
+    {
+        VFUNCTION_PTR(PlayerTargetComponent, 1, Helpers.UnmanagedString, GetName)
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x990)]
+    public struct HomingTarget
+    {
+        [FieldOffset(0)]    public PlayerTargetComponent Base;
+
+        [FieldOffset(0x48)] public ObjectMoveArray<int> ColliderHandles;
+
+        /// <summary>
+        /// Gets the target based on its priority.
+        /// The highest priority (0) is the current homing target.
+        /// </summary>
+        /// <param name="in_isLow">Determines if this function retrieves the lowest priority homing target.</param>
+        /// <returns>The homing target at the requested priority.</returns>
+        public GameObject.Data* GetPriorityTarget(bool in_isLow = false)
+        {
+            if (ColliderHandles.Length == 0)
+                return null;
+
+            var pGOCCollider = GOComponentManager.GetGOCFromHandle(ColliderHandles[in_isLow ? ColliderHandles.Length - 1 : 0]);
+
+            if (pGOCCollider == null)
+                return null;
+
+            return pGOCCollider->pParent;
+        }
+
+        /// <summary>
+        /// Determines if the input target data belongs to an enemy.
+        /// </summary>
+        /// <returns>A boolean representation of whether the input target data belongs to an enemy.</returns>
+        public bool IsTargetEnemy()
+        {
+            var pTarget = GetPriorityTarget();
+                
+            if (pTarget == null)
+                return false;
+
+            // Enemies will always use GOCEnemyParameter.
+            return GameObject.GetGOC(pTarget, "GOCEnemyParameter") != null;
+        }
+    }
+}
+Library "GameObject" by "Hyper, ĐeäTh & Sajid" 
+{
+    #include "Helpers" noemit
+
+    #import "Collections"
+    #import "GOComponents"
+
+    #lib "Helpers"
+    #lib "GameManager"
+    #lib "Memory"
+
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `hh::game::GameObject`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x1C0, Pack = 0x10)]
+    public struct Data
+    {
+        /// <summary>
+        /// The flags for this game object.
+        /// </summary>
+        [FieldOffset(0x18)] public byte Flags;
+
+        /// <summary>
+        /// A pointer to an instance of `app::GameManager`.
+        /// </summary>
+        [FieldOffset(0x40)] public GameManager.Data* pGameManager;
+
+        /// <summary>
+        /// An array of pointers to `hh::game::GOComponent` instances.
+        /// </summary>
+        [FieldOffset(0x50)] public ObjectMoveArray<Memory.Pointer<GOComponent>> Components;
+
+        /// <summary>
+        /// The name of this game object.
+        /// </summary>
+        [FieldOffset(0xB0)] public Helpers.UnmanagedString Name;
+
+        /// <summary>
+        /// A pointer to an instance of `hh::game::WorldObjectStatus`.
+        /// </summary>
+        [FieldOffset(0x1A8)] public WorldObjectStatus* pWorldObjectStatus;
+
+        public override string ToString() => Name.ToString();
+
+        /// <summary>
+        /// Destroys this game object.
+        /// </summary>
+        public void Kill()
+        {
+            Flags |= 1;
+        }
+    }
+
+    /// <summary>
+    /// A struct representation of `hh::game::WorldObjectStatus`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit)]
+    public struct WorldObjectStatus
+    {
+        [FieldOffset(0x14)] public int Status;
+    }
+
+    /// <summary>
+    /// Gets an instance of `hh::game::GOComponent` obtained by the input `hh::game::GameObject` instance by name.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "GameManager"
+    ///     #lib "GameObject"
+    /// //
+    /// {
+    ///     var pSonic = GameManager.GetGameObject("Sonic");
+    ///     var pGOCPlayerKinematicParams = GameObject.GetGOC(pSonic, "GOCPlayerKinematicParams");
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_pGameObject">An instance of `hh::game::GameObject`.</param>
+    /// <param name="in_name">The name of the instance of `hh::game::GOComponent` to find.</param>
+    /// <returns>A pointer to an instance of `hh::game::GOComponent`.</returns>
+    public GOComponent* GetGOC(Data* in_pGameObject, string in_name)
+    {
+        if (in_pGameObject == null)
+            return null;
+
+        var components = in_pGameObject->Components;
+
+        for (int i = 0; i < components.Length; i++)
+        {
+            var pComponent = components[i].pData;
+            
+            if (pComponent->pStaticClass->Name == in_name)
+                return pComponent;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Gets an instance of `hh::game::GOComponent` obtained by the input `hh::game::GameObject` instance.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "GameManager"
+    ///     #lib "GameObject"
+    ///     
+    ///     #import "GOComponents"
+    /// //
+    /// {
+    ///     var pSonic = GameManager.GetGameObject("Sonic");
+    ///     var pGOCPlayerKinematicParams = GameObject.GetGOC<GOCPlayerKinematicParams>(pSonic);
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_pGameObject">An instance of `hh::game::GameObject`.</param>
+    /// <returns>A pointer to an instance of `hh::game::GOComponent`.</returns>
+    public T* GetGOC<T>(Data* in_pGameObject) where T : unmanaged
+    {
+        var name = Helpers.GetInternalName(typeof(T));
+        
+        return (T*)(long)GetGOC(in_pGameObject, string.IsNullOrEmpty(name) ? typeof(T).Name : name);
+    }
+}
+Library "GameManager" by "Hyper, ĐeäTh & Sajid" 
+{
+    #include "Helpers" noemit
+
+    #lib "GameObject"
+    #lib "GameService"
+    #lib "Memory"
+    
+    #import "Allocators"
+    #import "Collections"
+
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `hh::game::GameManager`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x358)]
+    public struct Data
+    {
+        /// <summary>
+        /// An array of pointers to `hh::game::GameObject` instances.
+        /// </summary>
+        [FieldOffset(0x128)] public ObjectMoveArray<Memory.Pointer<GameObject.Data>> GameObjects;
+
+        /// <summary>
+        /// An array of pointers to `hh::game::GameService` instances.
+        /// </summary>
+        [FieldOffset(0x148)] public ObjectMoveArray<Memory.Pointer<GameService.Data>> GameServices;
+    }
+
+    /// <summary>
+    /// Gets an instance of `hh::game::GameManager`.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "GameManager"
+    /// //
+    /// {
+    ///     var pGameManager = GameManager.Get();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <returns>A pointer to an instance of `hh::game::GameManager`.</returns>
+    public Data* GetSingleton()
+    {
+        /* 0x140C478D8 */
+        long sigGameManagerSingleton = (long)ScanSignature
+        (
+            "\x48\x89\x2D\xCC\xCC\xCC\xCC\x8D\x75\x20",
+            "xxx????xxx"
+        );
+
+        if (sigGameManagerSingleton == 0)
+            return null;
+        
+        return *(Data**)Memory.ReadEffectiveAddress(sigGameManagerSingleton);
+    }
+
+    /// <summary>
+    /// Gets an instance of `hh::game::GameService` obtained by the current instance of `hh::game::GameManager` by name.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "GameManager"
+    /// //
+    /// {
+    ///     var pPhotoModeService = GameManager.GetService("PhotoModeService");
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_name">The name of the instance of `hh::game::GameService` to find.</param>
+    /// <returns>A pointer to an instance of `hh::game::GameService`.</returns>
+    public GameService.Data* GetService(string in_name)
+    {
+        var pGameManager = GetSingleton();
+
+        if (pGameManager == null)
+            return null;
+        
+        var gameServices = pGameManager->GameServices;
+
+        for (int i = 0; i < gameServices.Length; i++)
+        {
+            var pGameService = gameServices[i].pData;
+            
+            if (pGameService->pStaticClass->Name == in_name)
+                return pGameService;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Gets an instance of `hh::game::GameService` obtained by the current instance of `hh::game::GameManager`.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "GameManager"
+    ///     
+    ///     #import "Services"
+    /// //
+    /// {
+    ///     var pExpManager = GameManager.GetService<ExpManager>();
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <returns>A pointer to an instance of `hh::game::GameService`.</returns>
+    public T* GetService<T>() where T : unmanaged
+    {
+        var name = Helpers.GetInternalName(typeof(T));
+        
+        return (T*)GetService(string.IsNullOrEmpty(name) ? typeof(T).Name : name);
+    }
+
+    /// <summary>
+    /// Gets an instance of `hh::game::GameObject` obtained by the current instance of `hh::game::GameManager` by name.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "GameManager"
+    /// //
+    /// {
+    ///     var pSonic = GameManager.GetGameObject("Sonic");
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <param name="in_name">The name of the instance of `hh::game::GameObject` to find.</param>
+    /// <returns>A pointer to an instance of `hh::game::GameObject`.</returns>
+    public GameObject.Data* GetGameObject(string in_name)
+    {
+        var pGameManager = GetSingleton();
+
+        if (pGameManager == null)
+            return null;
+        
+        var gameObjects = pGameManager->GameObjects;
+
+        for (int i = 0; i < gameObjects.Length; i++)
+        {
+            var pGameObject = gameObjects[i].pData;
+
+            if (pGameObject->Name == in_name)
+                return pGameObject;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Gets an instance of `hh::game::GameObject` obtained by the current instance of `hh::game::GameManager`.
+    /// </summary>
+    /// <example>
+    /// <code><![CDATA[
+    /// Code
+    /// //
+    ///     #lib "GameManager"
+    ///     
+    ///     #import "Objects"
+    /// //
+    /// {
+    ///     var pSonic = GameManager.GetGameObject<Sonic>("Sonic");
+    /// }
+    /// ]]></code>
+    /// </example>
+    /// <returns>A pointer to an instance of `hh::game::GameObject`.</returns>
+    public T* GetGameObject<T>() where T : unmanaged
+    {
+        var name = Helpers.GetInternalName(typeof(T));
+        
+        return (T*)GetGameObject(string.IsNullOrEmpty(name) ? typeof(T).Name : name);
+    }
+}
+Library "HandleManagerBase" by "Sajid & Hyper"
+{
+    #import "Collections"
+    #import "GameTypes"
+
+    using System.Runtime.InteropServices;
+    using HandleBase = HandleManagerBase.Handle<GameTypes.RefByHandleObject>;
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x68)]
+    public struct Data
+    {
+        [FieldOffset(0x18)] public ObjectMoveArray<HandleTableEntry> HandleTable;
+
+        public RefByHandleObject* GetObject(int id)
+        {
+            if (!IsHandleValid(id))
+                return default;
+
+            id &= 0xFFFF;
+            return (RefByHandleObject*)HandleTable[(nint)id].Object;
+        }
+
+        public HandleBase GetHandle(int id)
+        {
+            if (!IsHandleValid(id))
+                return default;
+            
+            id &= 0xFFFF;
+            return new HandleBase(ref HandleTable[(nint)id]);
+        }
+
+        public Handle<T> GetHandle<T>(int id) where T : unmanaged
+        {
+            if (!IsHandleValid(id))
+                return default;
+
+            id &= 0xFFFF;
+            return new Handle<T>(ref HandleTable[(nint)id]);
+        }
+
+        public Handle<T> GetHandle<T>(in T obj) where T : unmanaged, IRefByHandleObject
+        {
+            if (!IsHandleValid(obj.Handle))
+                return default;
+
+            var id = obj.Handle & 0xFFFF;
+            return new Handle<T>(ref HandleTable[(nint)id]);
+        }
+
+        public static bool IsHandleValid(int id)
+        {
+            unchecked
+            {
+                return (0xFFFF0000 & id) != 0;
+            }
+        }
+    }
+
+    public struct HandleTableEntry
+    {
+        public long Handle;
+        public void* Object;
+    }
+
+    public struct Handle<T> where T : unmanaged
+    {
+        public long Value;
+        public HandleTableEntry* TableEntry;
+
+        public Handle(ref HandleTableEntry entry)
+        {
+            Value = entry.Handle;
+            fixed(HandleTableEntry* pEntry = &entry)
+            {
+                TableEntry = pEntry;
+            }
+        }
+
+        public bool IsValid()
+        {
+            return TableEntry != null && (TableEntry->Handle == Value && TableEntry->Object != null);
+        }
+
+        public T* Get()
+        {
+            return IsValid() ? (T*)TableEntry->Object : null;
+        }
+    }
+}
+Library "Services" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    #lib "Memory"
+
+    #import "Blackboards"
+    #import "Collections"
+    #import "PlayerTargets"
+
+    using System.Runtime.InteropServices;
+
+    [StructLayout(LayoutKind.Explicit, Size = 0xA0)]
+    public struct PlayerBlackboardService
+    {
+        [FieldOffset(0)]    public GameService.Data Base;
+
+        [FieldOffset(0x60)] public ObjectMoveArray<Memory.Pointer<BlackboardContent>> Blackboards;
+
+        [FieldOffset(0x80)] public Blackboard2* pBlackboard2;
+
+        public BlackboardContent* GetBlackboardContent(string in_blackboardName)
+        {
+            foreach (var pBlackboard in Blackboards)
+            {
+                if (pBlackboard.pData->GetName()() == in_blackboardName)
+                    return pBlackboard.pData;
+            }
+
+            return null;
+        }
+
+        MAKE_GENERIC_API(GetBlackboardContent)
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x88)]
+    public struct PlayerTargetService
+    {
+        [FieldOffset(0)]    public GameService.Data Base;
+
+        [FieldOffset(0x68)] public ObjectMoveArray<Memory.Pointer<PlayerTargetComponent>> PlayerTargetComponents;
+
+        public PlayerTargetComponent* GetTargetComponent(string in_componentName)
+        {
+            foreach (var pPlayerTargetComponent in PlayerTargetComponents)
+            {
+                if (pPlayerTargetComponent.pData->GetName()() == in_componentName)
+                    return pPlayerTargetComponent.pData;
+            }
+
+            return null;
+        }
+
+        MAKE_GENERIC_API(GetTargetComponent)
+    }
+}
+Library "Collections" by "Sajid & Hyper" does "Provides extended collection types."
+{
+    #import "Allocators"
+
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
+    #define MAKE_BITSET_TYPE(NAME, TYPE) \
+        public struct NAME \
+        { \
+            public TYPE Value; \
+\
+            public void Reset() \
+            { \
+                Value = 0; \
+            } \
+\
+            public void Reset(TYPE in_bitIndex) \
+            { \
+                Value &= (TYPE)(~((TYPE)1 << (int)in_bitIndex)); \
+            } \
+\
+            public void Flip(TYPE in_bitIndex) \
+            { \
+                Value ^= (TYPE)(((TYPE)1 << (int)in_bitIndex)); \
+            } \
+\
+            public void Set() \
+            { \
+                Value = TYPE.MaxValue; \
+            } \
+\
+            public void Set(TYPE in_bitIndex) \
+            { \
+                Value |= (TYPE)(((TYPE)1 << (int)in_bitIndex)); \
+            } \
+\
+            public void Set(TYPE in_bitIndex, bool in_isEnabled) \
+            { \
+                if (in_isEnabled) \
+                { \
+                    Set(in_bitIndex); \
+                } \
+                else \
+                { \
+                    Reset(in_bitIndex); \
+                } \
+            } \
+\
+            public bool Test(TYPE in_bitIndex) \
+            { \
+                return (Value & (TYPE)(((TYPE)1 << (int)in_bitIndex))) != 0; \
+            } \
+        }
+    
+    MAKE_BITSET_TYPE(BitSet8, byte);
+    MAKE_BITSET_TYPE(BitSet16, ushort);
+    MAKE_BITSET_TYPE(BitSet32, uint);
+    MAKE_BITSET_TYPE(BitSet64, ulong);
+
+    private readonly nint SIGN_BIT = (nint)((1u << ((sizeof(nint) * sizeof(byte)) - 1)));
+    
+    /// <summary>
+    /// A struct representation of `csl::ut::MoveArray<T>`.
+    /// </summary>
+    public struct MoveArray<T> : IEnumerable<T> where T : unmanaged
+    {
+        public T* pBuffer;
+        public int Length;
+        public int Capacity;
+        public IAllocator* pAllocator;
+        
+        public int Count => Length;    
+
+        public ref T this[int in_index]
+        {
+            get => ref pBuffer[in_index];
+        }
+
+        private bool IsInplace()
+        {
+            return (Capacity & SIGN_BIT) != 0;
+        }
+        
+        public void Reserve(int in_length)
+        {
+            if (in_length <= Capacity)
+                return;
+
+            var newLength = sizeof(T) * in_length;
+            var pNewBuffer = pAllocator->Alloc()(pAllocator, newLength, 16);
+
+            if (pBuffer != null)
+                Buffer.MemoryCopy(pBuffer, (T*)(long)pNewBuffer, newLength, newLength);
+
+            if (!IsInplace())
+                pAllocator->Free()(pAllocator, pBuffer);
+
+            Capacity = in_length;
+            pBuffer = (T*)(long)pNewBuffer;
+        }
+
+        public void Resize(int in_length)
+        {
+            Reserve(in_length);
+
+            Length = in_length;
+        }
+
+        public void Add(T in_item)
+        {
+            Length++;
+
+            if (Length > Capacity)
+                Reserve(Length * 2);
+
+            pBuffer[Length - 1] = in_item;
+        }
+
+        public void RemoveAt(int in_index)
+        {
+            if (in_index > Length)
+                return;
+
+            pBuffer[in_index] = pBuffer[in_index + 1];
+            Length--;
+        }
+
+        public void Remove(T in_item)
+        {
+            var index = IndexOf(in_item);
+
+            if (index != -1)
+                RemoveAt(index);
+        }
+
+        public void Clear()
+        {
+            Length = 0;
+        }
+
+        public int IndexOf(T in_item)
+        {
+            for (int i = 0; i < Length; i++)
+            {
+                if (this[i].Equals(in_item))
+                    return i;
+            }
+
+            return -1;
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            for (var i = 0; i < Count; i++)
+            {
+                yield return this[i];
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public List<T> ToList()
+        {
+            var l = new List<T>();
+            
+            foreach (var e in this)
+                l.Add(e);
+
+            return l;
+        }
+
+        public override string ToString()
+        {
+            if (typeof(T) == typeof(byte))
+                return Encoding.ASCII.GetString(ToList().Select(x => (byte)(object)x).ToArray());
+
+            return base.ToString();
+        }
+    }
+
+    /// <summary>
+    /// A struct representation of `csl::ut::ObjectMoveArray<T>`.
+    /// </summary>
+    public struct ObjectMoveArray<T> : IEnumerable<T> where T : unmanaged
+    {
+        public T* pBuffer;
+        public nint Length;
+        public nint Capacity;
+        public IAllocator* pAllocator;
+        
+        public nint Count => Length;    
+
+        public ref T this[nint in_index]
+        {
+            get => ref pBuffer[in_index];
+        }
+
+        private bool IsInplace()
+        {
+            return (Capacity & SIGN_BIT) != 0;
+        }
+        
+        public void Reserve(nint in_length)
+        {
+            if (in_length <= Capacity)
+                return;
+
+            var newLength = sizeof(T) * in_length;
+            var pNewBuffer = pAllocator->Alloc()(pAllocator, newLength, 16);
+
+            if (pBuffer != null)
+                Buffer.MemoryCopy(pBuffer, (T*)(long)pNewBuffer, newLength, newLength);
+
+            if (!IsInplace())
+                pAllocator->Free()(pAllocator, pBuffer);
+
+            Capacity = in_length;
+            pBuffer = (T*)(long)pNewBuffer;
+        }
+
+        public void Add(T in_item)
+        {
+            Length++;
+
+            if (Length > Capacity)
+                Reserve(Length * 2);
+
+            pBuffer[Length - 1] = in_item;
+        }
+
+        public void RemoveAt(nint in_index)
+        {
+            if (in_index > Length)
+                return;
+
+            pBuffer[in_index] = pBuffer[in_index + 1];
+            Length--;
+        }
+
+        public void Remove(T in_item)
+        {
+            var index = IndexOf(in_item);
+
+            if (index != -1)
+                RemoveAt(index);
+        }
+
+        public void Clear()
+        {
+            Length = 0;
+        }
+
+        public nint IndexOf(T in_item)
+        {
+            for (nint i = 0; i < Length; i++)
+            {
+                if (this[i].Equals(in_item))
+                    return i;
+            }
+
+            return -1;
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            for (var i = 0; i < Count; i++)
+            {
+                yield return this[i];
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public List<T> ToList()
+        {
+            var l = new List<T>();
+            
+            foreach (var e in this)
+                l.Add(e);
+
+            return l;
+        }
+    }
+
+    /// <summary>
+    /// A custom `System.Collections.Generic.List<T>` where items are added and retrieved like a stack.
+    /// </summary>
+    public class StackList<T> : List<T>
+    {
+        private int _capacity;
+
+        public StackList(int in_capacity)
+        {
+            _capacity = in_capacity;
+        }
+
+        /// <summary>
+        /// Adds an item to the top of the stack.
+        /// </summary>
+        /// <param name="in_item">The item to add.</param>
+        public new void Add(T in_item)
+        {
+            if (Count >= _capacity)
+            {
+                RemoveAt(Count - 1);
+            }
+
+            Insert(0, in_item);
+        }
+
+        /// <summary>
+        /// Gets an item from any index in the stack.
+        /// </summary>
+        /// <param name="in_index">The index to get the item from in the stack.</param>
+        /// <returns>The item in the stack at the requested index.</returns>
+        public T GetItemAt(int in_index)
+        {
+            if (Count == 0)
+                return default;
+
+            if (in_index >= Count)
+            {
+                return this[Count - 1];
+            }
+
+            return this[in_index];
+        }
+
+        /// <summary>
+        /// Adds an item to the top of the stack.
+        /// </summary>
+        /// <param name="in_item">The item to add.</param>
+        public void Push(T in_item)
+        {
+            Add(in_item);
+        }
+
+        /// <summary>
+        /// Gets an item from the top of the stack and removes it.
+        /// </summary>
+        /// <returns>The item at the top of the stack.</returns>
+        public T Pop()
+        {
+            T item = GetItemAt(0);
+
+            RemoveAt(0);
+
+            return item;
+        }
+
+        /// <summary>
+        /// Gets the item at the top of the stack.
+        /// </summary>
+        /// <returns>The item at the top of the stack.</returns>
+        public T Peek()
+        {
+            return GetItemAt(0);
+        }
+    }
+}
+Library "Buddy" by "Hyper"
+{
+    public enum StateID : int
+    {
+        Default = -1,
+        PlayerStateLevitationFollow = 144,
+        StateFollowPassHitWall = 132,
+        StateFollowRun = 103,
+        StateFollowSideWallRun = 136,
+        StateFollowSliding = 118,       // StateFollowSquatRoot
+        StateFollowSlidingToStand = 119,
+        StateFollowSquat = 117, // StateFollowSquatRoot
+        StateFollowSquatRoot = 116,
+        StateFollowStand = 102,
+        StateFollowStomping = 120,
+        StateFollowStompingLand = 121,
+        StateFollowWallJump = 124,
+        StateFollowWallJumpReady = 123,
+        StateFollowWallKick = 139,
+        StateFollowWallRun = 134,
+        StateFollowWallSideStep = 135,
+        StateFollowWallSlip = 137,
+        StateFollowWallSlipFall = 138,
+        StateFollowUpReel = 126,
+        StateFollowBoostTrio = 127,
+        StateFollowBoostJumpTrio = 128,
+        StateFollowBoostFallTrio = 129,
+        StateFollowGadgetAction = 130,
+        StateFollowGadgetSpAction = 131,
+        StateGetOverStep = 74,
+        StateGoal = 44,
+        StateGoal2 = 45,
+        StateFixedGoal = 46,
+        StateGrind = 36,        // StateGrindRoot
+        StateGrindDamage = 39,  // StateGrindRoot
+        StateGrindDamageAir = 40,       // StateGrindRoot
+        StateGrindJump = 37,    // StateGrindRoot
+        StateGrindDoubleJump = 38,      // StateGrindRoot
+        StateGrindRoot = 35,
+        StateGrindStep = 41,
+        StateHoldStand = 90,
+        StateJump = 6,
+        StateJumpBoardLaunch = 95,
+        StateDoubleJump = 7,
+        StateSpringJump = 20,
+        StateSpringJumpHeadLand = 21,
+        StateBigSpringJump = 22,
+        StateJumpGoingTarget = 86,
+        StateKnockedBack = 50,
+        StateLaunchAutoRunCannon = 94,
+        StateLeftStep = 61,
+        StateLeftStepRun = 63,
+        PlayerStateLevitation = 143,
+        StateParkourLanding = 76,
+        StatePathJump = 85,
+        StatePinBall = 96,
+        StatePipeMove = 92,
+        StatePipeOut = 93,
+        StatePressDead = 30,
+        StateQuickStep = 57,    // StateQuickStepRoot
+        StateQuickStepCrash = 60,       // StateQuickStepRoot
+        StateQuickStepLeft = 58,        // StateQuickStepRoot
+        StateQuickStepRight = 59,       // StateQuickStepRoot
+        StateQuickStepRoot = 56,
+        StateRightStep = 62,
+        StateRightStepRun = 64,
+        StateRun = 4,
+        StateRunningStart = 83,
+        StateSandSlider = 98,
+        StateSideWallRun = 73,
+        StateSleep = 0,
+        StateSlider = 97,
+        StateSliding = 16,      // StateSquatRoot
+        StateSlidingToStand = 17,
+        StateSpinAttack = 9,
+        StateSquat = 15,        // StateSquatRoot
+        StateSquatRoot = 14,
+        StateStagger = 51,
+        StateStandRoot = 1,
+        StateStand = 2, // StateStandRoot
+        StateStandWater = 3,    // StateStandRoot
+        StateHoldStart = 89,
+        StateChangeSuperSonic = 100,
+        StateStomping = 42,
+        StateStompingLand = 43,
+        StateStraightJump = 48,
+        StateSuffocatingDead = 13,
+        StateUpDead = 12,
+        StateWallCrashDead = 32,
+        StateWallJump = 19,
+        StateWallJumpReady = 18,
+        StateWallKick = 71,
+        StateWallRun = 69,
+        StateHoldWarp = 88,
+        StateHoldWarpStart = 87,
+        StateWaterFall = 99,
+        StateHomingAttackRoot = 53,
+        StateHomingFinished = 55,       // StateHomingAttackRoot
+        StateHomingAttack = 54, // StateHomingAttackRoot
+        StateFollowHomingAttack = 109,  // StateHomingAttackRoot
+        StateFollowHomingAttackFinished = 110,  // StateHomingAttackRoot
+        StateBoost = 78,        // StateRun
+        StateBoostAir = 79,     // StateRun
+        StateBoostJump = 80,
+        StateBoostFall = 81,
+        StateEventDERSonic = 141,
+        StateEventDERBuddy = 142,
+        TagStateDoubleJump = 223,
+        TagStateFollowDoubleJump = 224,
+        TagStateDoubleBoostRoot = 227,
+        TagStateDoubleBoostStart = 228, // TagStateDoubleBoostRoot
+        TagStateDoubleBoostRun = 229,   // TagStateDoubleBoostRoot
+        TagStateDoubleBoostRunWeak = 230,       // TagStateDoubleBoostRoot
+        TagStateDoubleBoostJump = 231,  // TagStateDoubleBoostRoot
+        TagStateDoubleBoostJumpWeak = 232,      // TagStateDoubleBoostRoot
+        TagStateDoubleBoostDamage = 233,        // TagStateDoubleBoostRoot
+        TagStateFollowDoubleBoostStart = 234,
+        TagStateFollowDoubleBoost = 235,
+        TagStateFollowDoubleBoostWeak = 236,
+        TagStateFollowDoubleBoostJump = 237,
+        TagStateFollowDoubleBoostJumpWeak = 238,
+        TagStateFollowDoubleBoostDamage = 239,
+        TagStateHomingAttack = 240,     // StateHomingAttackRoot
+        TagStateFollowHomingObject = 241,       // StateHomingAttackRoot
+        TagStateFollowHomingAttack = 242,       // StateHomingAttackRoot
+        TagStateHomingAttackFinished = 243,     // StateHomingAttackRoot
+        TagStateFollowHomingAttackFinished = 244,       // StateHomingAttackRoot
+        TagStateHomingThrow = 245,      // StateHomingAttackRoot
+        TagStateFollowHomingThrow = 246,        // StateHomingAttackRoot
+        TagStateHomingThrowFinished = 247,      // StateHomingAttackRoot
+        TagStateFollowHomingThrowFinished = 248,        // StateHomingAttackRoot
+        TagStateHomingKickWait = 249,   // StateHomingAttackRoot
+        TagStateFollowHomingKickWait = 250,     // StateHomingAttackRoot
+        TagStateHomingKick = 251,       // StateHomingAttackRoot
+        TagStateFollowHomingKick = 252, // StateHomingAttackRoot
+        TagStateHomingKickFinished = 253,       // StateHomingAttackRoot
+        TagStateFollowHomingKickFinished = 254, // StateHomingAttackRoot
+        TagStateRescueBeginBuddy = 255,
+        TagStateRescueBeginSonic = 256,
+        TagStateRescueMain = 257,
+        TagStateRescueSub = 258,
+        BuddyStateWireRoot = 158,
+        BuddyStateWireShoot = 159,      // BuddyStateWireRoot
+        BuddyStateWirePull = 160,       // BuddyStateWireRoot
+        BuddyStateWireAttack = 161,     // BuddyStateWireRoot
+        BuddyStateTrioWireAttack = 162, // BuddyStateWireRoot
+        BuddyStateWireTrapezeShoot = 163,
+        BuddyStateWireTrapeze = 164,
+        BuddyStateWireTrapezePath = 165,
+        BuddyStateWireTrapezeAuto = 166,
+        BuddyStateWireLaunchShoot = 167,
+        BuddyStateWireLaunchAir = 168,
+        BuddyStateWireTrack = 169,
+        BuddyStateWireGiantSwingShoot = 170,
+        BuddyStateWireGiantSwing = 171,
+        BuddyStateWireTurn = 172,
+        BuddyStateWireTurnPath = 173,
+        BuddyStateWireDrift = 174,
+        BuddyStateHangtime = 175,
+        BuddyStateFollowBoost = 176,
+        BuddyStateFollowBoostAir = 177,
+        BuddyStateFollowBoostFall = 178,
+        BuddyStateGadgetActivated = 179,
+        BuddyStateGadgetBurstStand = 180,       // StateStandRoot
+        BuddyStateGadgetBurstRun = 181, // StateRun
+        BuddyStateGadgetBurstAir = 182, // StateJump
+        BuddyStateGadgetBurstAirDouble = 183,   // StateDoubleJump
+        BuddyStateGadgetBurstFall = 184,        // StateFall
+        BuddyStateGadgetBurstJump = 185,
+        BuddyStateGadgetBurstJumpFall = 186,    // StateFall
+        BuddyStateGadgetLightningAttack = 187,
+        BuddyStateGadgetLightningAttackStand = 188,     // BuddyStateGadgetLightningAttack
+        BuddyStateGadgetLightningAttackDash = 189,      // BuddyStateGadgetLightningAttack
+        BuddyStateGadgetLightningCharge = 190,
+        BuddyStateGadgetLightningChargeAttack = 191,
+        BuddyStateGadgetLightningChain = 192,
+        BuddyStateGadgetDrillDash = 193,
+        BuddyStateGadgetDrillBoost = 194,
+        BuddyStateGadgetCubeAttack = 195,
+        BuddyStateGadgetCubeAttackAir = 196,
+        BuddyStateGadgetCubeSPAttack = 198,
+        BuddyStateGadgetCubeSPAttackAir = 199,
+        BuddyStateGadgetCubeSPFailed = 200,
+        BuddyStateGadgetHoverAttack = 201,
+        BuddyStateGadgetHoverJump = 202,
+        BuddyStateGadgetHoverFloating = 203,
+        BuddyStateGadgetHoverRescue = 204,
+        BuddyStateGadgetHoverSliderRescue = 205,
+        BuddyStateGadgetVoidAttack = 206,
+        BuddyStateGadgetVoidSPAttackStart = 207,
+        BuddyStateGadgetVoidSPAttackEnd = 208,
+        BuddyStateGadgetVoidJumpFall = 209,     // StateFall
+        BuddyStateGadgetVoidAir = 210,
+        BuddyStateGadgetVoidAirFall = 211,      // StateFall
+        BuddyStateGadgetAsteroidShoot = 212,
+        BuddyStateGiantCrabRunaway = 213,
+        BuddyStateChangeFriend = 214,
+        TrioStateTripleBoostBuddy = 215,
+        TrioStateTripleBoostBuddyFailed = 216,
+        StateAutoJump = 84,
+        StateBallMove = 47,
+        StateBlowDead = 31,
+        StateBlown = 49,
+        StateBrake = 5,
+        StateBreathe = 34,
+        StateCaught = 91,
+        StateCeilingRun = 77,
+        StateClassicDead = 33,
+        StateClimbWall = 75,
+        StateDamage = 23,
+        StateDamageAir = 24,
+        StateDamageQuake = 28,
+        StateDamageRunning = 25,
+        StateDead = 29,
+        StateDiving = 66,       // StateDivingRoot
+        StateDivingDamage = 68, // StateDivingRoot
+        StateDivingFall = 67,   // StateDivingRoot
+        StateDivingRoot = 65,
+        StateReturnSuperSonic = 101,
+        StateFall = 10,
+        StateFallingDead = 11,
+        StateFallSlope = 52,
+        StateFan = 82,
+        StateFollowBrake = 104,
+        StateFollowCancelStep = 140,
+        StateFollowClimbWall = 133,
+        StateFollowDiving = 111,
+        StateFollowDead = 108,
+        StateFollowDrill = 125,
+        StateFollowFall = 107,
+        StateFollowGrind = 112,
+        StateFollowGrindJump = 113,
+        StateFollowJump = 105,
+        StateFollowJumpBoard = 115,
+        StateFollowDoubleJump = 106,
+        StateFollowSpring = 114,
+        StateFollowKnockedBack = 122,
+    }
+}
+Library "Messages" by "Hyper, Sajid & ĐeäTh"
+{
+    #include "Helpers" noemit
+    
+    #import "Allocators"
+    
+    using System.Runtime.InteropServices;
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x20)]
+    public struct Message
+    {
+        [FieldOffset(0)]    public long pVftable;
+
+        [FieldOffset(0x08)] public int ID;
+
+        [FieldOffset(0x0C)] public int Sender;
+
+        [FieldOffset(0x10)] public int Receiver;
+
+        [FieldOffset(0x14)] public bool IsBroadcasted;
+
+        [FieldOffset(0x18)] public uint Mask = 0xFFFFFFFF;
+
+        public Message(int in_id)
+        {
+            ID = in_id;
+        }
+
+        VFUNCTION_PTR(Message, 0, Message*, Clone, Message* in_pMessage, IAllocator* in_pAllocator)
+
+        VFUNCTION_PTR(Message, 1, Message*, Dtor, Message* in_pMessage, byte a2)
+    }
+}
+Library "GOComponents" by "Hyper"
+{
+    #include "Helpers" noemit
+
+    #lib "GameObject"
+    #lib "Helpers"
+    #lib "Memory"
+
+    #import "Collections"
+    #import "Player"
+    #import "Plugins"
+    #import "States"
+
+    #load "System.Numerics.dll"
+    
+    using System.Numerics;
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `hh::game::GOComponent`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x80)]
+    public struct GOComponent
+    {
+        /// <summary>
+        /// A pointer to an instance of `hh::game::GameObject` acting as the parent of this component.
+        /// </summary>
+        [FieldOffset(0x20)] public GameObject.Data* pParent;
+
+        /// <summary>
+        /// A pointer to an instance of `GOComponentStaticClass`.
+        /// </summary>
+        [FieldOffset(0x38)] public GOComponentStaticClass* pStaticClass;
+    }
+
+    /// <summary>
+    /// A struct representation of the static class for storing information about a game object component.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct GOComponentStaticClass
+    {
+        /// <summary>
+        /// The name of this game object component.
+        /// </summary>
+        [FieldOffset(0)] public Helpers.UnmanagedString Name;
+
+        public override string ToString() => Name.ToString();
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x90)]
+    public struct GOCCamera
+    {
+        [FieldOffset(0)] public GOComponent Base;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x140)]
+    public struct GOCPlayerHsm
+    {
+        [FieldOffset(0)]     public GOComponent Base;
+
+        [FieldOffset(0x78)]  public int CurrentStateID;
+
+        [FieldOffset(0x90)]  public PlayerContext* pPlayerContext;
+
+        [FieldOffset(0xC8)]  public void* pPlayerStateParameter;
+
+        [FieldOffset(0xD0)]  public StatePluginManager* pStatePluginManager;
+
+        [FieldOffset(0xEC)]  public int DestinationStateID;
+
+        [FieldOffset(0xF4)]  public byte StateFlags;
+
+        [FieldOffset(0x120)] public MoveArray<StateDesc> States;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x240, Pack = 0x20)]
+    public struct GOCTransform
+    {
+        [FieldOffset(0xC0)] public Vector3 Position;
+    }
+}
+Library "GameObjectSystem" by "Hyper"
+{
+    #lib "GameObject"
+
+    #import "Allocators"
+
+    using System.Runtime.InteropServices;
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x1E0)]
+    public struct Data
+    {
+        [FieldOffset(0x20)] public IAllocator* pPooledAllocator;
+    }
+
+    public HandleManagerBase.Data* GetHandleManagerSingleton()
+    {
+        return *(HandleManagerBase.Data**)0x1420707B8;
+    }
+
+    public GameObject.Data* GetGameObjectFromHandle(int in_handle)
+    {
+        var manager = GetHandleManagerSingleton();
+        
+        if (manager == null)
+            return null;
+
+        return (GameObject.Data*)manager->GetObject(in_handle);
+    }
+}
+Library "GameTypes" by "Sajid"
+{
+    #include "Helpers" noemit
+
+    public struct BaseObject
+    {
+        public nint VFTable;
+    }
+
+    public struct ReferencedObject
+    {
+        public BaseObject Base;
+        public void* Allocator;
+        public int Unk1;
+        public int RefCount;
+    }
+
+    public interface IRefByHandleObject
+    {
+        int Handle { get; set; }
+    }
+
+    public struct RefByHandleObject : IRefByHandleObject
+    {
+        public ReferencedObject Base;
+        public int Handle;
+
+        DEFINE_INTERFACE_PROPERTY(IRefByHandleObject, int, Handle)
+        DEFINE_BASE_PROPERTY(void*, Allocator)
+        DEFINE_BASE_PROPERTY(int, RefCount)
+    }
+}
+Library "GameService" by "Hyper" 
+{
+    #include "Helpers" noemit
+
+    #lib "GameManager"
+
+    #import "Allocators"
+    
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `hh::game::GameService`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x60)]
+    public struct Data
+    {
+        /// <summary>
+        /// A pointer to a memory allocator.
+        /// </summary>
+        [FieldOffset(0x08)] public IAllocator* pAllocator;
+
+        /// <summary>
+        /// A pointer to an instance of `app::GameManager`.
+        /// </summary>
+        [FieldOffset(0x30)] public GameManager.Data* pGameManager;
+
+        /// <summary>
+        /// A pointer to an instance of `GameServiceStaticClass`.
+        /// </summary>
+        [FieldOffset(0x38)] public GameServiceStaticClass* pStaticClass;
+    }
+
+    /// <summary>
+    /// A struct representation of the static class for storing information about a game service.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct GameServiceStaticClass
+    {
+        /// <summary>
+        /// The name of this game service.
+        /// </summary>
+        [FieldOffset(0)] public Helpers.UnmanagedString Name;
+
+        public override string ToString() => Name.ToString();
+    }
+}
+Library "States" by "Hyper"
+{
+    using System.Runtime.InteropServices;
+
+    /// <summary>
+    /// A struct representation of `hh::ut::internal::StateDescImpl`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x18)]
+    public struct StateDescImpl
+    {
+        [FieldOffset(0)]    public Helpers.UnmanagedString Name;
+
+        [FieldOffset(0x08)] public void* pFactory;
+
+        [FieldOffset(0x10)] public long ParentID;
+    }
+
+    /// <summary>
+    /// A struct representation of `hh::ut::StateDesc`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x20)]
+    public struct StateDesc
+    {
+        [FieldOffset(0)]    public long StateID;
+
+        [FieldOffset(0x08)] public StateDescImpl* pDescription;
+    }
+}
+Library "Objects" by "Hyper"
+{
+    #lib "GameObject"
+    #lib "GameObjectSystem"
+
+    using System.Runtime.InteropServices;
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x260)]
+    public struct ObjDashRing
+    {
+        [FieldOffset(0)]     public GameObject.Data Base;
+
+        [FieldOffset(0x1C0)] public DashRingType Type;
+
+        public enum DashRingType : int
+        {
+            DashRing,
+            RainbowRing
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x230)]
+    public struct PlayerCoordinator
+    {
+        [FieldOffset(0)]     public GameObject.Data Base;
+
+        [FieldOffset(0x1D0)] public int UILockonCursorHandle;
+
+        public UILockonCursor* GetLockOnCursor()
+        {
+            return (UILockonCursor*)GameObjectSystem.GetGameObjectFromHandle(UILockonCursorHandle);
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x1F0)]
+    public struct UILockonCursor
+    {
+        [FieldOffset(0)] public GameObject.Data Base;
+    }
+}
+Patch "Disable Timer" in "Cheats" by "CodenameGamma" 
+WriteNop(0x14017EE5A, 5)
+
+
+
+Code "Disable Boost Jump" in "Gameplay" by "Hyper" does "Disables jumping from a boost immediately starting air boost, retaining full jump height."
+//
+    #lib "Player"
+//
+{
+    var pSonic = Player.GetSonicData();
+
+    if (pSonic == null)
+        return;
+    
+    if (Player.State.GetCurrentStateID<Sonic.StateID>(pSonic) != Sonic.StateID.StateBoostJump)
+        return;
+    
+    Player.State.SetState<Sonic.StateID>(pSonic, Sonic.StateID.StateJump);
+}
+Patch "Disable Dash Panels" in "Gameplay" by "SuperSonic16" 
+WriteProtected<byte>(0x14046F9A0, 0xC3)
+
+
+
+Patch "360 Degree Movement" in "Gameplay" by "Skyth" 
+WriteNop(0x1404615B7, 4)
+
+
+
+Code "Retrieve Boost from Rings" in "Gameplay" by "Hyper"
+//
+    #lib "GameManager"
+    #lib "MathHelpers"
+
+    #import "Blackboards"
+    #import "Services"
+
+    const float _boostMultiplier = 5.0f;
+
+    static int _lastRingCount = 0;
+//
+{
+    var pPlayerBlackboardService = GameManager.GetService<PlayerBlackboardService>();
+
+    if (pPlayerBlackboardService == null)
+        return;
+        
+    var pBlackboardBoost = pPlayerBlackboardService->GetBlackboardContent<BlackboardBoost>();
+
+    if (pBlackboardBoost == null)
+        return;
+
+    var pBlackboardItem = pPlayerBlackboardService->GetBlackboardContent<BlackboardItem>();
+    
+    if (pBlackboardItem == null)
+        return;
+
+    int currentRings = pBlackboardItem->RingCount;
+    
+    if (currentRings <= 0)
+        _lastRingCount = 0;
+
+    if (_lastRingCount != currentRings && currentRings > 0)
+    {
+        pBlackboardBoost->BoostAmount = MathHelpers.Clamp
+        (
+            pBlackboardBoost->BoostAmount + (Math.Abs(currentRings - _lastRingCount) * _boostMultiplier),
+            0.0f,
+            120.0f
+        );
+
+        _lastRingCount = currentRings;
+    }
+}
+Code "144 FPS (experimental)" in "Graphics/FPS" by "M&M" 
+Write<float>(GetPointer(0x14240E818, 0x34), 1.0f / 144.0f); /* internal framerate */
+Write<float>(0x88D23BD8, 144.0f); /* external framerate */
+WriteNop(0x14061AE3B, 3); /* nop out framerate changer */
+WriteNop(0x14061D4FD, 5); /* nop out framerate changer */
+WriteNop(0x1406E5F96, 5); /* nop out framerate changer */
+
+
+
+Code "165 FPS (experimental)" in "Graphics/FPS" by "M&M" 
+Write<float>(GetPointer(0x14240E818, 0x34), 1.0f / 165.0f); /* internal framerate */
+Write<float>(0x88D23BD8, 165.0f); /* external framerate */
+WriteNop(0x14061AE3B, 3); /* nop out framerate changer */
+WriteNop(0x14061D4FD, 5); /* nop out framerate changer */
+WriteNop(0x1406E5F96, 5); /* nop out framerate changer */
+
+
+Code "120 FPS (experimental)" in "Graphics/FPS" by "M&M" 
+Write<float>(GetPointer(0x14240E818, 0x34), 1.0f / 120.0f); /* internal framerate */
+Write<float>(0x88D23BD8, 120.0f); /* external framerate */
+WriteNop(0x14061AE3B, 3); /* nop out framerate changer */
+WriteNop(0x14061D4FD, 5); /* nop out framerate changer */
+WriteNop(0x1406E5F96, 5); /* nop out framerate changer */
+
+
+
+Code "75 FPS (experimental)" in "Graphics/FPS" by "M&M" 
+Write<float>(GetPointer(0x14240E818, 0x34), 1.0f / 75.0f); /* internal framerate */
+Write<float>(0x88D23BD8, 75.0f); /* external framerate */
+WriteNop(0x14061AE3B, 3); /* nop out framerate changer */
+WriteNop(0x14061D4FD, 5); /* nop out framerate changer */
+WriteNop(0x1406E5F96, 5); /* nop out framerate changer */
+
+
+
+Patch "Adjust Aspect Ratio to Resolution" in "Graphics/Display" by "Muzzarino Hezibeth" does "Dynamically adjusts the aspect ratio and field of view to match the game resolution (recommended for ultrawide)." 
+WriteProtected<float>(0x141DBED94, 1.7777777777777778f)
+WriteProtected<float>(0x14086BBE3, 1)
+WriteProtected<byte>(0x14086BA8B, 0xE9)
+WriteProtected<uint>(0x14086BA8C, 0x00000145)
+WriteNop(0x14086BA90, 2)
+WriteProtected<uint>(0x14086BBD5, 0xE05E0FF3)
+WriteProtected<uint>(0x14086BBD9, 0x4D413D80)
+WriteProtected<uint>(0x14086BBDD, 0x74010180)
+WriteProtected<ushort>(0x14086BBE1, 0x680E)
+WriteProtected<uint>(0x14086BBE7, 0x0C5E0FF3)
+WriteProtected<uint>(0x14086BBEB, 0xC4834824)
+WriteProtected<byte>(0x14086BBEF, 0x08)
+WriteProtected<uint>(0x14086BBF0, 0xE9C1280F)
+WriteProtected<uint>(0x14086BBF4, 0xFFFFFE9A)
+WriteProtected<byte>(0x1406781CE, 0xE9)
+WriteProtected<uint>(0x1406781CF, 0x001F39E3)
+WriteProtected<ushort>(0x14086BBB6, 0x05C6)
+WriteProtected<uint>(0x14086BBB8, 0x01804D64)
+WriteProtected<ushort>(0x14086BBBC, 0xE801)
+WriteProtected<uint>(0x14086BBBE, 0xFFED410E)
+WriteProtected<byte>(0x14086BBC2, 0xE9)
+WriteProtected<uint>(0x14086BBC3, 0xFFE0C60C)
+WriteProtected<uint>(0x1401255FD, 0x01F4B31C)
+WriteProtected<uint>(0x1401261E7, 0x01F4A732)
+WriteProtected<uint>(0x140127897, 0x01F49082)
+WriteProtected<uint>(0x140127C1A, 0x01F48CFF)
+WriteProtected<uint>(0x1401284E7, 0x01F48432)
+WriteProtected<uint>(0x14012EC8E, 0x01F41C8B)
+WriteProtected<uint>(0x140132E05, 0x01F3DB14)
+WriteProtected<uint>(0x140133D05, 0x01F3CC14)
+WriteProtected<uint>(0x14039B307, 0x01CD5612)
+WriteProtected<uint>(0x14066A6C7, 0x01A06252)
+WriteProtected<uint>(0x1406AD57F, 0x019C339A)
+WriteProtected<uint>(0x1406E183C, 0x0198F0DD)
+WriteProtected<uint>(0x1406E5025, 0x0198B8F4)
+WriteProtected<uint>(0x14073FB69, 0x01930DB0)
+WriteProtected<uint>(0x14073FBBE, 0x93110FF3)
+WriteProtected<uint>(0x14073FBC2, 0x000000B4)
+WriteNop(0x14073FBC6, 2)
+WriteProtected<uint>(0x142B1A6BA, 0xFF55625F)
+WriteProtected<uint>(0x142B1B89B, 0xFF55507E)
+WriteProtected<ushort>(0x14086BB60, 0x05C6)
+WriteProtected<uint>(0x14086BB62, 0x01804DBA)
+WriteProtected<ushort>(0x14086BB66, 0xE900)
+WriteProtected<uint>(0x14086BB68, 0xFFFFFF2A)
+WriteProtected<ushort>(0x1406C3EB9, 0x59EB)
+WriteNop(0x1406C3EBB, 8)
+WriteProtected<ushort>(0x1406C3F14, 0x44F3)
+WriteProtected<uint>(0x1406C3F16, 0x248C100F)
+WriteProtected<uint>(0x1406C3F1A, 0x000000A0)
+WriteProtected<ushort>(0x1406C3F1E, 0x05EB)
+WriteProtected<uint>(0x1406C3F20, 0xD5D80BE9)
+WriteProtected<uint>(0x1406C3F24, 0xF505C604)
+WriteProtected<uint>(0x1406C3F28, 0x00019AC9)
+WriteProtected<ushort>(0x1406C3F2C, 0x95EB)
+WriteProtected<byte>(0x1406E180F, 0xE9)
+WriteProtected<uint>(0x1406E1810, 0x0018A322)
+WriteProtected<ushort>(0x1406E1814, 0x5B0F)
+WriteProtected<byte>(0x1406E1816, 0xC0)
+WriteProtected<uint>(0x14086BA92, 0x90905FEB)
+WriteProtected<ushort>(0x14086BAF3, 0x36EB)
+WriteProtected<uint>(0x14086BB36, 0x6E0F4166)
+WriteProtected<ushort>(0x14086BBA5, 0x05C6)
+WriteProtected<uint>(0x14086BBA7, 0x01804D75)
+WriteProtected<ushort>(0x14086BBAB, 0xE801)
+WriteProtected<uint>(0x14086BBAD, 0xFFE0CC0F)
+WriteProtected<byte>(0x14086BBB1, 0xE9)
+WriteProtected<uint>(0x14086BBB2, 0xFFD2243C)
+WriteProtected<byte>(0x14058DFED, 0xE9)
+WriteProtected<uint>(0x14058DFEE, 0x002DDBB3)
+WriteProtected<byte>(0x14086BB3A, 0xC6)
+WriteProtected<uint>(0x14086BB3B, 0x6E0F4466)
+WriteProtected<byte>(0x14086BB3F, 0xE7)
+WriteProtected<uint>(0x14086BB40, 0xE45B0F45)
+WriteProtected<uint>(0x14086BB44, 0x6E0F4566)
+WriteProtected<byte>(0x14086BB48, 0xEE)
+WriteProtected<uint>(0x14086BB49, 0xED5B0F45)
+WriteProtected<uint>(0x14086BB4D, 0x5E0F45F3)
+WriteProtected<byte>(0x14086BB51, 0xE5)
+WriteProtected<uint>(0x14086BB52, 0x110F44F3)
+WriteProtected<uint>(0x14086BB56, 0x804DC225)
+WriteProtected<ushort>(0x14086BB5A, 0xE901)
+WriteProtected<uint>(0x14086BB5C, 0xFFE75CB4)
+WriteProtected<uint>(0x14086BB05, 0x88352F0F)
+WriteProtected<byte>(0x14086BB09, 0x32)
+WriteProtected<uint>(0x14086BB0A, 0x14730155)
+WriteProtected<uint>(0x14086BB0E, 0x355E0FF3)
+WriteProtected<uint>(0x14086BB12, 0x0155327E)
+WriteProtected<uint>(0x14086BB16, 0xCE590FF3)
+WriteProtected<uint>(0x14086BB1A, 0x35100FF3)
+WriteProtected<uint>(0x14086BB1E, 0x01553272)
+WriteProtected<uint>(0x14086BB22, 0xC65E0FF3)
+WriteProtected<byte>(0x14086BB26, 0xE9)
+WriteProtected<uint>(0x14086BB27, 0x00000035)
+WriteProtected<uint>(0x14086BB2B, 0x4DEF3D83)
+WriteProtected<uint>(0x14086BB2F, 0x74010180)
+WriteProtected<byte>(0x14086BB33, 0xEE)
+WriteProtected<ushort>(0x14086BB34, 0xCFEB)
+WriteProtected<ushort>(0x14086BC05, 0x05C6)
+WriteProtected<uint>(0x14086BC07, 0x01804D15)
+WriteProtected<ushort>(0x14086BC0B, 0xE801)
+WriteProtected<uint>(0x14086BC0D, 0xFFE0CBAF)
+WriteProtected<byte>(0x14086BC11, 0xE9)
+WriteProtected<uint>(0x14086BC12, 0xFFCF5C04)
+WriteProtected<byte>(0x140561815, 0xE9)
+WriteProtected<uint>(0x140561816, 0x0030A3EB)
+
+
+
+Patch "Disable Ring Invulnerability" in "Cheats/Player" by "SuperSonic16" does "Disables the player being invulnerable with at least one ring."
+WriteNop(0x14046E4EE, 0x06)
+
+
+
+Patch "Infinite Wispon Gauge" in "Cheats/Player" by "CodenameGamma" 
+WriteNop(0x1404D228C, 0x00000004)
+
+
+
+Patch "Always Ready Wispon Special" in "Cheats/Player" by "CodenameGamma" 
+WriteProtected<byte>(0x1423C060C, 0x01)
+
+
+
+Patch "Disable Ring Loss from Super Sonic" in "Cheats/Player" by "SuperSonic16" does "Disables losing a ring every second as Super Sonic."
+WriteNop(0x1404E1F54, 0x03)
+
+
+
+Patch "Disable Ring Loss from Damage" in "Cheats/Player" by "CodenameGamma" 
+WriteNop(0x1404F77AC, 5)
+
+
+
+Patch "Disable Wispon Boundaries" in "Cheats/Player" by "CodenameGamma" does "Disables the boundaries that prevent usage of certain Wispons in some areas of the stages."
+WriteNop(0x140267527, 0x00000005)
+
+
+
+Patch "Infinite Rings" in "Cheats/Player" by "SuperSonic16" 
+WriteProtected<uint>(0x1403DA766, 0x0010BBE9)
+WriteProtected<ushort>(0x1403DA76A, 0x9000)
+WriteProtected<uint>(0x1403DB826, 0x0003E7B9)
+WriteProtected<uint>(0x1403DB82A, 0x1C488900)
+WriteProtected<uint>(0x1403DB82E, 0xE9CF4D89)
+WriteProtected<uint>(0x1403DB832, 0xFFFFEF36)
+
+
+
+Patch "Infinite Boost Gauge" in "Cheats/Player" by "CodenameGamma" 
+WriteNop(0x1404CFD62, 0x00000005)
+WriteNop(0x1403DF93E, 0x00000007)
+
+
+
+Patch "Enable Super Sonic with 1 Ring" in "Cheats/Player" by "SuperSonic16" 
+WriteProtected<uint>(0x1404E1E8F, 0x4890C931)
+WriteProtected<byte>(0x1404E1E9B, 0x7E)
+
+
+
+Patch "Disable Damage" in "Cheats/Player" by "SuperSonic16" 
+WriteProtected<byte>(0x14046E1E0, 0xC3)
+
+
+

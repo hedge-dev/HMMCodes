@@ -1,4 +1,0 @@
-Code "Force Shadow Bias to 0.0002" in "Graphics/Quality" by "Skyth" 
-Write<float>(0x1A4356C, 0.0002f)
-
-
