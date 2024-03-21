@@ -4,13 +4,19 @@ Library "HMM" by "Hyper"
 
     using Microsoft.Win32;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Reflection;
     using System.Threading;
 
+    public string GetGameDirectory()
+    {
+        return Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+    }
+
     public Dictionary<string, Dictionary<string, string>> GetModsDatabase()
     {
-        string cpkredirCfgPath = Path.Combine(RegistryConfig.LastGameDirectory, "cpkredir.ini");
+        string cpkredirCfgPath = Path.Combine(GetGameDirectory(), "cpkredir.ini");
         
         if (!File.Exists(cpkredirCfgPath))
             return new();
