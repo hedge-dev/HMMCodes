@@ -1,10 +1,10 @@
-Patch "Force Open Zone Forward View Physics" in "Physics/Cyber Space" by "NM" does
+Patch "Force 3D Open Zone Physics (experimental)" in "Physics/Cyber Space" by "NM" does
 /*
-Forces the game to use the Open Zone's Forward View (3D) physics over the Cyber Space-specific 3D physics.
+Forces the game to use the 3D open zone physics in Cyber Space.
 
-Known Issues:
+Known issues;
 - Entering a Rocket Boost will cause the player to lose gravity.
-- Certain auto-run sections (i.e loops) may cause the player to fling off of terrain.
+- Certain auto-run sections (e.g. loops) may cause the player to fling off of terrain.
 */
 //
     #include "Helpers" noemit
