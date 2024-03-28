@@ -12,38 +12,10 @@ Notes;
     if (RSDK.GetPlayMode() != RSDK.PlayMode.Anniversary || RSDK.GetPlayMode() == RSDK.PlayMode.Unknown)
         return;
 
-    if (RSDK.GetCurrentGame() == RSDK.Game.Sonic1)
+    if (RSDK.GetEngineVersion() != 5)
+        RSDK.SetLegacyGlobalByName("game.coinMode", 0);
+    else if (RSDK.GetRSDKGlobalsPtr() != 0)
     {
-        var S1Globals = RSDK.GetSonic1Globals();
-
-        if (S1Globals == null)
-            return;
-
-        S1Globals->gameCoinMode = 0;
-    }
-    else if (RSDK.GetCurrentGame() == RSDK.Game.SonicCD)
-    {
-        var SCDGlobals = RSDK.GetSonicCDGlobals();
-
-        if (SCDGlobals == null)
-            return;
-
-        SCDGlobals->gameCoinMode = 0;
-    }
-    else if (RSDK.GetCurrentGame() == RSDK.Game.Sonic2)
-    {
-        var S2Globals = RSDK.GetSonic2Globals();
-
-        if (S2Globals == null)
-            return;
-
-        S2Globals->gameCoinMode = 0;
-    }
-    else if (RSDK.GetCurrentGame() == RSDK.Game.Sonic3k)
-    {
-        if (RSDK.GetRSDKGlobalsPtr() == 0)
-            return;
-
         // HUD Update
         // Version 1.0.0: RSDKGlobalsPtr + 0x447D20
         // Version 1.0.4: RSDKGlobalsPtr + 0x4C34D4 (Thanks to RDC)
