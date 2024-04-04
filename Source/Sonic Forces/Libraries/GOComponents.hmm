@@ -73,9 +73,35 @@ Library "GOComponents" by "Hyper"
         [FieldOffset(0x120)] public MoveArray<StateDesc> States;
     }
 
+    [StructLayout(LayoutKind.Explicit, Size = 0x380, Pack = 0x20)]
+    public struct GOCPlayerKinematicParams
+    {
+        [FieldOffset(0)]     public GOComponent Base;
+
+        [FieldOffset(0xB0)]  public Vector3 Position;
+
+        [FieldOffset(0xC0)]  public Quaternion Rotation;
+
+        [FieldOffset(0xE0)]  public Vector3 Velocity;
+
+        /// <summary>
+        /// The direction of the left stick on the Y axis relative to the camera.
+        /// </summary>
+        [FieldOffset(0x130)] public float LeftStickY;
+
+        /// <summary>
+        /// The direction of the left stick on the X axis relative to the camera.
+        /// </summary>
+        [FieldOffset(0x138)] public float LeftStickX;
+
+        [FieldOffset(0x1AC)] public bool IsGrounded;
+    }
+
     [StructLayout(LayoutKind.Explicit, Size = 0x240, Pack = 0x20)]
     public struct GOCTransform
     {
+        [FieldOffset(0)]    public GOComponent Base;
+
         [FieldOffset(0xC0)] public Vector3 Position;
     }
 }
