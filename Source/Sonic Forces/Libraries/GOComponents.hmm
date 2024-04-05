@@ -85,14 +85,14 @@ Library "GOComponents" by "Hyper"
         [FieldOffset(0xE0)]  public Vector3 Velocity;
 
         /// <summary>
-        /// The direction of the left stick on the Y axis relative to the camera.
+        /// The direction the player is moving on the Y axis relative to the camera.
         /// </summary>
-        [FieldOffset(0x130)] public float LeftStickY;
+        [FieldOffset(0x130)] public float ForwardY;
 
         /// <summary>
-        /// The direction of the left stick on the X axis relative to the camera.
+        /// The direction the player is moving on the X axis relative to the camera.
         /// </summary>
-        [FieldOffset(0x138)] public float LeftStickX;
+        [FieldOffset(0x138)] public float ForwardX;
 
         [FieldOffset(0x1AC)] public bool IsGrounded;
     }
