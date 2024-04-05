@@ -60,6 +60,26 @@ Library "Player" by "Hyper"
         return (Data*)GameManager.GetGameObject("Buddy");
     }
 
+    public Data* GetPlayerData()
+    {
+        var pSonic = GetSonicData();
+
+        if (pSonic != null)
+            return pSonic;
+
+        var pBuddy = GetBuddyData();
+
+        if (pBuddy != null)
+            return pBuddy;
+
+        var pClassicSonic = GetClassicSonicData();
+
+        if (pClassicSonic != null)
+            return pClassicSonic;
+
+        return null;
+    }
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
     
     public static class State
