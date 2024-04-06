@@ -7,6 +7,7 @@ Library "GOComponents" by "Hyper"
     #lib "Memory"
 
     #import "Collections"
+    #import "Input"
     #import "Player"
     #import "Plugins"
     #import "States"
@@ -51,6 +52,14 @@ Library "GOComponents" by "Hyper"
     public struct GOCCamera
     {
         [FieldOffset(0)] public GOComponent Base;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x88, Pack = 0x20)]
+    public struct GOCInput
+    {
+        [FieldOffset(0)]    public GOComponent Base;
+
+        [FieldOffset(0x80)] public InputComponent* pInputComponent;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x140)]
