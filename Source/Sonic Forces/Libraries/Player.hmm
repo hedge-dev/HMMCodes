@@ -10,6 +10,7 @@ Library "Player" by "Hyper"
 
     #import "Blackboards"
     #import "GOComponents"
+    #import "Input"
     #import "PlayerTargets"
     #import "Plugins"
     #import "Services"
@@ -78,6 +79,63 @@ Library "Player" by "Hyper"
             return pClassicSonic;
 
         return null;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public static class Input
+    {
+        public static InputComponent* GetInputComponent()
+        {
+            var pPlayer = GetPlayerData();
+
+            if (pPlayer == null)
+                return null;
+
+            var pGOCInput = GameObject.GetGOC<GOCInput>(&pPlayer->Base);
+
+            if (pGOCInput == null)
+                return null;
+
+            return pGOCInput->pInputComponent;
+        }
+
+        public static EButtonState GetButtonState(EButtonType in_buttonType)
+        {
+            var pInputComponent = GetInputComponent();
+
+            if (pInputComponent == null)
+                return EButtonState.Idle;
+
+            foreach (var binding in pInputComponent->Buttons)
+            {
+                if (binding.ButtonType == in_buttonType)
+                    return binding.ButtonState;
+            }
+
+            return EButtonState.Idle;
+        }
+
+        public static float GetAnalog(EAxisType in_axisType)
+        {
+            var pInputComponent = GetInputComponent();
+
+            if (pInputComponent == null)
+                return 0.0f;
+
+            foreach (var binding in pInputComponent->Axes)
+            {
+                if (binding.AxisType == in_axisType)
+                    return binding.Value;
+            }
+
+            return 0.0f;
+        }
+
+        public static bool IsAnalogNeutral()
+        {
+            return GetAnalog(EAxisType.Horizontal) == 0.0f && GetAnalog(EAxisType.Vertical) == 0.0f;
+        }
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
