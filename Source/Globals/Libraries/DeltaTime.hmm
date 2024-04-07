@@ -32,12 +32,10 @@ Library "DeltaTime" by "Hyper"
 
     public float GetDeltaTimeAverage()
     {
-        var deltaTime = GetDeltaTime();
-
         _deltaSum -= _deltaSamples[_deltaIndex];
-        _deltaSum += deltaTime;
+        _deltaSum += _deltaTime;
         
-        _deltaSamples[_deltaIndex] = deltaTime;
+        _deltaSamples[_deltaIndex] = _deltaTime;
 
         if (++_deltaIndex == _deltaSamples.Length)
             _deltaIndex = 0;
@@ -55,7 +53,7 @@ Library "DeltaTime" by "Hyper"
 
     public float GetFrameRate(bool in_isRounded = true)
     {
-        var result = 1.0f / GetDeltaTime();
+        var result = 1.0f / _deltaTime;
 
         if (in_isRounded)
             result = (float)Math.Round(result);
