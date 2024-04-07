@@ -6,6 +6,10 @@ Library "DeltaTime" by "Hyper"
 
     private static float _deltaTime;
 
+    private static int _deltaIndex;
+    private static float _deltaSum;
+    private static float[] _deltaSamples = new float[100];
+
     [LibraryInitializer]
     public void Init()
     {
@@ -26,18 +30,38 @@ Library "DeltaTime" by "Hyper"
         return _deltaTime;
     }
 
-    public float GetFrameRate()
+    public float GetDeltaTimeAverage()
     {
-        return 1.0f / _deltaTime;
+        var deltaTime = GetDeltaTime();
+
+        _deltaSum -= _deltaSamples[_deltaIndex];
+        _deltaSum += deltaTime;
+        
+        _deltaSamples[_deltaIndex] = deltaTime;
+
+        if (++_deltaIndex == _deltaSamples.Length)
+            _deltaIndex = 0;
+
+        return _deltaSum / _deltaSamples.Length;
     }
 
-    public float GetFrameRateNormalised()
+    public float GetFrameRate(bool in_isRounded = true)
     {
-        return (float)Math.Round(GetFrameRate());
+        var result = 1.0f / GetDeltaTime();
+
+        if (in_isRounded)
+            result = (float)Math.Round(result);
+
+        return result;
     }
 
-    public float GetFrameRateNormalized()
+    public float GetFrameRateAverage(bool in_isRounded = true)
     {
-        return GetFrameRateNormalised();
+        var result = 1.0f / GetDeltaTimeAverage();
+
+        if (in_isRounded)
+            result = (float)Math.Round(result);
+
+        return result;
     }
 }
