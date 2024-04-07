@@ -1,0 +1,72 @@
+Patch "Show Frame Rate on Title Bar" in "System" by "Hyper & Sajid" 
+//
+    #lib "DeltaTime"
+
+    using System.Diagnostics;
+    using System.Runtime.InteropServices;
+    using System.Text;
+    using System.Threading;
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    static extern int GetWindowTextLength(IntPtr hWnd);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    static extern bool SetWindowText(IntPtr hWnd, String lpString);
+
+    [DllImport("kernel32.dll")]
+    static extern IntPtr GetConsoleWindow();
+
+    static bool _isOriginalTitleCaptured = false;
+
+    static string _originalTitle;
+
+    static IntPtr _windowHandle = IntPtr.Zero;
+//
+{
+    new Thread
+    (
+        delegate()
+        {
+            while (true)
+            {
+                if (_windowHandle == IntPtr.Zero)
+                {
+                    var hwnd = Process.GetCurrentProcess().MainWindowHandle;
+
+                    if (hwnd == GetConsoleWindow())
+                        continue;
+                    
+                    _windowHandle = hwnd;
+                }
+                else
+                {
+                    if (!_isOriginalTitleCaptured)
+                    {
+                        if (string.IsNullOrEmpty(_originalTitle))
+                        {
+                            var title = new StringBuilder(GetWindowTextLength(_windowHandle) + 1);
+
+                            GetWindowText(_windowHandle, title, title.Capacity);
+
+                            _originalTitle = title.ToString();
+                        }
+                        else
+                        {
+                            _isOriginalTitleCaptured = true;
+                        }
+                    }
+                    else
+                    {
+                        SetWindowText(_windowHandle, $"{_originalTitle} - {DeltaTime.GetFrameRateAverage()} FPS ({DeltaTime.GetDeltaTimeAverage()} ms)");
+                    }
+                }
+
+                Thread.Sleep((int)DeltaTime.GetDeltaTimeMilliseconds());
+            }
+        }
+    )
+    .Start();
+}

@@ -45,6 +45,14 @@ Library "DeltaTime" by "Hyper"
         return _deltaSum / _deltaSamples.Length;
     }
 
+    public double GetDeltaTimeMilliseconds()
+    {
+        if (_frameTimer == null)
+            return 0.0;
+        
+        return _frameTimer.Elapsed.TotalMilliseconds;
+    }
+
     public float GetFrameRate(bool in_isRounded = true)
     {
         var result = 1.0f / GetDeltaTime();
