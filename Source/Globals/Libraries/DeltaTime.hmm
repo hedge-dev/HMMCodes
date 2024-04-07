@@ -9,9 +9,6 @@ Library "DeltaTime" by "Hyper"
     [LibraryInitializer]
     public void Init()
     {
-        if (_frameTimer != null)
-            return;
-        
         _frameTimer = Stopwatch.StartNew();
     }
 
