@@ -1,0 +1,51 @@
+Code "Show Frame Rate on Title Bar" in "System" by "Hyper & Sajid" 
+//
+    #lib "DeltaTime"
+
+    using System.Diagnostics;
+    using System.Runtime.InteropServices;
+    using System.Text;
+    using System.Threading;
+
+    [DllImport("user32.dll", SetLastError=true, CharSet=CharSet.Auto)]
+    static extern int GetWindowTextLength(IntPtr hWnd);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    static extern bool SetWindowText(IntPtr hWnd, String lpString);
+
+    static IntPtr _windowHandle = IntPtr.Zero;
+
+    static string _originalTitle;
+//
+{
+    new Thread
+    (
+        delegate()
+        {
+            if (_windowHandle == IntPtr.Zero)
+            {
+                _windowHandle = Process.GetCurrentProcess().MainWindowHandle;
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(_originalTitle))
+                {
+                    StringBuilder title = new StringBuilder(GetWindowTextLength(_windowHandle) + 1);
+                    {
+                        GetWindowText(_windowHandle, title, title.Capacity);
+
+                        _originalTitle = title.ToString();
+                    }
+                }
+                else
+                {
+                    SetWindowText(_windowHandle, $"{_originalTitle} - {DeltaTime.GetFrameRateAverage()} FPS ({DeltaTime.GetDeltaTimeAverage()} ms)");
+                }
+            }
+        }
+    )
+    .Start();
+}
