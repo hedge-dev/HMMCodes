@@ -64,11 +64,19 @@ Library "Player" by "Hyper"
     public Data* GetPlayerData()
     {
         var pSonic = GetSonicData();
+        var pBuddy = GetBuddyData();
+
+        if (pSonic != null && pBuddy != null)
+        {
+            // bodge
+            if (Player.State.GetCurrentStateID<Sonic.StateID>(pSonic).ToString().Contains("Follow"))
+                return pBuddy;
+
+            return pSonic;
+        }
 
         if (pSonic != null)
             return pSonic;
-
-        var pBuddy = GetBuddyData();
 
         if (pBuddy != null)
             return pBuddy;
