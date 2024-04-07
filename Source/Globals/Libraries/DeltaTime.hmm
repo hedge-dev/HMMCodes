@@ -1,0 +1,46 @@
+Library "DeltaTime" by "Hyper"
+{
+    using System.Diagnostics;
+
+    private static Stopwatch _frameTimer;
+
+    private static float _deltaTime;
+
+    [LibraryInitializer]
+    public void Init()
+    {
+        if (_frameTimer != null)
+            return;
+        
+        _frameTimer = Stopwatch.StartNew();
+    }
+
+    [LibraryUpdate]
+    public void Update()
+    {
+        _deltaTime = (float)_frameTimer.Elapsed.TotalMilliseconds / 1000.0f;
+
+        _frameTimer.Reset();
+        _frameTimer.Start();
+    }
+
+    public float GetDeltaTime()
+    {
+        return _deltaTime;
+    }
+
+    public float GetFrameRate()
+    {
+        return 1.0f / _deltaTime;
+    }
+
+    public float GetFrameRateNormalised()
+    {
+        return (float)Math.Round(GetFrameRate());
+    }
+
+    public float GetFrameRateNormalized()
+    {
+        return GetFrameRateNormalised();
+    }
+}
