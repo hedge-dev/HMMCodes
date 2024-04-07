@@ -39,6 +39,17 @@ Library "Input" by "Hyper"
         [FieldOffset(0x18)] public ObjectMoveArray<Memory.Pointer<ActionMapping>> ActionMappings;
 
         [FieldOffset(0x38)] public ObjectMoveArray<Memory.Pointer<AxisMapping>> AxisMappings;
+
+        public void SetAxisDeadzone(float in_deadZone)
+        {
+            foreach (var axisMapping in AxisMappings)
+            {
+                var bindings = axisMapping.pData->Bindings;
+
+                for (int i = 0; i < bindings.Length; i++)
+                    bindings[i].Min = in_deadZone;
+            }
+        }
     }
 
     [StructLayout(LayoutKind.Sequential)]
