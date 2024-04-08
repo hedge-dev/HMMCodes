@@ -99,6 +99,16 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
         return null;
     }
 
+    public bool TryGetGOC(Data* in_pGameObject, string in_name, GOComponent* out_pGOC)
+    {
+        out_pGOC = GetGOC(in_pGameObject, in_name);
+
+        if (out_pGOC == null)
+            return false;
+
+        return true;
+    }
+
     /// <summary>
     /// Gets an instance of `hh::game::GOComponent` obtained by the input `hh::game::GameObject` instance.
     /// </summary>
@@ -124,5 +134,15 @@ Library "GameObject" by "Hyper, ĐeäTh & Sajid"
         var name = Helpers.GetInternalName(typeof(T));
         
         return (T*)(long)GetGOC(in_pGameObject, string.IsNullOrEmpty(name) ? typeof(T).Name : name);
+    }
+
+    public bool TryGetGOC<T>(Data* in_pGameObject, out T* out_pGOC) where T : unmanaged
+    {
+        out_pGOC = GetGOC<T>(in_pGameObject);
+
+        if (out_pGOC == null)
+            return false;
+
+        return true;
     }
 }
