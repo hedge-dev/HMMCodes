@@ -85,6 +85,11 @@ Library "MathHelpers" by "Hyper"
         return Clamp01<float>((value - a) / (b - a));
     }
 
+    public static float Remap(float in_value, float in_sourceFrom, float in_sourceTo, float in_destinationFrom, float in_destinationTo)
+    {
+        return (in_value - in_sourceFrom) / (in_sourceTo - in_sourceFrom) * (in_destinationTo - in_destinationFrom) + in_destinationFrom;
+    }
+
     public static float ToDegrees(float in_radians)
     {
         return in_radians * (180.0f / (float)Math.PI);
