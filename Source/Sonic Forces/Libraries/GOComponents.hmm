@@ -9,6 +9,7 @@ Library "GOComponents" by "Hyper"
     #import "Collections"
     #import "Input"
     #import "Player"
+    #import "PlayerCollision"
     #import "Plugins"
     #import "States"
 
@@ -48,7 +49,7 @@ Library "GOComponents" by "Hyper"
         public override string ToString() => Name.ToString();
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x90)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x90, Pack = 0x20)]
     public struct GOCCamera
     {
         [FieldOffset(0)] public GOComponent Base;
@@ -62,7 +63,15 @@ Library "GOComponents" by "Hyper"
         [FieldOffset(0x80)] public InputComponent* pInputComponent;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 0x140)]
+    [StructLayout(LayoutKind.Explicit, Size = 0xE0, Pack = 0x20)]
+    public struct GOCPlayerCollider
+    {
+        [FieldOffset(0)]    public GOComponent Base;
+
+        [FieldOffset(0xC8)] public PlayerCollision.Data* pPlayerCollision;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x140, Pack = 0x20)]
     public struct GOCPlayerHsm
     {
         [FieldOffset(0)]     public GOComponent Base;
