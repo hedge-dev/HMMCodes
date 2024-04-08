@@ -2,7 +2,7 @@ Library "DeltaTime" by "Hyper"
 {
     using System.Diagnostics;
 
-    private static Stopwatch _frameTimer;
+    private static Stopwatch _frameTimer = new Stopwatch();
 
     private static float _deltaTime;
 
@@ -45,9 +45,6 @@ Library "DeltaTime" by "Hyper"
 
     public double GetDeltaTimeMilliseconds()
     {
-        if (_frameTimer == null)
-            return 0.0;
-        
         return _frameTimer.Elapsed.TotalMilliseconds;
     }
 
