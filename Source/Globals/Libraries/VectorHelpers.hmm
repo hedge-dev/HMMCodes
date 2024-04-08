@@ -1,5 +1,7 @@
 Library "VectorHelpers" by "Hyper" 
 {
+    #lib "MathHelpers"
+
     #load "System.Numerics.dll"
 
     using System.Numerics;
@@ -30,6 +32,18 @@ Library "VectorHelpers" by "Hyper"
     public static float GetVerticalMagnitude(Vector3 in_velocity)
     {
         return in_velocity.Y;
+    }
+
+    public static Vector3 Lerp(Vector3 in_start, Vector3 in_end, float in_time)
+    {
+        in_time = MathHelpers.Clamp(in_time, 0.0f, 1.0f);
+
+        return new Vector3
+        (
+            in_start.X + (in_end.X - in_start.X) * in_time,
+            in_start.Y + (in_end.Y - in_start.Y) * in_time,
+            in_start.Z + (in_end.Z - in_start.Z) * in_time
+        );
     }
 
     public static Quaternion LookRotation(Vector3 in_forward, Vector3 in_upward)
