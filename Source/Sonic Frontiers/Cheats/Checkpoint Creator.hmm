@@ -14,12 +14,15 @@ Notes;
 - It is recommended to have parry unlocked when using the controller layout.
 */
 //
+    #lib "BlackboardStatus"
     #lib "GameMode"
+    #lib "Lua"
     #lib "Player"
     #lib "Time"
 
     #load "System.Numerics.dll"
 
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Numerics;
     using System.Runtime.InteropServices;
@@ -30,17 +33,32 @@ Notes;
     static string _lastGameModeName = string.Empty;
 
     static Vector3 _checkpointPosition = Vector3.Zero;
+    static Quaternion _checkpointRotation = Quaternion.Identity;
 
     static bool _isRecentRespawn = false;
     static bool _isInputBuffered = false;
 
     static float _inputTimer = 0.0f;
     static float _inputTimerThreshold = 1.5f;
+
+    static Dictionary<Player.PlayerType, string> _effects = new()
+    {
+        { Player.PlayerType.Sonic, "ef_ob_seed01_guardseed01_sonicbuff01" },
+        { Player.PlayerType.Amy, "ef_ob_heart_get01" },
+        { Player.PlayerType.Knuckles, "ef_ob_seed01_powerseed01_sonicbuff01" },
+        { Player.PlayerType.Tails, "ef_ob_spanner_get01" }
+    };
 //
 {
     if (_lastGameModeName != GameMode.GetName())
     {
+        Lua.Call("LoadLevel", "w1_common");
+        Lua.Call("LoadLevel", "w3_common");
+        Lua.Call("LoadLevel", "zev_sonic_def_up");
+        Lua.Call("LoadLevel", "zev_sonic_pow_up");
+
         _checkpointPosition = Vector3.Zero;
+        _checkpointRotation = Quaternion.Identity;
 
         _lastGameModeName = GameMode.GetName();
     }
@@ -74,9 +92,29 @@ Notes;
     if (_isRecentRespawn)
         _inputTimer = 0.0f;
 
-    if (_inputTimer >= _inputTimerThreshold && _checkpointPosition != Vector3.Zero)
+    if (_inputTimer >= _inputTimerThreshold && _checkpointPosition != Vector3.Zero && _checkpointRotation != Quaternion.Identity)
     {
+        var playerType = Player.GetPlayerType();
+
+        if (playerType != Player.PlayerType.Unknown)
+        {
+            if (BlackboardStatus.IsSuper())
+            {
+                Player.Effect.PlayEffect("PlayerWarpEffect", "ef_ob_superring_get01");
+            }
+            else
+            {
+                Player.Effect.PlayEffect("PlayerWarpEffect", _effects[playerType]);
+            }
+        }
+
+        Player.Effect.PlayEffect("WarpEffect", "ef_ob_portalgate_out01");
+
+        Player.Sound.PlaySound("sn_sonic_boom");
+
         kinematics->Position = _checkpointPosition;
+        kinematics->Rotation = _checkpointRotation;
+
         _isRecentRespawn = true;
     }
     else if (isPlusKeyDown || (_inputTimer > 0.0f && !_isInputBuffered))
@@ -85,6 +123,8 @@ Notes;
             Player.Sound.PlaySound("obj_pointmarker");
         
         _checkpointPosition = kinematics->Position;
+        _checkpointRotation = kinematics->Rotation;
+        
         _inputTimer = 0.0f;
     }
 }
