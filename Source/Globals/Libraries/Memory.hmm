@@ -285,6 +285,13 @@ Library "Memory" by "Hyper & Sajid"
     {
         PrintMemory<byte>(in_address, in_rowCount);
     }
+
+    public static bool TryGetPointer<T>(void* in_pData, out T* out_pData) where T : unmanaged
+    {
+        out_pData = (T*)in_pData;
+
+        return in_pData != null;
+    }
     
     public struct Pointer<T> where T : unmanaged
     {
