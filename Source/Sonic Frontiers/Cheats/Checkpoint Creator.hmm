@@ -3,8 +3,8 @@ Code "Checkpoint Creator" in "Cheats" by "Hyper" does
 Allows you to create virtual checkpoints anywhere and restore them.
 
 Controller Layout;
-- LB + RB + LS + RS - create checkpoint from position
-- LB + RB + LS + RS (for 1.5 seconds) - restore position from checkpoint
+- LB + RB + LS + RS (for 1.5 seconds) - create checkpoint from position
+- LB + RB + LS + RS - restore position from checkpoint
 
 Keyboard Layout;
 - Plus - create checkpoint from position
@@ -17,18 +17,17 @@ Notes;
     #lib "BlackboardStatus"
     #lib "GameMode"
     #lib "Lua"
+    #lib "Memory"
     #lib "Player"
     #lib "Time"
+    #lib "Win32"
+
+    #import "GOComponents"
 
     #load "System.Numerics.dll"
 
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Numerics;
-    using System.Runtime.InteropServices;
-
-    [DllImport("user32.dll")]
-    static extern IntPtr GetForegroundWindow();
 
     static string _lastGameModeName = string.Empty;
 
@@ -63,12 +62,10 @@ Notes;
         _lastGameModeName = GameMode.GetName();
     }
 
-    if (GetForegroundWindow() != Process.GetCurrentProcess().MainWindowHandle)
+    if (!Win32.IsGameForegroundWindow())
         return;
 
-    var kinematics = Player.Kinematics.Get();
-
-    if (kinematics == null)
+    if (!Memory.TryGetPointer(Player.Kinematics.Get(), out GOCPlayerKinematicParams* out_pKinematics))
         return;
 
     bool isMinusKeyDown = (GetAsyncKeyState(Keys.OemMinus) & 0x8000) != 0;
@@ -92,7 +89,7 @@ Notes;
     if (_isRecentRespawn)
         _inputTimer = 0.0f;
 
-    if (_inputTimer >= _inputTimerThreshold && _checkpointPosition != Vector3.Zero && _checkpointRotation != Quaternion.Identity)
+    if (_inputTimer >= _inputTimerThreshold)
     {
         var playerType = Player.GetPlayerType();
 
@@ -107,24 +104,29 @@ Notes;
                 Player.Effect.PlayEffect("PlayerWarpEffect", _effects[playerType]);
             }
         }
-
-        Player.Effect.PlayEffect("WarpEffect", "ef_ob_portalgate_out01");
-
-        Player.Sound.PlaySound("sn_sonic_boom");
-
-        kinematics->Position = _checkpointPosition;
-        kinematics->Rotation = _checkpointRotation;
+        
+        Player.Sound.PlaySound("obj_pointmarker");
+        
+        _checkpointPosition = out_pKinematics->Position;
+        _checkpointRotation = out_pKinematics->Rotation;
 
         _isRecentRespawn = true;
     }
     else if (isPlusKeyDown || (_inputTimer > 0.0f && !_isInputBuffered))
     {
-        if (!isPlusKeyDown)
-            Player.Sound.PlaySound("obj_pointmarker");
-        
-        _checkpointPosition = kinematics->Position;
-        _checkpointRotation = kinematics->Rotation;
-        
         _inputTimer = 0.0f;
+
+        if (_checkpointPosition == Vector3.Zero && _checkpointRotation == Quaternion.Identity)
+            return;
+        
+        if (!isPlusKeyDown)
+        {
+            Player.Effect.PlayEffect("WarpEffect", "ef_ob_portalgate_out01");
+
+            Player.Sound.PlaySound("sn_sonic_boom");
+        }
+
+        out_pKinematics->Position = _checkpointPosition;
+        out_pKinematics->Rotation = _checkpointRotation;
     }
 }
