@@ -1,6 +1,7 @@
 Patch "Show Frame Rate on Title Bar" in "System" by "Hyper & Sajid" 
 //
     #lib "DeltaTime"
+    #lib "Win32"
 
     using System.Diagnostics;
     using System.Runtime.InteropServices;
@@ -16,14 +17,9 @@ Patch "Show Frame Rate on Title Bar" in "System" by "Hyper & Sajid"
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
     static extern bool SetWindowText(IntPtr hWnd, String lpString);
 
-    [DllImport("kernel32.dll")]
-    static extern IntPtr GetConsoleWindow();
-
     static bool _isOriginalTitleCaptured = false;
 
     static string _originalTitle;
-
-    static IntPtr _windowHandle = IntPtr.Zero;
 //
 {
     new Thread
@@ -32,36 +28,29 @@ Patch "Show Frame Rate on Title Bar" in "System" by "Hyper & Sajid"
         {
             while (true)
             {
-                if (_windowHandle == IntPtr.Zero)
-                {
-                    var hwnd = Process.GetCurrentProcess().MainWindowHandle;
+                var windowHandle = Win32.GetGameWindowHandle();
 
-                    if (hwnd == GetConsoleWindow())
-                        continue;
+                if (windowHandle == IntPtr.Zero)
+                    continue;
                     
-                    _windowHandle = hwnd;
-                }
-                else
+                if (!_isOriginalTitleCaptured)
                 {
-                    if (!_isOriginalTitleCaptured)
+                    if (string.IsNullOrEmpty(_originalTitle))
                     {
-                        if (string.IsNullOrEmpty(_originalTitle))
-                        {
-                            var title = new StringBuilder(GetWindowTextLength(_windowHandle) + 1);
+                        var title = new StringBuilder(GetWindowTextLength(windowHandle) + 1);
 
-                            GetWindowText(_windowHandle, title, title.Capacity);
+                        GetWindowText(windowHandle, title, title.Capacity);
 
-                            _originalTitle = title.ToString();
-                        }
-                        else
-                        {
-                            _isOriginalTitleCaptured = true;
-                        }
+                        _originalTitle = title.ToString();
                     }
                     else
                     {
-                        SetWindowText(_windowHandle, $"{_originalTitle} - {DeltaTime.GetFrameRateAverage()} FPS ({DeltaTime.GetDeltaTimeAverage()} ms)");
+                        _isOriginalTitleCaptured = true;
                     }
+                }
+                else
+                {
+                    SetWindowText(windowHandle, $"{_originalTitle} - {DeltaTime.GetFrameRateAverage()} FPS ({DeltaTime.GetDeltaTimeAverage()} ms)");
                 }
 
                 Thread.Sleep((int)DeltaTime.GetDeltaTimeMilliseconds());
