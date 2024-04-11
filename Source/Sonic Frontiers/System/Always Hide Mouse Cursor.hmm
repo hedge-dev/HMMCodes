@@ -5,16 +5,17 @@ Keeps the mouse cursor hidden at all times when the game window is focused.
 This prevents the mouse cursor appearing under certain conditions, even if the primary input method is a controller.
 */
 //
+    #lib "Win32"
+
     using System.Diagnostics;
     using System.Runtime.InteropServices;
-
-    [DllImport("user32.dll")]
-    static extern IntPtr GetForegroundWindow();
     
     [DllImport("user32.dll")]
     static extern nint SetCursor(nint hCursor);
 //
 {
-    if (GetForegroundWindow() == Process.GetCurrentProcess().MainWindowHandle)
-        SetCursor(0);
+    if (!Win32.IsGameForegroundWindow())
+        return;
+    
+    SetCursor(0);
 }

@@ -11,14 +11,9 @@ Keyboard Layout;
     #lib "Logger"
     #lib "Lua"
     #lib "Time"
+    #lib "Win32"
 
     #import "Services"
-
-    using System.Diagnostics;
-    using System.Runtime.InteropServices;
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr GetForegroundWindow();
     
     static bool _isUpdateTime = false;
 
@@ -39,7 +34,7 @@ Keyboard Layout;
         
     _hours = pTimeService->CurrentTime.Hours;
 
-    if (GetForegroundWindow() != Process.GetCurrentProcess().MainWindowHandle)
+    if (!Win32.IsGameForegroundWindow())
         return;
 
     float delta = Time.GetDeltaTime() * _rate;

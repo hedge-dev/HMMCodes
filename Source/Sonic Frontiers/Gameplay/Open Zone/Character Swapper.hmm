@@ -23,13 +23,8 @@ Notes;
     #lib "MathHelpers"
     #lib "PhotoMode"
     #lib "Player"
+    #lib "Win32"
     #lib "XInput"
-
-    using System.Diagnostics;
-    using System.Runtime.InteropServices;
-
-    [DllImport("user32.dll")]
-    static extern IntPtr GetForegroundWindow();
 
     static bool _isCharacterUpdate = false;
     static bool _isAwaitLastRingCount = false;
@@ -52,7 +47,7 @@ Notes;
     }
 //
 {
-    if (GetForegroundWindow() != Process.GetCurrentProcess().MainWindowHandle)
+    if (!Win32.IsGameForegroundWindow())
         return;
 
     if (PhotoMode.IsEnabled())

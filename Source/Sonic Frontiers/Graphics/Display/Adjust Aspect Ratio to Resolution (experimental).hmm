@@ -45,8 +45,6 @@ Known issues;
     static long _surfRideAspectRatioAddr = 0;
     static long _surfRideAspectRatioJumpAddr = 0;
     static long _dvSceneAspectRatioAddr = 0;
-
-    static IntPtr _windowHandle = IntPtr.Zero;
 //
 {
     if (!_isInitialised)
@@ -146,22 +144,12 @@ Known issues;
         _isInitialised = true;
     }
 
-    if (_windowHandle == IntPtr.Zero)
-    {
-        var hwnd = Process.GetCurrentProcess().MainWindowHandle;
-
-        if (hwnd == GetConsoleWindow())
-            return;
-
-        _windowHandle = hwnd;
-    }
-
     if (_mainAspectRatioAddr == 0)
         return;
 
     RECT clientRect = new RECT();
 
-    if (!GetClientRect(_windowHandle, ref clientRect))
+    if (!GetClientRect(Win32.GetGameWindowHandle(), ref clientRect))
         return;
 
     float width  = (float)(clientRect.Right - clientRect.Left);
