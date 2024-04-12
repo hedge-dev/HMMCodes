@@ -64,7 +64,7 @@ Library "INI" by "Hyper"
             }
             else
             {
-                return Parse<int>(in_value, in_defaultValue ? 1 : 0);
+                return (T)(object)(Parse<int>(in_value, (bool)(object)in_defaultValue ? 1 : 0) > 0);
             }
         }
         else if (typeof(T) == typeof(int))
