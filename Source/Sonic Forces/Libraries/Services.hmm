@@ -2,6 +2,7 @@ Library "Services" by "Hyper"
 {
     #include "Helpers" noemit
 
+    #lib "GameManager"
     #lib "Memory"
 
     #import "Blackboards"
@@ -9,6 +10,28 @@ Library "Services" by "Hyper"
     #import "PlayerTargets"
 
     using System.Runtime.InteropServices;
+    using System.Text;
+
+    [StructLayout(LayoutKind.Explicit, Size = 0xB0, Pack = 0x20)]
+    public struct LevelInfo
+    {
+        [FieldOffset(0)]    public GameService.Data Base;
+
+        [FieldOffset(0x60)] public StageInfo.StageData* pStageData;
+
+        [FieldOffset(0x70)] public void* pPlayerInformation;
+
+        public static string GetCurrentStageID()
+        {
+            if (!Memory.TryGetPointer(GameManager.GetService<LevelInfo>(), out LevelInfo* out_pLevelInfo))
+                return string.Empty;
+
+            if (!Memory.TryGetPointer(out_pLevelInfo->pStageData, out StageInfo.StageData* out_pStageData))
+                return string.Empty;
+
+            return out_pStageData->ToString();
+        }
+    }
 
     [StructLayout(LayoutKind.Explicit, Size = 0xA0)]
     public struct PlayerBlackboardService
@@ -52,5 +75,68 @@ Library "Services" by "Hyper"
         }
 
         MAKE_GENERIC_API(GetTargetComponent)
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0xC0, Pack = 0x20)]
+    public struct StageInfo
+    {
+        [FieldOffset(0)]    public GameService.Data Base;
+
+        [FieldOffset(0x60)] public ObjectMoveArray<StageData> Stages;
+
+        [StructLayout(LayoutKind.Explicit, Size = 0x1F0, Pack = 0x10)]
+        public struct StageData
+        {
+            [FieldOffset(0x18)]  public fixed byte Name[8];
+
+            [FieldOffset(0x38)]  public fixed byte BgmName[32];
+
+            [FieldOffset(0x58)]  public fixed byte SceneParamName[32];
+
+            [FieldOffset(0x78)]  public float BgmRetryStart;
+
+            [FieldOffset(0x7C)]  public float BgmRetryFade;
+
+            [FieldOffset(0x80)]  public int StageIndex;
+
+            [FieldOffset(0x84)]  public int Category;
+
+            [FieldOffset(0x88)]  public int SequenceIndex;
+
+            [FieldOffset(0x8E)]  public EPlayerType PlayerType;
+
+            [FieldOffset(0x8C)]  public short AttributeFlags;
+
+            [FieldOffset(0x90)]  public int StaticSectorCount;
+
+            [FieldOffset(0x94)]  public byte* pStaticSectors;
+
+            [FieldOffset(0xF8)]  public int DynamicSectorCount;
+
+            [FieldOffset(0xFC)]  public byte* pDynamicSectors;
+
+            [FieldOffset(0x1E8)] public EChunkType ChunkType;
+
+            public enum EPlayerType : byte
+            {
+                Sonic,
+                Buddy,
+                Tag,
+                Classic,
+                Shadow = 5
+            }
+
+            public enum EChunkType : byte
+            {
+                Initial,
+                After
+            }
+
+            public override string ToString()
+            {
+                fixed (byte* pName = Name)
+                    return Encoding.UTF8.GetString(pName, 8).Trim('\0');
+            }
+        }
     }
 }
