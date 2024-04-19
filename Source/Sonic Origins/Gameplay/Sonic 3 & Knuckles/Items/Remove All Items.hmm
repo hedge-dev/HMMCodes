@@ -1,4 +1,4 @@
-Code "Remove All Items" in "Gameplay/Sonic 3 & Knuckles/Items" by "MegAmi" does "Removes all rings, monitors, starposts, and special rings from all stages."
+Code "Remove All Items" in "Gameplay/Sonic 3 & Knuckles/Items" by "MegAmi" does "Removes all rings, monitors, star posts, and special rings from all stages."
 //
     #lib "RSDK"
 //

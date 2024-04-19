@@ -1,0 +1,8 @@
+Patch "Disable Ring Loss From Super/Hyper Forms" in "Cheats/Sonic 3 & Knuckles" by "MegAmi" does "Disables losing a ring every second while in a Super or Hyper form."
+//
+    #lib "Memory"
+//
+{
+    // 2.0.2: 0x1401DF8B7
+    Memory.WriteForceJump(ScanSignature("\x0F\x8F\x9E\x01\x00\x00\xFF\x8B\xD0\x00\x00\x00", "xxxxxxxxxxxx"));
+}
