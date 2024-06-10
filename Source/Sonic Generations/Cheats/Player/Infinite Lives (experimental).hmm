@@ -1,0 +1,8 @@
+Patch "Infinite Lives (experimental)" in "Cheats/Player" by "CodenameGamma" does 
+/*
+Prevents Sonic from losing lives.
+
+Known issues;
+- Prevents Casino Night from ending.
+*/
+WriteNop(0xD59A67, 0x6)
