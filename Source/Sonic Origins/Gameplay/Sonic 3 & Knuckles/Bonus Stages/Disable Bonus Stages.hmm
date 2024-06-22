@@ -1,4 +1,4 @@
-Patch "Disable Bonus Stages" in "Gameplay/Sonic 3 & Knuckles" by "MegAmi" does "Removes the Bonus Stage stars from Star Posts."
+Patch "Disable Bonus Stages" in "Gameplay/Sonic 3 & Knuckles/Bonus Stages" by "MegAmi" does "Removes the Bonus Stage stars from Star Posts."
 //
     #lib "Memory"
 //
