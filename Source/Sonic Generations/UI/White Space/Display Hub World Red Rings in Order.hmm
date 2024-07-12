@@ -1,4 +1,4 @@
-Patch "Display Hub World Red Rings in Order" in "UI/White Space" by "brianuuu" 
+Patch "Display Hub World Red Rings in Order" in "UI/White Space" by "brianuuu" does "Displays Red Rings in White Space in the order they were collected for their respective stages."
 WriteAsmHook(
 $@"
 	; ecx = stage ID * 5
