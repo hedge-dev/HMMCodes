@@ -1,0 +1,45 @@
+Code "Disable Cyber Space Spawn Distortion Effects" in "Graphics/Post-processing" by "jav.wav"
+//
+	#include "Reflection" noemit
+
+	#lib "Reflection"
+	#lib "NoisePresetParameters"
+//
+{
+	var NoisePresetParametersInfo = Reflection.GetDataInfo<NoisePresetParameters.Root>("gfx_noise_preset");
+
+	if (NoisePresetParametersInfo.pData == null)
+		return;
+
+	RFL_SET_PARAM(NoisePresetParametersInfo, presets[0].enable, false);
+}
+
+Library "NoisePresetParameters"
+{
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+    using System.Runtime.InteropServices;
+
+    [StructLayout(LayoutKind.Explicit, Size = 0xA4)]
+    public struct FxCyberSpaceStartNoiseParameter
+    {
+        [FieldOffset(0x00)] public bool enable;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 0x520)]
+    public struct Root
+    {
+        [FieldOffset(0x00)] public unsafe fixed byte /* FxCyberSpaceStartNoiseParameter[8] */ _presets[1312];
+
+        public unsafe FxCyberSpaceStartNoiseParameter* presets
+        {
+            get
+            {
+                fixed (byte* p_presets = _presets)
+                    return (FxCyberSpaceStartNoiseParameter*)p_presets;
+            }
+        }
+    }
+
+}
