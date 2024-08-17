@@ -3,6 +3,7 @@ Code "Adjust Aspect Ratio to Resolution (experimental)" in "Graphics/Display" by
 Dynamically adjusts the aspect ratio to match the game resolution (recommended for non-16:9 resolutions).
 
 Notes;
+- This code will still function at 16:9 resolutions, but will only fix minor aspect ratio issues (such as improper cutscene aspect ratio).
 - The UI will be stretched automatically for square or portrait resolutions.
 
 Known issues;

@@ -1,4 +1,9 @@
-Patch "Allow Controller Hotplugging" in "System" by "Skyth" 
+Patch "Allow Controller Hotplugging" in "System" by "Skyth" does
+/*
+Allows the controller to be reconnected at any time.
+
+Pressing the Start button will switch between controllers (including the keyboard) as Player 1.
+*/
 WriteProtected<byte>(0x9C85FA, 0x83)
 WriteProtected<byte>(0x9C85FB, 0xFA)
 WriteProtected<byte>(0x9C85FC, 0x4)
@@ -20,5 +25,3 @@ WriteProtected<byte>(0x9C817C, 0x0)
 WriteProtected<byte>(0x9C817D, 0x0)
 WriteNop(0x9C8A70, 2)
 WriteNop(0x9C8AC0, 2)
-
-
