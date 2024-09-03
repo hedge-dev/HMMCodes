@@ -26,6 +26,11 @@ Library "VectorHelpers" by "Hyper"
         return Vector3.Transform(Vector3.UnitZ, Quaternion.Normalize(in_rotation));
     }
 
+    public static Vector3 GetUp(Quaternion in_rotation)
+    {
+        return Vector3.Transform(Vector3.UnitY, Quaternion.Normalize(in_rotation));
+    }
+
     public static float GetMagnitude(Vector3 in_velocity)
     {
         return in_velocity.Length();
@@ -109,6 +114,16 @@ Library "VectorHelpers" by "Hyper"
         );
 
         return Quaternion.CreateFromRotationMatrix(m);
+    }
+
+    public static Quaternion RotateTowards(Quaternion in_from, Quaternion in_to, float in_maxRadiansDelta)
+    {
+        float angle = Angle(in_from, in_to);
+
+        if (angle <= in_maxRadiansDelta || angle == 0.0f)
+            return in_to;
+
+        return Quaternion.Slerp(in_from, in_to, in_maxRadiansDelta / angle);
     }
 
     public static Quaternion LookRotation(Vector3 in_forward)
