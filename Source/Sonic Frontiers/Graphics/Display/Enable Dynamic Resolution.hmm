@@ -1,4 +1,4 @@
-Patch "Enable Dynamic Resolution" in "Graphics/Display" by "angryzor" does "Re-enables the built-in dynamic resolution system. This system continuously measures your FPS and lowers the game's rendering resolution when it drops below 60fps."
+Patch "Enable Dynamic Resolution" in "Graphics/Display" by "angryzor" does "Re-enables the built-in dynamic resolution system. This system continuously measures your FPS and lowers the game's rendering resolution when it drops below the FPS you configured in the options."
 //
     #lib "Memory"
 //
