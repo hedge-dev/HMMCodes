@@ -1,0 +1,12 @@
+Patch "Enable Dynamic Resolution" in "Fixes/Graphics" by "angryzor" does "Re-enables the built-in dynamic resolution system. This system continuously measures your FPS and lowers the game's rendering resolution when it drops below 60fps."
+//
+    #lib "Memory"
+//
+{
+    Memory.WriteString(0x141741140, ">FrameStart");
+    WriteProtected<byte>(0x14174114B, 0);
+    Memory.WriteString(0x141741170, ">FrameEnd");
+    WriteProtected<byte>(0x141741179, 0);
+    WriteNop(0x1410F6F36, 6);
+    WriteNop(0x1410F6F6C, 15);
+}
