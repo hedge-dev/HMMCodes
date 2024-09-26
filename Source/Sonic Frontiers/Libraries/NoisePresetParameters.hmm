@@ -88,7 +88,7 @@ Library "NoisePresetParameters"
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x520)]
-    public struct NoisePresetParameters
+    public struct Root
     {
         [FieldOffset(0x00)] public unsafe fixed byte /* FxCyberSpaceStartNoiseParameter[8] */ _presets[1312];
 
@@ -101,5 +101,4 @@ Library "NoisePresetParameters"
             }
         }
     }
-
 }
