@@ -10,6 +10,8 @@ Code "P2 Always Amy" in "Cheats/Sonic 3 & Knuckles" by "KiaraGale" does "Forces 
     if (*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C350C) == (int)0)
 	return;
 
-    if (*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) >> 8 != (int)RSDK.S3KPlayer.Amy)
+    if (*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) >> 8 != (int)RSDK.S3KPlayer.Amy) {
+	*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) &= ~(int)(255 << 8);
         *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) |= (int)RSDK.S3KPlayer.Amy << 8;
+    }
 }
