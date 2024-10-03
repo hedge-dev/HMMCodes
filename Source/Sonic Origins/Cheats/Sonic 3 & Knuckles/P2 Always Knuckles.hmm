@@ -1,0 +1,10 @@
+Code "P2 Always Knuckles" in "Cheats/Sonic 3 & Knuckles" by "KiaraGale" does "Forces P2 to be Knuckles, regardless of in-game sidekick choice."
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    *(int*)(RSDK.GetRSDKGlobalsPtr() + 0xC2CB4) |= (int)RSDK.S3KMedalMod.AndKnuckles;
+}

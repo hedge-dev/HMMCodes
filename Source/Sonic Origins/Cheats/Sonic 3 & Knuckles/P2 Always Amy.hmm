@@ -1,0 +1,15 @@
+Code "P2 Always Amy" in "Cheats/Sonic 3 & Knuckles" by "KiaraGale" does "Forces P2 to be Amy if Plus DLC is active, regardless of in-game sidekick choice."
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    // no plus dlc, no amy!
+    if (*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C350C) == (int)0)
+	return;
+
+    if (*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) >> 8 != (int)RSDK.S3KPlayer.Amy)
+        *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) |= (int)RSDK.S3KPlayer.Amy << 8;
+}
