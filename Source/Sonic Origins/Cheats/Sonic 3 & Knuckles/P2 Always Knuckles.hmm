@@ -8,7 +8,7 @@ Code "P2 Always Knuckles" in "Cheats/Sonic 3 & Knuckles" by "KiaraGale" does "Fo
 
     // no P2 in mission mode or boss rush
     if (*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3510) == (int)2 || *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3510) == (int)4)
-	return;
-
+	      return;
+  
     *(int*)(RSDK.GetRSDKGlobalsPtr() + 0xC2CB4) |= (int)RSDK.S3KMedalMod.AndKnuckles;
 }

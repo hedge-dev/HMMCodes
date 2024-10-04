@@ -8,14 +8,14 @@ Code "P2 Always Amy" in "Cheats/Sonic 3 & Knuckles" by "KiaraGale" does "Forces 
 
     // no plus dlc, no amy!
     if (*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C350C) == (int)0)
-	return;
+	      return;
 
     // and no P2 in mission mode or boss rush, either!
     if (*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3510) == (int)2 || *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3510) == (int)4)
-	return;
-
+	      return;
+  
     if (*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) >> 8 != (int)RSDK.S3KPlayer.Amy) {
-	*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) &= ~(int)(255 << 8);
+	      *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) &= ~(int)(255 << 8);
         *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) |= (int)RSDK.S3KPlayer.Amy << 8;
     }
 }
