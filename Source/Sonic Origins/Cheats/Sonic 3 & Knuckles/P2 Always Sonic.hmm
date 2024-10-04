@@ -1,4 +1,4 @@
-Code "P2 Always Sonic" in "Cheats/Sonic 3 & Knuckles" by "KiaraGale" does "Forces P2 to be Sonic, regardless of in-game sidekick choice."
+Code "P2 is Always Sonic" in "Cheats/Sonic 3 & Knuckles" by "KiaraGale" does "Forces P2 to be Sonic, regardless of in-game sidekick choice."
 //
     #lib "RSDK"
 //
@@ -8,10 +8,8 @@ Code "P2 Always Sonic" in "Cheats/Sonic 3 & Knuckles" by "KiaraGale" does "Force
         
     // no P2 in mission mode or boss rush
     if (*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3510) == (int)2 || *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3510) == (int)4)
-	      return;
+        return;
   
-    if (*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) >> 8 != (int)RSDK.S3KPlayer.Sonic) {
-	      *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) &= ~(int)(255 << 8);
-        *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) |= (int)RSDK.S3KPlayer.Sonic << 8;
-    }
+    if (*(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x05) != (byte)RSDK.S3KPlayer.Sonic)
+        *(byte*)(RSDK.GetRSDKGlobalsPtr() + 0x05) = (byte)RSDK.S3KPlayer.Sonic;
 }
