@@ -1,0 +1,13 @@
+Code "P2 Always Tails" in "Cheats/Sonic 3 & Knuckles" by "KiaraGale" does "Forces P2 to be Tails, regardless of in-game sidekick choice."
+//
+    #lib "RSDK"
+//
+{
+    if (RSDK.GetRSDKGlobalsPtr() == 0)
+        return;
+
+    if (*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) >> 8 != (int)RSDK.S3KPlayer.Tails) {
+	*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) &= ~(int)(255 << 8);
+        *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) |= (int)RSDK.S3KPlayer.Tails << 8;
+    }
+}
