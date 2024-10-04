@@ -6,6 +6,10 @@ Code "P2 Always Tails" in "Cheats/Sonic 3 & Knuckles" by "KiaraGale" does "Force
     if (RSDK.GetRSDKGlobalsPtr() == 0)
         return;
 
+    // no P2 in mission mode or boss rush
+    if (*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3510) == (int)2 || *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4C3510) == (int)4)
+	return;
+
     if (*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) >> 8 != (int)RSDK.S3KPlayer.Tails) {
 	*(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) &= ~(int)(255 << 8);
         *(int*)(RSDK.GetRSDKGlobalsPtr() + 0x4) |= (int)RSDK.S3KPlayer.Tails << 8;
