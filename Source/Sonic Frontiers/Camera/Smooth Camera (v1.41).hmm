@@ -30,7 +30,7 @@ Patch "Smooth Camera (v1.41)" in "Camera" by "Ahremic" does "Replaces linear cam
     (
         "movss dword ptr [rdi + 0xF0], xmm6",
 
-        0x1464517E5,
+        0x1400C417A,
 
         HookBehavior.After
     );
