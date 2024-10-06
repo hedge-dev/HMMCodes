@@ -27,7 +27,7 @@ Notes;
     #lib "XInput"
 
     static bool _isCharacterUpdate = false;
-    static bool _isAwaitLastRingCount = false;
+    static bool _isAwaitPlayerInit = false;
 
     static Player.PlayerType _currentPlayer;
 
@@ -57,35 +57,71 @@ Notes;
 
     if (pBlackboardItem == null)
         return;
-    
-    /* Wait for new instance of BlackboardItem
-       to set the new ring count. */
-    if (_isAwaitLastRingCount)
+
+    if (_isAwaitPlayerInit)
     {
         pBlackboardItem->RingCount = MathHelpers.Clamp(_lastRingCount, 0, pBlackboardItem->RingCapacity);
-        _isAwaitLastRingCount = false;
+
+        if (Player.Sound.PlaySound("sn_sonic_boom") != 0)
+        {
+            Player.Effect.PlayEffect("SwapEffect", "ef_ob_portalgate_out01");
+            _isAwaitPlayerInit = false;
+        }
+    }
+
+    if (_isCharacterUpdate)
+    {
+        if (IsKeyDown(Keys.D1) ||
+            IsKeyDown(Keys.D2) ||
+            IsKeyDown(Keys.D3) ||
+            IsKeyDown(Keys.D4))
+        {
+            return;
+        }
+
+        if (IsButtonDownSpecial(XInput.Buttons.DPAD_UP)    ||
+            IsButtonDownSpecial(XInput.Buttons.DPAD_RIGHT) ||
+            IsButtonDownSpecial(XInput.Buttons.DPAD_DOWN)  ||
+            IsButtonDownSpecial(XInput.Buttons.DPAD_LEFT))
+        {
+            return;
+        }
+
+        _isCharacterUpdate = false;
     }
     
     if (IsKeyDown(Keys.D1) || IsButtonDownSpecial(XInput.Buttons.DPAD_UP))
     {
+        if (_currentPlayer == Player.PlayerType.Sonic)
+            return;
+
         _currentPlayer = Player.PlayerType.Sonic;
         _isCharacterUpdate = true;
     }
 
     if (IsKeyDown(Keys.D2) || IsButtonDownSpecial(XInput.Buttons.DPAD_RIGHT))
     {
+        if (_currentPlayer == Player.PlayerType.Amy)
+            return;
+            
         _currentPlayer = Player.PlayerType.Amy;
         _isCharacterUpdate = true;
     }
 
     if (IsKeyDown(Keys.D3) || IsButtonDownSpecial(XInput.Buttons.DPAD_DOWN))
     {
+        if (_currentPlayer == Player.PlayerType.Knuckles)
+            return;
+            
         _currentPlayer = Player.PlayerType.Knuckles;
         _isCharacterUpdate = true;
     }
 
     if (IsKeyDown(Keys.D4) || IsButtonDownSpecial(XInput.Buttons.DPAD_LEFT))
     {
+        if (_currentPlayer == Player.PlayerType.Tails)
+            return;
+            
         _currentPlayer = Player.PlayerType.Tails;
         _isCharacterUpdate = true;
     }
@@ -94,7 +130,6 @@ Notes;
     {
         Player.SetPlayerType(_currentPlayer);
         _lastRingCount = pBlackboardItem->RingCount;
-        _isAwaitLastRingCount = true;
-        _isCharacterUpdate = false;
+        _isAwaitPlayerInit = true;
     }
 }

@@ -110,6 +110,9 @@ Code "Enable Dodge and Parry" in "Gameplay/Cyber Space/Skills" by "Hyper" does "
 
     SET_COMBAT_FLAG(IsParry, true);
 
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateGrindStep)
+        return;
+
     PerformBumperActions();
     PerformBumperActions(true);
 }
