@@ -26,7 +26,6 @@ Notes;
 
     #load "System.Numerics.dll"
 
-    using System.Collections.Generic;
     using System.Numerics;
 
     static string _lastGameModeName = string.Empty;
@@ -39,21 +38,10 @@ Notes;
 
     static float _inputTimer = 0.0f;
     static float _inputTimerThreshold = 1.5f;
-
-    static Dictionary<Player.PlayerType, string> _effects = new()
-    {
-        { Player.PlayerType.Sonic, "ef_ob_seed01_guardseed01_sonicbuff01" },
-        { Player.PlayerType.Amy, "ef_ob_heart_get01" },
-        { Player.PlayerType.Knuckles, "ef_ob_seed01_powerseed01_sonicbuff01" },
-        { Player.PlayerType.Tails, "ef_ob_spanner_get01" }
-    };
 //
 {
     if (_lastGameModeName != GameMode.GetName())
     {
-        Lua.Call("LoadLevel", "w1_common");
-        Lua.Call("LoadLevel", "w3_common");
-        Lua.Call("LoadLevel", "zev_sonic_def_up");
         Lua.Call("LoadLevel", "zev_sonic_pow_up");
 
         _checkpointPosition = Vector3.Zero;
@@ -91,20 +79,7 @@ Notes;
 
     if (_inputTimer >= _inputTimerThreshold)
     {
-        var playerType = Player.GetPlayerType();
-
-        if (playerType != Player.PlayerType.Unknown)
-        {
-            if (BlackboardStatus.IsSuper())
-            {
-                Player.Effect.PlayEffect("PlayerWarpEffect", "ef_ob_superring_get01");
-            }
-            else
-            {
-                Player.Effect.PlayEffect("PlayerWarpEffect", _effects[playerType]);
-            }
-        }
-        
+        Player.Effect.PlayEffect("CheckpointEffect", "ef_ob_seed01_powerseed01_sonicbuff01");
         Player.Sound.PlaySound("obj_pointmarker");
         
         _checkpointPosition = out_pKinematics->Position;
@@ -122,7 +97,6 @@ Notes;
         if (!isPlusKeyDown)
         {
             Player.Effect.PlayEffect("WarpEffect", "ef_ob_portalgate_out01");
-
             Player.Sound.PlaySound("sn_sonic_boom");
         }
 
