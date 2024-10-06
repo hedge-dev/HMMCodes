@@ -1,4 +1,4 @@
-Code "Heat Stomp into Glide (experimental)" in "Gameplay/Skills/Knuckles" by "MyorraTheSniper" does "Allows Knuckles to glide during Heat Stomp by pressing the jump button."
+Code "Heat Stomp into Glide" in "Gameplay/Skills/Knuckles" by "MyorraTheSniper" does "Allows Knuckles to glide during Heat Stomp by pressing the jump button."
 //
     #lib "Player"
     #lib "Time"
