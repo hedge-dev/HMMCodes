@@ -207,6 +207,9 @@ Library "Cameras" by "Hyper"
         /// <param name="in_degrees">The field of view in degrees.</param>
         public void SetFieldOfView(float in_degrees)
         {
+            if (pStandardCameraConfig == null)
+                return;
+
             float fovY = FieldOfViewY * pStandardCameraConfig->option.minFovyRate;
 
             // HACK (Hyper): temporary fix, limits FOV to 0-89 to prevent unstable game state.
