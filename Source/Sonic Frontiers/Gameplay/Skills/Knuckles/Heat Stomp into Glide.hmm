@@ -1,0 +1,21 @@
+Code "Heat Stomp into Glide (experimental)" in "Gameplay/Skills/Knuckles" by "MyorraTheSniper" does "Allows Knuckles to glide during Heat Stomp by pressing the jump button."
+//
+    #lib "Player"
+    #lib "Time"
+    #lib "Knuckles"
+
+//
+{
+    if (Player.GetPlayerType() != Player.PlayerType.Knuckles)
+        return;
+
+Knuckles.StateID knucklesState = Player.State.GetCurrentStateID<Knuckles.StateID>();
+
+if (knucklesState == Knuckles.StateID.StateAquaBallStomping || knucklesState == Knuckles.StateID.KnucklesStateStomping || knucklesState == Knuckles.StateID.KnucklesStateStompingBounce || knucklesState == Knuckles.StateID.KnucklesStateStompingDown || knucklesState == Knuckles.StateID.KnucklesStateStompingLand)
+{
+    if (Player.Input.IsDown(Player.InputActionType.PlayerJump))
+    {
+        Player.State.SetState<Knuckles.StateID>(Knuckles.StateID.StateGliding);
+    }
+}
+}
