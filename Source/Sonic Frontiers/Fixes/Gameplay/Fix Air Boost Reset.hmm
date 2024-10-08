@@ -9,7 +9,7 @@ Code "Fix Air Boost Reset" in "Fixes/Gameplay" by "Hyper & Weezley" does "Allows
 
     using System.Collections.Generic;
 
-    static List<Sonic.StateID> AllowedStates = new()
+    static List<Sonic.StateID> _allowedStates = new()
     {
         Sonic.StateID.StateHomingFinished,
         Sonic.StateID.StateSpringJump,
@@ -17,9 +17,9 @@ Code "Fix Air Boost Reset" in "Fixes/Gameplay" by "Hyper & Weezley" does "Allows
         Sonic.StateID.StateStompingFlip,
         Sonic.StateID.StateUpDownPole,
         Sonic.StateID.StateUpDownPoleDamage
-    }
+    };
 
-    static List<Sonic.StateID> DisallowedStates = new()
+    static List<Sonic.StateID> _disallowedStates = new()
     {
         Sonic.StateID.StateAirBoost,
         Sonic.StateID.StateAuraTrain,
@@ -27,68 +27,56 @@ Code "Fix Air Boost Reset" in "Fixes/Gameplay" by "Hyper & Weezley" does "Allows
         Sonic.StateID.StateJumpBoardLaunch,
         Sonic.StateID.StateCaught,
         Sonic.StateID.StateSpinBoost
-    }
+    };
 
-    static List<Sonic.StateID> DontAirBoost = new()
+    static List<Sonic.StateID> _noAirBoostStates = new()
     {
         Sonic.StateID.StateGrindStep,
         Sonic.StateID.StateHoldStand,
         Sonic.StateID.StateHangPole,
         Sonic.StateID.StateUpDownPole,
         Sonic.StateID.StateUpDownPoleDamage
-    }
+    };
 
     static bool _isInitialised = false;
     static bool _isRestoredAirBoost = false;
-    static bool doNotAirBoost = false;
-    static bool noCycloneStart = false;
-    static bool noSpinStart = false;
+    static bool _isNoAirBoost = false;
+    static bool _isNoCycloneStart = false;
+    static bool _isNoSpinBoostStart = false;
 //
 {
-    bool playerPowerBoost = IS_WORLD_FLAG(IsPowerBoost);
-
     if (!_isInitialised)
     {
         foreach (var code in HMM.GetCodes())
         {
-            if (code == "Disable Card Spin Boost Transition")
+            switch (code)
             {
-                noSpinStart = true;
-                break;
-            }
+                case "Animation/Tails/Disable Cyclone Transition":
+                    _isNoCycloneStart = true;
+                    break;
 
-            if (code == "Disable Cyclone Transition")
-            {
-                noCycloneStart = true;
-                break
+                case "Animation/Amy/Disable Card Spin Boost Transition":
+                    _isNoSpinBoostStart = true;
+                    break;
             }
         }
 
         Sonic.StateID NotifyAirBoostReset(Sonic.StateID in_stateId, Sonic.StateID[] in_stateStackTrace)
         {
             // Reset flag for StateAirBoost or when the player is grounded.
-            if (DisallowedStates.Contains(in_stateId) || Player.Status.IsGrounded())
+            if (_disallowedStates.Contains(in_stateId) || Player.Status.IsGrounded())
             {
                 _isRestoredAirBoost = false;
                 return in_stateId;
             }
 
-            foreach (var state in AllowedStates)
+            foreach (var state in _allowedStates)
             {
                 if (state == in_stateId)
-                _isRestoredAirBoost = true;
+                    _isRestoredAirBoost = true;
             }
 
-            if (DontAirBoost.Contains(in_stateId))
-            {
-                doNotAirBoost = true;
-                return in_stateId;
-            }
-            else
-            {
-                doNotAirBoost = false;
-                return in_stateId;
-            }
+            _isNoAirBoost = _noAirBoostStates.Contains(in_stateId);
 
             return in_stateId;
         }
@@ -98,34 +86,30 @@ Code "Fix Air Boost Reset" in "Fixes/Gameplay" by "Hyper & Weezley" does "Allows
         _isInitialised = true;
     }
 
-    // Disable restored air boost for Super Sonic.
-    if (BlackboardStatus.IsSuper())
-        _isRestoredAirBoost = false;
+    var pStatePluginDiving = Player.State.GetStatePlugin("StatePluginDiving");
 
-    // Disable restored air boost for diving.
-    if (IS_STATE_FLAG(IsDiving))
+    if (BlackboardStatus.IsSuper()   ||
+        pStatePluginDiving != null   ||
+        IS_STATE_FLAG(IsDiving)      ||
+        IS_STATE_FLAG(IsDivingBoost) ||
+        IS_STATE_FLAG(IsBoarding)    ||
+        IS_WORLD_FLAG(IsDead))
+    {
         _isRestoredAirBoost = false;
+    }
 
-    // Disable restored air boost for skateboarding.
-    if (IS_STATE_FLAG(IsBoarding))
-        _isRestoredAirBoost = false;
-
-    // Disable restored air boost for when the player is dead.
-    if (IS_WORLD_FLAG(IsDead))
-        _isRestoredAirBoost = false;
-
-    if (Player.Input.IsPressed(Player.InputActionType.PlayerBoost) && !Player.Status.IsGroundedSpecial() && _isRestoredAirBoost && !doNotAirBoost)
+    if (_isRestoredAirBoost && !_isNoAirBoost && !Player.Status.IsGroundedSpecial() && Player.Input.IsPressed(Player.InputActionType.PlayerBoost))
     {
         // Exit into Air Boost depending on current character.
-        if (playerPowerBoost)
+        if (IS_WORLD_FLAG(IsPowerBoost))
         {
             if (Player.GetPlayerType() == Player.PlayerType.Tails)
             {
-                Player.State.SetState<Tails.StateID>(noCycloneStart ? Tails.StateID.StateAirBoostCyclone : Tails.StateID.StateCycloneAppear);
+                Player.State.SetState<Tails.StateID>(_isNoCycloneStart ? Tails.StateID.StateAirBoostCyclone : Tails.StateID.StateCycloneAppear);
             }
             else if (Player.GetPlayerType() == Player.PlayerType.Amy)
             {
-                Player.State.SetState<Amy.StateID>(noSpinStart ? Amy.StateID.AmyStateTarotBoost : Amy.StateID.AmyStateTarotBuildAir);
+                Player.State.SetState<Amy.StateID>(_isNoSpinBoostStart ? Amy.StateID.AmyStateTarotBoost : Amy.StateID.AmyStateTarotBuildAir);
             }
             else if (Player.GetPlayerType() == Player.PlayerType.Knuckles)
             {
