@@ -7,6 +7,7 @@ Library "GOComponents" by "Hyper & NM"
     #lib "Helpers"
     #lib "Memory"
     #lib "Player"
+    #lib "PlayerCollision"
     #lib "PlayerEffect"
     #lib "StringMapOperation"
 
@@ -158,6 +159,17 @@ Library "GOComponents" by "Hyper & NM"
         /// A pointer to an instance of `app::player::Blackboard`.
         /// </summary>
         [FieldOffset(0x80)] public Blackboard.Data* pBlackboard;
+    }
+
+    /// <summary>
+    /// A struct representation of `app::player::GOCPlayerCollider`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x100)]
+    public struct GOCPlayerCollider
+    {
+        [FieldOffset(0)]    public GOComponent Base;
+
+        [FieldOffset(0xE8)] public PlayerCollision.Data* pPlayerCollision;
     }
 
     /// <summary>
