@@ -8,16 +8,18 @@ Notes;
 - Flinging off of a grind rail will automatically begin tricking.
 */
 //
+    #lib "DeltaTime"
     #lib "Player"
 
-    static bool BeginFrameCount = false;
+    static bool _isReleaseAirTricks = false;
 
-    static long GrindJumpReleaseFrameCount = 0;
+    static float _airTricksReleaseTimer = 0.0f;
+    static float _airTricksReleaseTimerThreshold = 0.2f;
 
     static void ResetMembers()
     {
-        BeginFrameCount = false;
-        GrindJumpReleaseFrameCount = 0;
+        _isReleaseAirTricks = false;
+        _airTricksReleaseTimer = 0.0f;
     }
 //
 {
@@ -33,16 +35,15 @@ Notes;
     if (Player.State.GetCurrentStateID<Sonic.StateID>() == Sonic.StateID.StateGrindJump)
     {
         if (Player.Input.IsReleased(Player.InputActionType.PlayerJump))
-            BeginFrameCount = true;
+            _isReleaseAirTricks = true;
 
-        if (BeginFrameCount)
-            GrindJumpReleaseFrameCount++;
+        if (_isReleaseAirTricks)
+            _airTricksReleaseTimer += DeltaTime.GetDeltaTime();
 
         // Provide small frame window to allow for StateGrindDoubleJump.
-        if (GrindJumpReleaseFrameCount > 12)
+        if (_airTricksReleaseTimer > _airTricksReleaseTimerThreshold)
         {
             Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateBumpJump);
-
             ResetMembers();
         }
     }
@@ -51,5 +52,3 @@ Notes;
         ResetMembers();
     }
 }
-
-
