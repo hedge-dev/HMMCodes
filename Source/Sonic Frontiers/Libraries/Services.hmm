@@ -102,6 +102,23 @@ Library "Services" by "Hyper"
     }
 
     /// <summary>
+    /// A struct representation of `app::game::GrindService`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x1E0)]
+    public struct GrindService
+    {
+        /// <summary>
+        /// An instance of `hh::game::GameService`, the base class for `app::game::GrindService`.
+        /// </summary>
+        [FieldOffset(0)]    public GameService.Data GameService;
+
+        /// <summary>
+        /// Determines whether to show the procedural models for grind rails.
+        /// </summary>
+        [FieldOffset(0x1D0)] public bool ShowGrindRails;
+    }
+
+    /// <summary>
     /// A struct representation of `app::level::LevelInfo`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0x100)]
