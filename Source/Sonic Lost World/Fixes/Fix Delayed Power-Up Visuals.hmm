@@ -1,7 +1,0 @@
-Patch "Fix Delayed Power-Up Visuals" in "Fixes" by "ĐeäTh" does
-/*
-Forces the shield power-up particles to always stick with the player as opposed to certain game mechanics (Grind Rails, Sand Slide, etc.) being able to 'outrun' it.
-
-This change also affects the particles that are spawned by the game's Super state.
-*/
-WriteNop(ASLR(0x008F1C14), 2);

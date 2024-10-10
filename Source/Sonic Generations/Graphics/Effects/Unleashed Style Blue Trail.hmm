@@ -1,6 +1,0 @@
-Patch "Unleashed Style Blue Trail" in "Graphics/Effects" by "N69 & Nekit" 
-WriteNop(0xE5FB17, 6)
-WriteProtected<byte>(0xE5FE10, 0x48)
-WriteProtected<byte>(0xE5FE70, 0x48)
-
-

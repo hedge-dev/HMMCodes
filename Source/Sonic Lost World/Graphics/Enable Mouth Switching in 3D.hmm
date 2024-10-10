@@ -1,4 +1,0 @@
-Patch "Enable Mouth Switching in 3D" in "Graphics" by "ĐeäTh" does "Enables the mouth switching to occur on the player anywhere instead of just in 2D sections."
-{
-    WriteNop(ASLR(0x008F263A), 2)
-}
