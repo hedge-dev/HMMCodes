@@ -4,7 +4,6 @@ Disables Super Sonic remaining uncontrollable for a short period after taking he
 
 Notes;
 - This does not affect Wyvern, as the knock back damage doesn't cause any major inconvenience there, and disabling it only makes the camera look bad.
-- It is recommended to use this with the "Disable Super Sonic Damage Camera" code.
 */
 //
     #lib "Player"
