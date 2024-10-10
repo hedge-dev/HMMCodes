@@ -57,7 +57,7 @@ Notes;
 
     Sonic.StateID NotifyStateJump(Sonic.StateID in_stateId, Sonic.StateID[] in_stateStackTrace)
     {
-        _isStateJump = in_stateId == Sonic.StateID.StateJump;
+        _isStateJump = in_stateId is Sonic.StateID.StateJump or Sonic.StateID.StateGrindJump;
 
         return in_stateId;
     }
