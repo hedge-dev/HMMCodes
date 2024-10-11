@@ -515,6 +515,11 @@ Library "Services" by "Hyper"
             [FieldOffset(0x124)] public int RingMissionThreshold;
 
             /// <summary>
+            /// The gameplay mode for this stage.
+            /// </summary>
+            [FieldOffset(0x128)] public CyberModes CyberMode;
+
+            /// <summary>
             /// Rank times for Cyber Space.
             /// </summary>
             [FieldOffset(0x12C)] public RankTimes Ranks;
@@ -583,7 +588,7 @@ Library "Services" by "Hyper"
             SpecialParryEffect = 0x20
         }
 
-        public enum CyberModes
+        public enum CyberModes : byte
         {
             LowGravity = 0x01,
             TimeExtend = 0x02,

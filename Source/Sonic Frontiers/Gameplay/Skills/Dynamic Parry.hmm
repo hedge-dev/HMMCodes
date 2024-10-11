@@ -2,13 +2,13 @@ Patch "Dynamic Parry" in "Gameplay/Skills" by "NM" does
 /*
 Gradually reduces the player's parry window based on combo count and the active difficulty.
 
-Notes:
+Notes;
 - Each difficulty is given a combo threshold; the smaller the threshold, the faster the window decreases.
-  These are defined as follows:
-  - Easy: 100
-  - Normal: 75
-  - Hard: 40
-  - Extreme: 20
+  These are defined as follows;
+    - Easy: 100
+    - Normal: 75
+    - Hard: 40
+    - Extreme: 20
 - If a combo is not active, the parry window will be set to zero, meaning an infinite duration.
 - Perfect Parry is not affected.
 - You may customize the base window per difficulty by editing "maxRecieveTimes" in the character's RFL.

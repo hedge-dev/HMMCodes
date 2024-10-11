@@ -191,6 +191,15 @@ Library "States" by "Hyper"
     }
 
     /// <summary>
+    /// A struct representation of `app::player::StateParry`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0xE0)]
+    public struct StateParry
+    {
+        [FieldOffset(0xD4)] public byte Flags;
+    }
+
+    /// <summary>
     /// A struct representation of `app::player::StateRecoveryJump`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0xC8)]
