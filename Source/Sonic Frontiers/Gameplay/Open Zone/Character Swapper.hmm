@@ -29,7 +29,7 @@ Notes;
     static bool _isCharacterUpdate = false;
     static bool _isAwaitPlayerInit = false;
 
-    static Player.PlayerType _currentPlayer;
+    static Player.PlayerType _currentPlayer = Player.PlayerType.Unknown;
 
     static int _lastRingCount = 0;
 
