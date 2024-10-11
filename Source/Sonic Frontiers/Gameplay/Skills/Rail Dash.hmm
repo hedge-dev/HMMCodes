@@ -159,7 +159,9 @@ Notes;
                     Player.Effect.PlayAnimationEffect("SPINBOOST");
                     Player.Effect.PlayEffect("RailDashBoostImpact", "ef_so_boost_impact_fv01");
 
-                    if (!_isPowerBoostEffectsHidden && !IS_WORLD_FLAG(IsCyberSpace) && Player.GetPlayerType() == Player.PlayerType.Sonic)
+                    var isPowerBoost = IS_WORLD_FLAG(IsPowerBoost) || IS_WORLD_FLAG(IsCyberSpacePowerBoost);
+
+                    if (!_isPowerBoostEffectsHidden && isPowerBoost && Player.GetPlayerType() == Player.PlayerType.Sonic)
                     {
                         Player.Effect.PlayEffect("RailDashTrail01", "ec_ft_pow_dash_ge01_blue_line01");
                         Player.Effect.PlayEffect("RailDashTrail02", "ec_ft_pow_dash_ge01_lightning_line01");
