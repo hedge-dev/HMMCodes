@@ -552,6 +552,16 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
 
             return VectorHelpers.GetHorizontalMagnitude(kinematics->Velocity);
         }
+
+        public static float GetVerticalMagnitude()
+        {
+            var kinematics = Get();
+
+            if (kinematics == null)
+                return 0.0f;
+
+            return VectorHelpers.GetVerticalMagnitude(kinematics->Velocity);
+        }
     }
     
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
