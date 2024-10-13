@@ -7,11 +7,19 @@ Notes;
 - This fixes Tails being unable to stomp after jumping off of a grind rail.
 */
 //
-    #lib "Bridge.StateTransitions"
+    #lib "Globals"
     #lib "Player"
+
+    static bool _isInitialised = false;
 //
 {
-    if (!Bridge.StateTransitions.IsFixGrindTransitions)
+    if (!_isInitialised)
+    {
+        Globals.Add("Fix Grind Transitions", true);
+        _isInitialised = true;
+    }
+
+    if (!Globals.GetFlag("Fix Grind Transitions"))
         return;
 
     var playerType = Player.GetPlayerType();

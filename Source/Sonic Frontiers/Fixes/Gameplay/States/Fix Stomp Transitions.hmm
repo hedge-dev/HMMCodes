@@ -11,7 +11,7 @@ Notes;
 - This allows Knuckles to cancel stomp to start gliding by holding A.
 */
 //
-    #lib "Bridge.StateTransitions"
+    #lib "Globals"
     #lib "Player"
 
     static bool _isInitialised = false;
@@ -19,6 +19,8 @@ Notes;
 {
     if (!_isInitialised)
     {
+        Globals.Add("Fix Stomp Transitions", true);
+
         byte[] asm = Assemble($"lea edx, [r8 + {(int)Sonic.StateID.StateStompingLand}]");
 
         // Disable stomp flip for collision types (e.g. Asura body).
@@ -62,8 +64,8 @@ Notes;
 
         _isInitialised = true;
     }
-
-    if (!Bridge.StateTransitions.IsFixStompTransitions)
+    
+    if (!Globals.GetFlag("Fix Stomp Transitions"))
         return;
 
     switch (Player.GetPlayerType())

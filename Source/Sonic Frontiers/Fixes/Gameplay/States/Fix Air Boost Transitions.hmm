@@ -9,8 +9,8 @@ Notes;
     #include "BlackboardStatus" noemit
 
     #lib "Bitwise"
-    #lib "Bridge.StateTransitions"
     #lib "BlackboardStatus"
+    #lib "Globals"
     #lib "Player"
     #lib "HMM"
 
@@ -54,6 +54,8 @@ Notes;
 {
     if (!_isInitialised)
     {
+        Globals.Add("Fix Air Boost Transitions", true);
+
         foreach (var code in HMM.GetCodes())
         {
             switch (code)
@@ -93,7 +95,7 @@ Notes;
         _isInitialised = true;
     }
 
-    if (!Bridge.StateTransitions.IsFixAirBoostTransitions)
+    if (!Globals.GetFlag("Fix Air Boost Transitions"))
         return;
 
     var pStatePluginDiving = Player.State.GetStatePlugin("StatePluginDiving");

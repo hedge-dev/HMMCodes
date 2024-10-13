@@ -8,11 +8,19 @@ Notes;
 //
     #include "BlackboardStatus" noemit
     
-    #lib "Bridge.StateTransitions"
+    #lib "Globals"
     #lib "Player"
+
+    static bool _isInitialised = false;
 //
 {
-    if (!Bridge.StateTransitions.IsFixDropDashTransitions)
+    if (!_isInitialised)
+    {
+        Globals.Add("Fix Drop Dash Transitions", true);
+        _isInitialised = true;
+    }
+
+    if (!Globals.GetFlag("Fix Drop Dash Transitions"))
         return;
 
     var state = Player.State.GetCurrentStateID<Sonic.StateID>();
