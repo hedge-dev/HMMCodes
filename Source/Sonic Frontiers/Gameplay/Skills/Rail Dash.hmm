@@ -28,6 +28,7 @@ Notes;
 
     static bool _isInitialised = false;
     static bool _isPowerBoostEffectsHidden = false;
+    static bool _isHomingFromGrind = false;
     static bool _isDashCharged = false;
     static bool _isSpinBoostAnimThresholdReached = false;
     static bool _isLandAnimThresholdReached = false;
@@ -136,6 +137,18 @@ Notes;
     else if (!(state is Sonic.StateID.StateGrind or Sonic.StateID.StateGrindStep))
     {
         _isDashCharged = false;
+    }
+
+    if (state == Sonic.StateID.StateHomingAttack && statePrev == Sonic.StateID.StateGrind)
+    {
+        Player.Effect.PlayAnimationEffect("SPIN");
+        _isHomingFromGrind = true;
+        return;
+    }
+    else if (_isHomingFromGrind && state != Sonic.StateID.StateHomingAttack)
+    {
+        Player.Effect.StopAnimationEffects();
+        _isHomingFromGrind = false;
     }
     
     // Allow spin dashing on rails.
