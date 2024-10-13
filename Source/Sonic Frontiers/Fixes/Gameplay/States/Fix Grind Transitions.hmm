@@ -3,7 +3,6 @@ Code "Fix Grind Transitions" in "Fixes/Gameplay/States" by "Hyper" does
 Fixes state transitions for the grind states.
 
 Notes;
-- This fixes Sonic being unable to charge a drop dash after double jumping off of a grind rail.
 - This fixes Tails being unable to stomp after jumping off of a grind rail.
 */
 //
@@ -22,20 +21,7 @@ Notes;
     if (!Globals.GetFlag("Fix Grind Transitions"))
         return;
 
-    var playerType = Player.GetPlayerType();
-
-    /* Redirect StateGrindDoubleJump to StateDoubleJump to allow
-       Sonic to charge a Drop Dash after jumping off a grind rail. */
-    if (playerType == Player.PlayerType.Sonic)
-    {
-        Player.State.Redirect<Sonic.StateID>(Sonic.StateID.StateGrindDoubleJump, Sonic.StateID.StateDoubleJump);
-    }
-    else
-    {
-        Player.State.Restore<Sonic.StateID>(Sonic.StateID.StateGrindDoubleJump);
-    }
-
-    if (playerType == Player.PlayerType.Tails)
+    if (Player.GetPlayerType() == Player.PlayerType.Tails)
     {
         if (Player.State.GetCurrentStateID<Tails.StateID>() is Tails.StateID.StateGrindJump or Tails.StateID.StateGrindDoubleJump)
         {
