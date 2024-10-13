@@ -25,7 +25,7 @@ Known issues;
     */
     WriteNop
     (
-        /* 0x140D62210 */
+        /* v1.41: 0x140D64D50 */
         ScanSignature
         (
             "\xE8\x00\x00\x00\x00\x48\x8D\x4C\x24\x00\xE8\x00\x00\x00\x00\x48\x8B\x4C\x24\x00\x48\x8B\x43\x20",
@@ -52,7 +52,7 @@ Known issues;
             mov dword ptr [rdi], eax
         ",
 
-        /* 0x140D622E1 */
+        /* v1.41: 0x140D64E21 */
         ScanSignature
         (
             "\x0F\x2F\x0F\x48\x0F\x47\xC7\x8B\x00\x89\x83\x00\x00\x00\x00",
@@ -79,7 +79,7 @@ Known issues;
         Frontiers limits the monitor refresh rate to 60hz and forces VSync when in fullscreen.
         To prevent the game from doing this, we set both of these bytes to 0.
     */
-    /* 0x1410E9C98 */
+    /* v1.41: 0x1410EC6CE */
     instrAddr = ScanSignature
     (
         "\xC7\x45\x00\x3C\x00\x00\x00\xC7\x45\x00\x01\x00\x00\x00",

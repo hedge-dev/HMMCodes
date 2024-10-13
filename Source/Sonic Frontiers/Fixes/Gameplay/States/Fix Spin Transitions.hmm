@@ -1,0 +1,20 @@
+Code "Fix Spin Transitions" in "Fixes/Gameplay/States" by "Hyper" does
+/*
+Fixes state transitions for the spin state.
+
+Notes;
+- This fixes Sonic being unable to spin boost, air boost and stomp out of the spin state.
+*/
+{
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() != Sonic.StateID.StateSpin)
+        return;
+    
+    if (Player.Input.IsPressed(Player.InputActionType.PlayerSonicboom))
+        Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateSpinBoostCharge);
+
+    if (Player.Input.IsPressed(Player.InputActionType.PlayerBoost))
+        Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateAirBoost);
+
+    if (Player.Input.IsPressed(Player.InputActionType.PlayerStomping))
+        Player.State.SetState<Sonic.StateID>(Sonic.StateID.StateStompingDown);
+}

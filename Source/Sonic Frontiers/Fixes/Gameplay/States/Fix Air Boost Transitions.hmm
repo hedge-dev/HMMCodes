@@ -1,4 +1,10 @@
-Code "Fix Air Boost Reset" in "Fixes/Gameplay" by "Hyper & Weezley" does "Allows Sonic to perform another Air Boost after previously using it before performing a homing attack, stomp, or using a spring." 
+Code "Fix Air Boost Transitions" in "Fixes/Gameplay/States" by "Hyper & Weezley" does
+/*
+Fixes state transitions for the air boost state.
+
+Notes;
+- This fixes being unable to perform another air boost after previously using it before a homing attack, stomp or spring.
+*/
 //
     #include "BlackboardStatus" noemit
 
