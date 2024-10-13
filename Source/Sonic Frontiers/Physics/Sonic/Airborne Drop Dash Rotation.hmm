@@ -21,6 +21,9 @@ Code "Airborne Drop Dash Rotation" in "Physics/Sonic" by "Hyper" does "Allows So
     if (Player.State.GetCurrentStateID<Sonic.StateID>() != Sonic.StateID.StateDropDash)
         return;
 
+    if (Player.Status.IsSideView())
+        return;
+
     if (Player.Status.IsGrounded())
     {
         _lastGroundedMagnitude = Player.Kinematics.GetHorizontalMagnitude();
