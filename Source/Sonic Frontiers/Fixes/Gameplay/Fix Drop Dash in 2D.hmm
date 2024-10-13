@@ -1,0 +1,96 @@
+Code "Fix Drop Dash in 2D" in "Fixes/Gameplay" by "Hyper" does "Fixes the Drop Dash getting stuck in 2D sections where the guide spline crosses paths with another."
+//
+    #lib "DeltaTime"
+    #lib "Memory"
+    #lib "Player"
+    #lib "VectorHelpers"
+
+    #import "GOComponents"
+
+    #load "System.Numerics.dll"
+
+    using System.Numerics;
+    
+    static bool _isInitialised = false;
+    static bool _isSideView = false;
+//
+{
+    if (!_isInitialised)
+    {
+        // v1.41: 0x1408EA2CA
+        var sigDropDashAirPosture = ScanSignature
+        (
+            "\x0F\x29\xB4\x24\x80\x00\x00\x00\x48\x8D\x54\x24\x20\x0F\x10\xB7\x00\x01\x00\x00",
+            "xxxxxxxxxxxxxxxxxxxx"
+        );
+
+        // v1.41: 0x1408EA540
+        var sigDropDashGroundPosture = ScanSignature
+        (
+            "\x48\x8B\xC4\x48\x89\x58\x08\x48\x89\x70\x10\x48\x89\x78\x18\x55\x41\x56\x41\x57\x48\x8D\x68\xA1\x48\x81\xEC\xD0\x00\x00\x00\x4C",
+            "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        );
+
+        fixed (bool* p_isSideView = &_isSideView)
+        {
+            WriteAsmHook
+            (
+                $@"
+                    test   al, al
+                    jnz    doGroundPosture
+                    mov    rax, {sigDropDashAirPosture}
+                    jmp    rax
+                doGroundPosture:
+                    mov    rcx, {(long)p_isSideView}
+                    cmp    byte ptr [rcx], 0
+                    jnz    exit
+                    movaps xmm1, xmm7
+                    mov    rcx, rbx
+                    mov    rax, {sigDropDashGroundPosture}
+                    call   rax
+                exit:
+                ",
+
+                /* v1.41: 0x1408EA2B6 */
+                ScanSignature
+                (
+                    "\x84\xC0\x74\x10\x0F\x28\xCF",
+                    "xxxxxxx"
+                ),
+
+                HookBehavior.Replace
+            );
+        }
+
+        _isInitialised = true;
+    }
+
+    /* Check if we're grounded as well as in side view
+       to allow the drop dash to work after using ramps. */
+    _isSideView = Player.Status.IsSideView() && Player.Status.IsGrounded();
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // We have to do our own physics implementation here, since the mid-asm hook is effectively killing it. //
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    if (Player.State.GetCurrentStateID<Sonic.StateID>() != Sonic.StateID.StateDropDash)
+        return;
+
+    if (!_isSideView)
+        return;
+
+    if (!Memory.TryGetPointer<GOCPlayerKinematicParams>(Player.Kinematics.Get(), out var out_pKinematics))
+        return;
+
+    var worldInput = out_pKinematics->WorldInput;
+
+    if (worldInput.Length() <= 0.0f)
+        return;
+    
+    var forward = VectorHelpers.GetForward(out_pKinematics->Rotation);
+    var dot = Vector3.Dot(forward, worldInput);
+
+    // Decelerate if the player is holding back in the opposite direction.
+    if (1.0f - (float)-Math.Min(dot, 0) < 0.15f)
+        out_pKinematics->Velocity -= Vector3.Normalize(out_pKinematics->Velocity) * Player.Kinematics.GetHorizontalMagnitude() * DeltaTime.GetDeltaTime();
+}

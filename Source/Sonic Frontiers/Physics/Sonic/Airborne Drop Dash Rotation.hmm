@@ -1,4 +1,4 @@
-Code "Airborne Drop Dash Rotation" in "Physics/Sonic" by "Hyper" does "Allows Sonic to rotate whilst airborne during a drop dash."
+Code "Airborne Drop Dash Rotation" in "Physics/Sonic" by "Hyper" does "Allows Sonic to rotate whilst airborne during a Drop Dash."
 //
     #lib "DeltaTime"
     #lib "Memory"
