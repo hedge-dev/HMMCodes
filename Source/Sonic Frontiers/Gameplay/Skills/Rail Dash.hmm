@@ -127,7 +127,7 @@ Notes;
         _isDashCharged = out_pStateRecoveryJump->IsDropDashCharge;
         IncrementChargeCountByTime();
     }
-    else if (state is Sonic.StateID.StateSpinBoost or Sonic.StateID.StateSpinBoostCharge)
+    else if (state is Sonic.StateID.StateSpinBoost or Sonic.StateID.StateSpinBoostCharge or Sonic.StateID.StateDropDash)
     {
         _isDashCharged = true;
 
