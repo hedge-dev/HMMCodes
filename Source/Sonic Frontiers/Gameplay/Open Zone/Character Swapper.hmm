@@ -19,6 +19,8 @@ Notes;
 - Keep your expectations within reason; don't expect guardians outside of Another Story to work 100% correctly as the other characters, especially event-driven ones like Shark.
 */
 //
+    #include "BlackboardStatus" noemit
+
     #lib "BlackboardItem"
     #lib "MathHelpers"
     #lib "PhotoMode"
@@ -50,8 +52,14 @@ Notes;
     if (!Win32.IsGameForegroundWindow())
         return;
 
+    if (IS_WORLD_FLAG(IsCyberSpace))
+        return;
+
     if (PhotoMode.IsEnabled())
         return;
+
+    if (_currentPlayer != Player.GetPlayerType())
+        _currentPlayer = Player.GetPlayerType();
 
     var pBlackboardItem = BlackboardItem.Get();
 
