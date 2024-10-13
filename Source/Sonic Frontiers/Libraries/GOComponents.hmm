@@ -396,6 +396,8 @@ Library "GOComponents" by "Hyper & NM"
         /// The current velocity of the player.
         /// </summary>
         [FieldOffset(0xD0)]  public Vector3 Velocity;
+
+        [FieldOffset(0x120)] public Vector3 WorldInput;
         
         /// <summary>
         /// Bit flags for kinematics.
