@@ -11,6 +11,7 @@ Notes;
 - This allows Knuckles to cancel stomp to start gliding by holding A.
 */
 //
+    #lib "Bridge.StateTransitions"
     #lib "Player"
 
     static bool _isInitialised = false;
@@ -61,6 +62,9 @@ Notes;
 
         _isInitialised = true;
     }
+
+    if (!Bridge.StateTransitions.IsFixStompTransitions)
+        return;
 
     switch (Player.GetPlayerType())
     {

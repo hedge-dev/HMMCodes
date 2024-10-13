@@ -9,6 +9,7 @@ Notes;
     #include "BlackboardStatus" noemit
 
     #lib "Bitwise"
+    #lib "Bridge.StateTransitions"
     #lib "BlackboardStatus"
     #lib "Player"
     #lib "HMM"
@@ -91,6 +92,9 @@ Notes;
 
         _isInitialised = true;
     }
+
+    if (!Bridge.StateTransitions.IsFixAirBoostTransitions)
+        return;
 
     var pStatePluginDiving = Player.State.GetStatePlugin("StatePluginDiving");
 

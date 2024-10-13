@@ -1,0 +1,9 @@
+Library "Bridge.StateTransitions" by "Hyper"
+{
+    public static bool IsFixAirBoostTransitions = true;
+    public static bool IsFixDropDashTransitions = true;
+    public static bool IsFixGrindTransitions = true;
+    public static bool IsFixRecoveryJumpTransitions = true;
+    public static bool IsFixSpinTransitions = true;
+    public static bool IsFixStompTransitions = true;
+}

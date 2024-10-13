@@ -7,11 +7,15 @@ Notes;
 - This allows Tails to fly after performing a recovery jump whilst holding A.
 */
 //
+    #lib "Bridge.StateTransitions"
     #lib "Player"
 
     static float _recoveryJumpTimer = 0.0f;
 //
 {
+    if (!Bridge.StateTransitions.IsFixRecoveryJumpTransitions)
+        return;
+
     switch (Player.GetPlayerType())
     {
         case Player.PlayerType.Knuckles:
