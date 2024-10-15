@@ -1,8 +1,9 @@
-Patch "Always Trickable Spin Dash Exit" in "Gameplay/Skills" by "Hyper" does 
+Patch "Fix Spin Dash Transitions" in "Fixes/Gameplay/States" by "Hyper" does
 /*
-Allows Sonic to always trick when exiting out of Spin Dash whilst in the air.
+Fixes state transitions for the spin dash state.
 
-By default, exiting Spin Dash without boosting will make Sonic fall.
+Notes;
+- This allows Sonic to always trick when exiting out of spin dash whilst in the air without having to hold the boost input.
 */
 {
     WriteProtected<byte>
@@ -17,5 +18,3 @@ By default, exiting Spin Dash without boosting will make Sonic fall.
         Assemble("lea edx, dword ptr [r8 + 0x10]")
     );
 }
-
-
