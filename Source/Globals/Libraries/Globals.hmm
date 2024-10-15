@@ -25,19 +25,26 @@ Library "Globals" by "Hyper"
         return _globals[in_name];
     }
 
+    public T Get<T>(string in_name, T in_defaultValue = default)
+    {
+        var result = Get(in_name);
+
+        if (result == null)
+            return in_defaultValue;
+
+        return (T)result;
+    }
+
+    public bool GetFlag(string in_name)
+    {
+        return Get<bool>(in_name);
+    }
+
     public void Set(string in_name, object in_obj)
     {
         if (!_globals.ContainsKey(in_name))
             return;
 
         _globals[in_name] = in_obj;
-    }
-
-    public bool GetFlag(string in_name)
-    {
-        if (!_globals.ContainsKey(in_name))
-            return false;
-
-        return (bool)_globals[in_name];
     }
 }
