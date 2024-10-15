@@ -495,7 +495,7 @@ Library "Services" by "Hyper"
             [FieldOffset(0xE8)]  public ObjectMoveArray<byte> DynamicSectors;
 
             /// <summary>
-            /// The time limit of this stage (unused).
+            /// The time limit of this stage for the time extend mode.
             /// </summary>
             [FieldOffset(0x10C)] public float TimeLimit;
 
