@@ -150,6 +150,8 @@ Notes;
         Memory.Restore(_sigPostureHook);
         Memory.Restore(_sigSfxPlayer);
         Memory.Restore(_sigSfxHandleAssignment);
+        
+        SetDropDashCameraDelay(true);
 
         _isInitialised = false;
 
@@ -165,7 +167,10 @@ Notes;
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     if (!Memory.TryGetPointer<GOCPlayerKinematicParams>(Player.Kinematics.Get(), out var out_pKinematics))
+    {
+        SetDropDashCameraDelay(true);
         return;
+    }
 
     var state = Player.State.GetCurrentStateID<Sonic.StateID>();
     var deltaTime = DeltaTime.GetDeltaTime();
