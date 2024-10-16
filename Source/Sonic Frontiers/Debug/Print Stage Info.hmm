@@ -18,10 +18,14 @@ This code requires the debug console to be enabled in Hedge Mod Manager to have 
        being made lowercase instead. */
     static Dictionary<string, string> _flagNames = new()
     {
-        { "DeleteFallDeadCollision", "deleteFalldeadCol" },
-        { "DeleteAirWallCollision",  "deleteAirwallCol"  },
-        { "DeleteGrindRail",         "deleteGrindrail"   },
-        { "ChangeNewCollision",      "changeNewCol"      }
+        { "DeleteFallDeadCollision", "deleteFalldeadCol"  },
+        { "DeleteAirWallCollision",  "deleteAirwallCol"   },
+        { "DeleteGrindRail",         "deleteGrindrail"    },
+        { "ChangeNewCollision",      "changeNewCol"       },
+        { "LowGravity",              "low-gravity"        },
+        { "TimeExtend",              "time-extend"        },
+        { "SpeedScale",              "speed-scale"        },
+        { "MaxSpeedChallenge",       "maxspeed-challenge" }
     };
 
     static void PrintFlags(long in_flags, Type in_enumType)
@@ -50,7 +54,7 @@ This code requires the debug console to be enabled in Hedge Mod Manager to have 
 
         if (string.IsNullOrEmpty(result))
         {
-            Console.Write("None");
+            Console.Write("N/A");
         }
         else
         {
@@ -58,6 +62,19 @@ This code requires the debug console to be enabled in Hedge Mod Manager to have 
         }
 
         Console.Write("\r\n");
+    }
+
+    static string GetCyberModeName(byte in_flags)
+    {
+        if (in_flags == 0)
+            return "N/A";
+        
+        var result = ((StageInfo.CyberModes)in_flags).ToString();
+
+        if (_flagNames.ContainsKey(result))
+            return _flagNames[result];
+
+        return result.ToLower();
     }
 
     static void PrintSectors(ObjectMoveArray<byte> in_sectors)
@@ -110,7 +127,7 @@ This code requires the debug console to be enabled in Hedge Mod Manager to have 
     Console.WriteLine($"[Stage] deadheight ------------- : {out_pStageData->DeadHeight}");
     Console.WriteLine($"[Stage] noisetime -------------- : {out_pStageData->NoiseTime}");
     Console.WriteLine($"[Stage] ring_mission ----------- : {out_pStageData->RingMissionThreshold}");
-    Console.WriteLine($"[Stage] cyber_mode ------------- : {(out_pStageData->CyberMode == 0 ? "None" : out_pStageData->CyberMode)}");
+    Console.WriteLine($"[Stage] cyber_mode ------------- : {GetCyberModeName((byte)out_pStageData->CyberMode)}");
 
     Console.Write($"[Stage] rank ------------------- : ");
     PrintRanks(out_pStageData->Ranks);
