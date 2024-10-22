@@ -106,7 +106,15 @@ async Task BuildFolder(string path, bool test = true)
         Console.WriteLine($"{name} built successfully");
         if (!TestOnly)
         {
-            var outPath = Path.Combine(StartDirectory, "build", $"{Path.GetFileName(path).Replace(" ", string.Empty)}.hmm");
+            string GetCodeFileName()
+            {
+                return Path.GetFileName(path)
+                    .Replace(" ", "")
+                    .Replace("(", "")
+                    .Replace(")", "");
+            }
+
+            var outPath = Path.Combine(StartDirectory, "build", $"{GetCodeFileName()}.hmm");
             Directory.CreateDirectory(Path.GetDirectoryName(outPath));
             File.WriteAllText(outPath, result);
         }
