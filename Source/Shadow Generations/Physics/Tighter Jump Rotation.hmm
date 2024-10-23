@@ -1,17 +1,16 @@
 Patch "Tighter Jump Rotation" in "Physics" by "Hyper" does "Allows for tighter mid-air control for more precise movements when jumping, similar to SONIC THE HEDGEHOG (2006)."
 //
-    static float Threshold = 0.05f;
+    static float _threshold = 0.05f;
 //
 {
-    fixed (float* pThreshold = &Threshold)
+    fixed (float* p_threshold = &_threshold)
     {
         WriteAsmHook
         (
             $@"
-                push  rcx
-                mov   rcx, {(long)pThreshold}
-                movss xmm2, dword ptr [rcx]
-                pop   rcx
+                mov   rcx, {(long)p_threshold}
+                mulss xmm2, dword ptr [rcx]
+                mov   dword ptr [rsp + 0x58], 0x3F800000
             ",
 
             /* v1.1.0.0: 0x140648315 */
@@ -21,16 +20,16 @@ Patch "Tighter Jump Rotation" in "Physics" by "Hyper" does "Allows for tighter m
                 "xxxx????xxxxxxxx"
             ),
 
-            HookBehavior.After
+            HookBehavior.Replace
         );
 
         WriteAsmHook
         (
             $@"
-                push  rdx
-                mov   rdx, {(long)pThreshold}
-                movss xmm7, dword ptr [rdx]
-                pop   rdx
+                mov   qword ptr [rsp + 0x1A0], r12
+                mov   r12, {(long)p_threshold}
+                movss xmm7, dword ptr [r12]
+                lea   r12, qword ptr [rbx + 0x18]
             ",
 
             /* v1.1.0.0: 0x140648400 */
@@ -40,7 +39,7 @@ Patch "Tighter Jump Rotation" in "Physics" by "Hyper" does "Allows for tighter m
                 "xxxxxxxxxxxx"
             ),
 
-            HookBehavior.Before
+            HookBehavior.Replace
         );
     }
 }
