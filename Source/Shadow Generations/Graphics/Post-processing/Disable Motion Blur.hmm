@@ -1,4 +1,4 @@
-Patch "Disable Motion Blur" in "Graphics/Post-processing" by "Hyper" does "Disables motion blur when boosting, surfing or gliding."
+Patch "Disable Motion Blur" in "Graphics/Post-processing" by "Hyper"
 {
     // Disable player motion blur.
     WriteProtected<byte>
