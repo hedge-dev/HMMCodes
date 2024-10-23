@@ -1,0 +1,5 @@
+Patch "Disable Motion Blur" in "Graphics/Post-processing" by "Hyper" does "Disables motion blur when boosting, surfing or gliding."
+{
+    // v1.1.0.0: 0x1406C176F
+    WriteProtected<byte>(ScanSignature("\x41\x0F\xB6\x4E\x70", "xxxxx"), Assemble("mov ecx, 0"));
+}
