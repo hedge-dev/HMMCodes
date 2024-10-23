@@ -8,8 +8,10 @@ Patch "Tighter Jump Rotation" in "Physics" by "Hyper" does "Allows for tighter m
         WriteAsmHook
         (
             $@"
+                push  rcx
                 mov   rcx, {(long)pThreshold}
                 movss xmm2, dword ptr [rcx]
+                pop   rcx
             ",
 
             /* v1.1.0.0: 0x140648315 */
@@ -25,8 +27,10 @@ Patch "Tighter Jump Rotation" in "Physics" by "Hyper" does "Allows for tighter m
         WriteAsmHook
         (
             $@"
+                push  rdx
                 mov   rdx, {(long)pThreshold}
                 movss xmm7, dword ptr [rdx]
+                pop   rdx
             ",
 
             /* v1.1.0.0: 0x140648400 */
