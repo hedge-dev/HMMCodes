@@ -5,6 +5,7 @@ Patch "Tighter Jump Rotation" in "Physics" by "Hyper" does "Allows for tighter m
 {
     fixed (float* p_threshold = &_threshold)
     {
+        // Jump Slow
         WriteAsmHook
         (
             $@"
@@ -23,6 +24,7 @@ Patch "Tighter Jump Rotation" in "Physics" by "Hyper" does "Allows for tighter m
             HookBehavior.Replace
         );
 
+        // Jump Fast
         WriteAsmHook
         (
             $@"
@@ -37,6 +39,25 @@ Patch "Tighter Jump Rotation" in "Physics" by "Hyper" does "Allows for tighter m
             (
                 "\x4C\x89\xA4\x24\xA0\x01\x00\x00\x4C\x8D\x63\x18",
                 "xxxxxxxxxxxx"
+            ),
+
+            HookBehavior.Replace
+        );
+
+        // Doom Morph Jump
+        WriteAsmHook
+        (
+            $@"
+                comiss xmm12, dword ptr [r14 + 0x24]
+                mov    rax, {(long)p_threshold}
+                movss  xmm10, dword ptr [rax]
+            ",
+
+            /* v1.1.0.0: 0x140635D33 */
+            ScanSignature
+            (
+                "\x45\x0F\x2F\x66\x24\xF3\x44\x0F\x10\x15",
+                "xxxxxxxxxx"
             ),
 
             HookBehavior.Replace
