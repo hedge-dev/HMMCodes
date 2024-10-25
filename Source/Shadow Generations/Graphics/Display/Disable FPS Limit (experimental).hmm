@@ -3,6 +3,18 @@ Patch "Disable FPS Limit (experimental)" in "Graphics/Display" by "NM, M&M & Hyp
     #lib "Memory"
 //
 {
+    WriteProtected<byte>
+    (
+        /* v1.1.0.0: 0x140A23CE8 */
+        ScanSignature
+        (
+            "\x0F\x83\xA1\x00\x00\x00\xF2\x0F\x10\xA3\x50\x01\x00\x00",
+            "xxxxxxxxxxxxxx"
+        ),
+
+        0xE9, 0xB0, 0x00, 0x00, 0x00
+    );
+
     WriteNop
     (
         /* v1.1.0.0: 0x140A23DEB */
@@ -28,7 +40,7 @@ Patch "Disable FPS Limit (experimental)" in "Graphics/Display" by "NM, M&M & Hyp
         @"
             mov eax, dword ptr [rax]
             mov dword ptr [rbx + 0x144], eax
-            mov dword ptr [rdi], eax
+            mov dword ptr [rcx], eax
         ",
         
         /* v1.1.0.0: 0x140A23EFC */
