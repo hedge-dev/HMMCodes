@@ -1,4 +1,4 @@
-Patch "Force Higher Detail Reflections" in "Graphics/Quality" by "Hyper" does "Forces real-time local reflections to render at a higher resolution and reduces artefacting around Sonic and other nearby objects."
+Patch "Force Higher Detail Reflections" in "Graphics/Quality" by "Hyper" does "Forces real-time local reflections to render at a higher resolution and reduces artefacting around the player and other nearby objects."
 {
     WriteAsmHook
     (
