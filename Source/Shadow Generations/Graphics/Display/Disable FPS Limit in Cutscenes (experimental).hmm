@@ -1,6 +1,6 @@
 Patch "Disable FPS Limit in Cutscenes (experimental)" in "Graphics/Display" by "M&M & Hyper" does 
 /*
-Disables the framerate limiter for (most) cutscenes, allowing them to run above 30 FPS.
+Disables the frame rate limiter for (most) cutscenes, allowing them to run above 30 FPS.
 
 Known issues;
 - Certain cutscenes will still operate at 30 FPS due to how this game syncs cutscene audio.
@@ -9,7 +9,7 @@ Known issues;
     #lib "Memory"
 //
 {
-    /* v1.1.0.0: 0x14782FA63 */
+    // v1.1.0.0: 0x14782FA63
     long jmpAddr = ScanSignature
     (
         "\x74\x35\x48\x8B\x05\xCC\xCC\xCC\xCC\xF3\x0F\x10\x0D\xCC\xCC\xCC\xCC\xC6\x40\x10\x01\x48\x8B\x0D\xCC\xCC\xCC\xCC\xE8\xCC\xCC\xCC\xCC\xF3\x0F\x10\x05\xCC\xCC\xCC\xCC\x41\xB0\x01\x31\xD2",
