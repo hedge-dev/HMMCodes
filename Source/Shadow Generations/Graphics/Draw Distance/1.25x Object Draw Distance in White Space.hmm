@@ -8,7 +8,7 @@ Patch "1.25x Object Draw Distance in White Space" in "Graphics/Draw Distance" by
     (
         "\x48\x8B\x40\x00\x0F\x29\x74\x24\x00\xF3\x0F\x10\x30",
         "xxx?xxxx?xxxx"
-    )
+    );
 
     if (signature == 0)
         return;
