@@ -7,6 +7,7 @@ Notes;
 - This allows Tails to fly after performing a recovery jump whilst holding A.
 */
 //
+    #lib "DeltaTime"
     #lib "Globals"
     #lib "Player"
 
