@@ -3,6 +3,16 @@ Patch "1.5x Object Draw Distance in White Space" in "Graphics/Draw Distance" by 
     static float multiplier = 1.5f;
 //
 {
+    // v1.1.0.0: 0x14018D1C6
+    long signature = ScanSignature
+    (
+        "\x48\x8B\x40\x00\x0F\x29\x74\x24\x00\xF3\x0F\x10\x30",
+        "xxx?xxxx?xxxx"
+    );
+
+    if (signature == 0)
+        return;
+
     // v1.1.0.0: 0x14018C2E0
     long callAddress = ScanSignature
     (
@@ -25,12 +35,7 @@ Patch "1.5x Object Draw Distance in White Space" in "Graphics/Draw Distance" by 
                 call   rbx
             ",
 
-            // v1.1.0.0: 0x14018D1C6
-            ScanSignature
-            (
-                "\x48\x8B\x40\x00\x0F\x29\x74\x24\x00\xF3\x0F\x10\x30",
-                "xxx?xxxx?xxxx"
-            ),
+            signature,
 
             HookBehavior.Replace
         );
