@@ -1,4 +1,4 @@
-Patch "2x Object Draw Distance in White Space" in "Graphics/Quality" by "wAABBsif" does "Extends the draw distance at which objects will display in White Space."
+Patch "2x Object Draw Distance in White Space" in "Graphics/Draw Distance" by "wAABBsif" does "Extends the draw distance at which objects will display in White Space."
 //
     static float multiplier = 2.0f;
 //
