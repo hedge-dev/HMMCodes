@@ -10,6 +10,7 @@ Known issues;
 - The UI still renders at 16:9 and details that are supposed to be off screen will be visible at wider aspect ratios.
 - Cutscenes will stretch to your aspect ratio.
 - The expected aspect ratio will only apply to a newly set resolution when you change the screen mode to another and back.
+- Vignette (the circular shadowing effect on the screen) is pretty egregious at aspect ratios wider than 21:9, it is highly recommended to use the Disable Vignette code to remove it.
 */
 //
     #lib "Win32"
