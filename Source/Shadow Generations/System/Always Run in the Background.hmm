@@ -1,0 +1,15 @@
+Patch "Always Run in the Background" in "System" by "NM & Hyper" does "Stops the game from pausing when the window is unfocused."
+//
+    #lib "Memory"
+//
+{
+    Memory.WriteForceJump
+    (
+        /* v1.1.0.0: 0x140A21D27 */
+        ScanSignature
+        (
+            "\x75\x4A\xC0\xE8\x03",
+            "xxxxx"
+        )
+    );
+}
