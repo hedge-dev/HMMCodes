@@ -1,0 +1,29 @@
+Library "Allocators" by "Hyper, Sajid & ĐeäTh"
+{
+    #include "Helpers" noemit
+
+    /// <summary>
+    /// A struct representation of the `csl::fnd::IAllocator` interface.
+    /// </summary>
+    public struct IAllocator
+    {
+        /// <summary>
+        /// Destroys an instance of an allocator with the `csl::fnd::IAllocator` interface.
+        /// </summary>
+        /// <param name="in_pThis">The instance to destroy.</param>
+        VFUNCTION_PTR(IAllocator, 0, void, Dtor, IAllocator* in_pThis)
+        
+        /// <summary>
+        /// Allocates an amount of memory to be used for a resource.
+        /// </summary>
+        /// <param name="in_size">The amount of memory to allocate.</param>
+        /// <param name="in_alignment">The alignment of the data.</param>
+        VFUNCTION_PTR(IAllocator, 1, void*, Alloc, IAllocator* in_pThis, long in_size, int in_alignment)
+
+        /// <summary>
+        /// Frees used memory at a location.
+        /// </summary>
+        /// <param name="in_pMemory">A pointer to the memory to free.</param>
+        VFUNCTION_PTR(IAllocator, 2, void, Free, IAllocator* in_pThis, void* in_pMemory)
+    }
+}
