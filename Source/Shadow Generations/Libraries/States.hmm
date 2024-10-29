@@ -4,7 +4,6 @@ Library "States" by "Hyper"
 
     #lib "Helpers"
     #lib "Memory"
-    #lib "Player"
 
     #import "Collections"
     
@@ -33,7 +32,7 @@ Library "States" by "Hyper"
         /// </summary>
         [FieldOffset(0x20)] public Helpers.UnmanagedString Name;
 
-        [FieldOffset(0x28)] public Player.PlayerHsmContext* pContext;
+        [FieldOffset(0x28)] public void* pContext;
     }
 
     /// <summary>

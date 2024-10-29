@@ -42,20 +42,6 @@ Library "GOComponents" by "Hyper"
     }
 
     /// <summary>
-    /// A struct representation of `app::player::GOCPlayerBlackboard`.
-    /// </summary>
-    [StructLayout(LayoutKind.Explicit, Size = 0x88)]
-    public struct GOCPlayerBlackboard
-    {
-        [FieldOffset(0)]    public GOComponent Base;
-        
-        /// <summary>
-        /// A pointer to an instance of `app::player::Blackboard`.
-        /// </summary>
-        [FieldOffset(0x80)] public Blackboard.Data* pBlackboard;
-    }
-
-    /// <summary>
     /// A struct representation of `app::player::GOCPlayerHsm`.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 0x170)]
