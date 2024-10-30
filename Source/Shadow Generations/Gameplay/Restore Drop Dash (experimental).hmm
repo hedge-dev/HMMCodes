@@ -1,0 +1,180 @@
+Code "Restore Drop Dash (experimental)" in "Gameplay" by "Hyper & Sora" does
+/*
+Restores the drop dash ability from Sonic Frontiers.
+
+Known issues;
+- Drop Dash is not affected by the pollution Doom Morph uses to get around.
+- Drop Dash does not exit when intersecting water, causing the player to fall out of the level if there's no terrain below it.
+*/
+//
+    #include "Helpers" noemit
+
+    #lib "GameManager"
+    #lib "Memory"
+
+    #import "GOComponents"
+
+    static bool _isInitialised = false;
+    static bool _isSideView = false;
+//
+{
+    if (!_isInitialised)
+    {
+        // v1.1.0.0: 0x1406E8890
+        var fpPlaySound = Memory.ReadCall
+        (
+            /* v1.1.0.0: 0x14C5D9D9E */
+            ScanSignature
+            (
+                "\xE8\xCC\xCC\xCC\xCC\xBA\xEC\x24\x48\x83",
+                "x????xxxxx"
+            )
+        );
+
+        // Force Drop Dash flag in BlackboardStatus.
+        WriteAsmHook
+        (
+            $@"
+                mov rax, qword ptr [rbx + 0x28]
+                or  qword ptr [rax + 0x30], 0x2000000
+            ",
+
+            /* v1.1.0.0: 0x14C5D9C78 */
+            ScanSignature
+            (
+                "\x0F\x28\xC6\x0F\xC6\xC6\x99\xF3\x0F\x58\xF0\x0F\xC6\xC0\x55\xF3\x0F\x58\xF0\x41\x0F\x2F\xF0\x0F\x47\xD0",
+                "xxxxxxxxxxxxxxxxxxxxxxxxxx"
+            ),
+
+            HookBehavior.After
+        );
+
+        // Populate charge sound.
+        WriteAsmHook
+        (
+            $@"
+                mov  r8, {TO_STRING_PTR("sd_doomspower")}
+            ",
+
+            /* v1.1.0.0: 0x14C5D9D8F */
+            ScanSignature
+            (
+                "\x4C\x8D\x05\xCC\xCC\xCC\xCC\x48\x89\xDA\x48\x8D\x4C\x24\x70",
+                "xxx????xxxxxxxx"
+            ),
+
+            HookBehavior.Before
+        );
+
+        // Populate release sound.
+        WriteAsmHook
+        (
+            $@"
+                mov  r8, {TO_STRING_PTR("sd_wing_airboost")}
+                mov  rdx, rsi
+                lea  rcx, qword ptr [rsp + 0x70]
+                mov  rax, {fpPlaySound}
+                call rax
+                mov  r8, {TO_STRING_PTR("sd_chaos_spear_fire")}
+                mov  rdx, rsi
+                lea  rcx, qword ptr [rsp + 0x70]
+                mov  rax, {fpPlaySound}
+                call rax
+                mov  r8, {TO_STRING_PTR("sd_doomspower")}
+                mov  rdx, rsi
+                lea  rcx, qword ptr [rsp + 0x70]
+            ",
+
+            /* v1.1.0.0: 0x14068D2D8 */
+            ScanSignature
+            (
+                "\x4C\x8D\x05\xCC\xCC\xCC\xCC\x48\x8B\xD6\x48\x8D\x4C\x24\x70\xE8\xCC\xCC\xCC\xCC\x48\x8D\x8D\xE0\x00\x00\x00\x48\x8B\xD0\xE8\xCC\xCC\xCC\xCC\xB2\x01",
+                "xxx????xxxxxxxxx????xxxxxxxxxxx????xx"
+            ),
+
+            HookBehavior.Replace
+        );
+
+        fixed (bool* p_isSideView = &_isSideView)
+        {
+            // v1.1.0.0: 0x140639BB4
+            var sigDropDashAirPosture = ScanSignature
+            (
+                "\x0F\x29\xB4\x24\x80\x00\x00\x00\x48\x8D\x54\x24\x20",
+                "xxxxxxxxxxxxx"
+            );
+
+            // v1.1.0.0: 0x140639DE0
+            var sigDropDashGroundPosture = ScanSignature
+            (
+                "\x48\x8B\xC4\x48\x89\x58\x10\x48\x89\x78\x18\x4C\x89\x70\x20\x55\x48\x8D\x68\xA1\x48\x81\xEC\x00\x01\x00\x00\x48\x8B\x79\x18\x0F\x29\x70\xE8\x0F\x29\x78\xD8\x44\x0F\x29\x40\xC8\x44\x0F\x29\x48\xB8\x44\x0F\x29\x50\xA8\x44\x0F\x29\x58\x98\x44\x0F\x29\x60\x88\x44\x0F\x28\xE1\x44\x0F\x29\x74\x24\x70\x48\x89\x70\x08\x48\x8B\xF1\x48\x8B\xCF\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD8\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD0\x48\x8B\xCB\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD8\xE8\xCC\xCC\xCC\xCC\x48\x8B\xD0\x48\x8B\xCB\xE8\xCC\xCC\xCC\xCC\x48\x8B\x5F\x18\x48\x8D\x55\x97\x48\x8B\xCB\x4C\x8B\xF0\xF3\x44\x0F\x10\x58\x20",
+                "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx????xxxx????xxxxxxx????xxxx????xxxxxxx????xxxxxxxxxxxxxxxxxxxx"
+            );
+
+            // Fix 2D rolling.
+            WriteAsmHook
+            (
+                $@"
+                    test   al, al
+                    jnz    doGroundPosture
+                    mov    rax, {sigDropDashAirPosture}
+                    jmp    rax
+                doGroundPosture:
+                    mov    rcx, {(long)p_isSideView}
+                    cmp    byte ptr [rcx], 0
+                    jnz    exit
+                    movaps xmm1, xmm7
+                    mov    rcx, rsi
+                    mov    rax, {sigDropDashGroundPosture}
+                    call   rax
+                exit:
+                ",
+
+                /* v1.1.0.0: 0x140639BA0 */
+                ScanSignature
+                (
+                    "\x84\xC0\x74\x10\x0F\x28\xCF\x48\x8B\xCE",
+                    "xxxxxxxxxx"
+                ),
+
+                HookBehavior.Replace
+            );
+
+            // Force minDashSpeed to minDashSpeedMax in 3D.
+            WriteAsmHook
+            (
+                $@"
+                    mov rdx, {(long)p_isSideView}
+                    cmp byte ptr [rdx], 0
+                    jnz exit
+                    mov edx, dword ptr [rbx + 0x08]
+                    mov dword ptr [rbx + 0x04], edx
+                exit:
+                ",
+
+                /* v1.1.0.0: 0x14CF2604A */
+                ScanSignature
+                (
+                    "\xF3\x0F\x10\x53\x08\x48\x8D\x54\x24\x30",
+                    "xxxxxxxxxx"
+                ),
+
+                HookBehavior.After
+            );
+        }
+
+        _isInitialised = true;
+    }
+
+    var pPlayer = GameManager.GetGameObject("Shadow");
+
+    if (pPlayer == null)
+        return;
+
+    var pGOCPlayerParameter = pPlayer->GetGOC<GOCPlayerParameter>();
+
+    if (pGOCPlayerParameter == null)
+        return;
+        
+    _isSideView = pGOCPlayerParameter->CurrentModePackageType == GOCPlayerParameter.ModePackageType.SideView;
+}
