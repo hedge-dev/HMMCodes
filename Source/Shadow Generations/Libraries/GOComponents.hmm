@@ -119,6 +119,46 @@ Library "GOComponents" by "Hyper"
             IsUngrounded = 2
         }
     }
+
+    /// <summary>
+    /// A struct representation of `app::player::GOCPlayerParameter`.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 0x198)]
+    public struct GOCPlayerParameter
+    {
+        [FieldOffset(0)]    public GOComponent Base;
+        
+        /// <summary>
+        /// The current mode package type.
+        /// </summary>
+        [FieldOffset(0xB0)] public ModePackageType CurrentModePackageType;
+
+        /// <summary>
+        /// An enum containing the different mode package types from the player's reflection data.
+        /// </summary>
+        public enum ModePackageType : int
+        {
+            /// <summary>
+            /// The player is in 3D.
+            /// </summary>
+            ForwardView,
+
+            /// <summary>
+            /// The player is in 2D.
+            /// </summary>
+            SideView,
+
+            /// <summary>
+            /// The player is fighting a boss.
+            /// </summary>
+            Boss,
+
+            /// <summary>
+            /// The player is in White Space.
+            /// </summary>
+            WhiteSpace
+        }
+    }
     
     /// <summary>
     /// A struct representation of `hh::ui::GOCSprite`.
