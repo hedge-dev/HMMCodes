@@ -53,7 +53,9 @@ Known issues;
         WriteAsmHook
         (
             $@"
-                mov  r8, {TO_STRING_PTR("sd_doomspower")}
+                mov r8, {TO_STRING_PTR("sd_doomspower")}
+                mov rdx, rbx
+                lea rcx, qword ptr [rsp + 0x70]
             ",
 
             /* v1.1.0.0: 0x14C5D9D8F */
@@ -63,7 +65,7 @@ Known issues;
                 "xxx????xxxxxxxx"
             ),
 
-            HookBehavior.Before
+            HookBehavior.Replace
         );
 
         // Populate release sound.
