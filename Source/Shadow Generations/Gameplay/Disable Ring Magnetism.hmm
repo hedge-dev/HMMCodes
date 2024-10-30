@@ -1,0 +1,14 @@
+Patch "Disable Ring Magnetism" in "Gameplay" by "Hyper" does "Disables rings spinning around and magnetising to the player upon collecting them."
+{
+    WriteNop
+    (
+        /* v1.1.0.0: 0x140403169 */
+        ScanSignature
+        (
+            "\x48\x85\xC0\x74\x57\xBA\x05\x00\x00\x00",
+            "xxxxxxxxxx"
+        ),
+
+        23
+    );
+}
