@@ -1,0 +1,17 @@
+Patch "Chaos Control Doesn't Slow Music" in "Gameplay" by "brekko" does
+/*
+Chaos Control won't slow down the stage's music while active.
+*/
+{
+	WriteNop
+	(
+		/* 0x1407012D6 */
+		ScanSignature
+		(
+			"\x45\x38\xBC\x24\xE8\x00\x00\x00",
+			"xxxxxxxx"
+		),
+		
+		8
+	);
+}
