@@ -33,6 +33,7 @@ Notes;
     static bool _isSpinBoostAnimThresholdReached = false;
     static bool _isLandAnimThresholdReached = false;
 
+    static int _boostSfxHandle = 0;
     static int _spinBoostSfxHandle = 0;
 
     static int _chargeCount = 1;
@@ -73,6 +74,12 @@ Notes;
 
     static void StopEffects()
     {
+        if (_boostSfxHandle != 0)
+        {
+            fixed (int* p_boostSfxHandle = &_boostSfxHandle)
+                Player.Sound.StopSound(p_boostSfxHandle);
+        }
+
         if (_spinBoostSfxHandle != 0)
         {
             fixed (int* p_spinBoostSfxHandle = &_spinBoostSfxHandle)
@@ -85,6 +92,7 @@ Notes;
             Player.Effect.StopEffect("RailDashTrail02");
         }
 
+        _boostSfxHandle = 0;
         _spinBoostSfxHandle = 0;
         _isSpinBoostAnimThresholdReached = false;
         _isLandAnimThresholdReached = false;
@@ -167,7 +175,7 @@ Notes;
                    zero to prevent rail switching from using them. */
                 if (_releaseTimer <= 0.0f)
                 {
-                    Player.Sound.PlaySound("sn_boost_run");
+                    _boostSfxHandle = Player.Sound.PlaySound("sn_boost_run");
 
                     Player.Effect.PlayAnimationEffect("SPINBOOST");
                     Player.Effect.PlayEffect("RailDashBoostImpact", "ef_so_boost_impact_fv01");
