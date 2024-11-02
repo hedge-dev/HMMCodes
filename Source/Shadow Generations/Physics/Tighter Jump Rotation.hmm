@@ -1,11 +1,19 @@
-Patch "Tighter Jump Rotation" in "Physics" by "Hyper" does "Allows for tighter mid-air control for more precise movements when jumping, similar to SONIC THE HEDGEHOG (2006)."
+Patch "Tighter Jump Rotation" in "Physics" by "Hyper" does
+/*
+Allows for tighter mid-air control for more precise movements when jumping.
+
+Notes;
+- This affects regular jumping, as well as jumping for Doom Surf and Doom Morph.
+*/
 //
     static float _sensitivity = 0.05f;
+    static float _dsurfSteeringSpeedAir = 90.0f;
     static float _amoebaSteeringSpeed2 = 180.0f;
     static float _amoebaStartSteeringSpeed = 25.0f;
 //
 {
     fixed (float* p_sensitivity = &_sensitivity)
+    fixed (float* p_dsurfSteeringSpeedAir = &_dsurfSteeringSpeedAir)
     fixed (float* p_amoebaSteeringSpeed2 = &_amoebaSteeringSpeed2)
     fixed (float* p_amoebaStartSteeringSpeed = &_amoebaStartSteeringSpeed)
     {
@@ -43,6 +51,28 @@ Patch "Tighter Jump Rotation" in "Physics" by "Hyper" does "Allows for tighter m
             (
                 "\x4C\x89\xA4\x24\xA0\x01\x00\x00\x4C\x8D\x63\x18",
                 "xxxxxxxxxxxx"
+            ),
+
+            HookBehavior.Replace
+        );
+
+        // Doom Surf Jump Sensitivity & Steering Speed
+        WriteAsmHook
+        (
+            $@"
+                mov   r12, {(long)p_dsurfSteeringSpeedAir}
+                mov   r12d, dword ptr [r12]
+                mov   dword ptr [r14 + 0x34], r12d
+                movss xmm0, dword ptr [r14 + 0x34]
+                mov   r12, {(long)p_sensitivity}
+                mulss xmm0, dword ptr [r12]
+            ",
+
+            /* v1.1.0.0: 0x14068FCCC */
+            ScanSignature
+            (
+                "\xF3\x41\x0F\x10\x46\x34\xF3\x0F\x59\x05",
+                "xxxxxxxxxx"
             ),
 
             HookBehavior.Replace
