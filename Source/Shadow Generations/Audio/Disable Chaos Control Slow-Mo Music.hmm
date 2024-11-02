@@ -1,6 +1,6 @@
 Patch "Disable Chaos Control Slow-Mo Music" in "Audio" by "brekko" does
 /*
-Disables Chaos Control slowing the msuic down whilst active.
+Disables Chaos Control slowing the music down whilst active.
 */
 {
 	WriteNop
