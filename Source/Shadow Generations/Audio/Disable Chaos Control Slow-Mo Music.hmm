@@ -1,0 +1,17 @@
+Patch "Disable Chaos Control Slow-Mo Music" in "Audio" by "brekko" does
+/*
+Disables Chaos Control slowing the music down whilst active.
+*/
+{
+	WriteNop
+	(
+		/* v1.1.0.0: 0x1407012D6 */
+		ScanSignature
+		(
+			"\x45\x38\xBC\x24\xE8\x00\x00\x00",
+			"xxxxxxxx"
+		),
+		
+		8
+	);
+}
