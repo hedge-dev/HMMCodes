@@ -12,6 +12,7 @@ Notes;
     
     #lib "DeltaTime"
     #lib "GameMode"
+    #lib "Globals"
     #lib "HMM"
     #lib "Lua"
     #lib "MathHelpers"
@@ -110,9 +111,14 @@ Notes;
 {
     if (!_isInitialised)
     {
+        Globals.Add("Rail Dash", true);
+        
         _isPowerBoostEffectsHidden = HMM.GetCodes().Contains("Graphics/Effects/Hide Power Boost Effects");
         _isInitialised = true;
     }
+
+    if (!Globals.GetFlag("Rail Dash"))
+        return;
 
     Lua.Call("LoadLevel", "warship01");
 
