@@ -11,6 +11,7 @@ The air parry durations are as follows;
 //
     #lib "BlackboardStatus"
     #lib "DeltaTime"
+    #lib "GameManager"
     #lib "GameMode"
     #lib "Memory"
     #lib "Player"
