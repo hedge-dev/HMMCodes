@@ -9,7 +9,10 @@ Notes;
     #include "BlackboardStatus" noemit
     
     #lib "Globals"
+    #lib "Memory"
     #lib "Player"
+    
+    #import "Plugins"
 
     static bool _isInitialised = false;
 //
@@ -42,6 +45,13 @@ Notes;
     }
     else if (state == Sonic.StateID.StateRun)
     {
+        if (Memory.TryGetPointer<StatePluginBoost>(Player.State.GetStatePlugin<StatePluginBoost>(), out var out_pStatePluginBoost))
+        {
+            // Don't exit with boost if the gauge is empty.
+            if ((out_pStatePluginBoost->Flags & StatePluginBoost.BoostFlags.IsGaugeEmpty) != 0)
+                return;
+        }
+
         if (Player.Input.IsDown(Player.InputActionType.PlayerBoost) && isGrounded)
         {
             if (Player.State.GetPreviousStateID<Sonic.StateID>() == Sonic.StateID.StateDropDash)
