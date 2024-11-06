@@ -20,6 +20,7 @@ Patch "Tighter Jump Rotation for Doom Surf" in "Physics" by "Hyper" does "Allows
             ",
 
             /* v1.1.0.0: 0x14068FCCC */
+            /* v1.1.0.1: 0x14068FF7C */
             ScanSignature
             (
                 "\xF3\x41\x0F\x10\x46\x34\xF3\x0F\x59\x05",

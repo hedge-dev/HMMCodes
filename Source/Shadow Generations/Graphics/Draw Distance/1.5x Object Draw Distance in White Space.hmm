@@ -1,41 +1,33 @@
 Patch "1.5x Object Draw Distance in White Space" in "Graphics/Draw Distance" by "wAABBsif" does "Extends the draw distance at which objects will display in White Space."
 //
-    static float multiplier = 1.5f;
+    static float _multiplier = 1.5f;
 //
 {
-    // v1.1.0.0: 0x14018D1C6
-    long signature = ScanSignature
+    // v1.1.0.1: 0x14018D47A
+    var sig = ScanSignature
     (
-        "\x48\x8B\x40\x00\x0F\x29\x74\x24\x00\xF3\x0F\x10\x30",
-        "xxx?xxxx?xxxx"
+        "\x0F\x29\x74\x24\x40\xF3\x0F\x10\x30",
+        "xxxxxxxxx"
     );
 
-    if (signature == 0)
+    if (sig == 0)
         return;
 
-    // v1.1.0.0: 0x14018C2E0
-    long callAddress = ScanSignature
-    (
-        "\xF3\x0F\x10\x05\x00\x00\x00\x00\xC3\xCC\xCC\xCC\xCC\xCC\xCC\xCC\x48\x89\x51",
-        "xxxx????xxxxxxxxxxx"
-    );
-
-    fixed (float* pMultiplier = &multiplier)
+    fixed (float* p_multiplier = &_multiplier)
     {
         WriteAsmHook
         (
             $@"
-                mov    rax, [rax+18h]
-                movaps [rsp+40h], xmm6
+                movaps xmmword ptr [rsp + 0x40], xmm6
                 movss  xmm6, dword ptr [rax]
-                mov    rbx, {(long)pMultiplier}
-                mulss  xmm6, dword ptr [rbx] ; multiply rangeIn value
-                movss  dword ptr [rax+4h], xmm6 ; Move rangeIn value into rangeOut
-                mov    rbx, {(long)callAddress}
-                call   rbx
+                mov    rdx, {(long)p_multiplier}
+                mulss  xmm6, dword ptr [rdx]        ; Multiply rangeIn value.
+                movss  dword ptr [rax + 0x04], xmm6 ; Move rangeIn value into rangeOut.
+                mov    edx, 0x447A0000
+                movd   xmm0, edx
             ",
 
-            signature,
+            sig,
 
             HookBehavior.Replace
         );

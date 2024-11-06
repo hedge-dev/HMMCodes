@@ -14,6 +14,7 @@ Patch "Disable Flying Boost Fall" in "Animation" by "Hyper" does "Disables the a
         ",
 
         /* v1.1.0.0: 0x140694D77 */
+        /* v1.1.0.1: 0x140695027 */
         ScanSignature
         (
             "\x4C\x8D\x35\xCC\xCC\xCC\xCC\x41\x83\xFF\x2C",

@@ -4,6 +4,7 @@ Patch "Disable Motion Blur" in "Graphics/Post-processing" by "Hyper"
     WriteProtected<byte>
     (
         /* v1.1.0.0: 0x1406C176F */
+        /* v1.1.0.1: 0x1406C1A1F */
         ScanSignature
         (
             "\x41\x0F\xB6\x4E\x70",
@@ -19,6 +20,7 @@ Patch "Disable Motion Blur" in "Graphics/Post-processing" by "Hyper"
         "mov byte ptr [r11], 0",
 
         /* v1.1.0.0: 0x14968103E */
+        /* v1.1.0.1: 0x148AF391E */
         ScanSignature
         (
             "\x41\x0F\x28\x33\x0F\x29\xBC\x24\x80\x00\x00\x00",

@@ -18,6 +18,7 @@ Notes;
     Memory.WriteForceJump
     (
         /* v1.1.0.0: 0x1407F740C */
+        /* v1.1.0.1: 0x1407F76DC */
         ScanSignature
         (
             "\x0F\x85\xDC\x10\x00\x00",
@@ -29,6 +30,7 @@ Notes;
     WriteNop
     (
         /* v1.1.0.0: 0x1407FBB03 */
+        /* v1.1.0.1: 0x1407FBDD3 */
         ScanSignature
         (
             "\x74\x0D\xB0\x01\x48\x8B\x74\x24\x70",
@@ -47,6 +49,7 @@ Notes;
         ",
 
         /* v1.1.0.0: 0x146B55395 */
+        /* v1.1.0.1: 0x1467CB756 */
         ScanSignature
         (
             "\x84\xC0\x74\x09\x48\x83\xC4\x28",

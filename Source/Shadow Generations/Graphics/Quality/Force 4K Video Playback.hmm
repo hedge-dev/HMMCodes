@@ -9,6 +9,7 @@ Patch "Force 4K Video Playback" in "Graphics/Quality" by "Hyper" does "Forces th
         ",
 
         /* v1.1.0.0: 0x14E59CF53 */
+        /* v1.1.0.1: 0x14CC94C8E */
         ScanSignature
         (
             "\x81\x7C\x24\x40\x80\x07\x00\x00\x76\x10",

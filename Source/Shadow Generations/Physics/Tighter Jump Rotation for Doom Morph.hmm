@@ -19,6 +19,7 @@ Patch "Tighter Jump Rotation for Doom Morph" in "Physics" by "Hyper" does "Allow
             ",
 
             /* v1.1.0.0: 0x140635D33 */
+            /* v1.1.0.1: 0x140635FE3 */
             ScanSignature
             (
                 "\x45\x0F\x2F\x66\x24\xF3\x44\x0F\x10\x15",
@@ -41,6 +42,7 @@ Patch "Tighter Jump Rotation for Doom Morph" in "Physics" by "Hyper" does "Allow
             ",
 
             /* v1.1.0.0: 0x140636020 */
+            /* v1.1.0.1: 0x1406362D0 */
             ScanSignature
             (
                 "\xF3\x0F\x10\x46\x0C\x0F\x28\xCE",

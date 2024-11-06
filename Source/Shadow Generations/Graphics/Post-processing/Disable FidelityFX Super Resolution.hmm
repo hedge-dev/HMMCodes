@@ -14,6 +14,7 @@ This will reduce sharpening artefacts like subtle haloing around geometry.
         ",
 
         /* v1.1.0.0: 0x148FE99EC */
+        /* v1.1.0.1: 0x1485E622C */
         ScanSignature
         (
             "\x88\x41\x01\xF3\x41\x0F\x10\x48\x04",

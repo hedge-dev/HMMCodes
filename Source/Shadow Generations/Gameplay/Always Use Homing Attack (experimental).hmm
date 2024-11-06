@@ -11,6 +11,7 @@ Known issues;
     WriteNop
     (
         /* v1.1.0.0: 0x1406E2449 */
+        /* v1.1.0.1: 0x1406E26F9 */
         ScanSignature
         (
             "\x75\x44\x48\x8B\xCB\xE8\xCC\xCC\xCC\xCC\x84\xC0\x75\x0C",

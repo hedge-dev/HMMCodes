@@ -16,6 +16,7 @@ Notes;
         ",
 
         /* v1.1.0.0: 0x1406AD067 */
+        /* v1.1.0.1: 0x1406AD317 */
         ScanSignature
         (
             "\x74\x1B\x44\x8B\x40\x14",

@@ -6,6 +6,7 @@ Patch "Disable FPS Limit (experimental)" in "Graphics/Display" by "NM, M&M & Hyp
     WriteProtected<byte>
     (
         /* v1.1.0.0: 0x140A23CE8 */
+        /* v1.1.0.1: 0x140A23FB8 */
         ScanSignature
         (
             "\x0F\x83\xA1\x00\x00\x00\xF2\x0F\x10\xA3\x50\x01\x00\x00",
@@ -18,6 +19,7 @@ Patch "Disable FPS Limit (experimental)" in "Graphics/Display" by "NM, M&M & Hyp
     WriteNop
     (
         /* v1.1.0.0: 0x140A23DEB */
+        /* v1.1.0.1: 0x140A240BB */
         ScanSignature
         (
             "\x72\xC3\x44\x0F\x28\x44\x24\x40",
@@ -40,6 +42,7 @@ Patch "Disable FPS Limit (experimental)" in "Graphics/Display" by "NM, M&M & Hyp
         ",
         
         /* v1.1.0.0: 0x140A23EFC */
+        /* v1.1.0.1: 0x140A241CC */
         ScanSignature
         (
             "\x0F\x2F\x09\x48\x0F\x47\xC1\x8B\x00",
@@ -50,6 +53,7 @@ Patch "Disable FPS Limit (experimental)" in "Graphics/Display" by "NM, M&M & Hyp
     );
     
     // v1.1.0.0: 0x14782FA63
+    // v1.1.0.1: 0x147231BC9
     long jmpAddr = ScanSignature
     (
         "\x74\x35\x48\x8B\x05\xCC\xCC\xCC\xCC\xF3\x0F\x10\x0D\xCC\xCC\xCC\xCC\xC6\x40\x10\x01\x48\x8B\x0D\xCC\xCC\xCC\xCC\xE8\xCC\xCC\xCC\xCC\xF3\x0F\x10\x05\xCC\xCC\xCC\xCC\x41\xB0\x01\x31\xD2",

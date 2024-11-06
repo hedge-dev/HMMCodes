@@ -6,9 +6,11 @@ Patch "Bouncy Jump Ball" in "Animation" by "Hyper" does "Uses bouncy jump ball a
 //
 {
     // v1.1.0.0: 0x1406E8C90
+    // v1.1.0.1: 0x1406E8F40
     long sigPlayAnimationEffectAddr = Memory.ReadCall
     (
         /* v1.1.0.0: 0x14C5E1FAA */
+        /* v1.1.0.1: 0x14B402E1A */
         ScanSignature
         (
             "\xE8\xCC\xCC\xCC\xCC\x48\x89\xF2\x48\x89\xF9\xE8\xCC\xCC\xCC\xCC\x80\x8F\xF4\x00\x00\x00\x01",
@@ -27,6 +29,7 @@ Patch "Bouncy Jump Ball" in "Animation" by "Hyper" does "Uses bouncy jump ball a
         ",
 
         /* v1.1.0.0: 0x14C5E1F9D */
+        /* v1.1.0.1: 0x14B402E0D */
         ScanSignature
         (
             "\x41\xB0\x01\x48\x8D\x15\xCC\xCC\xCC\xCC\x48\x89\xF1",

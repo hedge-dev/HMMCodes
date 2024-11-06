@@ -19,6 +19,7 @@ Patch "Force Maximum Geometry Detail" in "Graphics/Quality" by "Hyper" does "For
         $"mov rax, {(long)p_layerRange}",
 
         /* v1.1.0.0: 0x140E3DC42 */
+        /* v1.1.0.1: 0x140E3DF12 */
         ScanSignature
         (
             "\x0F\x10\x00\x48\x8D\x55\xF4",

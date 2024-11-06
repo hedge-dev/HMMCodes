@@ -1,14 +1,15 @@
 Patch "Disable Chaos Control Slow-Mo Music" in "Audio" by "brekko" does "Disables Chaos Control slowing the music down whilst active."
+//
+    #lib "Memory"
+//
 {
-    WriteNop
+    Memory.WriteForceJump
     (
-        /* v1.1.0.0: 0x1407012D6 */
+        /* v1.1.0.1: 0x14070158E */
         ScanSignature
         (
-            "\x45\x38\xBC\x24\xE8\x00\x00\x00",
-            "xxxxxxxx"
-        ),
-
-        8
+            "\x74\x67\x84\xC0\x0F\x85\x5C\x01\x00\x00",
+            "xxxxxxxxxx"
+        )
     );
 }

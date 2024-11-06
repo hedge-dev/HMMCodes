@@ -28,6 +28,7 @@ Library "GameManager" by "Hyper, ĐeäTh & Sajid"
     }
 
     /* v1.1.0.0: 0x1409F1F9A */
+    /* v1.1.0.1: 0x1409F226A */
     private static long _sigGameManagerSingleton = (long)ScanSignature
     (
         "\x4C\x89\x3D\xCC\xCC\xCC\xCC\x48\x83\xC4\x40",
