@@ -130,6 +130,17 @@ Notes;
                 "xxxxxxxxxxxxx"
             );
 
+            // v1.1.0.1: 0x14063A090
+            var fpDropDashGroundPosture = Memory.ReadCall
+            (
+                /* v1.1.0.1: 0x140639E5A */
+                ScanSignature
+                (
+                    "\xE8\xCC\xCC\xCC\xCC\xE9\x03\x01\x00\x00\x0F\x29\xB4\x24\x80\x00\x00\x00",
+                    "x????xxxxxxxxxxxxx"
+                )
+            );
+
             // Fix 2D rolling and Doom Surf transitions.
             WriteAsmHook
             (
@@ -164,19 +175,20 @@ Notes;
                     cmp    byte ptr [rcx], 0
                     jnz    exit
 
-                    ; Set up ground posture arguments.
+                    ; Call ground posture method.
                     movaps xmm1, xmm7
                     mov    rcx, rsi
+                    mov    rax, {fpDropDashGroundPosture}
+                    call   rax
 
                 exit:
-                    xorps  xmm9, xmm9
                 ",
 
-                /* v1.1.0.1: 0x140639E4C */
+                /* v1.1.0.1: 0x140639E50 */
                 ScanSignature
                 (
-                    "\x45\x0F\x57\xC9\x84\xC0\x74\x10",
-                    "xxxxxxxx"
+                    "\x84\xC0\x74\x10\x0F\x28\xCF\x48\x8B\xCE",
+                    "xxxxxxxxxx"
                 ),
 
                 HookBehavior.Replace
@@ -193,6 +205,7 @@ Notes;
                     mov   dword ptr [rbx + 0x04], ecx
                 exit:
                     movss xmm2, dword ptr [rbx + 0x08]
+                    mov   ecx, 0x30 ; Fuck Denuvo.
                 ",
 
                 /* v1.1.0.1: 0x14BC07C91 */
