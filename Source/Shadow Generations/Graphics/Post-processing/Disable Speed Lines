@@ -1,4 +1,4 @@
-Patch "Disable Wind Overlay Effect" in "Graphics/Post-processing" by "stis" does "Disables the wind effect when boosting"
+Patch "Disable Speed Lines" in "Graphics/Post-processing" by "stis" does "Disables the speed lines around the edges of the screen whilst boosting."
 {
     WriteProtected<byte>(
         /* v1.1.0.1: 0x14120FF38 */
