@@ -1,0 +1,12 @@
+Patch "Disable Wind Overlay Effect" in "Graphics/Post-processing" by "stis" does "Disables the wind effect when boosting"
+{
+    WriteProtected<byte>(
+        /* v1.1.0.1: 0x14120FF38 */
+        ScanSignature
+        (
+            "\x65\x66\x5F\x70\x6C\x5F\x6C\x69\x6E\x65\x5F\x73\x70\x65\x65\x64\x30\x31",
+            "xxxxxxxxxxxxxxxxxx"
+        ),
+        0x30
+    );
+}
