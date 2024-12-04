@@ -1,4 +1,0 @@
-Patch "Disable Super Sonic Floating Boost (Ground Boost)" in "Gameplay/Skills/Modern Sonic" by "Skyth" 
-WriteProtected<byte>(0xDFF34C, 0xEB);
-
-

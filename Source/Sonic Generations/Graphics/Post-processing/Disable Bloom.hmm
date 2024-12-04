@@ -1,2 +1,0 @@
-Code "Disable Bloom" in "Graphics/Post-processing" by "Skyth" 
-Write<byte>(0x1A4323D, 0)
