@@ -18,11 +18,12 @@ Patch "Disable FPS Limit (experimental)" in "Graphics/Display" by "NM, M&M & Hyp
 
     WriteNop
     (
-        /* v1.1.0.0: 0x140A23DEB */
-        /* v1.1.0.1: 0x140A240BB */
+        /* v1.1.0.0:  0x140A23DEB */
+        /* v1.1.0.1:  0x140A240BB */
+        /* v1.10.0.0: 0x140A4F0DB */
         ScanSignature
         (
-            "\x72\xC3\x44\x0F\x28\x44\x24\x40",
+            "\x72\xC3\x44\x0F\x28\x4C\x24\x30",
             "xxxxxxxx"
         ),
 
