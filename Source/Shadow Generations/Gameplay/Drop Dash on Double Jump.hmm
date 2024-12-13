@@ -6,11 +6,12 @@ Notes;
 - This requires the Restore Drop Dash code.
 */
 {
-    // v1.1.0.0: 0x14C5D9E0E
-    // v1.1.0.1: 0x14B40269B
+    // v1.1.0.0:  0x14C5D9E0E
+    // v1.1.0.1:  0x14B40269B
+    // v1.10.0.0: 0x14AC7786A
     var sig = ScanSignature
     (
-        "\x74\x32\x48\x89\xD9\xE8\xCC\xCC\xCC\xCC\x48\x89\xD9",
+        "\x74\x39\x48\x89\xD9\xE8\xCC\xCC\xCC\xCC\x48\x89\xD9",
         "xxxxxx????xxx"
     );
 
