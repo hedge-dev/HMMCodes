@@ -24,11 +24,12 @@ Notes;
     // Disable pointing for menus.
     Memory.WriteForceJump
     (
-        /* v1.1.0.0: 0x140C1D823 */
-        /* v1.1.0.1: 0x140C1DAF3 */
+        /* v1.1.0.0:  0x140C1D823 */
+        /* v1.1.0.1:  0x140C1DAF3 */
+        /* v1.10.0.0: 0x140C47EB3 */
         ScanSignature
         (
-            "\x0F\x85\x68\x01\x00\x00\x48\x89\x68\x10",
+            "\x0F\x85\x6A\x01\x00\x00\x48\x89\x68\x10",
             "xxxxxxxxxx"
         )
     );
