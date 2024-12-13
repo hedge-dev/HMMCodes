@@ -5,10 +5,11 @@ Patch "Disable Chaos Control Slow-Mo Music" in "Audio" by "brekko" does "Disable
 {
     Memory.WriteForceJump
     (
-        /* v1.1.0.1: 0x14070158E */
+        /* v1.1.0.1:  0x14070158E */
+        /* v1.10.0.0: 0x140724D0B */
         ScanSignature
         (
-            "\x74\x67\x84\xC0\x0F\x85\x5C\x01\x00\x00",
+            "\x74\x66\x84\xC0\x0F\x85\x5E\x01\x00\x00",
             "xxxxxxxxxx"
         )
     );
