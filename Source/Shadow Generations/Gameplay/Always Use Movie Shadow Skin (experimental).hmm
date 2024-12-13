@@ -1,0 +1,40 @@
+Patch "Always Use Movie Shadow Skin (experimental)" in "Gameplay" by "Hyper & angryzor" does
+/*
+Always uses the Movie Shadow skin across the game.
+
+Notes;
+- This requires the Sonic the Hedgehog 3 Movie Pack DLC.
+
+Known issues;
+- Stage-specific animations and cutscenes outside of the Tokyo mission will not be animated properly.
+*/
+{
+    WriteAsmHook
+    (
+        $@"
+            mov al, 2
+            ret
+        ",
+
+        /* v1.10.0.0: 0x146AF7E00 */
+        ScanSignature
+        (
+            "\x40\x53\x48\x83\xEC\x20\x48\x89\xCB\xE8\xCC\xCC\xCC\xCC\x48\x89\xC2\x48\x89\xD9\xE8\xCC\xCC\xCC\xCC\x48\x85\xC0\x74\x15",
+            "xxxxxxxxxx????xxxxxxx????xxxxx"
+        ),
+
+        HookBehavior.Replace
+    );
+
+    WriteProtected<byte>
+    (
+        /* v1.10.0.0: 0x14060E211 */
+        ScanSignature
+        (
+            "\x75\x55\x45\x33\xC0",
+            "xxxxx"
+        ),
+
+        0xEB
+    );
+}
