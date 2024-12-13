@@ -1,4 +1,4 @@
-Patch "Disable Motion Blur" in "Graphics/Post-processing" by "Hyper"
+Patch "Disable Motion Blur (v1.1.0.1)" in "Graphics/Post-processing" by "Hyper"
 {
     // Disable player motion blur.
     WriteProtected<byte>
