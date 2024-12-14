@@ -208,8 +208,6 @@ Notes;
                     mov   ecx, dword ptr [rbx + 0x08]
                     mov   dword ptr [rbx + 0x04], ecx
                 exit:
-                    movss xmm2, dword ptr [rbx + 0x08]
-                    mov   ecx, 0x30 ; Fuck Denuvo.
                 ",
 
                 /* v1.1.0.1:  0x14BC07C91 */
@@ -220,7 +218,7 @@ Notes;
                     "xxxxxxxxxx"
                 ),
 
-                HookBehavior.Replace
+                HookBehavior.After
             );
         }
 
