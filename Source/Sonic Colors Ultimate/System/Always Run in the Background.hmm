@@ -1,4 +1,0 @@
-Patch "Always Run in the Background" in "System" by "Labrys" 
-WriteProtected<byte>(ScanSignature("\xC6\x81\xB6\x32\x00\x00\x00", "xxxxxxx") + 0x06, 0x01);
-// 1401044C7 (1.09)
-

@@ -1,6 +1,0 @@
-Patch "Fix Homing Trail Position" in "Fixes" by "Ahremic" 
-WriteProtected<byte>(0xE4F442, 0xF0); // Replaces "UpVector" (0x450), i.e. the floor normal,
-                                      // with "ModelUpVector" (0x4F0), Sonic's actual upward direction.
-                                      // This fixes an actual *bug* where the homing trail position was just WRONG.
-
-

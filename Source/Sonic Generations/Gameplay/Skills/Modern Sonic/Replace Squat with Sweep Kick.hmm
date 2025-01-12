@@ -1,4 +1,0 @@
-Patch "Replace Squat with Sweep Kick" in "Gameplay/Skills/Modern Sonic" by "N69" does "Replaces the crouch animation with the sweep kick animation. This does not restore functionality." 
-WriteProtected<ushort>(0xDFF8D6, 0x5608)
-
-
