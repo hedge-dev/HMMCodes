@@ -1,8 +1,0 @@
-Patch "Disable Bonus Stages" in "Gameplay/Sonic 3 & Knuckles/Bonus Stages" by "MegAmi" does "Removes the Bonus Stage stars from Star Posts."
-//
-    #lib "Memory"
-//
-{
-    // 2.0.2: 0x1401FA461
-    Memory.WriteForceJump(ScanSignature("\x0F\x8C\x28\x01\x00\x00\x83\xC1\xEC\xB8\x89\x88\x88\x88", "xxxxxxxxxxxxxx"));
-}
