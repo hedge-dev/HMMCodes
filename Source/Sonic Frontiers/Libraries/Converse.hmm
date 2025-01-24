@@ -237,10 +237,10 @@ Library "Converse" by "Hyper & M&M"
 
         WriteNop
         (
-            /* 0x14DC85938 */
+            /* v1.42: 0x14D89053A */
             ScanSignature
             (
-                "\x74\x53\x44\x8B\x44\x24\x28",
+                "\x74\x5E\x44\x8B\x44\x24\x28",
                 "xxxxxxx"
             ),
             

@@ -1,4 +1,4 @@
-Patch "Smooth Camera (v1.41)" in "Camera" by "Ahremic" does "Replaces linear camera interpolation with a sigmoid solution, using Ken Perlin's ''Smoother Step'' second-order hermite polynomial." 
+Patch "Smooth Camera (v1.42)" in "Camera" by "Ahremic" does "Replaces linear camera interpolation with a sigmoid solution, using Ken Perlin's ''Smoother Step'' second-order hermite polynomial." 
 //
     static float value01 = 1.0f;
     static float value03 = 3.0f;
@@ -7,20 +7,20 @@ Patch "Smooth Camera (v1.41)" in "Camera" by "Ahremic" does "Replaces linear cam
 //
 {
     // Linear coordinate interpolator
-    WriteProtected<byte>(0x146488544, Assemble("mov edx, 0x60"));
-    WriteProtected<byte>(0x146488583, Assemble("mov edx, 0x60"));
+    WriteProtected<byte>(0x1467D940D, Assemble("mov edx, 0x60"));
+    WriteProtected<byte>(0x1467D944C, Assemble("mov edx, 0x60"));
 
     // Target Base interpolator
-    WriteProtected<byte>(0x14648863B, Assemble("mov edx, 0x100"));
-    WriteProtected<byte>(0x146488617, Assemble("mov edx, 0x100"));
-    WriteProtected<byte>(0x1464885D0, Assemble("mov edx, 0x100"));
+    WriteProtected<byte>(0x1467D94FD, Assemble("mov edx, 0x100"));
+    WriteProtected<byte>(0x1467D94D9, Assemble("mov edx, 0x100"));
+    WriteProtected<byte>(0x1467D9492, Assemble("mov edx, 0x100"));
 
     // Base Ctor type A
     WriteAsmHook
     (
         "movss dword ptr [rdi + 0xF0], xmm6",
 
-        0x1464517E5,
+        0x146780EB5,
 
         HookBehavior.After
     );
@@ -52,7 +52,7 @@ Patch "Smooth Camera (v1.41)" in "Camera" by "Ahremic" does "Replaces linear cam
     (
         "mov [rdi + 0xF0], eax",
 
-        0x1464638E6,
+        0x146788681,
 
         HookBehavior.After
     );
@@ -177,7 +177,7 @@ Patch "Smooth Camera (v1.41)" in "Camera" by "Ahremic" does "Replaces linear cam
                 ret
             ",
 
-            0x14644DF30,
+            0x14677AED0,
 
             HookBehavior.Replace
         );
