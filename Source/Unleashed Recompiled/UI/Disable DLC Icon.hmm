@@ -1,0 +1,1 @@
+Patch "Disable DLC Icon" id "DisableDLCIcon" in "UI" by "Hyper" does "Disables the DLC icon that appears above the flags on the world map if they have DLC content installed."

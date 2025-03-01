@@ -1,0 +1,1 @@
+Patch "Use Arrows for Time of Day Transition" id "UseArrowsForTimeOfDayTransition" in "UI" by "Hyper" does "Uses the generic arrow loading transition when changing time of day."

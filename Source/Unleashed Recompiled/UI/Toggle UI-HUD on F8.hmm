@@ -1,0 +1,1 @@
+Patch "Toggle UI/HUD on F8" id "HUDToggleKey" in "UI" by "RadiantDerg" does "Toggles visibility of the UI and HUD by pressing the F8 key."

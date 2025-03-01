@@ -1,0 +1,1 @@
+Patch "Disable Auto Save Warning" id "DisableAutoSaveWarning" in "UI" by "Hyper" does "Disables the auto save warning that appears after pressing start at the title screen."
