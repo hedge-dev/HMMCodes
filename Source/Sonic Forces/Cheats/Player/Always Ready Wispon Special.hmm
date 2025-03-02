@@ -1,4 +1,0 @@
-Patch "Always Ready Wispon Special" in "Cheats/Player" by "CodenameGamma" 
-WriteProtected<byte>(0x1423C060C, 0x01)
-
-

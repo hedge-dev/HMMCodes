@@ -1,4 +1,0 @@
-Patch "Fix Sideways Wall Jump" in "Fixes" by "Sajid" 
-WriteNop(ASLR(0x008C142C), 2)
-
-

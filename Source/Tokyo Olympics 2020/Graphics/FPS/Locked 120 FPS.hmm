@@ -1,5 +1,0 @@
-Patch "Locked 120 FPS" in "Graphics/FPS" by "M&M" 
-WriteNop(ASLR(0x140A5A656), 5)
-Write<float>(GetPointer(ASLR(0x142AE0508), 0x1C), 120.0f)
-
-

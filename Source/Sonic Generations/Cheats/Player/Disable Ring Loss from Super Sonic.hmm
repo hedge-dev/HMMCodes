@@ -1,4 +1,0 @@
-Patch "Disable Ring Loss from Super Sonic" in "Cheats/Player" by "Muzzarino" 
-WriteNop(0xE64E80, 6)
-
-

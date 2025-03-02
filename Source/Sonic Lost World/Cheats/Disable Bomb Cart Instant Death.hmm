@@ -1,4 +1,0 @@
-Patch "Disable Bomb Cart Instant Death" in "Cheats" by "ĐeäTh" 
-WriteNop(ASLR(0x007D82A2), 3);
-
-

@@ -1,4 +1,0 @@
-Patch "Hide Lap Time Display" in "UI" by "Hyper" does "Disables the timer that appears when passing a checkpoint you've been to previously." 
-WriteProtected<byte>(0x10976EF, 0x90, 0xE9);
-
-
