@@ -14,3 +14,4 @@ Patch "Fix Eggmanland using Event Gallery Transition" id "FixEggmanlandUsingEven
 Patch "Allow Cancelling Unleash" id "AllowCancellingUnleash" in "Gameplay" by "Hyper" does "Allows the player to cancel the Werehog's Unleash ability at the cost of some Dark Gaia energy."
 Patch "Homing Attack on Jump" id "HomingAttackOnJump" in "Gameplay" by "Hyper" does "Remaps the homing attack to the A button."
 Patch "Save Score at Checkpoints" id "SaveScoreAtCheckpoints" in "Gameplay" by "Hyper" does "Saves your current score upon hitting a checkpoint and restores it when returning to that checkpoint after dying."
+Patch "Disable DPad as Analog Input" id "DisableDPadAsAnalogInput" in "Gameplay" by "Refrag" does "Disables handling the directional pad as analog input (the dpad still works for the game menus)."
