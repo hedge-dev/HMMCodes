@@ -1,1 +1,0 @@
-Patch "Disable DPad as Analog Input" id "DisableDPadAsAnalogInput" in "Gameplay" by "Refrag" does "Disables handling the directional pad as analog input (the dpad still works for the game menus)."
