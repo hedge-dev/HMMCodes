@@ -1,8 +1,0 @@
-Patch "Disable Cool Bonus" in "Gameplay/Sonic 3 & Knuckles" by "MegAmi" does "Disables the leftover Cool score bonus from Sonic Mania."
-//
-    #lib "Memory"
-//
-{
-    // 2.0.2: 0x1401FF215
-    Memory.WriteForceJump(ScanSignature("\x75\x55\xC7\x81\x00\x00\x00\x00\x10\x27\x00\x00", "xxxx????xxxx"));
-}
