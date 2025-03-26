@@ -1,5 +1,7 @@
 Patch "Tighter Jump Rotation" in "Physics" by "Hyper" does "Allows for tighter mid-air control for more precise movements when jumping."
 //
+    #lib "Memory"
+
     static float _sensitivity = 0.05f;
 //
 {
@@ -14,34 +16,47 @@ Patch "Tighter Jump Rotation" in "Physics" by "Hyper" does "Allows for tighter m
                 mov   dword ptr [rsp + 0x58], 0x3F800000
             ",
 
-            /* v1.1.0.0: 0x140648315 */
-            /* v1.1.0.1: 0x1406485C5 */
+            /* v1.1.0.0:  0x140648315 */
+            /* v1.1.0.1:  0x1406485C5 */
+            /* v1.10.0.0: 0x14066A594 */
             ScanSignature
             (
-                "\xF3\x0F\x59\x15\xCC\xCC\xCC\xCC\xC7\x44\x24\x58\x00\x00\x80\x3F",
+                "\xF3\x0F\x59\x15\xCC\xCC\xCC\xCC\xC7\x44\x24\x68\x00\x00\x80\x3F",
                 "xxxx????xxxxxxxx"
             ),
 
             HookBehavior.Replace
         );
 
+        // v1.10.0.0: 0x14066A673
+        var sig = ScanSignature
+        (
+            "\x0F\x2F\x7B\x18\xF3\x0F\x10\x35",
+            "xxxxxxxx"
+        );
+
+        if (sig == 0)
+            return;
+
+        var jumpAddr = Memory.ReadJump(sig + 12);
+
+        if (jumpAddr == 0)
+            return;
+
         // Jump Fast Sensitivity
         WriteAsmHook
         (
             $@"
-                mov   qword ptr [rsp + 0x1A0], r12
-                mov   r12, {(long)p_sensitivity}
-                movss xmm7, dword ptr [r12]
-                lea   r12, qword ptr [rbx + 0x18]
+                mov    rdx, {(long)p_sensitivity}
+                movss  xmm6, dword ptr [rdx]
+                comiss xmm7, dword ptr [rbx + 0x18]
+                ja     exit
+                mov    rdx, {jumpAddr}
+                jmp    rdx
+            exit:
             ",
 
-            /* v1.1.0.0: 0x140648400 */
-            /* v1.1.0.1: 0x1406486B0 */
-            ScanSignature
-            (
-                "\x4C\x89\xA4\x24\xA0\x01\x00\x00\x4C\x8D\x63\x18",
-                "xxxxxxxxxxxx"
-            ),
+            sig,
 
             HookBehavior.Replace
         );

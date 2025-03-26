@@ -1,4 +1,10 @@
-Patch "Disable Ring Magnetism" in "Gameplay" by "Hyper" does "Disables rings spinning around and magnetising to the player upon collecting them."
+Patch "Disable Ring Magnetism (experimental)" in "Gameplay" by "Hyper" does
+/*
+Disables rings spinning around and magnetising to the player upon collecting them.
+
+Known issues;
+- Rings that are attached to moving platforms will respawn immediately upon collecting them.
+*/
 {
     // ObjRing
     WriteNop

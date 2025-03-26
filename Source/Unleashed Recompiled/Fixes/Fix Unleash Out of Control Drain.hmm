@@ -1,0 +1,1 @@
+Patch "Fix Unleash Out of Control Drain" id "FixUnleashOutOfControlDrain" in "Fixes" by "Hyper" does "Fixes the Werehog's Unleash gauge draining whilst an event is playing in a stage that takes away the player's control."

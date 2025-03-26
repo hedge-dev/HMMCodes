@@ -1,0 +1,1 @@
+Patch "Save Score at Checkpoints" id "SaveScoreAtCheckpoints" in "Gameplay" by "Hyper" does "Saves your current score upon hitting a checkpoint and restores it when returning to that checkpoint after dying."

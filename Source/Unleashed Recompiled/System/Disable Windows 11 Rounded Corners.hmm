@@ -1,0 +1,1 @@
+Patch "Disable Windows 11 Rounded Corners" id "DisableDWMRoundedCorners" in "System" by "Hyper" does "Disables the rounded corners on the game window for Windows 11."

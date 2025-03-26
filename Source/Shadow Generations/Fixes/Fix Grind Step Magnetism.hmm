@@ -3,12 +3,13 @@ Patch "Fix Grind Step Magnetism" in "Fixes" by "Hyper" does "Fixes the player st
     #lib "Memory"
 //
 {
-    // v1.1.0.0: 0x1406CCE66
-    // v1.1.0.1: 0x1406CD116
+    // v1.1.0.0:  0x1406CCE66
+    // v1.1.0.1:  0x1406CD116
+    // v1.10.0.0: 0x1406F0478
     var sig = ScanSignature
     (
-        "\x48\x8B\xCB\xE8\xCC\xCC\xCC\xCC\x84\xC0\x74\x77",
-        "xxxx????xxxx"
+        "\x48\x8B\xCB\xE8\xCC\xCC\xCC\xCC\x84\xC0\x74\x77\x48\x8B\xCF",
+        "xxxx????xxxxxxx"
     );
 
     if (sig == 0)

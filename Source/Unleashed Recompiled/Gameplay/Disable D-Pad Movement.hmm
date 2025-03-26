@@ -1,0 +1,1 @@
+Patch "Disable D-Pad Movement" id "DisableDPadMovement" in "Gameplay" does "Disables Unleashed Recompiled's built-in D-Pad support for player and world map movement."

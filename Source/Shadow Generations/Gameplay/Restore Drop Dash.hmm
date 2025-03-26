@@ -22,15 +22,19 @@ Notes;
 {
     if (!_isInitialised)
     {
-        // v1.1.0.0: 0x1406E8890
-        // v1.1.0.1: 0x1406E8B40
+        // v1.1.0.0:  0x1406E8890
+        // v1.1.0.1:  0x1406E8B40
+        // v1.10.0.0: 0x14070C120
+        // v1.10.0.1: 0x14070C140
         var fpPlaySound = Memory.ReadCall
         (
-            /* v1.1.0.1: 0x14B402632 */
+            /* v1.1.0.1:  0x14B402632 */
+            /* v1.10.0.0: 0x14AC77801 */
+            /* v1.10.0.1: 0x14A7ADFA8 */
             ScanSignature
             (
-                "\xE8\xCC\xCC\xCC\xCC\x8B\x15\xCC\xCC\xCC\xCC\x81\xC2\x8D\xB7\xCC\xA2",
-                "x????xx????xxxxxx"
+                "\xE8\xCC\xCC\xCC\xCC\x48\x8D\x8F\xE8\x00\x00\x00\x48\x89\xC2",
+                "x????xxxxxxxxxx"
             )
         );
 
@@ -60,11 +64,12 @@ Notes;
                 pop  rax
             ",
 
-            /* v1.1.0.0: 0x14C5D9C78 */
-            /* v1.1.0.1: 0x14B4024F2 */
+            /* v1.1.0.0:  0x14C5D9C78 */
+            /* v1.1.0.1:  0x14B4024F2 */
+            /* v1.10.0.0: 0x14AC776DB */
             ScanSignature
             (
-                "\x0F\x28\xC6\x0F\xC6\xC6\x99\xF3\x0F\x58\xF0\x0F\xC6\xC0\x55\xF3\x0F\x58\xF0\x41\x0F\x2F\xF0\x0F\x47\xD0",
+                "\x0F\x28\xC1\x0F\xC6\xC1\x99\xF3\x0F\x58\xC8\x0F\xC6\xC0\x55\xF3\x0F\x58\xC8\x41\x0F\x2F\xC8\x0F\x47\xD0",
                 "xxxxxxxxxxxxxxxxxxxxxxxxxx"
             ),
 
@@ -122,12 +127,13 @@ Notes;
         fixed (bool* p_isDropDashGrounded = &_isDropDashGrounded)
         fixed (bool* p_isSideView = &_isSideView)
         {
-            // v1.1.0.0: 0x140639BB4
-            // v1.1.0.1: 0x140639E64
+            // v1.1.0.0:  0x140639BB4
+            // v1.1.0.1:  0x140639E64
+            // v1.10.0.0: 0x14065C034
             var sigDropDashAirPosture = ScanSignature
             (
-                "\x0F\x29\xB4\x24\x80\x00\x00\x00\x48\x8D\x54\x24\x20",
-                "xxxxxxxxxxxxx"
+                "\x0F\x29\xB4\x24\x80\x00\x00\x00\x48\x8D\x54\x24\x20\x0F\x10\xB3\x00\x01\x00\x00",
+                "xxxxxxxxxxxxxxxxxxxx"
             );
 
             // v1.1.0.1: 0x14063A090
@@ -204,18 +210,17 @@ Notes;
                     mov   ecx, dword ptr [rbx + 0x08]
                     mov   dword ptr [rbx + 0x04], ecx
                 exit:
-                    movss xmm2, dword ptr [rbx + 0x08]
-                    mov   ecx, 0x30 ; Fuck Denuvo.
                 ",
 
-                /* v1.1.0.1: 0x14BC07C91 */
+                /* v1.1.0.1:  0x14BC07C91 */
+                /* v1.10.0.0: 0x14B37F601 */
                 ScanSignature
                 (
-                    "\xF3\x0F\x10\x53\x08\xB9\x30\x00\x48\x89",
+                    "\xF3\x0F\x10\x53\x08\x48\x8D\x54\x24\x30",
                     "xxxxxxxxxx"
                 ),
 
-                HookBehavior.Replace
+                HookBehavior.After
             );
         }
 

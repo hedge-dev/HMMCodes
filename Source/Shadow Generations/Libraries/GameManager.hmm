@@ -27,11 +27,12 @@ Library "GameManager" by "Hyper, ĐeäTh & Sajid"
         [FieldOffset(0x150)] public ObjectMoveArray<Memory.Pointer<GameService.Data>> GameServices;
     }
 
-    /* v1.1.0.0: 0x1409F1F9A */
-    /* v1.1.0.1: 0x1409F226A */
+    /* v1.1.0.0:  0x1409F1F9A */
+    /* v1.1.0.1:  0x1409F226A */
+    /* v1.10.0.0: 0x140A1D514 */
     private static long _sigGameManagerSingleton = (long)ScanSignature
     (
-        "\x4C\x89\x3D\xCC\xCC\xCC\xCC\x48\x83\xC4\x40",
+        "\x4C\x89\x3D\xCC\xCC\xCC\xCC\x49\x8B\x5B\x38",
         "xxx????xxxx"
     );
     

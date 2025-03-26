@@ -1,0 +1,1 @@
+Patch "Fix Eggmanland using Event Gallery Transition" id "FixEggmanlandUsingEventGalleryTransition" in "Fixes" by "Hyper" does "Fixes Eggmanland erroneously using the loading screen for Event Gallery when reloading as the Werehog."
