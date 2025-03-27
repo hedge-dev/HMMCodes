@@ -2,7 +2,7 @@ Patch "Disable Speed Lines in 3D" in "Graphics/Post-processing" by "stis" does "
 {
     WriteProtected<byte>
     (
-        /* v1.1.0.1: 0x14120FF38 */
+        /* v1.10.0.0: 0x1412450C8 */
         ScanSignature
         (
             "\x65\x66\x5F\x70\x6C\x5F\x6C\x69\x6E\x65\x5F\x73\x70\x65\x65\x64\x30\x31",
