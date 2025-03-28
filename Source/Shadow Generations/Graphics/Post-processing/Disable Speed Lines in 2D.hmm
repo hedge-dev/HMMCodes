@@ -1,0 +1,13 @@
+Patch "Disable Speed Lines in 2D" in "Graphics/Post-processing" by "stis" does "Disables the speed lines around the player whilst boosting."
+{
+    WriteProtected<byte>
+    (
+        /* v1.10.0.0: 0x141240A78 */
+        ScanSignature
+        (
+            "\x65\x66\x5F\x70\x6C\x5F\x6C\x69\x6E\x65\x5F\x73\x70\x65\x65\x64\x30\x34",
+            "xxxxxxxxxxxxxxxxxx"
+        ),
+        0x30
+    );
+}

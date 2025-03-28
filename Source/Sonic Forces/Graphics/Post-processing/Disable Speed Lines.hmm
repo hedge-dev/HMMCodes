@@ -1,0 +1,23 @@
+Patch "Disable Speed Lines" in "Graphics/Post-processing" by "stis" does "Disables the speed lines around the edges of the screen whilst boosting."
+{
+    WriteProtected<byte>
+    (
+        /* 0x141D9DD28 */
+        ScanSignature
+        (
+            "\x65\x66\x5F\x70\x6C\x5F\x6C\x69\x6E\x65\x5F\x73\x70\x65\x65\x64\x5F\x6C\x76\x31\x5F\x72\x6F\x74\x61\x74\x65",
+            "xxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        ),
+        0x30
+    );
+    WriteProtected<byte>
+    (
+        /* 0x141D9DD60 */
+        ScanSignature
+        (
+            "\x65\x66\x5F\x70\x6C\x5F\x6C\x69\x6E\x65\x5F\x73\x70\x65\x65\x64\x5F\x6C\x76\x32\x5F\x72\x6F\x74\x61\x74\x65",
+            "xxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        ),
+        0x30
+    );
+}
