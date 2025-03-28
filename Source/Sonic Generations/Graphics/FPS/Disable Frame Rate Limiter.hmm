@@ -1,4 +1,0 @@
-Patch "Disable Frame Rate Limiter" in "Graphics/FPS" by "Skyth" 
-WriteProtected<byte>(0xE7B580, 0xEB);
-
-
