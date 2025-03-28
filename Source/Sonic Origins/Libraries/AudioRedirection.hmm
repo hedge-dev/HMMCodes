@@ -1,0 +1,347 @@
+Library "AudioRedirection" by "Lave sIime"
+{
+    #include "Helpers" noemit
+    #lib "RSDK"
+
+    using System.Runtime.InteropServices;
+
+    private static bool _isInitialised = false;
+
+    [StructLayout(LayoutKind.Explicit, Size = 40)]
+    private struct RetroMusicData
+    {
+        [FieldOffset(0)]  public Helpers.UnmanagedString m_music;
+        [FieldOffset(16)] public Helpers.UnmanagedString m_cue;
+        [FieldOffset(32)] public float m_speed;
+
+        public RetroMusicData(string music, string cue, float speed)
+        {
+            m_music = music;
+            m_cue = cue;
+            m_speed = speed;
+        }
+    }
+
+    private static List<RetroMusicData> _s1MusicReplacements = new();
+    private static List<RetroMusicData> _sCDMusicReplacements = new();
+    private static List<RetroMusicData> _s2MusicReplacements = new();
+    private static List<RetroMusicData> _s3kMusicReplacements = new();
+
+    private static RetroMusicData _redirectedMusicData;
+
+    /// <summary>
+    /// Redirects a Retro Engine music track in a specific game to a custom ACB/AWB audio entry.
+    /// </summary>
+    /// <param name="game">The game that this replacement is for.</param>
+    /// <param name="name">The name of the Retro Engine music file to be redirected.</param>
+    /// <param name="cue">The name of the Criware audio entry to redirect the music track to.</param>
+    /// <param name="speed">The speed of the music track (normal speed is 1.0).</param>
+    public void AddMusicReplacement(RSDK.Game game, string name, string cue, float speed = 1.0f)
+    {
+        if (string.IsNullOrEmpty(name))
+            return;
+
+        List<RetroMusicData> list;
+        switch (game)
+        {
+            default:
+            case RSDK.Game.Sonic1:  list = _s1MusicReplacements;  break;
+            case RSDK.Game.SonicCD: list = _sCDMusicReplacements; break;
+            case RSDK.Game.Sonic2:  list = _s2MusicReplacements;  break;
+            case RSDK.Game.Sonic3k: list = _s3kMusicReplacements; break;
+        }
+
+        int index = list.FindIndex(a => a.m_music == name);
+
+        if (index != -1)
+        {
+            list[index] = new(name, cue, speed);
+            return;
+        }
+
+        list.Add(new(name, cue, speed));
+    }
+
+    /// <summary>
+    /// Redirects a Retro Engine music track in all games to a custom ACB/AWB audio entry.
+    /// </summary>
+    /// <param name="name">The name of the Retro Engine music file to be redirected.</param>
+    /// <param name="cue">The name of the Criware audio entry to redirect the music track to.</param>
+    /// <param name="speed">The speed of the music track (normal speed is 1.0).</param>
+    public void AddMusicReplacement(string name, string cue, float speed = 1.0f)
+    {
+        AddMusicReplacement(RSDK.Game.Sonic1, name, cue, speed);
+        AddMusicReplacement(RSDK.Game.SonicCD, name, cue, speed);
+        AddMusicReplacement(RSDK.Game.Sonic2, name, cue, speed);
+        AddMusicReplacement(RSDK.Game.Sonic3k, name, cue, speed);
+    }
+
+    /// <summary>
+    /// Removes the redirected ACB/AWB audio entry to a Retro Engine music track.
+    /// </summary>
+    /// <param name="game">The game that to remove the redirected entry for.</param>
+    /// <param name="name">The name of the Retro Engine music file entry to be restored.</param>
+    public void RestoreMusic(RSDK.Game game, string name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return;
+
+        List<RetroMusicData> list;
+        switch (game)
+        {
+            default:
+            case RSDK.Game.Sonic1:  list = _s1MusicReplacements;  break;
+            case RSDK.Game.SonicCD: list = _sCDMusicReplacements; break;
+            case RSDK.Game.Sonic2:  list = _s2MusicReplacements;  break;
+            case RSDK.Game.Sonic3k: list = _s3kMusicReplacements; break;
+        }
+
+        list.RemoveAll(a => a.m_music == name);
+    }
+
+    /// <summary>
+    /// Removes the redirected ACB/AWB audio entry to a Retro Engine music track for all games.
+    /// </summary>
+    /// <param name="name">The name of the Retro Engine music file entry to be restored.</param>
+    public void RestoreMusic(string name)
+    {
+        RestoreMusic(RSDK.Game.Sonic1, name);
+        RestoreMusic(RSDK.Game.SonicCD, name);
+        RestoreMusic(RSDK.Game.Sonic2, name);
+        RestoreMusic(RSDK.Game.Sonic3k, name);
+    }
+
+    UNMANAGED_FUNCTION(long, MusicReplacement, string trackName)
+    {
+        List<RetroMusicData> list;
+        switch (RSDK.GetCurrentGame())
+        {
+            default:
+            case RSDK.Game.Sonic1:  list = _s1MusicReplacements;  break;
+            case RSDK.Game.SonicCD: list = _sCDMusicReplacements; break;
+            case RSDK.Game.Sonic2:  list = _s2MusicReplacements;  break;
+            case RSDK.Game.Sonic3k: list = _s3kMusicReplacements; break;
+        }
+
+        foreach (var entry in list)
+        {
+            if (entry.m_music.Value.Equals(trackName, StringComparison.OrdinalIgnoreCase))
+            {
+                _redirectedMusicData = entry;
+
+                fixed (RetroMusicData* p_musicData = &_redirectedMusicData)
+                    return (long)p_musicData;
+            }
+        }
+
+        return 0;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 48)]
+    private struct RetroSfxData
+    {
+        [FieldOffset(0)]  public Helpers.UnmanagedString m_sfx;
+        [FieldOffset(16)] public Helpers.UnmanagedString m_cue;
+        [FieldOffset(32)] public Helpers.UnmanagedString m_music;
+
+        public RetroSfxData(string sfx, string cue, string music)
+        {
+            m_sfx = sfx;
+            m_cue = cue;
+            m_music = music;
+        }
+    }
+
+    private static List<RetroSfxData> _s1SfxReplacements = new();
+    private static List<RetroSfxData> _sCDSfxReplacements = new();
+    private static List<RetroSfxData> _s2SfxReplacements = new();
+    private static List<RetroSfxData> _s3kSfxReplacements = new();
+
+    private static RetroSfxData _redirectedSfxData;
+
+    /// <summary>
+    /// Redirects a Retro Engine sound effect in a specific game to a custom ACB audio entry.
+    /// </summary>
+    /// <param name="game">The game that this replacement is for.</param>
+    /// <param name="path">The path of the Retro Engine sound effect to be redirected, without its file extension.</param>
+    /// <param name="cue">The Criware audio cue to redirect the sound effect to.</param>
+    /// <param name="music">The Retro Engine music file that should play in place of this sound effect.</param>
+    public void AddSoundReplacement(RSDK.Game game, string path, string cue, string music = "")
+    {
+        if (string.IsNullOrEmpty(path))
+            return;
+
+        List<RetroSfxData> list;
+        switch (game)
+        {
+            default:
+            case RSDK.Game.Sonic1:  list = _s1SfxReplacements;  break;
+            case RSDK.Game.SonicCD: list = _sCDSfxReplacements; break;
+            case RSDK.Game.Sonic2:  list = _s2SfxReplacements;  break;
+            case RSDK.Game.Sonic3k: list = _s3kSfxReplacements; break;
+        }
+
+        // Extra precautions
+        path = Path.ChangeExtension(path, null);
+
+        int index = list.FindIndex(a => a.m_sfx == path);
+
+        if (index != -1)
+        {
+            list[index] = new(path, cue, music);
+            return;
+        }
+
+        list.Add(new(path, cue, music));
+    }
+
+    /// <summary>
+    /// Redirects a Retro Engine sound effect in all games to a custom ACB audio entry.
+    /// </summary>
+    /// <param name="path">The path of the Retro Engine sound effect to be redirected, without its file extension.</param>
+    /// <param name="cue">The Criware audio cue to redirect the sound effect to.</param>
+    /// <param name="music">The Retro Engine music file that should play in place of this sound effect.</param>
+    public void AddSoundReplacement(string path, string cue, string music = "")
+    {
+        AddSoundReplacement(RSDK.Game.Sonic1, path, cue, music);
+        AddSoundReplacement(RSDK.Game.SonicCD, path, cue, music);
+        AddSoundReplacement(RSDK.Game.Sonic2, path, cue, music);
+        AddSoundReplacement(RSDK.Game.Sonic3k, path, cue, music);
+    }
+
+    /// <summary>
+    /// Removes the redirected ACB audio entry to a Retro Engine sound effect.
+    /// </summary>
+    /// <param name="game">The game to remove the redirected entry for.</param>
+    /// <param name="path">The path of the Retro Engine sound effect to be restored.</param>
+    public void RestoreSound(RSDK.Game game, string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return;
+
+        List<RetroSfxData> list;
+        switch (game)
+        {
+            default:
+            case RSDK.Game.Sonic1:  list = _s1SfxReplacements;  break;
+            case RSDK.Game.SonicCD: list = _sCDSfxReplacements; break;
+            case RSDK.Game.Sonic2:  list = _s2SfxReplacements;  break;
+            case RSDK.Game.Sonic3k: list = _s3kSfxReplacements; break;
+        }
+
+        // Extra precautions
+        path = Path.ChangeExtension(path, null);
+
+        list.RemoveAll(a => a.m_sfx == path);
+    }
+
+    /// <summary>
+    /// Removes the redirected ACB audio entry to a Retro Engine sound effect for all games.
+    /// </summary>
+    /// <param name="path">The path of the Retro Engine sound effect to be restored.</param>
+    public void RestoreSound(string path)
+    {
+        RestoreSound(RSDK.Game.Sonic1, path);
+        RestoreSound(RSDK.Game.SonicCD, path);
+        RestoreSound(RSDK.Game.Sonic2, path);
+        RestoreSound(RSDK.Game.Sonic3k, path);
+    }
+
+    UNMANAGED_FUNCTION(long, SoundReplacement, string sfxName)
+    {
+        List<RetroSfxData> list;
+        switch (RSDK.GetCurrentGame())
+        {
+            default:
+            case RSDK.Game.Sonic1:  list = _s1SfxReplacements;  break;
+            case RSDK.Game.SonicCD: list = _sCDSfxReplacements; break;
+            case RSDK.Game.Sonic2:  list = _s2SfxReplacements;  break;
+            case RSDK.Game.Sonic3k: list = _s3kSfxReplacements; break;
+        }
+
+        sfxName = Path.ChangeExtension(sfxName, null);
+
+        foreach (var entry in list)
+        {
+            if (entry.m_sfx.Value.Equals(sfxName, StringComparison.OrdinalIgnoreCase))
+            {
+                _redirectedSfxData = entry;
+
+                fixed (RetroSfxData* p_sfxData = &_redirectedSfxData)
+                    return (long)p_sfxData;
+            }
+        }
+
+        return 0;
+    }
+
+    [LibraryInitializer]
+    public void Init()
+    {
+        if (_isInitialised)
+            return;
+
+        // Music hook
+        WriteAsmHook
+        (
+            $@"
+                push r10
+                push r11
+                
+                mov  rcx, rdx
+                mov  rax, {GET_UNMANAGED_FUNCTION_PTR(MusicReplacement)}
+                call rax
+                
+                ; replacement found?
+                test rax, rax
+                jnz  found
+                
+                ; nope, let's stick with the original result
+                mov  rax, rbx
+                
+            found:
+                pop  r11
+                pop  r10
+                mov  rbx, [r11 + 0x10]
+                mov  rbp, [r11 + 0x18]
+                mov  rsi, [r11 + 0x20]
+                mov  rsp, r11
+                pop  rdi
+                ret
+            ",
+            /* 2.0.2: 0x140331F7A + 8 = 0x140331F82 */
+            ScanSignature("\x4C\x8D\x9C\x24\xC0\x00\x00\x00\x48\x8B\xC3\x49\x8B\x5B\x10\x49\x8B\x6B\x18", "xxxxxxxxxxxxxxxxxxx") + 8,
+            HookBehavior.Replace
+        );
+
+        // SFX hook
+        WriteAsmHook
+        (
+            $@"
+                mov  rcx, rsi
+                mov  rax, {GET_UNMANAGED_FUNCTION_PTR(SoundReplacement)}
+                call rax
+                
+                ; replacement found?
+                test rax, rax
+                jnz  found
+                
+                ; nope, let's stick with the original result
+                mov  rax, rdi
+                
+            found:
+                mov rbx, [rsp + 0x30]
+                mov rbp, [rsp + 0x38]
+                mov rsi, [rsp + 0x40]
+                add rsp, 0x20
+                pop rdi
+                ret
+            ",
+            /* 2.0.2: 0x140332012 */
+            ScanSignature("\x48\x8B\x5C\x24\x30\x48\x8B\x6C\x24\x38\x48\x8B\x74\x24\x40\x48\x83\xC4\x20\x5F\xC3\x48\x81\xC7\x90\x27\x00\x00", "xxxxxxxxxxxxxxxxxxxxxxxxxxxx"),
+            HookBehavior.Replace
+        );
+
+        _isInitialised = true;
+    }
+}
