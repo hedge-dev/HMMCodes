@@ -1,0 +1,6 @@
+Code "Disable Low Resolution Custom UI Font" id "DisableLowResolutionFontOnCustomUI" in "UI" by "Skyth" does
+/*
+Disables fonts rendering at a lower resolution for some custom UI text.
+
+This code currently affects the achievement overlay and achievements button guide on the pause menu.
+*/
