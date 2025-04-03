@@ -1,0 +1,8 @@
+Code "Use Alternate Title" id "UseAlternateTitle" in "UI" by "Hyper" does
+/*
+Changes the game logo and title to the alternate versions depending on your current language.
+
+If you play the game in Japanese, this will change to "SONIC UNLEASHED".
+
+Otherwise, the game will display "SONIC WORLD ADVENTURE".
+*/
