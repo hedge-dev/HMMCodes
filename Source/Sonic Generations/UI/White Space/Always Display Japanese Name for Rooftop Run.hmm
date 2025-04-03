@@ -1,4 +1,0 @@
-Patch "Always Display Japanese Name for Rooftop Run" in "UI/White Space" by "Hyper" does "Uses the 'Orange Roofs' stage title instead of 'Rooftop Run' for White Space, which is the Japanese name of the stage." 
-WriteNop(0xEE51E5, 2);
-
-

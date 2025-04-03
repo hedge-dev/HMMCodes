@@ -1,7 +1,0 @@
-Patch "Fix Power-Ups Disappearing when Warping" in "Fixes" by "ĐeäTh" does
-/*
-Makes power-ups persist through warps initiated by objects found in the base game.
-
-This behaviour was added in the 2.0.0 update on the Wii U for objects in the NiGHTS DLC (and subsequent DLCs), however the objects in the base game never got updated to behave like this.
-*/
-WriteNop(ASLR(0x008D2E37), 2);
