@@ -1,0 +1,11 @@
+Patch "Disable Hyper Sonic Screen Flash" in "Graphics/Sonic 3 & Knuckles" by "Lave sIime" does "Disables the screen flash that occurs when using Hyper Sonic's double jump ability."
+{
+    // 2.0.2: 0x1401DDB27
+    WriteNop(
+        ScanSignature
+        (
+            "\x48\x8B\x15\x22\x26\xC9\x02\x44\x8B\xC0\x48\x8B\x0D\xD0\x6C\xBD\x03\x49\xC1\xE9\x20\x4C\x8B\x52\x70\xBA\xFF\xFF\xFF\x00",
+            "xxx????xxxxxx????xxxxxxxxxxxxx"
+        ),
+        0x45);
+}
