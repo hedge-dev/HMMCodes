@@ -1,0 +1,14 @@
+Patch "1 Ring Transform Requirement" in "Cheats/Sonic 3 & Knuckles" by "Lave sIime" does "Changes the ring requirement to transform to just 1 ring, instead of 50."
+{
+    WriteProtected<byte>
+    (
+        /* 2.0.2: 0x1401DE597 + 8 */
+        ScanSignature
+        (
+            "\x74\x0D\x83\xBF\xD0\x00\x00\x00\x32",
+            "x?xxxxxxx"
+        ) + 8,
+
+        1
+    );
+}

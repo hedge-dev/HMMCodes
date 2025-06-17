@@ -1,0 +1,8 @@
+Patch "Disable Ring Loss When Hit" in "Cheats/Sonic 3 & Knuckles" by "Lave sIime" does "Lets the player keep their rings and shield after getting damaged."
+{
+    #lib "Memory"
+
+    // 2.0.2: 0x1401E3379 + 9 = 0x1401E3382
+    // Change the `if (isSidekick)` check in the Player's hit function to always pass
+    Memory.WriteForceJump(ScanSignature("\x48\x8B\xD9\x39\xA9\x0C\x02\x00\x00", "xxxxxxxxx") + 9);
+}
