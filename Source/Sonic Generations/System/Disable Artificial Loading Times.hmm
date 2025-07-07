@@ -1,4 +1,0 @@
-Patch "Disable Artificial Loading Times" in "System" by "Hyper" does "Disables the Omochao hints during the loading screens, which create artificial loading times for the hints to be readable." 
-WriteProtected<byte>(0x448959, 0xE9, 0x12, 0x01, 0x00, 0x00);
-
-
