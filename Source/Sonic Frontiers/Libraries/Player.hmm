@@ -757,14 +757,15 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
             WriteAsmHook
             (
                 $@"
-                    mov   edx, [rbx + 0x114]
+                    mov   edx, dword ptr [rbx + 0x114]
+                    cmp   edx, -1
+                    jz    exit
                     mov   ecx, edx
                     mov   rax, {GET_UNMANAGED_FUNCTION_PTR(SetStateID)}
                     call  rax
                     mov   edx, eax
                     cmp   edx, -2
                     jne   exit
-                    mov   r15, qword ptr [rsp + 0x38 + 0xFFFFFFFFFFFFFFE8]
                     add   rsp, 0x28
                     pop   rbp
                     pop   rbx
@@ -773,7 +774,7 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
                     movzx eax, byte ptr [rbx + 0x11C]
                 ",
 
-                /* 0x1408AA67D */
+                /* v1.42: 0x1408AB9BD */
                 ScanSignature
                 (
                     "\x8B\x93\x14\x01\x00\x00\x83\xFA\xFF",
