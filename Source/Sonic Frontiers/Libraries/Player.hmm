@@ -766,6 +766,7 @@ Library "Player" by "Hyper, NM, Ahremic, Skyth & Sajid"
                     mov   edx, eax
                     cmp   edx, -2
                     jne   exit
+                    mov   r15, qword ptr [rsp + 0x38 + 0xFFFFFFFFFFFFFFE8]
                     add   rsp, 0x28
                     pop   rbp
                     pop   rbx
