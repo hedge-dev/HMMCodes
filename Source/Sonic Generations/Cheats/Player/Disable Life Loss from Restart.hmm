@@ -1,3 +1,0 @@
-Patch "Disable Life Loss from Restart" in "Cheats/Player" by "M&M" 
-WriteProtected<byte>(0xD06919, 0xEB, 0x29);
-

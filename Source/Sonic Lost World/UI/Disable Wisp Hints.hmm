@@ -1,4 +1,0 @@
-Patch "Disable Wisp Hints" in "UI" by "Sajid" 
-WriteNop(ASLR(0x0091AAF8), 6)
-
-

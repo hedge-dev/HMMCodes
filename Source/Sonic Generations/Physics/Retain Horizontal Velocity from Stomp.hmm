@@ -1,8 +1,0 @@
-Patch "Retain Horizontal Velocity from Stomp" in "Physics" by "TGE" 
-string code = @"
-movaps xmm1, [edi+0x290]
-addps xmm0, xmm1
-movaps [edi+0x290], xmm0"
-WriteAsmHook(code, 0x01254D4C, HookBehavior.Replace)
-
-

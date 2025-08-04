@@ -1,4 +1,0 @@
-Patch "Disable Voice Option Completely" in "Audio" by "M&M" does "Prevents any sound considered as 'Voice' from playing, which in result prevents the music from lowering in volume. This is preferable over lowering the 'Voice' volume to 0 in the game's settings." 
-WriteNop(ASLR(0x004A3D82), 5)
-
-

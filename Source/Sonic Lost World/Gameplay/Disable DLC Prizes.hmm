@@ -1,5 +1,0 @@
-Patch "Disable DLC Prizes" in "Gameplay" by "ĐeäTh" does "Disables the prizes given by the DLC levels (bomb wisp) upon completion." 
-WriteNop(ASLR(0x0094595B), 12);
-WriteNop(ASLR(0x00945630), 5);
-
-

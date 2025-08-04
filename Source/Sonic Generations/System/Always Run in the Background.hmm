@@ -1,4 +1,0 @@
-Patch "Always Run in the Background" in "System" by "SuperSonic16" does "Stops the game from pausing when the window is unfocused." 
-WriteProtected<byte>(0xE7BF04, 0xEB)
-
-

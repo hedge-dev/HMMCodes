@@ -1,4 +1,0 @@
-Patch "Enable Object Collision Debug View" in "Debug" by "Aruki" 
-*(bool*)0x1E5E3A0 = true;
-
-

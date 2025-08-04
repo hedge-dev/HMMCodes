@@ -1,9 +1,0 @@
-Patch "Enable Stage Retry Option" in "UI" by "Sajid" does "Enables the Retry option from the game's time attack mode in normal play." 
-WriteAsmHook
-(
-    ASLR(0x005169E3),
-    HookBehavior.After,
-    "mov DWORD PTR [ebp+8], 1"
-)
-
-

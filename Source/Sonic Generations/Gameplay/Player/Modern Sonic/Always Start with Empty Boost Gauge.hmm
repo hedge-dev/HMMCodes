@@ -1,7 +1,0 @@
-Patch "Always Start with Empty Boost Gauge" in "Gameplay/Player/Modern Sonic" by "PTKay & brianuuu" 
-WriteProtected<uint>(0xE64F25, 0x90C9570F)
-WriteNop(0xE64F29, 4)
-WriteProtected<uint>(0xE64F2F, 0x90C9570F)
-WriteNop(0xE64F33, 4)
-
-
