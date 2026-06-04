@@ -1,0 +1,12 @@
+Patch "Always Run in the Background" in "System" by "Hyper" does
+/*
+Stops the game from pausing when the window is unfocused.
+
+Known issues:
+- The main menu and world map will continue to mute when unfocused.
+- The credits will continue to pause when unfocused.
+*/
+{
+    WriteProtected<byte>(0x14014E659, 0x74, 0x21);
+    WriteProtected<byte>(0x140108C3E, 0xEB);
+}
