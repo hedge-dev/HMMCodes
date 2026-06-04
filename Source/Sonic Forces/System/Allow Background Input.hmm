@@ -1,0 +1,3 @@
+Patch "Allow Background Input" in "System" by "Hyper" does "Allows the controller to be used when the window is unfocused."
+WriteNop(0x1406BF74E, 6);
+WriteNop(0x1458FB11E, 6);
