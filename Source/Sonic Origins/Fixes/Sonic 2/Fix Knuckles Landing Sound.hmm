@@ -1,0 +1,7 @@
+Patch "Fix Knuckles Landing Sound" in "Fixes/Sonic 2" by "Lave sIime" does "Fixes Knuckles playing the wrong sound effect when landing from a glide in Sonic 2."
+{
+    #lib "AudioRedirection"
+    #lib "RSDK"
+    
+    AudioRedirection.AddSoundReplacement(RSDK.Game.Sonic2, "Global/Landing.ogg", "RSDK-1---Landing");
+}

@@ -1,0 +1,49 @@
+Patch "Random Soundtrack Region" in "Audio/Sonic CD" by "Lave sIime" does
+/*
+Individually randomizes the soundtrack region for every applicable song in the game.
+
+Notes;
+- Act Results timings and Invincibility duration will still be controlled by the in-game soundtrack setting.
+*/
+{
+    #include "Helpers" noemit
+    private static Random _rand = new Random();
+    
+    static class MusicTrackHook
+    {
+        UNMANAGED_FUNCTION(string, SetMusicTrack, string filePath)
+        {
+            // Nothing too complicated - if we start with a region prefix, then just replace it with a random one
+            if (filePath != null && (filePath.StartsWith("US") || filePath.StartsWith("JP")))
+            {
+                filePath = ((_rand.NextDouble() > 0.5) ? "US" : "JP") + filePath.Substring(2);
+                
+                // Special exception: JP/TimeAttack.ogg exists but there's no US version, so replace it with the DA Garden theme (as does the base game already)
+                if (filePath == "JP/TimeAttack.ogg")
+                    filePath = "US/DAGarden.ogg";
+            }
+            
+            return filePath;
+        }
+    }
+    
+    WriteAsmHook
+    (
+        $@"
+            push rax
+            push rdx
+            push r9
+            
+            mov  rax, {MusicTrackHook._fpSetMusicTrack}
+            call rax
+            mov  rcx, rax
+            
+            pop r9
+            pop rdx
+            pop rax
+        ",
+        /* 2.0.2: 0x1400A468F */
+        ScanSignature("\x57\x48\x83\xEC\x20\x8B\xC2\x41\x0F\xB6\xF0\x83\xE0\x0F", "xxxxxxxxxxxxxx"),
+        HookBehavior.After
+    );
+}

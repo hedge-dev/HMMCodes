@@ -39,6 +39,30 @@ Notes;
             HookBehavior.Replace
         );
 
+        // Fix the Super Peel Out always sending the player right in reverse gravity
+        WriteAsmHook
+        (
+            $@"
+                neg eax
+                
+                ; original instruction: cmp byte ptr [rbx + 0x56], 00
+                ; instead of comparing the entire byte, let's check only the low bit (aka the x flip bit, ignoring the y flip bit)
+                movzx edx, byte ptr [rbx + 0x56]
+                and dl, 01
+                cmovne ecx, eax
+                
+                xor edx, edx
+                mov [rbx + 0x34], ecx
+            ",
+            /* Player::State_Peelout - 2.0.2: 0x1401EB828 */
+            ScanSignature
+            (
+                "\xF7\xD8\x80\x7B\x56\x00\x0F\x45\xC8\x33\xD2\x89\x4B\x34",
+                "xxxxxxxxxxxxxx"
+            ),
+            HookBehavior.Replace
+        );
+
         _isInitialised = true;
     }
 

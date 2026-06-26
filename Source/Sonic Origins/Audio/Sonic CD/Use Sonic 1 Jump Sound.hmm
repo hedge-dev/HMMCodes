@@ -1,0 +1,7 @@
+Patch "Use Sonic 1 Jump Sound" in "Audio/Sonic CD" by "Lave sIime" does "Replaces Sonic CD's unique jump sound effect with the one used in Sonic 1."
+{
+    #lib "AudioRedirection"
+    #lib "RSDK"
+    
+    AudioRedirection.AddSoundReplacement(RSDK.Game.SonicCD, "Global/Jump.wav", "SFX_A0_Jump");
+}
