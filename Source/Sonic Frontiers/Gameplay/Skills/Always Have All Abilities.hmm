@@ -23,7 +23,7 @@ Abilities;
             "xxxxxx"
         ),
 
-        Assemble("mov bpl, 1; nop")
+        Assemble("mov bpl, 1\n nop")
     );
 }
 

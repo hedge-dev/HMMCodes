@@ -27,7 +27,7 @@ Known issues;
     };
 
     foreach (var addr in addrs)
-        WriteProtected<byte>(addr, Assemble("mov al, 2; nop; nop; nop"));
+        WriteProtected<byte>(addr, Assemble("mov al, 2\n nop\n nop\n nop"));
     
     // Force load Movie Shadow UI and sound resources.
     WriteNop

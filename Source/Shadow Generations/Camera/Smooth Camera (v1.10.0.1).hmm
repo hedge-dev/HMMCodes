@@ -8,11 +8,11 @@ Patch "Smooth Camera (v1.10.0.1)" in "Camera" by "Ahremic & Hyper" does "Replace
 {
     // Linear coordinate interpolator
     WriteProtected<byte>(0x146506695, Assemble("mov edx, 0x60"));
-    WriteProtected<byte>(0x1465066D2, Assemble("mov edx, 0x60; nop"));
+    WriteProtected<byte>(0x1465066D2, Assemble("mov edx, 0x60\n nop"));
 
     // Target Base interpolator
-    WriteProtected<byte>(0x146506786, Assemble("mov edx, 0x230; nop"));
-    WriteProtected<byte>(0x146506754, Assemble("mov edx, 0x230; nop"));
+    WriteProtected<byte>(0x146506786, Assemble("mov edx, 0x230\n nop"));
+    WriteProtected<byte>(0x146506754, Assemble("mov edx, 0x230\n nop"));
     WriteProtected<byte>(0x14650670A, Assemble("mov edx, 0x230"));
 
     // Base Ctor type A
