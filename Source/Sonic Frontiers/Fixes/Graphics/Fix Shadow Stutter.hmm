@@ -9,7 +9,7 @@ Patch "Fix Shadow Stutter" in "Fixes/Graphics" by "Hyper" does "Fixes shadows no
             "xxxxxxxxxx"
         ),
 
-        Assemble("mov byte ptr [rcx + 0x74], 0; nop; nop; nop")
+        Assemble("mov byte ptr [rcx + 0x74], 0\n nop\n nop\n nop")
     );
 }
 

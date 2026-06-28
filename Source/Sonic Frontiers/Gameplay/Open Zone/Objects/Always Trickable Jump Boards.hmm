@@ -9,6 +9,6 @@ Patch "Always Trickable Jump Boards" in "Gameplay/Open Zone/Objects" by "Hyper"
             "xxxxxxxxxxxxxxxx"
         ),
 
-        Assemble("mov cl, 1; nop")
+        Assemble("mov cl, 1\n nop")
     );
 }
