@@ -1,4 +1,4 @@
-Patch "60 FPS" in "Graphics/FPS/Locked" by "Skyth and M&M" 
+Patch "60 FPS" in "Graphics/FPS/Locked" by "Skyth and RagdollClash" 
 static float FPS = 60.0f; 
 
 fixed (float* pFPS = &FPS)

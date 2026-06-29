@@ -1,4 +1,4 @@
-Patch "Enable Stage Collision Debug View" in "Debug" by "M&M" 
+Patch "Enable Stage Collision Debug View" in "Debug" by "RagdollClash" 
 *(bool*)0x1E5E382 = true;
 
 

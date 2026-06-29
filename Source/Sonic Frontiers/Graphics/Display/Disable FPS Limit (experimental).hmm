@@ -1,4 +1,4 @@
-Patch "Disable FPS Limit (experimental)" in "Graphics/Display" by "NM & M&M" does 
+Patch "Disable FPS Limit (experimental)" in "Graphics/Display" by "NM & RagdollClash" does 
 /*
 Disables the framerate limiter, allowing the game to run above its targeted 30/60 FPS limit.
 
