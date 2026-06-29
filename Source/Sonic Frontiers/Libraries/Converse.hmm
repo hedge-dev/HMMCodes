@@ -81,20 +81,27 @@ Library "Converse" by "Hyper & M&M"
 
     UNMANAGED_FUNCTION(long, RedirectString, long in_pCnvrsKey, long in_pCnvrsText, int in_cnvrsTextLength)
     {
-        if (in_pCnvrsKey == 0)
-            return in_pCnvrsText;
+        var result = (nint)0;
+        var length = 0;
 
-        string cnvrsKey = Marshal.PtrToStringAnsi((IntPtr)in_pCnvrsKey);
-        string cnvrsText = in_pCnvrsText == 0 ? string.Empty : Marshal.PtrToStringUni((IntPtr)in_pCnvrsText, in_cnvrsTextLength);
-        nint pData = 0;
+        var cnvrsKey = in_pCnvrsKey == 0
+            ? string.Empty
+            : Marshal.PtrToStringAnsi((nint)in_pCnvrsKey);
+        
+        var cnvrsText = string.Empty;
+
+        if (in_pCnvrsText != 0 && in_cnvrsTextLength > 0)
+            cnvrsText = Marshal.PtrToStringUni((nint)in_pCnvrsText, in_cnvrsTextLength);
 
         void MarshalString(string in_str)
         {
-            int length = sizeof(int) + ((in_str.Length + 1) * sizeof(short));
+            if (result != 0)
+                Marshal.FreeHGlobal(result);
+            
+            length = in_str.Length;
+            result = Marshal.AllocHGlobal(sizeof(int) + ((length + 1) * sizeof(short)));
 
-            pData = Marshal.AllocHGlobal(length);
-
-            var wideTextStart = pData + sizeof(int);
+            var wideTextStart = result + sizeof(int);
             var wideText = Encoding.Unicode.GetBytes(in_str);
             var wideTextEnd = wideTextStart + wideText.Length;
             
@@ -102,74 +109,78 @@ Library "Converse" by "Hyper & M&M"
             
             // Null terminator.
             Marshal.WriteInt16(wideTextEnd, 0);
-
-            in_pCnvrsText = (long)pData;
-            in_cnvrsTextLength = length;
         }
 
-        string redirectResult = cnvrsText;
+        if (!string.IsNullOrEmpty(cnvrsKey))
         {
-            foreach (var entry in _redirectedStrings)
+            var redirectResult = cnvrsText;
             {
-                if (entry.Key == cnvrsKey)
+                foreach (var entry in _redirectedStrings)
                 {
+                    if (entry.Key != cnvrsKey)
+                        continue;
+                    
                     redirectResult = entry.IsRawAttributes
                         ? entry.Value
                         : WriteAttributes(entry.Value);
                 }
+
+                if (redirectResult != cnvrsText)
+                    MarshalString(redirectResult);
             }
 
-            if (redirectResult != cnvrsText)
-                MarshalString(redirectResult);
-        }
-
-        string notifyResult = redirectResult;
-        {
-            foreach (var entry in _converseNotifyActions)
+            var notifyResult = redirectResult;
             {
-                notifyResult = entry.Key(cnvrsKey, notifyResult, ReadAttributes(notifyResult));
+                foreach (var entry in _converseNotifyActions)
+                {
+                    notifyResult = entry.Key(cnvrsKey, notifyResult, ReadAttributes(notifyResult));
 
-                if (!entry.Value)
-                    notifyResult = WriteAttributes(notifyResult);
+                    if (!entry.Value)
+                        notifyResult = WriteAttributes(notifyResult);
+                }
+
+                if (notifyResult != cnvrsText)
+                    MarshalString(notifyResult);
             }
 
-            if (notifyResult != cnvrsText)
-                MarshalString(notifyResult);
+            foreach (var entry in _replacementStrings)
+            {
+                var replacementResult = entry.IsRawAttributes
+                    ? notifyResult
+                    : ReadAttributes(notifyResult);
+
+                // Perform replacement operation.
+                replacementResult = entry.IsRegex
+                    ? new Regex(entry.Pattern).Replace(replacementResult, entry.Replacement)
+                    : replacementResult.Replace(entry.Pattern, entry.Replacement);
+
+                replacementResult = entry.IsRawAttributes
+                    ? replacementResult
+                    : WriteAttributes(replacementResult);
+
+                if (replacementResult != cnvrsText)
+                    MarshalString(replacementResult);
+            }
         }
 
-        foreach (var entry in _replacementStrings)
+        // Handle null strings.
+        if (result == 0 && (in_pCnvrsKey == 0 || in_pCnvrsText == 0 || in_cnvrsTextLength <= 0))
+            MarshalString(" ");
+
+        if (result != 0)
         {
-            string replacementResult = entry.IsRawAttributes
-                ? notifyResult
-                : ReadAttributes(notifyResult);
+            // String character length.
+            Marshal.WriteInt32(result, length);
 
-            // Perform replacement operation.
-            replacementResult = entry.IsRegex
-                ? new Regex(entry.Pattern).Replace(replacementResult, entry.Replacement)
-                : replacementResult.Replace(entry.Pattern, entry.Replacement);
-
-            replacementResult = entry.IsRawAttributes
-                ? replacementResult
-                : WriteAttributes(replacementResult);
-
-            if (replacementResult != cnvrsText)
-                MarshalString(replacementResult);
+            return result;
         }
 
-        if (pData != 0)
-        {
-            // Wide string length.
-            Marshal.WriteInt32(pData, in_cnvrsTextLength);
-            Marshal.FreeHGlobal(pData);
-        }
-        else if (in_pCnvrsText != 0)
-        {
-            /* No need to reallocate all strings,
-               return -1 and reload original pointer. */
-            in_pCnvrsText = -1;
-        }
+        return -1L;
+    }
 
-        return in_pCnvrsText;
+    UNMANAGED_FUNCTION(void, FreeString, long in_pCnvrsText)
+    {
+        Marshal.FreeHGlobal((nint)in_pCnvrsText);
     }
 
     [LibraryInitializer]
@@ -183,28 +194,48 @@ Library "Converse" by "Hyper & M&M"
             WriteAsmHook
             (
                 $@"
-                    mov  r8d, dword ptr [rsp + 0x1C8 + 0xFFFFFFFFFFFFFE60]
-                    mov  rcx, rsi
+                    mov  r8d, dword ptr [rsp + 0x28] ; Converse Text Length
+                    mov  rdx, qword ptr [rsp + 0x20] ; Converse Text
+                    mov  rcx, rsi                    ; Converse Key
                     mov  rax, {GET_UNMANAGED_FUNCTION_PTR(RedirectString)}
                     call rax
-                    cmp  rax, 0
-                    jne  notNull
-                    mov  rdx, {TO_WSTRING_PTR(" ")}
-                    mov  r8d, 1
-                    jmp  exit
-                notNull:
-                    cmp  rax, -1
-                    je   notCustom
-                    lea  rdx, qword ptr [rax + 4]
-                    mov  r8d, dword ptr [rax]
-                    jmp  exit
-                notCustom:
-                    mov  rdx, qword ptr [rsp + 0x1C8 + 0xFFFFFFFFFFFFFE58]
-                    mov  r8d, dword ptr [rsp + 0x1C8 + 0xFFFFFFFFFFFFFE60]
-                exit:
-                    mov  rcx, qword ptr [rdi + 8]
+                    mov  rbx, rax                    ; Preserve result in RBX.
+
+                    ; Check if result is -1 or null, use original string if so.
+                    cmp  rbx, -1
+                    je   original
+                    test rbx, rbx
+                    jz   original
+
+                    mov  r8d, dword ptr [rbx]        ; Redirected Text Length
+                    lea  rdx, qword ptr [rbx + 0x04] ; Redirected Text
+                    jmp  cnvrs
+
+                original:
+                    mov  r8d, dword ptr [rsp + 0x28] ; Converse Text Length
+                    mov  rdx, qword ptr [rsp + 0x20] ; Converse Text
+
+                cnvrs:
+                    mov  rcx, qword ptr [rdi + 0x08] ; Allocator
+                    push rbx
                     mov  rax, {Memory.ReadCall(in_addr + 0x09)}
                     call rax
+                    pop  rbx
+
+                    ; Check if redirect result is -1, skip free if so.
+                    cmp  rbx, -1
+                    je   exit
+
+                    ; Free redirected string.
+                    mov  r12, rax
+                    mov  rcx, rbx
+                    sub  rsp, 32
+                    mov  rax, {GET_UNMANAGED_FUNCTION_PTR(FreeString)}
+                    call rax
+                    add  rsp, 32
+                    mov  rax, r12                    ; Restore original result.
+
+                exit:
                 ",
 
                 in_addr,
@@ -215,10 +246,10 @@ Library "Converse" by "Hyper & M&M"
 
         WriteNop
         (
-            /* v1.41: 0x14DA978CD */
+            /* v1.42: 0x14D89049D */
             ScanSignature
             (
-                "\x0F\x84\xE8\x00\x00\x00\x48\x8D\x8F\xC8\x00\x00\x00",
+                "\x0F\x84\xF7\x00\x00\x00\x48\x8D\x8F\xC8\x00\x00\x00",
                 "xxxxxxxxxxxxx"
             ),
             
@@ -227,7 +258,7 @@ Library "Converse" by "Hyper & M&M"
 
         ConverseHook
         (
-            /* 0x14DC858D3 */
+            /* v1.42: 0x14D8904D1 */
             ScanSignature
             (
                 "\x44\x8B\x44\x24\x28\x48\x8B\x4F\x08\xE8\xCC\xCC\xCC\xCC\x48\x89\xC2\x48\x8B\x8F\xF0\x00\x00\x00",
@@ -249,7 +280,7 @@ Library "Converse" by "Hyper & M&M"
 
         ConverseHook
         (
-            /* 0x14DC8593A */
+            /* v1.42: 0x14D89053C */
             ScanSignature
             (
                 "\x44\x8B\x44\x24\x28\x48\x8B\x4F\x08\xE8\xCC\xCC\xCC\xCC\x48\x89\xC2\x48\x89\xF9",
@@ -259,7 +290,7 @@ Library "Converse" by "Hyper & M&M"
 
         fixed (sbyte* p_language = &_language)
         {
-            /* 0x140AFA200 */
+            /* v1.42: 0x146E3A1CC */
             var sig = Memory.ReadCall
             (
                 ScanSignature
