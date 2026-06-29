@@ -95,17 +95,17 @@ Library "Converse" by "Hyper & RagdollClash"
 
         void MarshalString(string in_str)
         {
-            if (result != 0)
-                Marshal.FreeHGlobal(result);
+            if (in_str.Length > length)
+            {
+                if (result != 0)
+                    Marshal.FreeHGlobal(result);
+                
+                length = in_str.Length;
+                result = Marshal.AllocHGlobal(sizeof(int) + (length * sizeof(char)));
+            }
             
-            length = in_str.Length;
-            result = Marshal.AllocHGlobal(sizeof(int) + (length * sizeof(short)));
-
-            var wideTextStart = sizeof(int) + result;
-            var wideText = Encoding.Unicode.GetBytes(in_str);
-            var wideTextEnd = wideTextStart + wideText.Length;
-            
-            Marshal.Copy(wideText, 0, wideTextStart, wideText.Length);
+            Marshal.WriteInt32(result, length);
+            Marshal.Copy(in_str.ToCharArray(), 0, result + sizeof(int), length);
         }
 
         if (!string.IsNullOrEmpty(cnvrsKey))
@@ -164,15 +164,7 @@ Library "Converse" by "Hyper & RagdollClash"
         if (result == 0 && (in_pCnvrsKey == 0 || in_pCnvrsText == 0 || in_cnvrsTextLength <= 0))
             MarshalString(" ");
 
-        if (result != 0)
-        {
-            // Text character length.
-            Marshal.WriteInt32(result, length);
-
-            return result;
-        }
-
-        return -1L;
+        return result != 0 ? result : -1L;
     }
 
     UNMANAGED_FUNCTION(void, FreeString, long in_pCnvrsText)
