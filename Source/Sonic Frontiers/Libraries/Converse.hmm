@@ -166,7 +166,7 @@ Library "Converse" by "Hyper & RagdollClash"
 
         if (result != 0)
         {
-            // String character length.
+            // Text character length.
             Marshal.WriteInt32(result, length);
 
             return result;
@@ -224,13 +224,13 @@ Library "Converse" by "Hyper & RagdollClash"
                     je   exit
 
                     ; Free redirected string.
-                    mov  r12, rax
                     mov  rcx, rbx
+                    mov  rbx, rax
                     sub  rsp, 32
                     mov  rax, {GET_UNMANAGED_FUNCTION_PTR(FreeString)}
                     call rax
                     add  rsp, 32
-                    mov  rax, r12                    ; Restore original result.
+                    mov  rax, rbx                    ; Restore original result.
 
                 exit:
                 ",
