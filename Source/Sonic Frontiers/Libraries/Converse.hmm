@@ -83,12 +83,12 @@ Library "Converse" by "Hyper & RagdollClash"
     {
         var result = (nint)0;
         var length = 0;
-
-        var cnvrsKey = in_pCnvrsKey == 0
-            ? string.Empty
-            : Marshal.PtrToStringAnsi((nint)in_pCnvrsKey);
         
+        var cnvrsKey = string.Empty;
         var cnvrsText = string.Empty;
+
+        if (in_pCnvrsKey != 0)
+            cnvrsKey = Marshal.PtrToStringAnsi((nint)in_pCnvrsKey);
 
         if (in_pCnvrsText != 0 && in_cnvrsTextLength > 0)
             cnvrsText = Marshal.PtrToStringUni((nint)in_pCnvrsText, in_cnvrsTextLength);
@@ -99,16 +99,13 @@ Library "Converse" by "Hyper & RagdollClash"
                 Marshal.FreeHGlobal(result);
             
             length = in_str.Length;
-            result = Marshal.AllocHGlobal(sizeof(int) + ((length + 1) * sizeof(short)));
+            result = Marshal.AllocHGlobal(sizeof(int) + (length * sizeof(short)));
 
-            var wideTextStart = result + sizeof(int);
+            var wideTextStart = sizeof(int) + result;
             var wideText = Encoding.Unicode.GetBytes(in_str);
             var wideTextEnd = wideTextStart + wideText.Length;
             
             Marshal.Copy(wideText, 0, wideTextStart, wideText.Length);
-            
-            // Null terminator.
-            Marshal.WriteInt16(wideTextEnd, 0);
         }
 
         if (!string.IsNullOrEmpty(cnvrsKey))
