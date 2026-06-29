@@ -1,4 +1,4 @@
-Patch "Disable FPS Limit (experimental)" in "Graphics/Display" by "NM, M&M & Hyper" does "Disables the frame rate limiter, allowing the game to run above its targeted 30/60/120 FPS limit."
+Patch "Disable FPS Limit (experimental)" in "Graphics/Display" by "NM, RagdollClash & Hyper" does "Disables the frame rate limiter, allowing the game to run above its targeted 30/60/120 FPS limit."
 //
     #lib "Memory"
 //

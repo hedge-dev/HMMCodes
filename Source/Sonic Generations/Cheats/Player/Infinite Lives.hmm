@@ -1,4 +1,4 @@
-Code "Infinite Lives" in "Cheats/Player" by "CodenameGamma & M&M" does "Prevents Sonic from losing lives."
+Code "Infinite Lives" in "Cheats/Player" by "CodenameGamma & RagdollClash" does "Prevents Sonic from losing lives."
 //
 	#lib "Memory"
 	#include "Helpers" noemit

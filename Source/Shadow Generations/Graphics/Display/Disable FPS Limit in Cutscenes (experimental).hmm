@@ -1,4 +1,4 @@
-Patch "Disable FPS Limit in Cutscenes (experimental)" in "Graphics/Display" by "M&M & Hyper" does 
+Patch "Disable FPS Limit in Cutscenes (experimental)" in "Graphics/Display" by "RagdollClash & Hyper" does 
 /*
 Disables the frame rate limiter for (most) cutscenes, allowing them to run above 30 FPS.
 
