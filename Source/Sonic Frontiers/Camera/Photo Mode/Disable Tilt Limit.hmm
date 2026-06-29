@@ -8,7 +8,7 @@ Patch "Disable Tilt Limit" in "Camera/Photo Mode" by "Hyper"
     );
 
     WriteNop(addr, 2);
-    WriteProtected<byte>(addr + 0x16, Assemble("mov rax, rcx; nop"));
+    WriteProtected<byte>(addr + 0x16, Assemble("mov rax, rcx\n nop"));
 }
 
 

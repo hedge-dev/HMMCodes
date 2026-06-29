@@ -9,6 +9,6 @@ Patch "Allow Spin Dash on Dash Panels" in "Gameplay/Skills" by "Hyper" does "All
             "xxxxxx"
         ),
 
-        Assemble("mov r15b, 0; nop")
+        Assemble("mov r15b, 0\n nop")
     );
 }

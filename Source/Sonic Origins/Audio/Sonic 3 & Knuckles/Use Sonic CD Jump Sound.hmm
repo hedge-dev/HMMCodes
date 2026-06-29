@@ -1,0 +1,7 @@
+Patch "Use Sonic CD Jump Sound" in "Audio/Sonic 3 & Knuckles" by "Lave sIime" does "Replaces Sonic 3's jump sound effect with Sonic CD's unique one."
+{
+    #lib "AudioRedirection"
+    #lib "RSDK"
+    
+    AudioRedirection.AddSoundReplacement(RSDK.Game.Sonic3k, "Global/Jump.wav", "SFX_SCD_F02_Jump");
+}

@@ -292,14 +292,10 @@ Library "AudioRedirection" by "Lave sIime"
                 mov  rax, {GET_UNMANAGED_FUNCTION_PTR(MusicReplacement)}
                 call rax
                 
-                ; replacement found?
+                ; if we didn't find a replacement, let's stick with the original result
                 test rax, rax
-                jnz  found
+                cmovz rax, rbx
                 
-                ; nope, let's stick with the original result
-                mov  rax, rbx
-                
-            found:
                 pop  r11
                 pop  r10
                 mov  rbx, [r11 + 0x10]
@@ -319,17 +315,14 @@ Library "AudioRedirection" by "Lave sIime"
         (
             $@"
                 mov  rcx, rsi
+                mov  rdi, rax
                 mov  rax, {GET_UNMANAGED_FUNCTION_PTR(SoundReplacement)}
                 call rax
                 
-                ; replacement found?
+                ; if we didn't find a replacement, let's stick with the original result
                 test rax, rax
-                jnz  found
+                cmovz rax, rdi
                 
-                ; nope, let's stick with the original result
-                mov  rax, rdi
-                
-            found:
                 mov rbx, [rsp + 0x30]
                 mov rbp, [rsp + 0x38]
                 mov rsi, [rsp + 0x40]

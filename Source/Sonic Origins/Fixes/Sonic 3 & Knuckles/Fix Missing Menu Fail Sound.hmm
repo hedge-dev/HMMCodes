@@ -1,0 +1,7 @@
+Patch "Fix Missing Menu Fail Sound" in "Fixes/Sonic 3 & Knuckles" by "Lave sIime" does "Fixes the missing Fail sound after trying to input an invalid stage code in the Blue Spheres menu."
+{
+    #lib "AudioRedirection"
+    #lib "RSDK"
+    
+    AudioRedirection.AddSoundReplacement(RSDK.Game.Sonic3k, "Stage/Fail.wav", "S127_SB2_Fail");
+}
