@@ -81,9 +81,7 @@ Library "Converse" by "Hyper & RagdollClash"
 
     UNMANAGED_FUNCTION(long, RedirectString, long in_pCnvrsKey, long in_pCnvrsText, int in_cnvrsTextLength)
     {
-        var result = (nint)0;
-        var length = 0;
-        
+        var result = string.Empty;
         var cnvrsKey = string.Empty;
         var cnvrsText = string.Empty;
 
@@ -91,80 +89,60 @@ Library "Converse" by "Hyper & RagdollClash"
             cnvrsKey = Marshal.PtrToStringAnsi((nint)in_pCnvrsKey);
 
         if (in_pCnvrsText != 0 && in_cnvrsTextLength > 0)
-            cnvrsText = Marshal.PtrToStringUni((nint)in_pCnvrsText, in_cnvrsTextLength);
-
-        void MarshalString(string in_str)
+            result = cnvrsText = Marshal.PtrToStringUni((nint)in_pCnvrsText, in_cnvrsTextLength);
+        
+        foreach (var entry in _redirectedStrings)
         {
-            if (in_str.Length > length)
-            {
-                if (result != 0)
-                    Marshal.FreeHGlobal(result);
-                
-                length = in_str.Length;
-                result = Marshal.AllocHGlobal(sizeof(int) + (length * sizeof(char)));
-            }
+            if (entry.Key != cnvrsKey)
+                continue;
             
-            Marshal.WriteInt32(result, length);
-            Marshal.Copy(in_str.ToCharArray(), 0, result + sizeof(int), length);
+            result = entry.IsRawAttributes
+                ? entry.Value
+                : WriteAttributes(entry.Value);
         }
 
-        if (!string.IsNullOrEmpty(cnvrsKey))
+        foreach (var entry in _converseNotifyActions)
         {
-            var redirectResult = cnvrsText;
-            {
-                foreach (var entry in _redirectedStrings)
-                {
-                    if (entry.Key != cnvrsKey)
-                        continue;
-                    
-                    redirectResult = entry.IsRawAttributes
-                        ? entry.Value
-                        : WriteAttributes(entry.Value);
-                }
+            result = entry.Key(cnvrsKey, result, ReadAttributes(result));
 
-                if (redirectResult != cnvrsText)
-                    MarshalString(redirectResult);
-            }
-
-            var notifyResult = redirectResult;
-            {
-                foreach (var entry in _converseNotifyActions)
-                {
-                    notifyResult = entry.Key(cnvrsKey, notifyResult, ReadAttributes(notifyResult));
-
-                    if (!entry.Value)
-                        notifyResult = WriteAttributes(notifyResult);
-                }
-
-                if (notifyResult != cnvrsText)
-                    MarshalString(notifyResult);
-            }
-
-            foreach (var entry in _replacementStrings)
-            {
-                var replacementResult = entry.IsRawAttributes
-                    ? notifyResult
-                    : ReadAttributes(notifyResult);
-
-                // Perform replacement operation.
-                replacementResult = entry.IsRegex
-                    ? new Regex(entry.Pattern).Replace(replacementResult, entry.Replacement)
-                    : replacementResult.Replace(entry.Pattern, entry.Replacement);
-
-                replacementResult = entry.IsRawAttributes
-                    ? replacementResult
-                    : WriteAttributes(replacementResult);
-
-                if (replacementResult != cnvrsText)
-                    MarshalString(replacementResult);
-            }
+            if (!entry.Value)
+                result = WriteAttributes(result);
         }
 
-        // Handle null strings.
-        if (result == 0 && (in_pCnvrsKey == 0 || in_pCnvrsText == 0 || in_cnvrsTextLength <= 0))
-            MarshalString(" ");
+        foreach (var entry in _replacementStrings)
+        {
+            var text = entry.IsRawAttributes
+                ? result
+                : ReadAttributes(result);
+            
+            if (!string.IsNullOrEmpty(text))
+            {
+                text = entry.IsRegex
+                    ? new Regex(entry.Pattern).Replace(text, entry.Replacement)
+                    : text.Replace(entry.Pattern, entry.Replacement);
+            }
 
-        return result != 0 ? result : -1L;
+            result = entry.IsRawAttributes
+                ? text
+                : WriteAttributes(text);
+        }
+
+        // Fallback for null strings.
+        if (string.IsNullOrEmpty(result))
+            result = " ";
+
+        if (result != cnvrsText)
+        {
+            var length = result.Length;
+            var buffer = Marshal.AllocHGlobal(sizeof(int) + (length * sizeof(char)));
+
+            Marshal.WriteInt32(buffer, length);
+            Marshal.Copy(result.ToCharArray(), 0, buffer + sizeof(int), length);
+
+            return (long)buffer;
+        }
+
+        return -1L;
     }
 
     UNMANAGED_FUNCTION(void, FreeString, long in_pCnvrsText)
@@ -388,6 +366,9 @@ Library "Converse" by "Hyper & RagdollClash"
     /// <returns>The input string where known binary Converse attributes are replaced with XML keys.</returns>
     public string ReadAttributes(string in_text)
     {
+        if (string.IsNullOrEmpty(in_text))
+            return in_text;
+        
         var result = new StringBuilder();
         var chars = Encoding.Unicode.GetChars(Encoding.Unicode.GetBytes(in_text));
 
@@ -467,6 +448,9 @@ Library "Converse" by "Hyper & RagdollClash"
     /// <returns>The input string where XML Converse attributes are replaced with known binary attributes.</returns>
     public string WriteAttributes(string in_text, XElement in_element = null)
     {
+        if (string.IsNullOrEmpty(in_text))
+            return in_text;
+        
         var result = new StringBuilder();
         var root = in_element ?? XElement.Parse($"<text>{in_text}</text>");
 
