@@ -115,12 +115,12 @@ Library "Converse" by "Hyper & RagdollClash"
                 ? result
                 : ReadAttributes(result);
             
-            if (!string.IsNullOrEmpty(text))
-            {
-                text = entry.IsRegex
-                    ? new Regex(entry.Pattern).Replace(text, entry.Replacement)
-                    : text.Replace(entry.Pattern, entry.Replacement);
-            }
+            if (string.IsNullOrEmpty(text))
+                break;
+            
+            text = entry.IsRegex
+                ? new Regex(entry.Pattern).Replace(text, entry.Replacement)
+                : text.Replace(entry.Pattern, entry.Replacement);
 
             result = entry.IsRawAttributes
                 ? text
@@ -155,7 +155,7 @@ Library "Converse" by "Hyper & RagdollClash"
     {
         if (_isInitialised)
             return;
-
+        
         void ConverseHook(long in_addr)
         {
             WriteAsmHook
@@ -368,13 +368,12 @@ Library "Converse" by "Hyper & RagdollClash"
     {
         if (string.IsNullOrEmpty(in_text))
             return in_text;
-        
-        var result = new StringBuilder();
-        var chars = Encoding.Unicode.GetChars(Encoding.Unicode.GetBytes(in_text));
 
-        for (int i = 0; i < chars.Length; i++)
+        var result = new StringBuilder();
+
+        for (int i = 0; i < in_text.Length; i++)
         {
-            var c = chars[i];
+            var c = in_text[i];
 
             switch ((AttributeType)(c & 0xF00F))
             {
@@ -386,15 +385,15 @@ Library "Converse" by "Hyper & RagdollClash"
                         result.Append("</color>");
                         break;
                     }
-                    
+
                     i++;
 
                     var nameLength = GetNameLength(c) - 2;
-                    var argb = (uint)(chars[i] << 16 | (chars[i + 1]));
+                    var argb = (uint)(in_text[i] << 16 | (in_text[i + 1]));
 
                     i += 2;
 
-                    var name = new string(chars, i, nameLength);
+                    var name = in_text.Substring(i, nameLength);
 
                     result.Append($"<color name=\"{name}\" value=\"{argb.ToString("X8")}\">");
 
@@ -402,13 +401,13 @@ Library "Converse" by "Hyper & RagdollClash"
 
                     break;
                 }
-                
+
                 case AttributeType.Variable:
                 {
                     i++;
 
                     var nameLength = GetNameLength(c);
-                    var name = new string(chars, i, nameLength);
+                    var name = in_text.Substring(i, nameLength);
 
                     result.Append($"<var name=\"{name}\" />");
 
@@ -416,13 +415,13 @@ Library "Converse" by "Hyper & RagdollClash"
 
                     break;
                 }
-                
+
                 case AttributeType.Image:
                 {
                     i++;
 
                     var nameLength = GetNameLength(c);
-                    var name = new string(chars, i, nameLength);
+                    var name = in_text.Substring(i, nameLength);
 
                     result.Append($"<image name=\"{name}\" />");
 
@@ -535,7 +534,7 @@ Library "Converse" by "Hyper & RagdollClash"
     public string OmitAttributes(string in_text)
     {
         var result = new StringBuilder();
-        var chars = Encoding.Unicode.GetChars(Encoding.Unicode.GetBytes(in_text));
+        var chars = in_text.ToCharArray();
 
         for (int i = 0; i < chars.Length; i++)
         {
@@ -605,6 +604,7 @@ Library "Converse" by "Hyper & RagdollClash"
         if (first != null)
         {
             first.Value = in_text;
+            first.IsRawAttributes = in_isRawAttributes;
             return;
         }
 
@@ -628,6 +628,8 @@ Library "Converse" by "Hyper & RagdollClash"
         if (first != null)
         {
             first.Replacement = in_replacement;
+            first.IsRegex = in_isRegex;
+            first.IsRawAttributes = in_isRawAttributes;
             return;
         }
 
