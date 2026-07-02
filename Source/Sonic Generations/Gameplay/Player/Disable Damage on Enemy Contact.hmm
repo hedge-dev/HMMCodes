@@ -1,4 +1,0 @@
-Code "Disable Damage on Enemy Contact" in "Gameplay/Player" by "Skyth" does "Prevents Sonic from taking damage when colliding with enemies, similar to Sonic Unleashed." 
-*(int*)0x1E0BE34 = 0;
-
-

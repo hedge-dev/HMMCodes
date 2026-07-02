@@ -1,4 +1,0 @@
-Patch "Always Have Homing Attack" in "Cheats/Skills/Classic Sonic" by "Sajid" 
-WriteNop(0x00DC50DF, 6)
-
-

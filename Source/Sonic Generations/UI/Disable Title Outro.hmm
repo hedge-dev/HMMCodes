@@ -1,4 +1,0 @@
-Patch "Disable Title Outro" in "UI" by "Skyth" does "Immediately transitions out of the title screen without Sonic jumping from the logo." 
-WriteProtected<int>(0x57346F, 0x16A36CC);
-
-

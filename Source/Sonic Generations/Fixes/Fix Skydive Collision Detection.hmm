@@ -1,4 +1,0 @@
-Patch "Fix Skydive Collision Detection" in "Fixes" by "N69" 
-WriteNop(0x119822E, 18)
-
-

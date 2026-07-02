@@ -1,4 +1,0 @@
-Patch "Disable Super Music" in "Audio" by "Sajid" does "Prevents the Super Sonic theme from overwriting the stage music." 
-WriteNop(ASLR(0x0091ABAD), 6)
-
-

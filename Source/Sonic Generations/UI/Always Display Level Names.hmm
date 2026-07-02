@@ -1,4 +1,0 @@
-Patch "Always Display Level Names" in "UI" by "Muzzarino & brianuuu" does "Always displays the stage title in the loading screen regardless of whether the stage has been played already." 
-WriteProtected<byte>(0xD58A93, 0xEB, 0x41, 0xEB, 0x3F)
-
-

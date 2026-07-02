@@ -1,4 +1,0 @@
-Patch "Disable Grind Rail Lock-On" in "Gameplay/Objects" by "brianuuu" does "Removes the homing targets from the beginning and end of rails." 
-WriteProtected<byte>(0x121EDA4, 0xE9, 0xAD, 0x00, 0x00, 0x00)
-
-

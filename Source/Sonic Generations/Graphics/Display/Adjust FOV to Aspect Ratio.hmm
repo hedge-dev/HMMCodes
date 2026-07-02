@@ -1,9 +1,0 @@
-Patch "Adjust FOV to Aspect Ratio" in "Graphics/Display" by "Muzzarino" does "Dynamically adjusts the field of view based on the current aspect ratio (recommended for ultrawide)." 
-string code = @"push 0x3F800000
-fdiv dword ptr [esp]
-add esp,0x04
-fstp dword ptr [esp+0x0C]
-fld dword ptr [ebp+0x14]"
-WriteAsmHook(code, 0x6F23AA, HookBehavior.Replace)
-
-

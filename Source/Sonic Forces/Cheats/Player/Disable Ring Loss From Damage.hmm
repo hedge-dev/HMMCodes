@@ -1,4 +1,0 @@
-Patch "Disable Ring Loss from Damage" in "Cheats/Player" by "CodenameGamma" 
-WriteNop(0x1404F77AC, 5)
-
-

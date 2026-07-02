@@ -1,5 +1,0 @@
-Patch "Disable Spin Jump Particles" in "Graphics/Effects" by "Hyper" does "Disables the particle effect for when Sonic jumps and curls into a ball." 
-WriteProtected<byte>(0x15E902C, 0x00);
-WriteProtected<byte>(0x15F99DC, 0x00);
-
-

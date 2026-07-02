@@ -1,7 +1,0 @@
-Code "Infinite Tickets" in "Cheats/Fishing" by "Hyper"
-//
-    #include "SaveData" noemit
-//
-{
-    SAVE_SET_PARAM(character.numGoldCards, ushort.MaxValue);
-}

@@ -1,4 +1,0 @@
-Patch "Fix Input Delay at Arbitrary Frame Rates" in "Graphics/FPS" by "Skyth" 
-WriteProtected<byte>(0xD6CCA1, 0xF3, 0x0F, 0x10, 0x44, 0x24, 0x24, 0x90, 0x90);
-
-

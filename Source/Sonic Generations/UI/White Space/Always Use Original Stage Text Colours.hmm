@@ -1,4 +1,0 @@
-Patch "Always Use Original Stage Text Colours" in "UI/White Space" by "Hyper" does "Uses the coloured stage title models in White Space, instead of being gold if you have S ranks for those particular stages." 
-WriteProtected<byte>(0xEE3F90, 0xEB, 0x2A);
-
-

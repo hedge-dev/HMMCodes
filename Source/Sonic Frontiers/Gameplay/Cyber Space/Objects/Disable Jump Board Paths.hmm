@@ -1,7 +1,0 @@
-Patch "Disable Jump Board Paths" in "Gameplay/Cyber Space/Objects" by "Hyper" does "Stops the player locking to a path when hitting jump boards in Cyber Space, allowing him to fling off them like ramps."
-//
-    #lib "Bridge.DisableJumpBoardPaths"
-//
-{
-    Bridge.DisableJumpBoardPaths.IsDisabledInCyberSpace = true;
-}

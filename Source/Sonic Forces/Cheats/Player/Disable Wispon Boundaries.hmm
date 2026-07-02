@@ -1,4 +1,0 @@
-Patch "Disable Wispon Boundaries" in "Cheats/Player" by "CodenameGamma" does "Disables the boundaries that prevent usage of certain Wispons in some areas of the stages."
-WriteNop(0x140267527, 0x00000005)
-
-
