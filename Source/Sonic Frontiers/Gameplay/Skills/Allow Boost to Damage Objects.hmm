@@ -6,7 +6,9 @@ Code "Allow Boost to Damage Objects" in "Gameplay/Skills" by "Hyper & NM" does "
 
     using System.Collections.Generic;
 
-    static bool _isBoostPrevious = false;
+    static bool _isDamageEnabled = false;
+
+    static bool _isRunBoost = false;
 
     static List<Sonic.StateID> _boostStates = new()
     {
@@ -23,22 +25,58 @@ Code "Allow Boost to Damage Objects" in "Gameplay/Skills" by "Hyper & NM" does "
         Sonic.StateID.StateRun,
         Sonic.StateID.StateWallMove
     };
+
+    static List<Sonic.StateID> _damageStates = new()
+    {
+        Sonic.StateID.StateJump,
+        Sonic.StateID.StateDoubleJump,
+        Sonic.StateID.StateSpinDash,
+        Sonic.StateID.StateSpinBoostCharge,
+        Sonic.StateID.StateSpinBoost,
+        Sonic.StateID.StateHomingAttack,
+        Sonic.StateID.StateStompingDown,
+        Sonic.StateID.StateStompingLand,
+        Sonic.StateID.StateBounceJump,
+        Sonic.StateID.StateDropDash,
+        Sonic.StateID.StateSliding
+    };
 //
 {
-    Sonic.StateID _stateId = Player.State.GetCurrentStateID<Sonic.StateID>();
-    if (_boostStates.Contains(_stateId) && IS_STATE_FLAG(IsBoost))
+    void EnableDamage()
     {
-        if (!_isBoostPrevious)
-        {
-            Player.Collision.SetCollisionSphere(Player.CollisionType.Damage, 1.0f);
-            Player.Collision.SetEntityCollision(false);
-            _isBoostPrevious = true;
-        }
+        Player.Collision.SetCollisionSphere(Player.CollisionType.Damage, 1.0f);
+        Player.Collision.SetEntityCollision(false);
+        _isDamageEnabled = true;
     }
-    else if (_isBoostPrevious)
+
+    void DisableDamage()
     {
         Player.Collision.SetCollisionSphere(Player.CollisionType.Default, 1.0f);
         Player.Collision.SetEntityCollision(true);
-        _isBoostPrevious = false;
+        _isDamageEnabled = false;
+    }
+
+    Sonic.StateID stateId = Player.State.GetCurrentStateID<Sonic.StateID>();
+
+    if (_boostStates.Contains(stateId) && IS_STATE_FLAG(IsBoost))
+    {
+        if (stateId == Sonic.StateID.StateRun)
+        {
+            if (!_isRunBoost)
+            {
+                EnableDamage();
+                _isRunBoost = true;
+            }
+        }
+        else
+        {
+            if (!_isDamageEnabled) EnableDamage();
+            _isRunBoost = false;
+        }
+    }
+    else
+    {
+        if (_isDamageEnabled && !_damageStates.Contains(stateId)) DisableDamage();
+        _isRunBoost = false;
     }
 }
