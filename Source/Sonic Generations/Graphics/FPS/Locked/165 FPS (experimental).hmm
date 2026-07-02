@@ -1,4 +1,4 @@
-Patch "165 FPS (experimental)" in "Graphics/FPS/Locked" by "Skyth and M&M" 
+Patch "165 FPS (experimental)" in "Graphics/FPS/Locked" by "Skyth & RagdollClash" 
 static float FPS = 165.0f; 
 
 fixed (float* pFPS = &FPS)

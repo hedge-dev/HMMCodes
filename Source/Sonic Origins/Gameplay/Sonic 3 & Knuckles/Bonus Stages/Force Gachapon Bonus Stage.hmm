@@ -9,6 +9,6 @@ Patch "Force Gachapon Bonus Stage" in "Gameplay/Sonic 3 & Knuckles/Bonus Stages"
 			"xxx????xxxxxxxxxxxxxxxxxx"
 		) + 47,
 		
-		Assemble("mov r8d, 2; nop; nop")
+		Assemble("mov r8d, 2\n nop\n nop")
 	);
 }

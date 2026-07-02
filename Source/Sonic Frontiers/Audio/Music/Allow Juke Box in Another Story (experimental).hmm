@@ -32,7 +32,7 @@ Known issues;
             "x????xxxxxx"
         ),
 
-        Assemble("xor al, al; nop; nop; nop")
+        Assemble("xor al, al\n nop\n nop\n nop")
     );
 
     // Restore Juke Box options' visibility.

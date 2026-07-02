@@ -45,7 +45,7 @@ Notes;
             "xxxxxxxxx"
         ),
 
-        Assemble("xorps xmm0, xmm0; ret")
+        Assemble("xorps xmm0, xmm0\n ret")
     );
 
     // Disable mouse cursor hook.

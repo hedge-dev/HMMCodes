@@ -9,6 +9,6 @@ Patch "Force Rotating Slot Bonus Stage" in "Gameplay/Sonic 3 & Knuckles/Bonus St
 			"xxx????xxxxxxxxxxxxxxxxxx"
 		) + 47,
 		
-		Assemble("mov r8d, 0; nop; nop")
+		Assemble("mov r8d, 0\n nop\n nop")
 	);
 }

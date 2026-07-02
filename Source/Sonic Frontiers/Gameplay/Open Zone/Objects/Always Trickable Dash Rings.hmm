@@ -9,6 +9,6 @@ Patch "Always Trickable Dash Rings" in "Gameplay/Open Zone/Objects" by "Hyper"
             "xxxxxxxxx"
         ),
 
-        Assemble("mov cl, 2; nop")
+        Assemble("mov cl, 2\n nop")
     );
 }

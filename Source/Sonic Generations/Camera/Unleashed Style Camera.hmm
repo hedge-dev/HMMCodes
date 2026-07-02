@@ -9,9 +9,9 @@ if (!initialized)
     WriteAsmHook("mulss xmm3, ds:0x14AF8CC", 0x10EDB4C, HookBehavior.After);
     WriteAsmHook("mulss xmm3, ds:0x14AF8CC", 0x10EDAC2, HookBehavior.After);
 
-    WriteAsmHook("cvtps2pd xmm2, xmm1; mulsd xmm0, xmm2", 0x10ED123, HookBehavior.Replace);
+    WriteAsmHook("cvtps2pd xmm2, xmm1\n mulsd xmm0, xmm2", 0x10ED123, HookBehavior.Replace);
     WriteAsmHook("movss xmm1, ds:0x1559A98", 0x10ED12F, HookBehavior.After);
-    WriteAsmHook("xorpd xmm0, ds:0x1703930; addsd xmm0, ds:0x1703940", 0x10ED14A, HookBehavior.Before);
+    WriteAsmHook("xorpd xmm0, ds:0x1703930\n addsd xmm0, ds:0x1703940", 0x10ED14A, HookBehavior.Before);
 
     fixed (double* p0 = &_0)
     fixed (double* p50_60 = &_50_60)

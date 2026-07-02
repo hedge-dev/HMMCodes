@@ -1,4 +1,4 @@
-Code "Disable Lives" in "Gameplay/Player" by "Hyper & M&M" does "Prevents Sonic from losing lives, hides the counter from the HUD, and removes all 1-UP related items from the stages."
+Code "Disable Lives" in "Gameplay/Player" by "Hyper & RagdollClash" does "Prevents Sonic from losing lives, hides the counter from the HUD, and removes all 1-UP related items from the stages."
 //
 	#lib "Memory"
 	#include "Helpers" noemit

@@ -1,4 +1,4 @@
-Library "Converse" by "Hyper & M&M" 
+Library "Converse" by "Hyper & RagdollClash" 
 {
     #include "Helpers" noemit
 
@@ -81,95 +81,73 @@ Library "Converse" by "Hyper & M&M"
 
     UNMANAGED_FUNCTION(long, RedirectString, long in_pCnvrsKey, long in_pCnvrsText, int in_cnvrsTextLength)
     {
-        if (in_pCnvrsKey == 0)
-            return in_pCnvrsText;
+        var result = string.Empty;
+        var cnvrsKey = string.Empty;
+        var cnvrsText = string.Empty;
 
-        string cnvrsKey = Marshal.PtrToStringAnsi((IntPtr)in_pCnvrsKey);
-        string cnvrsText = in_pCnvrsText == 0 ? string.Empty : Marshal.PtrToStringUni((IntPtr)in_pCnvrsText, in_cnvrsTextLength);
-        nint pData = 0;
+        if (in_pCnvrsKey != 0)
+            cnvrsKey = Marshal.PtrToStringAnsi((nint)in_pCnvrsKey);
 
-        void MarshalString(string in_str)
+        if (in_pCnvrsText != 0 && in_cnvrsTextLength > 0)
+            result = cnvrsText = Marshal.PtrToStringUni((nint)in_pCnvrsText, in_cnvrsTextLength);
+        
+        foreach (var entry in _redirectedStrings)
         {
-            int length = sizeof(int) + ((in_str.Length + 1) * sizeof(short));
-
-            pData = Marshal.AllocHGlobal(length);
-
-            var wideTextStart = pData + sizeof(int);
-            var wideText = Encoding.Unicode.GetBytes(in_str);
-            var wideTextEnd = wideTextStart + wideText.Length;
+            if (entry.Key != cnvrsKey)
+                continue;
             
-            Marshal.Copy(wideText, 0, wideTextStart, wideText.Length);
-            
-            // Null terminator.
-            Marshal.WriteInt16(wideTextEnd, 0);
-
-            in_pCnvrsText = (long)pData;
-            in_cnvrsTextLength = length;
+            result = entry.IsRawAttributes
+                ? entry.Value
+                : WriteAttributes(entry.Value);
         }
 
-        string redirectResult = cnvrsText;
+        foreach (var entry in _converseNotifyActions)
         {
-            foreach (var entry in _redirectedStrings)
-            {
-                if (entry.Key == cnvrsKey)
-                {
-                    redirectResult = entry.IsRawAttributes
-                        ? entry.Value
-                        : WriteAttributes(entry.Value);
-                }
-            }
+            result = entry.Key(cnvrsKey, result, ReadAttributes(result));
 
-            if (redirectResult != cnvrsText)
-                MarshalString(redirectResult);
-        }
-
-        string notifyResult = redirectResult;
-        {
-            foreach (var entry in _converseNotifyActions)
-            {
-                notifyResult = entry.Key(cnvrsKey, notifyResult, ReadAttributes(notifyResult));
-
-                if (!entry.Value)
-                    notifyResult = WriteAttributes(notifyResult);
-            }
-
-            if (notifyResult != cnvrsText)
-                MarshalString(notifyResult);
+            if (!entry.Value)
+                result = WriteAttributes(result);
         }
 
         foreach (var entry in _replacementStrings)
         {
-            string replacementResult = entry.IsRawAttributes
-                ? notifyResult
-                : ReadAttributes(notifyResult);
+            var text = entry.IsRawAttributes
+                ? result
+                : ReadAttributes(result);
+            
+            if (string.IsNullOrEmpty(text))
+                break;
+            
+            text = entry.IsRegex
+                ? new Regex(entry.Pattern).Replace(text, entry.Replacement)
+                : text.Replace(entry.Pattern, entry.Replacement);
 
-            // Perform replacement operation.
-            replacementResult = entry.IsRegex
-                ? new Regex(entry.Pattern).Replace(replacementResult, entry.Replacement)
-                : replacementResult.Replace(entry.Pattern, entry.Replacement);
-
-            replacementResult = entry.IsRawAttributes
-                ? replacementResult
-                : WriteAttributes(replacementResult);
-
-            if (replacementResult != cnvrsText)
-                MarshalString(replacementResult);
+            result = entry.IsRawAttributes
+                ? text
+                : WriteAttributes(text);
         }
 
-        if (pData != 0)
+        // Fallback for null strings.
+        if (string.IsNullOrEmpty(result))
+            result = " ";
+
+        if (result != cnvrsText)
         {
-            // Wide string length.
-            Marshal.WriteInt32(pData, in_cnvrsTextLength);
-            Marshal.FreeHGlobal(pData);
-        }
-        else if (in_pCnvrsText != 0)
-        {
-            /* No need to reallocate all strings,
-               return -1 and reload original pointer. */
-            in_pCnvrsText = -1;
+            var length = result.Length;
+            var buffer = Marshal.AllocHGlobal(sizeof(int) + (length * sizeof(char)));
+
+            Marshal.WriteInt32(buffer, length);
+            Marshal.Copy(result.ToCharArray(), 0, buffer + sizeof(int), length);
+
+            return (long)buffer;
         }
 
-        return in_pCnvrsText;
+        return -1L;
+    }
+
+    UNMANAGED_FUNCTION(void, FreeString, long in_pCnvrsText)
+    {
+        Marshal.FreeHGlobal((nint)in_pCnvrsText);
     }
 
     [LibraryInitializer]
@@ -177,34 +155,54 @@ Library "Converse" by "Hyper & M&M"
     {
         if (_isInitialised)
             return;
-
+        
         void ConverseHook(long in_addr)
         {
             WriteAsmHook
             (
                 $@"
-                    mov  r8d, dword ptr [rsp + 0x1C8 + 0xFFFFFFFFFFFFFE60]
-                    mov  rcx, rsi
+                    mov  r8d, dword ptr [rsp + 0x28] ; Converse Text Length
+                    mov  rdx, qword ptr [rsp + 0x20] ; Converse Text
+                    mov  rcx, rsi                    ; Converse Key
                     mov  rax, {GET_UNMANAGED_FUNCTION_PTR(RedirectString)}
                     call rax
-                    cmp  rax, 0
-                    jne  notNull
-                    mov  rdx, {TO_WSTRING_PTR(" ")}
-                    mov  r8d, 1
-                    jmp  exit
-                notNull:
-                    cmp  rax, -1
-                    je   notCustom
-                    lea  rdx, qword ptr [rax + 4]
-                    mov  r8d, dword ptr [rax]
-                    jmp  exit
-                notCustom:
-                    mov  rdx, qword ptr [rsp + 0x1C8 + 0xFFFFFFFFFFFFFE58]
-                    mov  r8d, dword ptr [rsp + 0x1C8 + 0xFFFFFFFFFFFFFE60]
-                exit:
-                    mov  rcx, qword ptr [rdi + 8]
+                    mov  rbx, rax                    ; Preserve result in RBX.
+
+                    ; Check if result is -1 or null, use original string if so.
+                    cmp  rbx, -1
+                    je   original
+                    test rbx, rbx
+                    jz   original
+
+                    mov  r8d, dword ptr [rbx]        ; Redirected Text Length
+                    lea  rdx, qword ptr [rbx + 0x04] ; Redirected Text
+                    jmp  cnvrs
+
+                original:
+                    mov  r8d, dword ptr [rsp + 0x28] ; Converse Text Length
+                    mov  rdx, qword ptr [rsp + 0x20] ; Converse Text
+
+                cnvrs:
+                    mov  rcx, qword ptr [rdi + 0x08] ; Allocator
+                    push rbx
                     mov  rax, {Memory.ReadCall(in_addr + 0x09)}
                     call rax
+                    pop  rbx
+
+                    ; Check if redirect result is -1, skip free if so.
+                    cmp  rbx, -1
+                    je   exit
+
+                    ; Free redirected string.
+                    mov  rcx, rbx
+                    mov  rbx, rax
+                    sub  rsp, 32
+                    mov  rax, {GET_UNMANAGED_FUNCTION_PTR(FreeString)}
+                    call rax
+                    add  rsp, 32
+                    mov  rax, rbx                    ; Restore original result.
+
+                exit:
                 ",
 
                 in_addr,
@@ -215,10 +213,10 @@ Library "Converse" by "Hyper & M&M"
 
         WriteNop
         (
-            /* v1.41: 0x14DA978CD */
+            /* v1.42: 0x14D89049D */
             ScanSignature
             (
-                "\x0F\x84\xE8\x00\x00\x00\x48\x8D\x8F\xC8\x00\x00\x00",
+                "\x0F\x84\xF7\x00\x00\x00\x48\x8D\x8F\xC8\x00\x00\x00",
                 "xxxxxxxxxxxxx"
             ),
             
@@ -227,7 +225,7 @@ Library "Converse" by "Hyper & M&M"
 
         ConverseHook
         (
-            /* 0x14DC858D3 */
+            /* v1.42: 0x14D8904D1 */
             ScanSignature
             (
                 "\x44\x8B\x44\x24\x28\x48\x8B\x4F\x08\xE8\xCC\xCC\xCC\xCC\x48\x89\xC2\x48\x8B\x8F\xF0\x00\x00\x00",
@@ -249,7 +247,7 @@ Library "Converse" by "Hyper & M&M"
 
         ConverseHook
         (
-            /* 0x14DC8593A */
+            /* v1.42: 0x14D89053C */
             ScanSignature
             (
                 "\x44\x8B\x44\x24\x28\x48\x8B\x4F\x08\xE8\xCC\xCC\xCC\xCC\x48\x89\xC2\x48\x89\xF9",
@@ -259,7 +257,7 @@ Library "Converse" by "Hyper & M&M"
 
         fixed (sbyte* p_language = &_language)
         {
-            /* 0x140AFA200 */
+            /* v1.42: 0x146E3A1CC */
             var sig = Memory.ReadCall
             (
                 ScanSignature
@@ -368,12 +366,14 @@ Library "Converse" by "Hyper & M&M"
     /// <returns>The input string where known binary Converse attributes are replaced with XML keys.</returns>
     public string ReadAttributes(string in_text)
     {
-        var result = new StringBuilder();
-        var chars = Encoding.Unicode.GetChars(Encoding.Unicode.GetBytes(in_text));
+        if (string.IsNullOrEmpty(in_text))
+            return in_text;
 
-        for (int i = 0; i < chars.Length; i++)
+        var result = new StringBuilder();
+
+        for (int i = 0; i < in_text.Length; i++)
         {
-            var c = chars[i];
+            var c = in_text[i];
 
             switch ((AttributeType)(c & 0xF00F))
             {
@@ -385,15 +385,15 @@ Library "Converse" by "Hyper & M&M"
                         result.Append("</color>");
                         break;
                     }
-                    
+
                     i++;
 
                     var nameLength = GetNameLength(c) - 2;
-                    var argb = (uint)(chars[i] << 16 | (chars[i + 1]));
+                    var argb = (uint)(in_text[i] << 16 | (in_text[i + 1]));
 
                     i += 2;
 
-                    var name = new string(chars, i, nameLength);
+                    var name = in_text.Substring(i, nameLength);
 
                     result.Append($"<color name=\"{name}\" value=\"{argb.ToString("X8")}\">");
 
@@ -401,13 +401,13 @@ Library "Converse" by "Hyper & M&M"
 
                     break;
                 }
-                
+
                 case AttributeType.Variable:
                 {
                     i++;
 
                     var nameLength = GetNameLength(c);
-                    var name = new string(chars, i, nameLength);
+                    var name = in_text.Substring(i, nameLength);
 
                     result.Append($"<var name=\"{name}\" />");
 
@@ -415,13 +415,13 @@ Library "Converse" by "Hyper & M&M"
 
                     break;
                 }
-                
+
                 case AttributeType.Image:
                 {
                     i++;
 
                     var nameLength = GetNameLength(c);
-                    var name = new string(chars, i, nameLength);
+                    var name = in_text.Substring(i, nameLength);
 
                     result.Append($"<image name=\"{name}\" />");
 
@@ -447,6 +447,9 @@ Library "Converse" by "Hyper & M&M"
     /// <returns>The input string where XML Converse attributes are replaced with known binary attributes.</returns>
     public string WriteAttributes(string in_text, XElement in_element = null)
     {
+        if (string.IsNullOrEmpty(in_text))
+            return in_text;
+        
         var result = new StringBuilder();
         var root = in_element ?? XElement.Parse($"<text>{in_text}</text>");
 
@@ -531,7 +534,7 @@ Library "Converse" by "Hyper & M&M"
     public string OmitAttributes(string in_text)
     {
         var result = new StringBuilder();
-        var chars = Encoding.Unicode.GetChars(Encoding.Unicode.GetBytes(in_text));
+        var chars = in_text.ToCharArray();
 
         for (int i = 0; i < chars.Length; i++)
         {
@@ -601,6 +604,7 @@ Library "Converse" by "Hyper & M&M"
         if (first != null)
         {
             first.Value = in_text;
+            first.IsRawAttributes = in_isRawAttributes;
             return;
         }
 
@@ -624,6 +628,8 @@ Library "Converse" by "Hyper & M&M"
         if (first != null)
         {
             first.Replacement = in_replacement;
+            first.IsRegex = in_isRegex;
+            first.IsRawAttributes = in_isRawAttributes;
             return;
         }
 

@@ -1,4 +1,4 @@
-Patch "Disable Colour Correction" in "Graphics/Post-processing" by "M&M" 
+Patch "Disable Colour Correction" in "Graphics/Post-processing" by "RagdollClash" 
 WriteProtected<byte>(0x1699F54, 0x00);
 
 
