@@ -25,23 +25,20 @@ Code "Allow Boost to Damage Objects" in "Gameplay/Skills" by "Hyper & NM" does "
     };
 //
 {
-    Sonic.StateID NotifyStateRunDamageCollision(Sonic.StateID in_stateId, Sonic.StateID[] in_stateStackTrace)
+    Sonic.StateID _stateId = Player.State.GetCurrentStateID<Sonic.StateID>();
+    if (_boostStates.Contains(_stateId) && IS_STATE_FLAG(IsBoost))
     {
-        if (_boostStates.Contains(in_stateId) && IS_STATE_FLAG(IsBoost))
+        if (!_isBoostPrevious)
         {
             Player.Collision.SetCollisionSphere(Player.CollisionType.Damage, 1.0f);
             Player.Collision.SetEntityCollision(false);
             _isBoostPrevious = true;
         }
-        else if (_isBoostPrevious)
-        {
-            Player.Collision.SetCollisionSphere(Player.CollisionType.Default, 1.0f);
-            Player.Collision.SetEntityCollision(true);
-            _isBoostPrevious = false;
-        }
-
-        return in_stateId;
     }
-
-    Player.State.AddStateNotifyAction<Sonic.StateID>(NotifyStateRunDamageCollision);
+    else if (_isBoostPrevious)
+    {
+        Player.Collision.SetCollisionSphere(Player.CollisionType.Default, 1.0f);
+        Player.Collision.SetEntityCollision(true);
+        _isBoostPrevious = false;
+    }
 }
