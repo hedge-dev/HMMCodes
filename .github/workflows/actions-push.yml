@@ -17,15 +17,11 @@ jobs:
     - name: Set up dotnet
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 9.0.x
-
-    - name: Install dependencies
-      run: |
-        dotnet tool install -g dotnet-script
+        dotnet-version: 10.0.x
 
     - name: Run build
       run: |
-        dotnet script build.csx
+        dotnet run build.cs
 
     - name: Push to build branch
       run: |
