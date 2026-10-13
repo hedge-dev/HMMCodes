@@ -1,0 +1,31 @@
+Patch "Skippable Cutscenes (experimental)" in "Gameplay" by "Ashrindy" does 
+/*
+Allows skipping for most unskippable cutscenes.
+*/
+//
+    #lib "Memory"
+//
+{
+    /* v1.42: 0x146D47329 */
+    long jmpAddr0 = ScanSignature
+    (
+        "\x74\x61\x48\x89\xD9\xCC\xCC\xCC\xCC\x40\xE8\xD8\xEC",
+        "xxxxx????xxxx"
+    );
+
+    if (jmpAddr0 == 0)
+        return;
+
+    /* v1.42: 0x140148D42 */
+    long jmpAddr1 = ScanSignature
+    (
+        "\x74\x72\x48\x8B\x15\xCC\xCC\xCC\xCC\x48\x85\xD2\x74",
+        "xxxxx????xxxx"
+    );
+
+    if (jmpAddr1 == 0)
+        return;
+    
+    WriteNop(jmpAddr0, 2);
+    WriteNop(jmpAddr1, 2);
+}
