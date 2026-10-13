@@ -102,7 +102,6 @@ WriteAsmHook
         jb loc_10003B60
         lea eax, dword ptr ds:[ecx-1]
         mov ecx, eax
-        nop dword ptr ds:[eax+eax], eax
 
     loc_10003B40:
         movsx eax, byte ptr ds:[ebx+edx]
@@ -115,7 +114,6 @@ WriteAsmHook
         mov ecx, dword ptr ss:[ebp-0x10]
         cmp edx, ecx
         jae loc_10003B7D
-        nop dword ptr ds:[eax+eax], eax
 
     loc_10003B60:
         movsx eax, byte ptr ds:[ebx+edx]
@@ -216,7 +214,6 @@ WriteAsmHook
         bswap eax
         sub eax, 1
         je loc_10003C54
-        nop word ptr ds:[eax+eax], ax
 
     loc_10003C40:
         mov eax, dword ptr ds:[ebx+0x34]
@@ -304,7 +301,6 @@ WriteAsmHook
         jbe loc_10003D2E
         add ecx, 0x1F
         mov edx, 0x20
-        nop dword ptr ds:[eax], eax
 
     loc_10003D20:
         mov al, byte ptr ds:[ecx+4]
@@ -390,7 +386,6 @@ WriteAsmHook
         test eax, eax
         je loc_10003E73
         mov ebx, dword ptr ss:[ebp-8]
-        nop dword ptr ds:[eax], eax
 
     loc_10003E10:
         mov eax, dword ptr ds:[esi+8]
@@ -479,7 +474,6 @@ WriteAsmHook
         test edx, edx
         je loc_10003F11
         sub edi, ecx
-        nop dword ptr ds:[eax], eax
 
     loc_10003EE0:
         mov al, byte ptr ds:[edi+ecx]
@@ -496,7 +490,6 @@ WriteAsmHook
         lea esi, dword ptr ds:[ecx-1]
         add esi, edx
         sub edi, ecx
-        nop dword ptr ds:[eax], eax
 
     loc_10003F00:
         mov al, byte ptr ds:[esi+edi]
