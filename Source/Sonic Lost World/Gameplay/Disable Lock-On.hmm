@@ -1,8 +1,0 @@
-Patch "Disable Lock-On" in "Gameplay" by "Sajid" does "Disables the player's ability to Homing Attack or Kick enemies and objects. Enabled for a few bosses to prevent softlocks."
-WriteProtected<uint>(ASLR(0x00537D15), 0x5005)
-WriteProtected<uint>(ASLR(0x0053AFD1), 0x1003)
-WriteProtected<uint>(ASLR(0x005A8121), 0x1003)
-WriteProtected<uint>(ASLR(0x005C7A91), 0x1003)
-WriteProtected<uint>(ASLR(0x00587A71), 0x1003)
-WriteProtected<uint>(ASLR(0x0059889A), 0x5005)
-WriteProtected<uint>(ASLR(0x0058FDC1), 0x1003)

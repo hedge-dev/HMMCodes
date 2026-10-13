@@ -1,3 +1,0 @@
-Patch "Fix Clearing Sheets" in "Fixes/CD & 1+2" does "Fixes an issue where the game does not clear all sprite sheets from memory in v3 & v4 Legacy Modes."
-WriteProtected<byte>(0x1400da2f6,0x18);
-WriteProtected<byte>(0x1400c2639,0x18);

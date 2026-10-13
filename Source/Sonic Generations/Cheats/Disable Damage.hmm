@@ -1,5 +1,0 @@
-Patch "Disable Damage" in "Cheats" by "SuperSonic16 & brianuuu" 
-WriteProtected<byte>(0xDEAF2A, 0xEB)
-WriteProtected<byte>(0xE28364, 0xEB)
-
-

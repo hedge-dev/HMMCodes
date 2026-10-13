@@ -1,4 +1,0 @@
-Patch "Disable Ring Loss" in "Cheats" by "Sajid" does "Disables the loss of rings upon being damaged by an enemy." 
-WriteNop(ASLR(0x00866900), 2)
-
-

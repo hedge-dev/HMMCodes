@@ -1,5 +1,0 @@
-Patch "Disable Spin Dash on Dash Panels" in "Gameplay/Skills/Modern Sonic" by "Hyper" does "Disables the short spin dash animation that occurs when hitting a dash panel." 
-WriteProtected<byte>(0xE0AC1C, 0xE9, 0x27, 0x01, 0x00, 0x00);
-WriteProtected<byte>(0xE0C734, 0xE9, 0x27, 0x01, 0x00, 0x00);
-
-

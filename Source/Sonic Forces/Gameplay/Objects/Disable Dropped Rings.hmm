@@ -1,2 +1,0 @@
-Patch "Disable Dropped Rings" in "Gameplay/Objects" by "Hyper" does "Removes the bouncing rings when taking damage." 
-WriteNop(0x1404F76AB, 5);

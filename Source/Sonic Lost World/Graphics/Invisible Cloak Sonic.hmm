@@ -1,4 +1,0 @@
-Patch "Invisible Cloak Sonic" in "Graphics" by "Muzzarino" does "Turns Sonic's textures into a highly reflective material to blend in (requires the Jump or Spin button to be pressed to enable it)." 
-WriteNop(ASLR(0x0085C68E), 6)
-
-

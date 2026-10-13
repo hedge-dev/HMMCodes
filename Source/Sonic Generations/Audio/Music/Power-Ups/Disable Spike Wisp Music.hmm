@@ -1,5 +1,0 @@
-Patch "Disable Spike Wisp Music" in "Audio/Music/Power-Ups" by "Hyper" 
-WriteProtected<byte>(0xE3DD80, 0xEB, 0x33); /* Spike - on contact with wisp active */
-WriteProtected<byte>(0xE3E00A, 0xEB, 0x33); /* Spike - on contact without wisp active */
-
-

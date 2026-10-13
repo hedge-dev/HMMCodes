@@ -1,5 +1,0 @@
-# Ignore dot folders
-.*/
-[Bb]uild/*
-
-!.github/

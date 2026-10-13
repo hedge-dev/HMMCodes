@@ -1,2 +1,0 @@
-Patch "Fix Loading Screen Stutter" in "Fixes" by "Skyth"
-WriteNop(0xD67E9A, 4);

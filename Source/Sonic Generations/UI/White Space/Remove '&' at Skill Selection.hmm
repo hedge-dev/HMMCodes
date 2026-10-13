@@ -1,2 +1,0 @@
-Patch "Remove '&' from Skill Sets" in "UI/White Space" by "brianuuu" does "Removes the '&' symbol between the two custom name tags in the skill set selection screen."
-WriteNop(0x10A1BE0, 2);

@@ -1,4 +1,0 @@
-Patch "Infinite Bounce Attacks" in "Cheats" by "ĐeäTh" does "Disables the 3 times limit on the bounce attack." 
-WriteNop(ASLR(0x008CA177), 4);
-
-

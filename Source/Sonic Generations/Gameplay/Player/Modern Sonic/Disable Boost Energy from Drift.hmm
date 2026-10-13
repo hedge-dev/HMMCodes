@@ -1,6 +1,0 @@
-Patch "Disable Boost Energy from Drift" in "Gameplay/Player/Modern Sonic" by "Hyper" does "Disables receiving boost whilst drifting."
-WriteProtected<byte>(0xE03E46, 0xD9, 0xEE);
-WriteNop(0xE03E48, 6);
-WriteProtected<byte>(0x15E96B0, 0x00);
-
-

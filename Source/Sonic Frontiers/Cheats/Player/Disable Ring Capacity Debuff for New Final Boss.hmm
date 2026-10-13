@@ -1,5 +1,0 @@
-Patch "Disable Ring Capacity Debuff for New Final Boss" by "MegAmi" in "Cheats/Player" does "Disables max rings decreasing when getting hit by the energy ball projectiles in the final boss of Another Story."
-{
-    /* 1.40: 0x14091C408 */
-    WriteNop(ScanSignature("\x41\x89\x40\x04\x41\x8B\x50\x08", "xxxxxxxx"), 8); // First 4 nops disable the max rings decrease, last 4 nops disable losing current rings
-}

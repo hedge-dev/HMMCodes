@@ -1,4 +1,0 @@
-Patch "Disable Rocket Wisp Music" in "Audio/Music/Power-Ups" by "Hyper" 
-WriteProtected<byte>(0xE3E0AA, 0xEB, 0x33);
-
-

@@ -1,9 +1,0 @@
-Patch "Infinite Rings" in "Cheats/Player" by "SuperSonic16" 
-WriteProtected<uint>(0x1403DA766, 0x0010BBE9)
-WriteProtected<ushort>(0x1403DA76A, 0x9000)
-WriteProtected<uint>(0x1403DB826, 0x0003E7B9)
-WriteProtected<uint>(0x1403DB82A, 0x1C488900)
-WriteProtected<uint>(0x1403DB82E, 0xE9CF4D89)
-WriteProtected<uint>(0x1403DB832, 0xFFFFEF36)
-
-

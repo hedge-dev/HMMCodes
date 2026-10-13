@@ -1,4 +1,0 @@
-Patch "Disable Dropped Rings" in "Gameplay/Objects" by "Hyper" does "Removes the bouncing rings when taking damage, similar to Sonic Unleashed." 
-WriteProtected<byte>(0x1055002, 0xE9, 0xBD, 0x03, 0x00, 0x00);
-
-

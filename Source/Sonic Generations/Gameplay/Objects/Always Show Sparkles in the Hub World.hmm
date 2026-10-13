@@ -1,4 +1,0 @@
-Patch "Always Show Sparkles in White Space" in "Gameplay/Objects" by "Muzzarino" does "Keeps the sparkle effects in White Space for stages you haven't played yet." 
-WriteProtected<ushort>(0xEE3DA6, 0x6EB)
-
-

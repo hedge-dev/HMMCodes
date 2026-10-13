@@ -1,4 +1,0 @@
-Patch "Fix Pull Switch Grip Height" in "Fixes" by "ĐeäTh" does "Fixes the position of Sonic's grip compared to the light switches found in Silent Forest Act 4." 
-WriteProtected<float>(ASLR(0x00DF2D14), -10.5f)
-
-

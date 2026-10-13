@@ -1,4 +1,0 @@
-Patch "Always Show Red Rings on New Game" in "Gameplay/Objects" by "brianuuu" 
-WriteNop(0x11A9ECB, 2);
-
-
