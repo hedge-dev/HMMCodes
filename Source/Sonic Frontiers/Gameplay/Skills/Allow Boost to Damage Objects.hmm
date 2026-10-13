@@ -13,6 +13,7 @@ Code "Allow Boost to Damage Objects" in "Gameplay/Skills" by "Hyper, NM & alepri
     {
         Sonic.StateID.StateJump,
         Sonic.StateID.StateDoubleJump,
+        Sonic.StateID.StateGrindDoubleJump,
         Sonic.StateID.StateSpinAttack,
         Sonic.StateID.StateSpinDash,
         Sonic.StateID.StateSpinBoostCharge,
@@ -28,7 +29,8 @@ Code "Allow Boost to Damage Objects" in "Gameplay/Skills" by "Hyper, NM & alepri
     static List<Sonic.StateID> _overrideStates = new()
     {
         Sonic.StateID.StateRun,
-        Sonic.StateID.StateAirBoost
+        Sonic.StateID.StateAirBoost,
+        Sonic.StateID.StateGrind
     };
 //
 {
