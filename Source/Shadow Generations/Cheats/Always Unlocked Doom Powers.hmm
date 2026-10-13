@@ -1,0 +1,4 @@
+Patch "Always Unlocked Doom Powers" by "Ashrindy"
+WriteProtected<byte>(0x14C2A04AD, 0xB0);
+WriteProtected<byte>(0x14C2A04AE, 0x01);
+WriteProtected<byte>(0x14C2A04AF, 0x90);
