@@ -1,8 +1,10 @@
-#!/usr/bin/env dotnet-script
-#r "nuget: Microsoft.CodeAnalysis.CSharp, 4.7.0"
-#r "nuget: HedgeModManager.CodeCompiler, 0.2.37"
+#!/usr/bin/dotnet run
+#:package Microsoft.CodeAnalysis.CSharp@4.*
+#:package HedgeModManager.CodeCompiler@0.2.150
 
 using HedgeModManager.CodeCompiler;
+using System.Text;
+
 var StartDirectory = Environment.CurrentDirectory;
 var TestOnly = false;
 var Failures = new List<string>();
@@ -13,7 +15,7 @@ var IgnoreGlobals = new List<string>()
 
 Environment.CurrentDirectory = Path.Combine(StartDirectory, "Source");
 
-foreach(var arg in Args)
+foreach(var arg in args)
 {
     if (arg.Equals("test", StringComparison.OrdinalIgnoreCase))
     {
@@ -120,7 +122,7 @@ async Task BuildFolder(string path, bool test = true)
             }
 
             var outPath = Path.Combine(StartDirectory, "build", $"{GetCodeFileName()}.hmm");
-            Directory.CreateDirectory(Path.GetDirectoryName(outPath));
+            Directory.CreateDirectory(Path.GetDirectoryName(outPath)!);
             File.WriteAllText(outPath, result);
         }
     }
