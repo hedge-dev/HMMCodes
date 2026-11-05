@@ -60,7 +60,7 @@ Library "GameManager" by "Hyper, ĐeäTh & Sajid"
         [FieldOffset(0x350)] public MyApplication* pMyApplication;
     }
 
-    /* 0x140C478D8 */
+    /* 0x140D30788 */
     private static long _sigGameManagerSingleton = (long)ScanSignature
     (
         "\x48\x89\x2D\xCC\xCC\xCC\xCC\x8D\x75\x20",

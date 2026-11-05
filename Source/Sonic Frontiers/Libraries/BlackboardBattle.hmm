@@ -39,6 +39,11 @@ Library "BlackboardBattle" by "Hyper, ĐeäTh & NM" does "Provides access to `ap
         /// The value of the Quick Cyloop gauge.
         /// </summary>
         [FieldOffset(0xB8)] public float QuickCyloopAmount;
+
+        /// <summary>
+        /// Is the Quick Cyloop gauge Active (false) or Charging (true).
+        /// </summary>
+        [FieldOffset(0xF1)] public bool QuickCyloopCharging;
     }
 
     /// <summary>
