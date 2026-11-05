@@ -1,0 +1,32 @@
+Code "Disable Wall Flip"
+//
+#lib "Player"
+//
+{
+    Player.State.Discard<Sonic.StateID>(Sonic.StateID.StateFallFlip);
+    Player.State.Discard<Sonic.StateID>(Sonic.StateID.StateFallSlope);
+}
+Code "better Ground Collision" by "ace super"
+//
+    #include "Reflection" noemit
+
+    #lib "Player"
+    #lib "Reflection"
+    #lib "Sonic"
+    #lib "SonicParameters"
+//
+{
+    var SonicParametersInfo = Reflection.GetDataInfo<SonicParameters.Root>("player_common");
+    if (SonicParametersInfo.pData == null)
+        return;
+
+    RFL_SET_PARAM(SonicParametersInfo, forwardView.modePackage.common.movableMaxSlope, 55.0f);
+    RFL_SET_PARAM(SonicParametersInfo, forwardView.modePackage.common.activeLandingSlope, 50.0f);
+    RFL_SET_PARAM(SonicParametersInfo, forwardView.modePackage.common.activeLandingSlopeInBoost, 10.5f);    
+    RFL_SET_PARAM(SonicParametersInfo, forwardView.modePackage.common.wallSlideSlowInBoost, false);
+    RFL_SET_PARAM(SonicParametersInfo, forwardView.modePackage.common.landingMaxSlope, 49.4f);
+    RFL_SET_PARAM(SonicParametersInfo, forwardView.modePackage.common.slidingMaxSlope, 80.0f);
+    RFL_SET_PARAM(SonicParametersInfo, forwardView.modePackage.common.wallAngleMaxSlope, 100.0f);
+    RFL_SET_PARAM(SonicParametersInfo, forwardView.modePackage.common.onStand, SonicParameters.SupportedPlane.Slope);
+    RFL_SET_PARAM(SonicParametersInfo, forwardView.modePackage.common.onRun, SonicParameters.SupportedPlane.Flat);
+}
