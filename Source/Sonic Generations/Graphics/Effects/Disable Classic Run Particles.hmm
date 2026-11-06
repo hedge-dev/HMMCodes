@@ -1,4 +1,0 @@
-Patch "Disable Classic Run Particles" in "Graphics/Effects" by "Hyper" 
-WriteProtected<byte>(0xDC1C6F, 0xE9, 0x99, 0x00, 0x00, 0x00);
-
-

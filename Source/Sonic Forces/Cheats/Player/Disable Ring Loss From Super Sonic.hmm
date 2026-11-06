@@ -1,4 +1,0 @@
-Patch "Disable Ring Loss from Super Sonic" in "Cheats/Player" by "SuperSonic16" does "Disables losing a ring every second as Super Sonic."
-WriteNop(0x1404E1F54, 0x03)
-
-

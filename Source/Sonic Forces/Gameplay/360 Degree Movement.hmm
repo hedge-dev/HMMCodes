@@ -1,4 +1,0 @@
-Patch "360 Degree Movement" in "Gameplay" by "Skyth" 
-WriteNop(0x1404615B7, 4)
-
-

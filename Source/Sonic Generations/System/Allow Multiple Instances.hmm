@@ -1,7 +1,0 @@
-Patch "Allow Multiple Instances" in "System" by "Sajid & Skyth" does "Allows multiple instances of Sonic Generations to be running at once." 
-WriteProtected<byte>(0xE7A6E6, 0x83)
-WriteProtected<byte>(0xE7A6E7, 0xC4)
-WriteProtected<byte>(0xE7A6E8, 0xC)
-WriteNop(0xE7A6E9, 0x3)
-
-

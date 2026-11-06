@@ -1,4 +1,0 @@
-Patch "32:9" in "Graphics/Display/Internal Resolution" by "ĐeäTh" does "Changes the game in-game resolution to a 32:9 aspect ratio." 
-WriteProtected<int>(ASLR(0x00D56D30), 0x40638E39)
-
-

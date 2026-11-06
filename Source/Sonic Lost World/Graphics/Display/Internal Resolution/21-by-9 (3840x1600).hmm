@@ -1,4 +1,0 @@
-Patch "21:9 (3840x1600)" in "Graphics/Display/Internal Resolution" by "ĐeäTh" does "Changes the game in-game resolution to a 21:9 (3840x1600) aspect ratio." 
-WriteProtected<int>(ASLR(0x00D56D30), 0x4019999A)
-
-

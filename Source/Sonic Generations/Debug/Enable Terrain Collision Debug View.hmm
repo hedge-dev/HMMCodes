@@ -1,5 +1,0 @@
-Patch "Enable Terrain Collision Debug View" in "Debug" by "Sajid" 
-WriteProtected<byte>(0xCF2497, 1);
-WriteNop(0xCF2515, 23);
-
-

@@ -1,4 +1,0 @@
-Patch "Always Controllable Cameras" in "Camera" by "Skyth" 
-WriteNop(0x10E7515, 2);
-
-
